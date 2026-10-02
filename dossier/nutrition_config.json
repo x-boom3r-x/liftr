@@ -1,0 +1,112 @@
+{
+ "version": 1,
+ "bmr_formula": "mifflin_st_jeor",
+ "bmr_formula_note": "homme: 10*kg + 6.25*cm - 5*age + 5 ; femme: 10*kg + 6.25*cm - 5*age - 161",
+ "activity_levels": [
+  {
+   "id": "sedentary",
+   "label": "Sédentaire (peu ou pas de sport)",
+   "factor": 1.2
+  },
+  {
+   "id": "light",
+   "label": "Légèrement actif (1-3 séances/semaine)",
+   "factor": 1.375
+  },
+  {
+   "id": "moderate",
+   "label": "Modérément actif (3-5 séances/semaine)",
+   "factor": 1.55
+  },
+  {
+   "id": "high",
+   "label": "Très actif (6-7 séances/semaine)",
+   "factor": 1.725
+  },
+  {
+   "id": "extreme",
+   "label": "Extrême (2 séances/jour, travail physique)",
+   "factor": 1.9
+  }
+ ],
+ "goals": [
+  {
+   "id": "maintain",
+   "label": "Maintien",
+   "intensities": [
+    {
+     "id": "maintain",
+     "label": "Maintien",
+     "percent_of_tdee": 0
+    }
+   ]
+  },
+  {
+   "id": "bulk",
+   "label": "Prise de masse",
+   "intensities": [
+    {
+     "id": "light",
+     "label": "Légère (+10 %)",
+     "percent_of_tdee": 10
+    },
+    {
+     "id": "moderate",
+     "label": "Modérée (+15 %)",
+     "percent_of_tdee": 15
+    },
+    {
+     "id": "aggressive",
+     "label": "Grand surplus (+20 %)",
+     "percent_of_tdee": 20
+    }
+   ]
+  },
+  {
+   "id": "cut",
+   "label": "Perte de poids",
+   "intensities": [
+    {
+     "id": "light",
+     "label": "Léger (-10 %)",
+     "percent_of_tdee": -10
+    },
+    {
+     "id": "moderate",
+     "label": "Modéré (-20 %)",
+     "percent_of_tdee": -20
+    },
+    {
+     "id": "aggressive",
+     "label": "Grand déficit (-25 %)",
+     "percent_of_tdee": -25
+    }
+   ]
+  }
+ ],
+ "macros": {
+  "protein_g_per_kg": {
+   "maintain": 1.8,
+   "bulk": 2.0,
+   "cut": 2.2
+  },
+  "fat_g_per_kg": {
+   "maintain": 0.9,
+   "bulk": 0.9,
+   "cut": 0.8
+  },
+  "carbs": "tout le reste des calories : (target_kcal - 4*protein_g - 9*fat_g) / 4",
+  "kcal_per_g": {
+   "protein": 4,
+   "carbs": 4,
+   "fat": 9,
+   "alcohol": 7
+  }
+ },
+ "safety": {
+  "min_kcal_female": 1200,
+  "min_kcal_male": 1500,
+  "note": "Ne jamais proposer une cible sous ces planchers ; si le calcul tombe dessous, remonter à la valeur plancher et afficher un avertissement. Estimation indicative, pas un avis médical.",
+  "carbs_floor_g": 50
+ }
+}

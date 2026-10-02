@@ -1,0 +1,628 @@
+id,name,category_id,as_sold_kcal,as_sold_protein_g,as_sold_carbs_g,as_sold_fat_g,cooked_kcal,cooked_protein_g,cooked_carbs_g,cooked_fat_g,note,source,contains_alcohol,search_text
+amarante,Amarante,cereales_feculents_pains,371,13.6,65.2,7,102,3.8,18.7,1.6,bouillie,original,false,amarante
+bagel,Bagel,cereales_feculents_pains,257,10,50,1.6,,,,,,original,false,bagel
+baguette,Baguette,cereales_feculents_pains,270,9,55,1.3,,,,,,original,false,baguette pain
+biscottes,Biscottes,cereales_feculents_pains,400,11,74,5,,,,,valeur moyenne,original,false,biscottes
+ble_entier_grain,Blé entier (grain),cereales_feculents_pains,339,13.7,71.2,2.5,,,,,,original,false,ble entier grain
+ble_precuit_type_ebly,Blé précuit (type Ébly),cereales_feculents_pains,350,12,70,1.5,120,4.5,24,0.6,bouilli,estimate,false,ble precuit type ebly
+boulgour,Boulgour,cereales_feculents_pains,342,12.3,75.9,1.3,83,3.1,18.6,0.2,bouilli,original,false,boulgour
+brioche,Brioche,cereales_feculents_pains,375,8.5,51,15,,,,,valeur moyenne,original,false,brioche
+cereales_chocolatees_type_chocapic,Céréales chocolatées (type Chocapic),cereales_feculents_pains,380,7,75,4,,,,,varie selon la marque,estimate,false,cereales chocolatees type chocapic petit-dejeuner
+chapelure,Chapelure,cereales_feculents_pains,395,13,72,5,,,,,,estimate,false,chapelure
+corn_flakes,Corn flakes,cereales_feculents_pains,357,7.5,84,0.4,,,,,,original,false,corn flakes
+couscous_semoule_precuite,Couscous (semoule précuite),cereales_feculents_pains,376,12.8,77.4,0.6,112,3.8,23.2,0.2,hydraté,original,false,couscous semoule precuite
+croissant,Croissant,cereales_feculents_pains,406,8.2,45.8,21,,,,,,original,false,croissant
+epeautre,Épeautre,cereales_feculents_pains,338,14.6,70.2,2.4,127,5.5,26.4,0.8,bouilli,original,false,epeautre
+farine_d_amande,Farine d'amande,cereales_feculents_pains,571,21.4,21.4,50,,,,,,original,false,farine d'amande
+farine_de_ble_blanche,Farine de blé blanche,cereales_feculents_pains,364,10.3,76.3,1,,,,,,original,false,farine de ble blanche
+farine_de_ble_complete,Farine de blé complète,cereales_feculents_pains,340,13.2,72,2.5,,,,,,original,false,farine de ble complete
+farine_de_riz,Farine de riz,cereales_feculents_pains,366,6,80,1.4,,,,,,original,false,farine de riz
+farine_de_sarrasin,Farine de sarrasin,cereales_feculents_pains,335,13,70,3.4,,,,,,estimate,false,farine de sarrasin
+farine_de_seigle,Farine de seigle,cereales_feculents_pains,338,10.3,75.9,1.6,,,,,,original,false,farine de seigle
+fecule_de_mais_maizena,Fécule de maïs (Maïzena),cereales_feculents_pains,381,0.3,91.3,0.1,,,,,,original,false,fecule de mais maizena
+flocons_d_avoine,Flocons d'avoine,cereales_feculents_pains,379,13.2,67.7,6.5,71,2.5,12,1.5,porridge à l'eau,original,false,flocons d'avoine avoine oats porridge
+galettes_de_riz_souffle,Galettes de riz soufflé,cereales_feculents_pains,387,8.2,81.5,2.8,,,,,,original,false,galettes de riz souffle
+gnocchi_de_pommes_de_terre,Gnocchi de pommes de terre,cereales_feculents_pains,150,3.5,32,0.5,,,,,tel que vendu (frais),estimate,false,gnocchi de pommes terre
+granola,Granola,cereales_feculents_pains,471,10,64,20,,,,,valeur moyenne,original,false,granola
+khobz_pain_marocain,Khobz (pain marocain),cereales_feculents_pains,265,8.5,52,2,,,,,valeur moyenne,original,false,khobz pain marocain maroc
+millet,Millet,cereales_feculents_pains,378,11,72.8,4.2,119,3.5,23.7,1,bouilli,original,false,millet
+muesli_sans_sucre_ajoute,Muesli (sans sucre ajouté),cereales_feculents_pains,360,10,66,6,,,,,varie selon la marque,estimate,false,muesli sans sucre ajoute cereales petit-dejeuner
+nouilles_de_riz,Nouilles de riz,cereales_feculents_pains,364,3.4,83.2,0.6,108,0.9,24.9,0.2,bouillies,original,false,nouilles de riz
+nouilles_instantanees_ramen_seches,"Nouilles instantanées (ramen, sèches)",cereales_feculents_pains,450,9,63,18,,,,,"sèches, avant cuisson",estimate,false,"nouilles instantanees ramen, seches noodles"
+nouilles_soba,Nouilles soba,cereales_feculents_pains,336,14.4,70,1.5,99,5.1,21.4,0.1,bouillies,original,false,nouilles soba
+orge_perle,Orge perlé,cereales_feculents_pains,352,9.9,77.7,1.2,123,2.3,28.2,0.4,bouilli,original,false,orge perle
+pain_au_chocolat,Pain au chocolat,cereales_feculents_pains,410,8,45,21,,,,,valeur moyenne,estimate,false,pain au chocolat viennoiserie
+pain_au_lait,Pain au lait,cereales_feculents_pains,320,8,50,9,,,,,,estimate,false,pain au lait viennoiserie
+pain_aux_cereales_multigrains,Pain aux céréales / multigrains,cereales_feculents_pains,270,10,45,5,,,,,,estimate,false,pain aux cereales multigrains
+pain_blanc_de_mie,Pain blanc de mie,cereales_feculents_pains,265,9,49,3.2,,,,,,original,false,pain blanc de mie tranche toast sandwich
+pain_burger_bun,Pain burger (bun),cereales_feculents_pains,270,9,49,4,,,,,,estimate,false,pain burger bun hamburger
+pain_complet,Pain complet,cereales_feculents_pains,247,13,41,3.4,,,,,,original,false,pain complet
+pain_de_campagne,Pain de campagne,cereales_feculents_pains,250,8,50,1.5,,,,,,estimate,false,pain de campagne
+pain_de_seigle,Pain de seigle,cereales_feculents_pains,259,8.5,48,3.3,,,,,,original,false,pain de seigle
+pain_pita,Pain pita,cereales_feculents_pains,275,9.1,55.7,1.2,,,,,,original,false,pain pita
+pates_aux_oeufs,Pâtes aux oeufs,cereales_feculents_pains,384,14.2,71.3,4.4,138,4.5,25.2,2.1,bouillies,original,false,pates aux oeufs tagliatelles oeuf
+pates_blanches,Pâtes blanches,cereales_feculents_pains,371,13,74.7,1.5,158,5.8,30.9,0.9,bouillies,original,false,pates blanches normales spaghetti macaroni penne tagliatelle coquillettes fusilli
+pates_completes,Pâtes complètes,cereales_feculents_pains,352,14.6,73.4,2.8,124,5.3,26.5,0.5,bouillies,original,false,pates completes spaghetti macaroni penne
+pates_de_legumineuses_lentilles_pois_chiches,Pâtes de légumineuses (lentilles / pois chiches),cereales_feculents_pains,340,24,50,3,125,9,19,1.5,bouillies,estimate,false,pates de legumineuses lentilles pois chiches proteinees
+pizza_margherita,Pizza margherita,cereales_feculents_pains,266,11,33,10,,,,,valeur moyenne,original,false,pizza margherita
+polenta_semoule_de_mais,Polenta / semoule de maïs,cereales_feculents_pains,362,8,77,1.5,70,1.6,15,0.4,cuite (approx.),original,false,polenta semoule de mais
+pop_corn_air_popped,Pop-corn (air popped),cereales_feculents_pains,387,12.9,77.8,4.5,,,,,,original,false,pop-corn air popped
+quinoa,Quinoa,cereales_feculents_pains,368,14.1,64.2,6.1,120,4.4,21.3,1.9,bouilli,original,false,quinoa
+riz_basmati,Riz basmati,cereales_feculents_pains,349,7.9,77,0.6,121,3.5,25.2,0.4,bouilli,original,false,riz basmati
+riz_blanc_long_grain,Riz blanc long grain,cereales_feculents_pains,365,7.1,80,0.7,130,2.7,28.2,0.3,bouilli,original,false,riz blanc long grain normal ordinaire
+riz_complet,Riz complet,cereales_feculents_pains,370,7.9,77.2,2.9,123,2.7,25.6,1,bouilli,original,false,riz complet
+riz_etuve_parboiled,Riz étuvé (parboiled),cereales_feculents_pains,367,7,81,0.5,123,2.9,26,0.3,bouilli,estimate,false,riz etuve parboiled
+riz_jasmin_thai,Riz jasmin / thaï,cereales_feculents_pains,360,7,79,0.6,130,2.7,28.2,0.3,bouilli,estimate,false,riz jasmin thai
+riz_rond_arborio_risotto,Riz rond / arborio (risotto),cereales_feculents_pains,350,6.5,79,0.6,130,2.4,28.7,0.2,bouilli,estimate,false,riz rond arborio risotto
+riz_sauvage,Riz sauvage,cereales_feculents_pains,357,14.7,74.9,1.1,101,4,21.3,0.3,bouilli,original,false,riz sauvage
+sarrasin,Sarrasin,cereales_feculents_pains,343,13.3,71.5,3.4,92,3.4,19.9,0.6,bouilli,original,false,sarrasin
+semoule_de_ble_dur,Semoule de blé dur,cereales_feculents_pains,360,12.7,72.8,1.1,,,,,,original,false,semoule de ble dur
+son_d_avoine,Son d'avoine,cereales_feculents_pains,246,17.3,66.2,7,,,,,,original,false,son d'avoine
+tapioca_perles_seches,Tapioca (perles sèches),cereales_feculents_pains,358,0.2,88.7,0,,,,,,original,false,tapioca perles seches
+teff,Teff,cereales_feculents_pains,367,13.3,73.1,2.4,101,3.9,19.9,0.7,bouilli,original,false,teff
+tortilla_de_ble,Tortilla de blé,cereales_feculents_pains,312,8.3,51.6,8.1,,,,,,original,false,tortilla de ble
+agneau_cotelette,Agneau - côtelette,viandes_volailles,282,16.3,0,23.4,294,25.6,0,20.9,grillée,original,false,agneau - cotelette
+agneau_epaule,Agneau - épaule,viandes_volailles,230,16.5,0,18,,,,,cru,estimate,false,agneau - epaule viande mouton
+agneau_gigot,Agneau - gigot,viandes_volailles,162,20.3,0,8.4,225,27.5,0,12.5,rôti,original,false,agneau - gigot
+agneau_hache,Agneau - haché,viandes_volailles,282,16.6,0,23.4,283,25.6,0,19.7,grillé,original,false,agneau - hache
+bacon_lardons,Bacon / lardons,viandes_volailles,417,12.6,1.4,40,541,37,1.4,42,poêlé,original,false,bacon lardons
+blanc_de_poulet_en_tranches_charcuterie,Blanc de poulet en tranches (charcuterie),viandes_volailles,105,19,1,2.5,,,,,tel que vendu,estimate,false,blanc de poulet en tranches charcuterie volaille jambon
+boeuf_bavette_flanchet,Boeuf - bavette / flanchet,viandes_volailles,155,21,0,7.6,192,27.8,0,8,grillée,original,false,boeuf - bavette flanchet oeuf oeufs viande
+boeuf_entrecote,Boeuf - entrecôte,viandes_volailles,250,19.5,0,19,291,24,0,21,grillée,original,false,boeuf - entrecote oeuf oeufs viande
+boeuf_filet,Boeuf - filet,viandes_volailles,143,20.8,0,6,190,28,0,8,grillé,original,false,boeuf - filet oeuf oeufs viande
+boeuf_hache_10_mg,Boeuf - haché 10% MG,viandes_volailles,176,20,0,10,217,26.1,0,11.8,poêlé,original,false,boeuf - hache 10% mg oeuf oeufs viande
+boeuf_hache_15_mg,Boeuf - haché 15% MG,viandes_volailles,215,18.6,0,15,250,25.9,0,15.9,poêlé,original,false,boeuf - hache 15% mg oeuf oeufs viande
+boeuf_hache_20_mg,Boeuf - haché 20% MG,viandes_volailles,254,17.2,0,20,272,25.6,0,17.9,poêlé,original,false,boeuf - hache 20% mg oeuf oeufs viande
+boeuf_hache_5_mg,Boeuf - haché 5% MG,viandes_volailles,137,21.4,0,5,171,26.1,0,6.5,poêlé,original,false,boeuf - hache 5% mg oeuf oeufs viande
+boeuf_paleron_macreuse,Boeuf - paleron / macreuse,viandes_volailles,150,20,0,7.5,,,,,cru,estimate,false,boeuf - paleron macreuse viande oeuf oeufs
+boeuf_rumsteck_faux_filet_maigre,Boeuf - rumsteck / faux-filet maigre,viandes_volailles,150,21.5,0,6.2,190,29,0,7.5,grillé,original,false,boeuf - rumsteck faux-filet maigre oeuf oeufs viande
+boeuf_viande_sechee_jerky,Boeuf - viande séchée (jerky),viandes_volailles,410,33.2,11,25.6,,,,,tel que vendu,original,false,boeuf - viande sechee jerky oeuf oeufs
+boudin_noir,Boudin noir,viandes_volailles,379,14.6,0.1,34.1,,,,,tel que vendu (valeur moyenne),original,false,boudin noir
+bresaola,Bresaola,viandes_volailles,151,32,0.3,2,,,,,tel que vendu,original,false,bresaola
+caille,Caille,viandes_volailles,134,21.8,0,4.5,192,25.1,0,9.3,rôtie,original,false,caille
+canard_avec_peau,Canard - avec peau,viandes_volailles,337,11.5,0,32.4,337,19,0,28.4,rôti,original,false,canard - avec peau
+canard_sans_peau,Canard - sans peau,viandes_volailles,135,18.3,0,5.9,201,23.5,0,11.2,rôti,original,false,canard - sans peau
+cerf_venaison,Cerf (venaison),viandes_volailles,120,23,0,2.4,158,30.2,0,3.2,rôti,original,false,cerf venaison
+chorizo,Chorizo,viandes_volailles,455,24.1,1.9,38.3,,,,,tel que vendu,original,false,chorizo
+coeur_de_boeuf,Coeur de boeuf,viandes_volailles,112,17.7,0.1,3.9,165,28.5,0.1,4.8,braisé,original,false,coeur de boeuf oeuf oeufs viande
+dinde_blanc_sans_peau,Dinde - blanc sans peau,viandes_volailles,114,23.7,0,1.5,135,30,0,0.7,rôti,original,false,dinde - blanc sans peau
+dinde_hachee_93_maigre,Dinde - hachée 93% maigre,viandes_volailles,150,18.7,0,8.3,213,27.1,0,11.1,poêlée,original,false,dinde - hachee 93% maigre
+dinde_tranches_charcuterie,Dinde - tranches (charcuterie),viandes_volailles,105,18,1.5,2.5,,,,,tel que vendu (valeur moyenne),original,false,dinde - tranches charcuterie
+faisan,Faisan,viandes_volailles,133,23.6,0,3.6,,,,,,original,false,faisan
+foie_de_boeuf,Foie de boeuf,viandes_volailles,135,20.4,3.9,3.6,175,27,5.2,4.7,braisé,original,false,foie de boeuf oeuf oeufs viande
+foie_de_volaille,Foie de volaille,viandes_volailles,119,16.9,0.7,4.8,167,24.5,0.9,6.5,poché,original,false,foie de volaille
+jambon_blanc_cuit,Jambon blanc cuit,viandes_volailles,107,17.5,0.8,3.5,,,,,tel que vendu (valeur moyenne),original,false,jambon blanc cuit
+jambon_cru_seche_type_serrano,Jambon cru séché (type Serrano),viandes_volailles,241,31,0.3,12.6,,,,,tel que vendu,original,false,jambon cru seche type serrano
+jambon_de_dinde,Jambon de dinde,viandes_volailles,105,17.5,1.5,3,,,,,tel que vendu,estimate,false,jambon de dinde charcuterie
+langue_de_boeuf,Langue de boeuf,viandes_volailles,224,16.3,3.7,16.1,284,19.1,3.6,21,bouillie,original,false,langue de boeuf oeuf oeufs viande
+lapin,Lapin,viandes_volailles,136,20.1,0,5.5,197,29.1,0,8.1,rôti,original,false,lapin
+merguez,Merguez,viandes_volailles,280,14,2,24,,,,,"cru, valeur moyenne (varie selon boucher)",original,false,merguez
+mortadelle,Mortadelle,viandes_volailles,311,16,2,26,,,,,tel que vendu,estimate,false,mortadelle charcuterie
+oie_sans_peau,Oie - sans peau,viandes_volailles,161,22.7,0,7.1,238,29.3,0,12.7,rôtie,original,false,oie - sans peau
+pate_de_campagne,Pâté de campagne,viandes_volailles,290,14,2,25,,,,,varie selon la marque,estimate,false,pate de campagne charcuterie
+pintade,Pintade,viandes_volailles,110,23.4,0,1.6,,,,,,original,false,pintade
+porc_cote_maigre,Porc - côte maigre,viandes_volailles,142,21.4,0,5.5,172,28,0,6.5,grillée,original,false,porc - cote maigre
+porc_filet_mignon,Porc - filet mignon,viandes_volailles,120,20.9,0,3.5,143,26.2,0,3.5,rôti,original,false,porc - filet mignon
+porc_hache_20_mg,Porc - haché 20% MG,viandes_volailles,263,16.9,0,21.2,297,25.7,0,20.8,poêlé,original,false,porc - hache 20% mg
+porc_poitrine,Porc - poitrine,viandes_volailles,518,9.3,0,53,,,,,,original,false,porc - poitrine
+poulet_aile_avec_peau,Poulet - aile avec peau,viandes_volailles,222,18.3,0,15.9,254,27,0,16,rôtie,estimate,false,poulet - aile avec peau volaille
+poulet_blanc_avec_peau,Poulet - blanc avec peau,viandes_volailles,172,20.8,0,9.3,197,29.8,0,7.8,rôti,original,false,poulet - blanc avec peau
+poulet_blanc_sans_peau,Poulet - blanc sans peau,viandes_volailles,120,22.5,0,2.6,165,31,0,3.6,rôti / grillé,original,false,poulet - blanc sans peau
+poulet_cuisse_avec_peau,Poulet - cuisse avec peau,viandes_volailles,211,17.3,0,15.3,247,23.3,0,16.7,rôtie,original,false,poulet - cuisse avec peau
+poulet_cuisse_sans_peau,Poulet - cuisse sans peau,viandes_volailles,121,19.7,0,4.1,179,24.8,0,8.2,rôtie,original,false,poulet - cuisse sans peau
+poulet_entier_avec_peau,Poulet - entier avec peau,viandes_volailles,215,18.6,0,15.1,239,27.3,0,13.6,rôti,original,false,poulet - entier avec peau
+poulet_pilon_sans_peau,Poulet - pilon sans peau,viandes_volailles,116,19.5,0,3.8,155,24.2,0,5.7,rôti,original,false,poulet - pilon sans peau
+rillettes_de_porc,Rillettes de porc,viandes_volailles,440,16,0.5,41,,,,,tel que vendu,estimate,false,rillettes de porc charcuterie
+rognons_de_boeuf,Rognons de boeuf,viandes_volailles,99,17.4,0.3,3.1,158,27.3,0,5,poché,original,false,rognons de boeuf oeuf oeufs viande
+salami_sec,Salami sec,viandes_volailles,407,22.6,1.6,33.7,,,,,tel que vendu,original,false,salami sec
+saucisse_de_porc,Saucisse de porc,viandes_volailles,304,13.5,0.9,27,339,19.4,0.8,28,poêlée,original,false,saucisse de porc
+saucisse_de_strasbourg_knack,Saucisse de Strasbourg / knack,viandes_volailles,290,11,3,26,,,,,tel que vendu (valeur moyenne),original,false,saucisse de strasbourg knack
+saucisson_sec,Saucisson sec,viandes_volailles,410,27,2,33,,,,,varie selon la marque,estimate,false,saucisson sec charcuterie
+veau_escalope_noix,Veau - escalope / noix,viandes_volailles,109,21,0,2.5,153,30.5,0,3.2,poêlée,original,false,veau - escalope noix
+anchois_en_boite_a_l_huile_egouttes,Anchois en boîte à l'huile (égouttés),poissons_fruits_de_mer,210,28.9,0,9.7,,,,,tel que vendu,original,false,anchois en boite a l'huile egouttes
+anchois_frais,Anchois frais,poissons_fruits_de_mer,131,20.4,0,4.8,,,,,,original,false,anchois frais
+anguille,Anguille,poissons_fruits_de_mer,184,18.4,0,11.7,236,23.6,0,15,au four,original,false,anguille
+bar_loup,Bar / loup,poissons_fruits_de_mer,97,18.4,0,2,124,23.6,0,2.6,au four,original,false,bar loup
+batonnets_de_poisson_panes_surgeles,Bâtonnets de poisson panés (surgelés),poissons_fruits_de_mer,230,12,21,11,,,,,"tel que vendu, avant cuisson",estimate,false,batonnets de poisson panes surgeles pane
+cabillaud_morue_fraiche,Cabillaud (morue fraîche),poissons_fruits_de_mer,82,17.8,0,0.7,105,22.8,0,0.9,au four / vapeur,original,false,cabillaud morue fraiche
+calamar,Calamar,poissons_fruits_de_mer,92,15.6,3.1,1.4,175,17.9,7.8,7.5,frit (pané),original,false,calamar
+carpe,Carpe,poissons_fruits_de_mer,127,17.8,0,5.6,162,22.8,0,7.2,au four,original,false,carpe
+caviar_oeufs_de_poisson,Caviar / oeufs de poisson,poissons_fruits_de_mer,264,24.6,4,17.9,,,,,tel que vendu,original,false,caviar oeufs de poisson oeuf
+coquilles_saint_jacques,Coquilles Saint-Jacques,poissons_fruits_de_mer,69,12.1,3.2,0.5,111,20.5,5.4,0.8,vapeur,original,false,coquilles saint-jacques
+crabe,Crabe,poissons_fruits_de_mer,87,18.1,0,1.1,97,19.4,0,1.5,vapeur,original,false,crabe
+crevettes,Crevettes,poissons_fruits_de_mer,85,20.1,0.2,0.5,99,24,0.2,0.3,bouillies,original,false,crevettes
+dorade,Dorade,poissons_fruits_de_mer,96,19,0,2,128,24,0,3,grillée,original,false,dorade
+ecrevisse,Écrevisse,poissons_fruits_de_mer,72,14.9,0,1.2,87,17.8,0,1.2,cuite,original,false,ecrevisse
+eglefin_haddock,Églefin (haddock),poissons_fruits_de_mer,74,17.2,0,0.6,90,20.9,0,0.6,au four,original,false,eglefin haddock
+escargots,Escargots,poissons_fruits_de_mer,90,16.1,2,1.4,,,,,,original,false,escargots
+espadon,Espadon,poissons_fruits_de_mer,144,19.7,0,6.7,172,26.9,0,6.7,grillé,original,false,espadon
+fletan,Flétan,poissons_fruits_de_mer,91,18.6,0,1.3,111,22.5,0,1.6,au four,original,false,fletan
+hareng,Hareng,poissons_fruits_de_mer,158,18,0,9,203,23,0,11.6,au four,original,false,hareng
+homard,Homard,poissons_fruits_de_mer,77,16.5,0,0.9,98,20.5,0,0.6,vapeur,original,false,homard
+huitres_creuses,Huîtres (creuses),poissons_fruits_de_mer,81,9.5,4.7,2.3,,,,,cru,original,false,huitres creuses
+lieu_noir_colin,Lieu noir / colin,poissons_fruits_de_mer,92,19.4,0,0.8,118,24.9,0,1,au four,original,false,lieu noir colin
+lotte,Lotte,poissons_fruits_de_mer,76,14.5,0,1.5,,,,,,original,false,lotte
+maquereau,Maquereau,poissons_fruits_de_mer,205,18.6,0,13.9,262,23.8,0,17.8,au four,original,false,maquereau
+maquereau_en_boite_egoutte,Maquereau en boîte (égoutté),poissons_fruits_de_mer,156,23.2,0,6.3,,,,,tel que vendu,original,false,maquereau en boite egoutte
+maquereau_fume,Maquereau fumé,poissons_fruits_de_mer,305,18.6,0,25.1,,,,,tel que vendu,estimate,false,maquereau fume
+merlan,Merlan,poissons_fruits_de_mer,90,18,0,1.2,,,,,cru,estimate,false,merlan
+merlu,Merlu,poissons_fruits_de_mer,82,17.2,0,1,105,22,0,1.3,vapeur,original,false,merlu
+merou,Mérou,poissons_fruits_de_mer,92,19.4,0,1,118,24.8,0,1.3,au four,original,false,merou
+morue_salee_sechee,Morue salée séchée,poissons_fruits_de_mer,290,62.8,0,2.4,,,,,"sèche, avant dessalage",original,false,morue salee sechee
+moules,Moules,poissons_fruits_de_mer,86,11.9,3.7,2.2,172,23.8,7.4,4.5,vapeur,original,false,moules
+palourdes,Palourdes,poissons_fruits_de_mer,74,12.8,2.6,1,148,25.6,5.1,2,vapeur,original,false,palourdes
+pangasius,Pangasius,poissons_fruits_de_mer,90,15.7,0,2.9,,,,,,original,false,pangasius
+perche,Perche,poissons_fruits_de_mer,91,19.4,0,0.9,117,24,0,1.2,au four,original,false,perche
+poulpe,Poulpe,poissons_fruits_de_mer,82,14.9,2.2,1,164,29.8,4.4,2.1,bouilli,original,false,poulpe
+sardine_fraiche,Sardine fraîche,poissons_fruits_de_mer,135,19.1,0,6,185,25,0,8.5,grillée,original,false,sardine fraiche
+sardines_en_boite_a_l_huile_egouttees,Sardines en boîte à l'huile (égouttées),poissons_fruits_de_mer,208,24.6,0,11.5,,,,,tel que vendu,original,false,sardines en boite a l'huile egouttees
+sardines_en_boite_a_la_tomate_egouttees,Sardines en boîte à la tomate (égouttées),poissons_fruits_de_mer,178,17.5,0.5,11,,,,,tel que vendu,estimate,false,sardines en boite a la tomate egouttees
+saumon_atlantique_elevage,Saumon atlantique (élevage),poissons_fruits_de_mer,208,20.4,0,13.4,206,22.1,0,12.4,au four,original,false,saumon atlantique elevage
+saumon_fume,Saumon fumé,poissons_fruits_de_mer,117,18.3,0,4.3,,,,,tel que vendu,original,false,saumon fume
+saumon_rose_en_boite_egoutte,Saumon rose en boîte (égoutté),poissons_fruits_de_mer,136,19.8,0,5.9,,,,,tel que vendu,original,false,saumon rose en boite egoutte
+saumon_sauvage,Saumon sauvage,poissons_fruits_de_mer,142,19.8,0,6.3,182,25.4,0,8.1,au four,original,false,saumon sauvage
+seiche,Seiche,poissons_fruits_de_mer,79,16.2,0.8,0.7,158,32.5,1.6,1.4,cuite,original,false,seiche
+silure_catfish,Silure (catfish),poissons_fruits_de_mer,95,16.4,0,2.8,,,,,,original,false,silure catfish
+sole_carrelet_poisson_plat,Sole / carrelet (poisson plat),poissons_fruits_de_mer,70,12.4,0,1.2,86,17.5,0,1.3,vapeur,original,false,sole carrelet poisson plat
+surimi,Surimi,poissons_fruits_de_mer,99,15.2,6.9,0.9,,,,,tel que vendu,original,false,surimi
+thon_albacore,Thon albacore,poissons_fruits_de_mer,109,24.4,0,0.5,139,29.1,0,1,grillé,original,false,thon albacore
+thon_en_boite_a_l_huile_egoutte,Thon en boîte à l'huile (égoutté),poissons_fruits_de_mer,198,29.1,0,8.2,,,,,tel que vendu,original,false,thon en boite a l'huile egoutte
+thon_en_boite_au_naturel_egoutte,Thon en boîte au naturel (égoutté),poissons_fruits_de_mer,116,25.5,0,0.8,,,,,tel que vendu,original,false,thon en boite au naturel egoutte
+thon_rouge,Thon rouge,poissons_fruits_de_mer,144,23.3,0,4.9,184,29.9,0,6.3,grillé,original,false,thon rouge
+tilapia,Tilapia,poissons_fruits_de_mer,96,20.1,0,1.7,128,26.2,0,2.7,au four,original,false,tilapia
+truite_arc_en_ciel_elevage,Truite arc-en-ciel (élevage),poissons_fruits_de_mer,141,19.9,0,6.2,168,23.8,0,7.2,au four,original,false,truite arc-en-ciel elevage
+blanc_d_oeuf,Blanc d'oeuf,oeufs,52,10.9,0.7,0.2,55,11,0.7,0.2,dur,original,false,blanc d'oeuf oeufs oeuf
+jaune_d_oeuf,Jaune d'oeuf,oeufs,322,15.9,3.6,26.5,355,15.9,3.6,30.9,dur,original,false,jaune d'oeuf oeufs oeuf
+oeuf_de_caille,Oeuf de caille,oeufs,158,13.1,0.4,11.1,,,,,,original,false,oeuf de caille oeufs
+oeuf_entier,Oeuf entier,oeufs,143,12.6,0.7,9.5,155,13,1.1,10.6,dur (bouilli),original,false,oeuf entier oeufs dur coque poche egg
+oeuf_entier_au_plat,Oeuf entier - au plat,oeufs,143,12.6,0.7,9.5,196,13.6,0.8,14.8,poêlé à l'huile,original,false,oeuf entier - au plat oeufs poele
+oeuf_entier_brouille,Oeuf entier - brouillé,oeufs,143,12.6,0.7,9.5,149,10,1.6,11,brouillé avec lait,original,false,oeuf entier - brouille oeufs brouilles
+omelette,Omelette,oeufs,143,12.6,0.7,9.5,154,10.6,0.6,11.7,poêlée,original,false,omelette oeufs
+babeurre,Babeurre,produits_laitiers_fromages,40,3.3,4.8,0.9,,,,,,original,false,babeurre
+beurre,Beurre,produits_laitiers_fromages,717,0.9,0.1,81,,,,,,original,false,beurre doux sale
+brie,Brie,produits_laitiers_fromages,334,20.8,0.5,27.7,,,,,,original,false,brie
+camembert,Camembert,produits_laitiers_fromages,300,19.8,0.5,24.3,,,,,,original,false,camembert
+cantal,Cantal,produits_laitiers_fromages,355,23,0,29,,,,,,estimate,false,cantal
+cheddar,Cheddar,produits_laitiers_fromages,403,24.9,1.3,33.1,,,,,,original,false,cheddar
+chevre_frais,Chèvre frais,produits_laitiers_fromages,268,18.5,0.1,21.1,,,,,,original,false,chevre frais
+comte,Comté,produits_laitiers_fromages,409,27,0,34,,,,,valeur moyenne,original,false,comte
+cottage_cheese_1,Cottage cheese 1%,produits_laitiers_fromages,72,12.4,2.7,1,,,,,,original,false,cottage cheese 1%
+cottage_cheese_4,Cottage cheese 4%,produits_laitiers_fromages,98,11.1,3.4,4.3,,,,,,original,false,cottage cheese 4%
+creme_fraiche_epaisse_30,Crème fraîche épaisse 30%,produits_laitiers_fromages,292,2.1,2.8,30,,,,,valeur moyenne,original,false,creme fraiche epaisse 30%
+creme_fraiche_legere_15,Crème fraîche légère 15%,produits_laitiers_fromages,163,3,4,15,,,,,,estimate,false,creme fraiche legere 15%
+creme_glacee_vanille,Crème glacée vanille,produits_laitiers_fromages,207,3.5,23.6,11,,,,,,original,false,creme glacee vanille
+creme_liquide_entiere_35,Crème liquide entière 35%,produits_laitiers_fromages,340,2.8,2.8,36.1,,,,,,original,false,creme liquide entiere 35%
+edam,Edam,produits_laitiers_fromages,357,25,1.4,27.8,,,,,,original,false,edam
+emmental,Emmental,produits_laitiers_fromages,380,26.9,5.4,27.8,,,,,,original,false,emmental
+feta,Feta,produits_laitiers_fromages,264,14.2,4.1,21.3,,,,,,original,false,feta
+fontina,Fontina,produits_laitiers_fromages,389,25.6,1.6,31.1,,,,,,original,false,fontina
+fromage_a_raclette,Fromage à raclette,produits_laitiers_fromages,330,22,0.5,26,,,,,,estimate,false,fromage a raclette
+fromage_a_tartiner_cream_cheese,Fromage à tartiner (cream cheese),produits_laitiers_fromages,342,6.2,4.1,34.2,,,,,,original,false,fromage a tartiner cream cheese
+fromage_blanc_0,Fromage blanc 0%,produits_laitiers_fromages,46,8,4,0.2,,,,,,original,false,fromage blanc 0%
+fromage_blanc_20,Fromage blanc 20%,produits_laitiers_fromages,80,7.5,4,3.5,,,,,valeur moyenne,original,false,fromage blanc 20%
+fromage_fondu_en_portions_type_vache_qui_rit,Fromage fondu en portions (type Vache qui rit),produits_laitiers_fromages,260,10,5,22,,,,,varie selon la marque,estimate,false,fromage fondu en portions type vache qui rit
+gorgonzola,Gorgonzola,produits_laitiers_fromages,353,21.4,2.3,28.7,,,,,,original,false,gorgonzola
+gouda,Gouda,produits_laitiers_fromages,356,25,2.2,27.4,,,,,,original,false,gouda
+gruyere,Gruyère,produits_laitiers_fromages,413,29.8,0.4,30.8,,,,,,original,false,gruyere
+halloumi,Halloumi,produits_laitiers_fromages,321,21,2.2,25,,,,,valeur moyenne,original,false,halloumi
+kefir,Kéfir,produits_laitiers_fromages,41,3.8,4.5,1,,,,,,original,false,kefir
+lait_concentre_sucre,Lait concentré sucré,produits_laitiers_fromages,321,7.9,54.4,8.7,,,,,,original,false,lait concentre sucre
+lait_de_brebis,Lait de brebis,produits_laitiers_fromages,108,6,5.4,7,,,,,,original,false,lait de brebis
+lait_de_chevre,Lait de chèvre,produits_laitiers_fromages,69,3.6,4.5,4.1,,,,,,original,false,lait de chevre
+lait_demi_ecreme,Lait demi-écrémé,produits_laitiers_fromages,46,3.4,4.8,1.6,,,,,,original,false,lait demi-ecreme vache normal
+lait_ecreme,Lait écrémé,produits_laitiers_fromages,34,3.4,5,0.1,,,,,,original,false,lait ecreme vache leger
+lait_ecreme_en_poudre,Lait écrémé en poudre,produits_laitiers_fromages,362,36.2,52,0.8,,,,,poudre sèche,original,false,lait ecreme en poudre
+lait_entier,Lait entier,produits_laitiers_fromages,61,3.2,4.8,3.3,,,,,,original,false,lait entier vache normal
+lait_entier_en_poudre,Lait entier en poudre,produits_laitiers_fromages,496,26.3,38.4,26.7,,,,,poudre sèche,original,false,lait entier en poudre
+lben_lait_fermente,Lben (lait fermenté),produits_laitiers_fromages,40,3,4.5,1,,,,,valeur moyenne,original,false,lben lait fermente
+mascarpone,Mascarpone,produits_laitiers_fromages,429,4.8,4.6,44,,,,,,original,false,mascarpone
+mimolette,Mimolette,produits_laitiers_fromages,350,25,0,28,,,,,,estimate,false,mimolette
+monterey_jack,Monterey Jack,produits_laitiers_fromages,373,24.5,0.7,30.3,,,,,,original,false,monterey jack
+mozzarella_demi_ecremee,Mozzarella (demi-écrémée),produits_laitiers_fromages,254,24.3,2.8,16,,,,,,original,false,mozzarella demi-ecremee
+mozzarella_lait_entier,Mozzarella (lait entier),produits_laitiers_fromages,300,22.2,2.2,22.4,,,,,,original,false,mozzarella lait entier
+parmesan,Parmesan,produits_laitiers_fromages,431,38.5,4.1,28.6,,,,,,original,false,parmesan
+pecorino_romano,Pecorino / Romano,produits_laitiers_fromages,387,31.8,3.6,26.9,,,,,,original,false,pecorino romano
+port_salut,Port-Salut,produits_laitiers_fromages,352,23.8,0.5,28.2,,,,,,original,false,port-salut
+provolone,Provolone,produits_laitiers_fromages,351,25.6,2.1,26.6,,,,,,original,false,provolone
+reblochon,Reblochon,produits_laitiers_fromages,330,20,0.5,27.5,,,,,,estimate,false,reblochon
+ricotta_demi_ecremee,Ricotta (demi-écrémée),produits_laitiers_fromages,138,11.4,5.1,7.9,,,,,,original,false,ricotta demi-ecremee
+ricotta_lait_entier,Ricotta (lait entier),produits_laitiers_fromages,174,11.3,3,13,,,,,,original,false,ricotta lait entier
+roquefort_bleu,Roquefort / bleu,produits_laitiers_fromages,369,21.5,2,30.6,,,,,,original,false,roquefort bleu
+saint_nectaire,Saint-Nectaire,produits_laitiers_fromages,330,21,0.5,27,,,,,,estimate,false,saint-nectaire
+skyr_nature,Skyr nature,produits_laitiers_fromages,63,11,4,0.2,,,,,,original,false,skyr nature
+yaourt_aux_fruits_sucre,Yaourt aux fruits (sucré),produits_laitiers_fromages,96,3.5,15,2.5,,,,,varie selon la marque,estimate,false,yaourt aux fruits sucre yogourt
+yaourt_grec_0,Yaourt grec 0%,produits_laitiers_fromages,59,10.2,3.6,0.4,,,,,,original,false,yaourt grec 0%
+yaourt_grec_nature_entier,Yaourt grec nature entier,produits_laitiers_fromages,97,9,4,5,,,,,,original,false,yaourt grec nature entier
+yaourt_nature_0_type_usda,Yaourt nature 0% (type USDA),produits_laitiers_fromages,56,5.7,7.7,0.2,,,,,,original,false,yaourt nature 0% type usda
+yaourt_nature_entier,Yaourt nature entier,produits_laitiers_fromages,61,3.5,4.7,3.3,,,,,,original,false,yaourt nature entier yogourt
+ail,Ail,legumes,149,6.4,33,0.5,,,,,,original,false,ail
+algue_nori,Algue nori,legumes,35,5.8,5.1,0.3,,,,,,original,false,algue nori
+algue_wakame,Algue wakame,legumes,45,3,9.1,0.6,,,,,,original,false,algue wakame
+artichaut,Artichaut,legumes,47,3.3,10.5,0.2,53,2.9,11.9,0.4,bouilli,original,false,artichaut
+asperge,Asperge,legumes,20,2.2,3.9,0.1,22,2.4,4.1,0.2,bouillie,original,false,asperge
+aubergine,Aubergine,legumes,25,1,5.9,0.2,35,0.8,8.7,0.2,bouillie,original,false,aubergine
+basilic_frais,Basilic frais,legumes,23,3.2,2.7,0.6,,,,,,original,false,basilic frais
+betterave,Betterave,legumes,43,1.6,9.6,0.2,44,1.7,10,0.2,bouillie,original,false,betterave
+blettes,Blettes,legumes,19,1.8,3.7,0.2,20,1.9,4.1,0.1,bouillies,original,false,blettes
+brocoli,Brocoli,legumes,34,2.8,6.6,0.4,35,2.4,7.2,0.4,bouilli,original,false,brocoli
+capres,Câpres,legumes,23,2.4,4.9,0.9,,,,,,original,false,capres
+carotte,Carotte,legumes,41,0.9,9.6,0.2,35,0.8,8.2,0.2,bouillie,original,false,carotte
+celeri_branche,Céleri-branche,legumes,16,0.7,3,0.2,18,0.8,4,0.2,bouilli,original,false,celeri-branche
+celeri_rave,Céleri-rave,legumes,42,1.5,9.2,0.3,,,,,,original,false,celeri-rave
+champignons_de_paris,Champignons de Paris,legumes,22,3.1,3.3,0.3,28,2.2,5.3,0.5,bouillis,original,false,champignons de paris
+chataignes,Châtaignes,legumes,213,2.4,45.5,2.3,245,3.2,53,2.2,rôties,original,false,chataignes
+chicoree,Chicorée,legumes,23,1.7,4.7,0.3,,,,,,original,false,chicoree
+chou_blanc,Chou blanc,legumes,25,1.3,5.8,0.1,23,1.3,5.5,0.1,bouilli,original,false,chou blanc
+chou_chinois,Chou chinois,legumes,13,1.5,2.2,0.2,,,,,,original,false,chou chinois
+chou_de_bruxelles,Chou de Bruxelles,legumes,43,3.4,9,0.3,36,2.6,7.1,0.5,bouilli,original,false,chou de bruxelles
+chou_frise_kale,Chou frisé (kale),legumes,49,4.3,8.8,0.9,,,,,,original,false,chou frise kale
+chou_rouge,Chou rouge,legumes,31,1.4,7.4,0.2,,,,,,original,false,chou rouge
+chou_fleur,Chou-fleur,legumes,25,1.9,5,0.3,23,1.8,4.1,0.5,bouilli,original,false,chou-fleur
+chou_rave,Chou-rave,legumes,27,1.7,6.2,0.1,,,,,,original,false,chou-rave
+choucroute,Choucroute,legumes,19,0.9,4.3,0.1,,,,,,original,false,choucroute
+ciboulette,Ciboulette,legumes,30,3.3,4.4,0.7,,,,,,original,false,ciboulette
+coeurs_de_palmier_conserve,Coeurs de palmier (conserve),legumes,28,2.5,4.6,0.6,,,,,égouttés,estimate,false,coeurs de palmier conserve
+concentre_de_tomate,Concentré de tomate,legumes,82,4.3,18.9,0.5,,,,,,original,false,concentre de tomate
+concombre,Concombre,legumes,15,0.7,3.6,0.1,,,,,,original,false,concombre
+coriandre_fraiche,Coriandre fraîche,legumes,23,2.1,3.7,0.5,,,,,,original,false,coriandre fraiche
+cornichons,Cornichons,legumes,11,0.3,2.3,0.2,,,,,,original,false,cornichons
+courge_butternut,Courge butternut,legumes,45,1,11.7,0.1,40,0.9,10.5,0.1,au four,original,false,courge butternut
+courge_spaghetti,Courge spaghetti,legumes,31,0.6,6.9,0.6,31,0.6,7,0.6,bouillie,original,false,courge spaghetti
+courgette,Courgette,legumes,17,1.2,3.1,0.3,15,1.1,2.7,0.4,bouillie,original,false,courgette
+cresson,Cresson,legumes,11,2.3,1.3,0.1,,,,,,original,false,cresson
+echalote,Échalote,legumes,72,2.5,16.8,0.1,,,,,,original,false,echalote
+endive,Endive,legumes,17,1.3,3.4,0.2,,,,,,original,false,endive
+epinards,Épinards,legumes,23,2.9,3.6,0.4,23,3,3.8,0.3,bouillis,original,false,epinards
+fenouil,Fenouil,legumes,31,1.2,7.3,0.2,,,,,,original,false,fenouil
+frites_friture_industrielle,Frites (friture industrielle),legumes,77,2,17.5,0.1,312,3.4,41.4,14.7,frites,original,false,frites friture industrielle pommes de terre
+gingembre_frais,Gingembre frais,legumes,80,1.8,17.8,0.8,,,,,,original,false,gingembre frais
+gombo,Gombo,legumes,33,1.9,7.5,0.2,22,1.9,4.5,0.2,bouilli,original,false,gombo
+haricots_verts,Haricots verts,legumes,31,1.8,7,0.2,35,1.9,7.9,0.3,bouillis,original,false,haricots verts
+igname,Igname,legumes,118,1.5,27.9,0.2,116,1.5,27.5,0.1,bouillie,original,false,igname
+kimchi,Kimchi,legumes,15,1.1,2.4,0.5,,,,,,estimate,false,kimchi
+laitue,Laitue,legumes,15,1.4,2.9,0.2,,,,,,original,false,laitue
+laitue_iceberg,Laitue iceberg,legumes,14,0.9,3,0.1,,,,,,original,false,laitue iceberg
+laitue_romaine,Laitue romaine,legumes,17,1.2,3.3,0.3,,,,,,original,false,laitue romaine
+mache,Mâche,legumes,21,2,3.6,0.4,,,,,,original,false,mache
+mais_doux,Maïs doux,legumes,86,3.3,18.7,1.4,96,3.4,21,1.5,bouilli,original,false,mais doux
+mais_doux_en_conserve_egoutte,Maïs doux en conserve (égoutté),legumes,81,2.6,17,1.2,,,,,,estimate,false,mais doux en conserve egoutte
+manioc,Manioc,legumes,160,1.4,38.1,0.3,,,,,,original,false,manioc
+menthe_fraiche,Menthe fraîche,legumes,70,3.8,14.9,0.9,,,,,,original,false,menthe fraiche
+navet,Navet,legumes,28,0.9,6.4,0.1,22,0.7,4.9,0.1,bouilli,original,false,navet
+oignon,Oignon,legumes,40,1.1,9.3,0.1,44,1.4,10.2,0.2,bouilli,original,false,oignon
+oignon_vert_cebette,Oignon vert / cébette,legumes,32,1.8,7.3,0.2,,,,,,original,false,oignon vert cebette
+olives_noires_conserve,Olives noires (conserve),legumes,115,0.8,6,10.7,,,,,,original,false,olives noires conserve
+olives_vertes_conserve,Olives vertes (conserve),legumes,145,1,3.8,15.3,,,,,,original,false,olives vertes conserve
+pak_choi,Pak choï,legumes,13,1.5,2.2,0.2,,,,,,original,false,pak choi
+panais,Panais,legumes,75,1.2,18,0.3,71,1.3,17,0.3,bouilli,original,false,panais
+patate_douce,Patate douce,legumes,86,1.6,20.1,0.1,76,1.4,17.7,0.1,bouillie,original,false,patate douce
+patate_douce_au_four,Patate douce - au four,legumes,86,1.6,20.1,0.1,90,2,20.7,0.2,au four avec peau,original,false,patate douce - au four
+persil_frais,Persil frais,legumes,36,3,6.3,0.8,,,,,,original,false,persil frais
+petits_pois,Petits pois,legumes,81,5.4,14.5,0.4,84,5.4,15.6,0.2,bouillis,original,false,petits pois
+petits_pois_en_conserve_egouttes,Petits pois en conserve (égouttés),legumes,66,4.1,11.5,0.4,,,,,,estimate,false,petits pois en conserve egouttes
+piment_fort,Piment fort,legumes,40,1.9,8.8,0.4,,,,,,original,false,piment fort
+pissenlit_feuilles,Pissenlit (feuilles),legumes,45,2.7,9.2,0.7,,,,,,original,false,pissenlit feuilles
+pleurotes,Pleurotes,legumes,33,3.3,6.1,0.4,,,,,,original,false,pleurotes
+poireau,Poireau,legumes,61,1.5,14.2,0.3,31,0.8,7.6,0.2,bouilli,original,false,poireau
+pois_mange_tout,Pois mange-tout,legumes,42,2.8,7.6,0.2,42,3.3,7.5,0.2,bouillis,original,false,pois mange-tout
+poivron_jaune,Poivron jaune,legumes,27,1,6.3,0.2,,,,,,original,false,poivron jaune
+poivron_rouge,Poivron rouge,legumes,31,1,6,0.3,28,0.9,5.5,0.2,bouilli,original,false,poivron rouge
+poivron_vert,Poivron vert,legumes,20,0.9,4.6,0.2,24,0.9,5.5,0.5,bouilli,original,false,poivron vert
+pomme_de_terre,Pomme de terre,legumes,77,2,17.5,0.1,87,1.9,20.1,0.1,bouillie,original,false,pomme de terre patate
+pomme_de_terre_au_four,Pomme de terre - au four,legumes,77,2,17.5,0.1,93,2.5,21.2,0.1,au four avec peau,original,false,pomme de terre - au four patate
+potiron_citrouille,Potiron / citrouille,legumes,26,1,6.5,0.1,20,0.7,4.9,0.1,bouilli,original,false,potiron citrouille
+pousses_de_soja,Pousses de soja,legumes,30,3,5.9,0.2,,,,,,original,false,pousses de soja
+radicchio,Radicchio,legumes,23,1.4,4.5,0.3,,,,,,original,false,radicchio
+radis,Radis,legumes,16,0.7,3.4,0.1,,,,,,original,false,radis
+roquette,Roquette,legumes,25,2.6,3.7,0.7,,,,,,original,false,roquette
+rutabaga,Rutabaga,legumes,38,1.1,8.6,0.2,,,,,,original,false,rutabaga
+salade_verte_mesclun,Salade verte (mesclun),legumes,17,1.5,3,0.3,,,,,,estimate,false,salade verte mesclun
+salsifis,Salsifis,legumes,82,3.3,18.6,0.2,,,,,,original,false,salsifis
+sauce_tomate_en_conserve,Sauce tomate en conserve,legumes,24,1.2,5.3,0.3,,,,,,original,false,sauce tomate en conserve
+shiitake,Shiitake,legumes,34,2.2,6.8,0.5,56,1.6,14.4,0.2,cuits,original,false,shiitake
+spiruline_sechee,Spiruline (séchée),legumes,290,57.5,23.9,7.7,,,,,poudre,original,false,spiruline sechee
+taro,Taro,legumes,112,1.5,26.5,0.2,142,0.5,34.6,0.1,bouilli,original,false,taro
+tomate,Tomate,legumes,18,0.9,3.9,0.2,18,0.9,3.5,0.1,cuite,original,false,tomate
+tomates_cerises,Tomates cerises,legumes,18,0.9,3.9,0.2,,,,,,original,false,tomates cerises
+tomates_pelees_en_conserve,Tomates pelées en conserve,legumes,32,1.6,7.3,0.3,,,,,,original,false,tomates pelees en conserve
+tomates_sechees,Tomates séchées,legumes,258,14.1,55.8,3,,,,,,original,false,tomates sechees
+topinambour,Topinambour,legumes,73,2,17.4,0,,,,,,original,false,topinambour
+abricot,Abricot,fruits,48,1.4,11.1,0.4,,,,,,original,false,abricot
+abricots_secs,Abricots secs,fruits,241,3.4,62.6,0.5,,,,,,original,false,abricots secs
+ananas,Ananas,fruits,50,0.5,13.1,0.1,,,,,,original,false,ananas
+avocat,Avocat,fruits,160,2,8.5,14.7,,,,,,original,false,avocat
+baies_de_goji_sechees,Baies de goji séchées,fruits,349,14.3,77,0.4,,,,,,estimate,false,baies de goji sechees fruit sec
+banane,Banane,fruits,89,1.1,22.8,0.3,,,,,,original,false,banane
+canneberge_fraiche,Canneberge fraîche,fruits,46,0.4,12.2,0.1,,,,,,original,false,canneberge fraiche
+carambole,Carambole,fruits,31,1,6.7,0.3,,,,,,original,false,carambole
+cassis,Cassis,fruits,63,1.4,15.4,0.4,,,,,,original,false,cassis
+cerise,Cerise,fruits,63,1.1,16,0.2,,,,,,original,false,cerise
+chips_de_banane,Chips de banane,fruits,519,2.3,58.4,33.6,,,,,,original,false,chips de banane
+citron,Citron,fruits,29,1.1,9.3,0.3,,,,,,original,false,citron
+citron_vert,Citron vert,fruits,30,0.7,10.5,0.2,,,,,,original,false,citron vert
+coing,Coing,fruits,57,0.4,15.3,0.1,,,,,,original,false,coing
+compote_de_pomme_sans_sucre_ajoute,Compote de pomme sans sucre ajouté,fruits,42,0.2,11,0.1,,,,,,original,false,compote de pomme sans sucre ajoute
+compote_de_pomme_sucree,Compote de pomme sucrée,fruits,73,0.3,18.5,0.2,,,,,,estimate,false,compote de pomme sucree
+cranberries_sechees_sucrees,Cranberries séchées sucrées,fruits,308,0.1,82.4,1.4,,,,,,original,false,cranberries sechees sucrees
+datte_deglet_noor,Datte Deglet Noor,fruits,282,2.5,75,0.4,,,,,,original,false,datte deglet noor
+datte_medjool,Datte Medjool,fruits,277,1.8,75,0.2,,,,,,original,false,datte medjool
+durian,Durian,fruits,147,1.5,27.1,5.3,,,,,,original,false,durian
+figue_de_barbarie,Figue de barbarie,fruits,41,0.7,9.6,0.5,,,,,,original,false,figue de barbarie
+figue_fraiche,Figue fraîche,fruits,74,0.8,19.2,0.3,,,,,,original,false,figue fraiche
+figues_seches,Figues sèches,fruits,249,3.3,63.9,0.9,,,,,,original,false,figues seches
+fraise,Fraise,fruits,32,0.7,7.7,0.3,,,,,,original,false,fraise
+framboise,Framboise,fruits,52,1.2,11.9,0.7,,,,,,original,false,framboise
+fruit_de_la_passion,Fruit de la passion,fruits,97,2.2,23.4,0.7,,,,,,original,false,fruit de la passion
+fruit_du_dragon,Fruit du dragon,fruits,60,1.2,13,0.4,,,,,,original,false,fruit du dragon
+fruits_au_sirop_peche_poire_abricot,"Fruits au sirop (pêche, poire, abricot)",fruits,65,0.5,16.5,0.1,,,,,égouttés,estimate,false,"fruits au sirop peche, poire, abricot conserve"
+goyave,Goyave,fruits,68,2.6,14.3,1,,,,,,original,false,goyave
+grenade,Grenade,fruits,83,1.7,18.7,1.2,,,,,,original,false,grenade
+groseille,Groseille,fruits,56,1.4,13.8,0.2,,,,,,original,false,groseille
+jacquier_jaque,Jacquier (jaque),fruits,95,1.7,23.2,0.6,,,,,,original,false,jacquier jaque
+jus_d_ananas,Jus d'ananas,fruits,50,0.4,12.4,0.1,,,,,,original,false,jus d'ananas
+jus_de_carotte,Jus de carotte,fruits,40,0.9,9.3,0.2,,,,,,original,false,jus de carotte
+jus_de_grenade,Jus de grenade,fruits,54,0.2,13.1,0.3,,,,,,original,false,jus de grenade
+jus_de_pamplemousse,Jus de pamplemousse,fruits,39,0.5,9.2,0.1,,,,,,original,false,jus de pamplemousse
+kaki,Kaki,fruits,70,0.6,18.6,0.2,,,,,,original,false,kaki
+kiwi,Kiwi,fruits,61,1.1,14.7,0.5,,,,,,original,false,kiwi
+kumquat,Kumquat,fruits,71,1.9,15.9,0.9,,,,,,original,false,kumquat
+litchi,Litchi,fruits,66,0.8,16.5,0.4,,,,,,original,false,litchi
+mandarine_clementine,Mandarine / clémentine,fruits,47,0.8,12,0.2,,,,,,original,false,mandarine clementine
+mangue,Mangue,fruits,60,0.8,15,0.4,,,,,,original,false,mangue
+mangue_sechee,Mangue séchée,fruits,319,2.5,78,1.2,,,,,varie selon la marque,estimate,false,mangue sechee fruit sec
+melon_cantaloup,Melon cantaloup,fruits,34,0.8,8.2,0.2,,,,,,original,false,melon cantaloup
+mure,Mûre,fruits,43,1.4,9.6,0.5,,,,,,original,false,mure
+myrtille,Myrtille,fruits,57,0.7,14.5,0.3,,,,,,original,false,myrtille
+nectarine,Nectarine,fruits,44,1.1,10.6,0.3,,,,,,original,false,nectarine
+noix_de_coco_chair_fraiche,Noix de coco (chair fraîche),fruits,354,3.3,15.2,33.5,,,,,,original,false,noix de coco chair fraiche
+orange,Orange,fruits,47,0.9,11.8,0.1,,,,,,original,false,orange
+pamplemousse,Pamplemousse,fruits,42,0.8,10.7,0.1,,,,,,original,false,pamplemousse
+papaye,Papaye,fruits,43,0.5,10.8,0.3,,,,,,original,false,papaye
+pasteque,Pastèque,fruits,30,0.6,7.6,0.2,,,,,,original,false,pasteque
+peche,Pêche,fruits,39,0.9,9.5,0.3,,,,,,original,false,peche
+physalis,Physalis,fruits,53,1.9,11.2,0.7,,,,,,estimate,false,physalis
+plantain,Plantain,fruits,122,1.3,31.9,0.4,,,,,,original,false,plantain
+poire,Poire,fruits,57,0.4,15.2,0.1,,,,,,original,false,poire
+pomelo,Pomelo,fruits,38,0.8,9.6,0,,,,,,original,false,pomelo
+pomme,Pomme,fruits,52,0.3,13.8,0.2,,,,,,original,false,pomme
+pomme_sechee,Pomme séchée,fruits,243,0.9,65.9,0.3,,,,,,estimate,false,pomme sechee fruit sec
+prune,Prune,fruits,46,0.7,11.4,0.3,,,,,,original,false,prune
+pruneaux,Pruneaux,fruits,240,2.2,63.9,0.4,,,,,,original,false,pruneaux
+raisin,Raisin,fruits,69,0.7,18.1,0.2,,,,,,original,false,raisin
+raisins_secs,Raisins secs,fruits,299,3.1,79.2,0.5,,,,,,original,false,raisins secs
+rhubarbe,Rhubarbe,fruits,21,0.9,4.5,0.2,,,,,,original,false,rhubarbe
+tamarin,Tamarin,fruits,239,2.8,62.5,0.6,,,,,,original,false,tamarin
+edamame,Edamame,legumineuses,,,,,121,11.9,8.9,5.2,cuit (surgelé préparé),original,false,edamame
+falafel,Falafel,legumineuses,333,13.3,31.8,17.8,,,,,frit,original,false,falafel
+farine_de_pois_chiche,Farine de pois chiche,legumineuses,387,22.4,57.8,6.7,,,,,,original,false,farine de pois chiche
+feves_seches,Fèves sèches,legumineuses,341,26.1,58.3,1.5,110,7.6,19.7,0.4,bouillies,original,false,feves seches
+gluten_de_ble_vital_wheat_gluten,Gluten de blé (vital wheat gluten),legumineuses,370,75.2,13.8,1.9,,,,,poudre sèche,original,false,gluten de ble vital wheat
+haricots_adzuki,Haricots adzuki,legumineuses,329,19.9,62.9,0.5,128,7.5,24.8,0.1,bouillis,original,false,haricots adzuki
+haricots_blancs,Haricots blancs,legumineuses,333,23.4,60.3,0.9,139,9.7,25.1,0.3,bouillis,original,false,haricots blancs
+haricots_blancs_en_conserve_egouttes,Haricots blancs en conserve (égouttés),legumineuses,90,6,15,0.4,,,,,prêts à consommer,estimate,false,haricots blancs en conserve egouttes
+haricots_mungo,Haricots mungo,legumineuses,347,23.9,62.6,1.2,105,7,19.2,0.4,bouillis,original,false,haricots mungo
+haricots_noirs,Haricots noirs,legumineuses,341,21.6,62.4,1.4,132,8.9,23.7,0.5,bouillis,original,false,haricots noirs
+haricots_pinto,Haricots pinto,legumineuses,347,21.4,62.6,1.2,143,9,26.2,0.7,bouillis,original,false,haricots pinto
+haricots_rouges,Haricots rouges,legumineuses,337,22.5,61.3,1.1,127,8.7,22.8,0.5,bouillis,original,false,haricots rouges
+haricots_rouges_en_conserve_egouttes,Haricots rouges en conserve (égouttés),legumineuses,95,6.5,17,0.5,,,,,prêts à consommer,estimate,false,haricots rouges en conserve egouttes
+houmous,Houmous,legumineuses,166,7.9,14.3,9.6,,,,,tel que vendu,original,false,houmous
+lentilles,Lentilles,legumineuses,352,24.6,63.4,1.1,116,9,20.1,0.4,bouillies,original,false,lentilles
+lentilles_en_conserve_egouttees,Lentilles en conserve (égouttées),legumineuses,100,8,15,0.5,,,,,prêtes à consommer,estimate,false,lentilles en conserve egouttees
+lupin,Lupin,legumineuses,,,,,119,15.6,9.9,2.9,cuit,original,false,lupin
+miso,Miso,legumineuses,199,11.7,26.5,6,,,,,,original,false,miso
+natto,Natto,legumineuses,212,17.7,14.4,11,,,,,tel que vendu,original,false,natto
+pois_casses,Pois cassés,legumineuses,341,24.6,60.4,1.2,118,8.3,21.1,0.4,bouillis,original,false,pois casses
+pois_chiches,Pois chiches,legumineuses,364,19.3,60.7,6,164,8.9,27.4,2.6,bouillis,original,false,pois chiches
+pois_chiches_en_conserve_egouttes,Pois chiches en conserve (égouttés),legumineuses,139,7,22.5,2.8,,,,,tel que vendu,original,false,pois chiches en conserve egouttes
+proteines_de_soja_texturees_tvp,Protéines de soja texturées (TVP),legumineuses,330,50,30,1,,,,,sèches,estimate,false,proteines de soja texturees tvp hache vegetarien
+soja_graines,Soja (graines),legumineuses,446,36.5,30.2,19.9,173,16.6,9.9,9,bouilli,original,false,soja graines
+tempeh,Tempeh,legumineuses,192,20.3,7.6,10.8,,,,,,original,false,tempeh
+tofu_ferme,Tofu ferme,legumineuses,144,17.3,2.8,8.7,,,,,,original,false,tofu ferme
+tofu_soyeux,Tofu soyeux,legumineuses,55,4.8,1.9,2.7,,,,,,original,false,tofu soyeux
+amandes,Amandes,fruits_a_coque_graines,579,21.2,21.6,49.9,,,,,,original,false,amandes
+beurre_d_amande,Beurre d'amande,fruits_a_coque_graines,614,21,19,56,,,,,,original,false,beurre d'amande
+beurre_de_cacahuete,Beurre de cacahuète,fruits_a_coque_graines,588,25.1,20,50.4,,,,,,original,false,beurre de cacahuete
+beurre_de_noix_de_cajou,Beurre de noix de cajou,fruits_a_coque_graines,587,17.6,27.6,49.4,,,,,,original,false,beurre de noix cajou
+cacahuetes,Cacahuètes,fruits_a_coque_graines,567,25.8,16.1,49.2,,,,,,original,false,cacahuetes
+cacahuetes_grillees_salees,Cacahuètes grillées salées,fruits_a_coque_graines,585,23.7,21.5,49.7,,,,,,estimate,false,cacahuetes grillees salees arachides
+graines_de_chanvre,Graines de chanvre,fruits_a_coque_graines,553,31.6,8.7,48.8,,,,,,original,false,graines de chanvre
+graines_de_chia,Graines de chia,fruits_a_coque_graines,486,16.5,42.1,30.7,,,,,,original,false,graines de chia
+graines_de_courge,Graines de courge,fruits_a_coque_graines,559,30.2,10.7,49.1,,,,,,original,false,graines de courge
+graines_de_lin,Graines de lin,fruits_a_coque_graines,534,18.3,28.9,42.2,,,,,,original,false,graines de lin
+graines_de_sesame,Graines de sésame,fruits_a_coque_graines,573,17.7,23.4,49.7,,,,,,original,false,graines de sesame
+graines_de_tournesol,Graines de tournesol,fruits_a_coque_graines,584,20.8,20,51.5,,,,,,original,false,graines de tournesol
+melange_de_noix_mix_aperitif_nature,Mélange de noix (mix apéritif nature),fruits_a_coque_graines,580,17,22,48,,,,,varie selon le mélange,estimate,false,melange de noix mix aperitif nature fruits secs
+noisettes,Noisettes,fruits_a_coque_graines,628,15,16.7,60.8,,,,,,original,false,noisettes
+noix,Noix,fruits_a_coque_graines,654,15.2,13.7,65.2,,,,,,original,false,noix
+noix_de_cajou,Noix de cajou,fruits_a_coque_graines,553,18.2,30.2,43.9,,,,,,original,false,noix de cajou
+noix_de_coco_sechee_non_sucree,Noix de coco séchée non sucrée,fruits_a_coque_graines,660,6.9,24,64.5,,,,,,original,false,noix de coco sechee non sucree
+noix_de_macadamia,Noix de macadamia,fruits_a_coque_graines,718,7.9,13.8,75.8,,,,,,original,false,noix de macadamia
+noix_de_pecan,Noix de pécan,fruits_a_coque_graines,691,9.2,13.9,72,,,,,,original,false,noix de pecan
+noix_du_bresil,Noix du Brésil,fruits_a_coque_graines,659,14.3,12.3,67.1,,,,,,original,false,noix du bresil
+pate_a_tartiner_chocolat_noisette,Pâte à tartiner chocolat-noisette,fruits_a_coque_graines,539,6.3,57.5,30.9,,,,,,original,false,pate a tartiner chocolat-noisette
+pate_d_amande_massepain,Pâte d'amande (massepain),fruits_a_coque_graines,450,9,50,24,,,,,varie selon la marque,estimate,false,pate d'amande massepain
+pignons_de_pin,Pignons de pin,fruits_a_coque_graines,673,13.7,13.1,68.4,,,,,,original,false,pignons de pin
+pistaches,Pistaches,fruits_a_coque_graines,560,20.2,27.2,45.3,,,,,,original,false,pistaches
+tahini_puree_de_sesame,Tahini (purée de sésame),fruits_a_coque_graines,595,17,21.2,53.8,,,,,,original,false,tahini puree de sesame
+beurre_de_cacao,Beurre de cacao,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,beurre de cacao
+ghee_beurre_clarifie,Ghee (beurre clarifié),huiles_matieres_grasses,876,0.3,0,99.5,,,,,,original,false,ghee beurre clarifie
+graisse_de_canard,Graisse de canard,huiles_matieres_grasses,900,0,0,99.8,,,,,,estimate,false,graisse de canard
+huile_d_arachide,Huile d'arachide,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile d'arachide
+huile_d_argan,Huile d'argan,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile d'argan
+huile_d_olive,Huile d'olive,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile d'olive
+huile_de_coco,Huile de coco,huiles_matieres_grasses,862,0,0,100,,,,,,original,false,huile de coco
+huile_de_colza,Huile de colza,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de colza
+huile_de_lin,Huile de lin,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de lin
+huile_de_mais,Huile de maïs,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de mais
+huile_de_noisette,Huile de noisette,huiles_matieres_grasses,900,0,0,100,,,,,,estimate,false,huile de noisette
+huile_de_noix,Huile de noix,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de noix
+huile_de_palme,Huile de palme,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de palme
+huile_de_pepins_de_raisin,Huile de pépins de raisin,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de pepins raisin
+huile_de_sesame,Huile de sésame,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de sesame
+huile_de_soja,Huile de soja,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de soja
+huile_de_tournesol,Huile de tournesol,huiles_matieres_grasses,884,0,0,100,,,,,,original,false,huile de tournesol
+margarine,Margarine,huiles_matieres_grasses,717,0.2,0.7,80.7,,,,,,original,false,margarine
+mayonnaise,Mayonnaise,huiles_matieres_grasses,680,1,0.6,74.9,,,,,,original,false,mayonnaise
+saindoux,Saindoux,huiles_matieres_grasses,902,0,0,100,,,,,,original,false,saindoux
+barre_chocolatee_type_snickers_mars,Barre chocolatée (type Snickers / Mars),sucres_sucreries_snacks,490,9,60,24,,,,,varie selon la marque,estimate,false,barre chocolatee type snickers mars
+barre_de_cereales,Barre de céréales,sucres_sucreries_snacks,410,6,70,11,,,,,varie selon la marque,estimate,false,barre de cereales
+biscuits_secs_type_petit_beurre,Biscuits secs (type petit-beurre),sucres_sucreries_snacks,450,7,74,13,,,,,valeur moyenne,original,false,biscuits secs type petit-beurre
+bonbons_gelifies_type_haribo,Bonbons gélifiés (type Haribo),sucres_sucreries_snacks,340,6.5,77,0.1,,,,,,estimate,false,bonbons gelifies type haribo
+bretzels,Bretzels,sucres_sucreries_snacks,380,10,80,3,,,,,,estimate,false,bretzels
+cacao_en_poudre_non_sucre,Cacao en poudre non sucré,sucres_sucreries_snacks,228,19.6,57.9,13.7,,,,,,original,false,cacao en poudre non sucre
+chips_de_pomme_de_terre,Chips de pomme de terre,sucres_sucreries_snacks,536,7,53,35,,,,,,original,false,chips de pomme terre
+chips_tortilla_mais,Chips tortilla (maïs),sucres_sucreries_snacks,490,7,63,24,,,,,,estimate,false,chips tortilla mais
+chocolat_au_lait,Chocolat au lait,sucres_sucreries_snacks,535,7.7,59.4,29.7,,,,,,original,false,chocolat au lait
+chocolat_blanc,Chocolat blanc,sucres_sucreries_snacks,539,5.9,59.2,32.1,,,,,,original,false,chocolat blanc
+chocolat_noir_45_59,Chocolat noir 45-59%,sucres_sucreries_snacks,546,4.9,61.2,31.3,,,,,,original,false,chocolat noir 45-59%
+chocolat_noir_70_85,Chocolat noir 70-85%,sucres_sucreries_snacks,598,7.8,45.9,42.6,,,,,,original,false,chocolat noir 70-85%
+confiture,Confiture,sucres_sucreries_snacks,250,0.4,65,0.1,,,,,,original,false,confiture
+crackers_sales,Crackers salés,sucres_sucreries_snacks,430,9,65,15,,,,,,estimate,false,crackers sales biscuits aperitif
+halva,Halva,sucres_sucreries_snacks,469,12.5,50.2,21.5,,,,,,original,false,halva
+melasse,Mélasse,sucres_sucreries_snacks,290,0,74.7,0.1,,,,,,original,false,melasse
+miel,Miel,sucres_sucreries_snacks,304,0.3,82.4,0,,,,,,original,false,miel
+sirop_d_agave,Sirop d'agave,sucres_sucreries_snacks,310,0.1,76.4,0.5,,,,,,original,false,sirop d'agave
+sirop_d_erable,Sirop d'érable,sucres_sucreries_snacks,260,0,67,0.1,,,,,,original,false,sirop d'erable
+sucre_blanc,Sucre blanc,sucres_sucreries_snacks,387,0,100,0,,,,,,original,false,sucre blanc
+sucre_glace,Sucre glace,sucres_sucreries_snacks,389,0,99.8,0,,,,,,original,false,sucre glace
+sucre_roux,Sucre roux,sucres_sucreries_snacks,380,0.1,98,0,,,,,,original,false,sucre roux
+biscuit_fourre_chocolat_type_oreo,Biscuit fourré chocolat (type Oreo),desserts_patisseries_biscuits,480,4.5,70,20,,,,,varie selon la marque,estimate,false,biscuit fourre chocolat type oreo
+brownie,Brownie,desserts_patisseries_biscuits,455,5,55,24,,,,,valeur moyenne,estimate,false,brownie
+cheesecake,Cheesecake,desserts_patisseries_biscuits,320,5.5,26,22,,,,,valeur moyenne,estimate,false,cheesecake
+cookie,Cookie,desserts_patisseries_biscuits,480,5,65,22,,,,,valeur moyenne,estimate,false,cookie biscuit
+creme_dessert_chocolat,Crème dessert chocolat,desserts_patisseries_biscuits,120,3.5,20,3,,,,,varie selon la marque,estimate,false,creme dessert chocolat
+crepe_nature,Crêpe nature,desserts_patisseries_biscuits,190,6.5,28,6,,,,,valeur moyenne,estimate,false,crepe nature
+donut_beignet,Donut / beignet,desserts_patisseries_biscuits,420,5,48,23,,,,,valeur moyenne,estimate,false,donut beignet
+eclair_au_chocolat,Éclair au chocolat,desserts_patisseries_biscuits,260,6,26,15,,,,,valeur moyenne,estimate,false,eclair au chocolat
+gaufre,Gaufre,desserts_patisseries_biscuits,290,7,40,11,,,,,valeur moyenne,estimate,false,gaufre
+glace_au_chocolat,Glace au chocolat,desserts_patisseries_biscuits,216,3.8,28,11,,,,,valeur moyenne,estimate,false,glace au chocolat creme glacee
+madeleine,Madeleine,desserts_patisseries_biscuits,430,6,52,22,,,,,,estimate,false,madeleine gateau
+mousse_au_chocolat,Mousse au chocolat,desserts_patisseries_biscuits,216,5,22,12,,,,,valeur moyenne,estimate,false,mousse au chocolat
+muffin,Muffin,desserts_patisseries_biscuits,375,5,50,17,,,,,valeur moyenne,estimate,false,muffin
+pain_d_epices,Pain d'épices,desserts_patisseries_biscuits,330,4,70,3,,,,,,estimate,false,pain d'epices
+pancake,Pancake,desserts_patisseries_biscuits,230,6,31,9,,,,,valeur moyenne,estimate,false,pancake
+quatre_quarts,Quatre-quarts,desserts_patisseries_biscuits,390,5.5,50,19,,,,,valeur moyenne,estimate,false,quatre-quarts gateau
+riz_au_lait,Riz au lait,desserts_patisseries_biscuits,120,3,19,3.5,,,,,valeur moyenne,estimate,false,riz au lait
+sorbet_aux_fruits,Sorbet aux fruits,desserts_patisseries_biscuits,110,0.4,27,0.1,,,,,valeur moyenne,estimate,false,sorbet aux fruits glace
+speculoos,Spéculoos,desserts_patisseries_biscuits,480,5,72,19,,,,,,estimate,false,speculoos biscuit
+tarte_aux_pommes,Tarte aux pommes,desserts_patisseries_biscuits,230,2.5,32,10,,,,,valeur moyenne,estimate,false,tarte aux pommes
+tiramisu,Tiramisu,desserts_patisseries_biscuits,285,5,26,18,,,,,valeur moyenne,estimate,false,tiramisu
+biere_blonde_5,Bière blonde (5%),boissons,43,0.5,3.6,0,,,,,"contient de l'alcool (7 kcal/g), kcal non recalculables avec Atwater",estimate,true,biere blonde 5% alcool
+biere_sans_alcool,Bière sans alcool,boissons,24,0.3,5,0,,,,,,estimate,false,biere sans alcool
+boisson_energisante,Boisson énergisante,boissons,45,0,11,0,,,,,,original,false,boisson energisante
+boisson_isotonique,Boisson isotonique,boissons,26,0,6.2,0,,,,,,original,false,boisson isotonique
+cafe_noir_sans_sucre,Café noir (sans sucre),boissons,1,0.1,0,0,,,,,,original,false,cafe noir sans sucre
+champagne_vin_mousseux,Champagne / vin mousseux,boissons,76,0.2,1.6,0,,,,,contient de l'alcool (7 kcal/g),estimate,true,champagne vin mousseux alcool
+chocolat_chaud_lait_entier_poudre_sucree,Chocolat chaud (lait entier + poudre sucrée),boissons,85,3.3,11,3,,,,,valeur moyenne,estimate,false,chocolat chaud lait entier + poudre sucree
+cidre,Cidre,boissons,45,0,4,0,,,,,contient de l'alcool (7 kcal/g),estimate,true,cidre alcool
+coca_cola,Coca-Cola,boissons,42,0.1,10.6,0,,,,,,original,false,coca-cola
+eau,Eau,boissons,0,0,0,0,,,,,,original,false,eau
+eau_de_coco,Eau de coco,boissons,19,0.7,3.7,0.2,,,,,,original,false,eau de coco
+jus_d_orange,Jus d'orange,boissons,45,0.7,10.4,0.2,,,,,,original,false,jus d'orange
+jus_de_citron,Jus de citron,boissons,22,0.4,6.9,0.2,,,,,,original,false,jus de citron
+jus_de_pomme,Jus de pomme,boissons,46,0.1,11.3,0.1,,,,,,original,false,jus de pomme
+jus_de_raisin,Jus de raisin,boissons,60,0.4,14.8,0.1,,,,,,original,false,jus de raisin
+jus_de_tomate,Jus de tomate,boissons,17,0.9,3.9,0.1,,,,,,original,false,jus de tomate
+jus_multifruits,Jus multifruits,boissons,46,0.5,10.8,0.1,,,,,,estimate,false,jus multifruits
+lait_chocolate,Lait chocolaté,boissons,83,3.2,10.6,3.4,,,,,,original,false,lait chocolate
+lait_d_amande_non_sucre,Lait d'amande non sucré,boissons,15,0.6,0.3,1.2,,,,,,original,false,lait d'amande non sucre
+lait_d_avoine,Lait d'avoine,boissons,43,1,7,1.5,,,,,valeur moyenne,original,false,lait d'avoine
+lait_de_coco_conserve,Lait de coco (conserve),boissons,197,2,2.8,21.3,,,,,,original,false,lait de coco conserve
+lait_de_riz,Lait de riz,boissons,47,0.3,9.2,1,,,,,,original,false,lait de riz
+lait_de_soja_nature_non_sucre,Lait de soja nature non sucré,boissons,33,2.8,1.8,1.6,,,,,,original,false,lait de soja nature non sucre
+limonade,Limonade,boissons,41,0,10.4,0,,,,,,original,false,limonade
+poudre_chocolatee_type_nesquik,Poudre chocolatée (type Nesquik),boissons,384,4.5,86,2.5,,,,,poudre sèche,estimate,false,poudre chocolatee type nesquik cacao
+smoothie_aux_fruits_commerce,Smoothie aux fruits (commerce),boissons,55,0.7,12.5,0.3,,,,,,estimate,false,smoothie aux fruits commerce
+soda_a_l_orange_type_fanta,Soda à l'orange (type Fanta),boissons,42,0,10.3,0,,,,,,estimate,false,soda a l'orange type fanta orangina
+soda_zero_sucre_type_coca_zero,Soda zéro sucre (type Coca Zéro),boissons,0,0,0,0,,,,,"édulcorants, ~0 kcal",estimate,false,soda zero sucre type coca light diet
+spiritueux_whisky_vodka_rhum_40,"Spiritueux (whisky, vodka, rhum - 40%)",boissons,231,0,0,0,,,,,contient de l'alcool (7 kcal/g),estimate,true,"spiritueux whisky, vodka, rhum - 40% alcool"
+the_a_la_menthe_sucre,Thé à la menthe sucré,boissons,20,0,5,0,,,,,estimation (≈ 10 g de sucre par verre),estimate,false,the a la menthe sucre maroc atay
+the_glace_ice_tea_peche,Thé glacé (ice tea) pêche,boissons,30,0,7.5,0,,,,,,estimate,false,the glace ice tea peche
+the_nature_sans_sucre,Thé nature (sans sucre),boissons,1,0,0.3,0,,,,,,original,false,the nature sans sucre
+vin_blanc_sec,Vin blanc sec,boissons,82,0.1,2.6,0,,,,,contient de l'alcool (7 kcal/g),estimate,true,vin blanc sec alcool
+vin_rouge,Vin rouge,boissons,85,0.1,2.6,0,,,,,contient de l'alcool (7 kcal/g),estimate,true,vin rouge alcool
+ail_en_poudre,Ail en poudre,condiments_epices_divers,331,16.6,72.7,0.7,,,,,,original,false,ail en poudre
+bechamel,Béchamel,condiments_epices_divers,110,3.5,8,7,,,,,,estimate,false,bechamel sauce blanche
+cannelle_moulue,Cannelle moulue,condiments_epices_divers,247,4,80.6,1.2,,,,,,original,false,cannelle moulue
+cardamome,Cardamome,condiments_epices_divers,311,10.8,68.5,6.7,,,,,,original,false,cardamome
+clou_de_girofle,Clou de girofle,condiments_epices_divers,274,6,65.5,13,,,,,,original,false,clou de girofle
+coriandre_graines,Coriandre (graines),condiments_epices_divers,298,12.4,55,17.8,,,,,,original,false,coriandre graines
+cumin_moulu,Cumin moulu,condiments_epices_divers,375,17.8,44.2,22.3,,,,,,original,false,cumin moulu
+curcuma_moulu,Curcuma moulu,condiments_epices_divers,312,9.7,67.1,3.3,,,,,,original,false,curcuma moulu
+gelatine,Gélatine,condiments_epices_divers,335,85.6,0,0.1,,,,,poudre sèche,original,false,gelatine
+gingembre_moulu,Gingembre moulu,condiments_epices_divers,335,9,71.6,4.2,,,,,,original,false,gingembre moulu
+ketchup,Ketchup,condiments_epices_divers,101,1,27.4,0.1,,,,,,original,false,ketchup
+levure_maltee_flocons,Levure maltée (flocons),condiments_epices_divers,350,45,35,5,,,,,,estimate,false,levure maltee flocons nutritionnelle
+mayonnaise_allegee,Mayonnaise allégée,condiments_epices_divers,270,0.8,9,26,,,,,,estimate,false,mayonnaise allegee
+moutarde,Moutarde,condiments_epices_divers,66,4.4,5.8,4,,,,,,original,false,moutarde
+muscade,Muscade,condiments_epices_divers,525,5.8,49.3,36.3,,,,,,original,false,muscade
+oignon_en_poudre,Oignon en poudre,condiments_epices_divers,341,10.4,79.1,1,,,,,,original,false,oignon en poudre
+origan_seche,Origan séché,condiments_epices_divers,265,9,68.9,4.3,,,,,,original,false,origan seche
+paprika,Paprika,condiments_epices_divers,282,14.1,54,12.9,,,,,,original,false,paprika
+pesto,Pesto,condiments_epices_divers,418,5,5,42,,,,,valeur moyenne,original,false,pesto
+piment_en_poudre,Piment en poudre,condiments_epices_divers,282,13.5,49.7,14.3,,,,,,original,false,piment en poudre
+poivre_noir,Poivre noir,condiments_epices_divers,251,10.4,63.9,3.3,,,,,,original,false,poivre noir
+safran,Safran,condiments_epices_divers,310,11.4,65.4,5.9,,,,,,original,false,safran
+sauce_barbecue,Sauce barbecue,condiments_epices_divers,124,0.8,29,0.6,,,,,,estimate,false,sauce barbecue bbq
+sauce_soja,Sauce soja,condiments_epices_divers,53,8.1,4.9,0.6,,,,,,original,false,sauce soja
+sauce_teriyaki,Sauce teriyaki,condiments_epices_divers,88,6,15,0,,,,,,estimate,false,sauce teriyaki
+sel,Sel,condiments_epices_divers,0,0,0,0,,,,,,estimate,false,sel
+thym_seche,Thym séché,condiments_epices_divers,276,9.1,63.9,7.4,,,,,,original,false,thym seche
+vinaigre_de_cidre,Vinaigre de cidre,condiments_epices_divers,21,0,0.9,0,,,,,,estimate,false,vinaigre de cidre
+vinaigrette_huile_vinaigre,Vinaigrette (huile + vinaigre),condiments_epices_divers,450,0.5,3,48,,,,,valeur moyenne,estimate,false,vinaigrette huile + vinaigre sauce salade
+cheeseburger,Cheeseburger,plats_prepares_fast_food,265,14,24,12,,,,,valeur moyenne,estimate,false,cheeseburger burger
+chili_con_carne,Chili con carne,plats_prepares_fast_food,130,9,11,6,,,,,valeur moyenne,estimate,false,chili con carne
+croque_monsieur,Croque-monsieur,plats_prepares_fast_food,270,13,20,15,,,,,valeur moyenne,estimate,false,croque-monsieur
+gratin_dauphinois,Gratin dauphinois,plats_prepares_fast_food,130,3,12,8,,,,,valeur moyenne,estimate,false,gratin dauphinois
+hamburger,Hamburger,plats_prepares_fast_food,250,13,24,11,,,,,valeur moyenne,estimate,false,hamburger burger
+hot_dog,Hot-dog,plats_prepares_fast_food,250,10,18,15,,,,,valeur moyenne,estimate,false,hot-dog
+kebab_sandwich_turc,Kebab / sandwich turc,plats_prepares_fast_food,200,11,20,8,,,,,très variable,estimate,false,kebab sandwich turc shawarma
+lasagnes_bolognaise,Lasagnes bolognaise,plats_prepares_fast_food,135,7,13,6,,,,,valeur moyenne,estimate,false,lasagnes bolognaise
+nuggets_de_poulet,Nuggets de poulet,plats_prepares_fast_food,260,15,16,15,,,,,valeur moyenne,estimate,false,nuggets de poulet
+paella,Paella,plats_prepares_fast_food,150,8,20,4,,,,,valeur moyenne,estimate,false,paella
+pates_carbonara,Pâtes carbonara,plats_prepares_fast_food,190,8,22,8,,,,,plat cuisiné,estimate,false,pates carbonara
+pizza_4_fromages,Pizza 4 fromages,plats_prepares_fast_food,281,13,28,13,,,,,valeur moyenne,estimate,false,pizza 4 fromages
+pizza_pepperoni,Pizza pepperoni,plats_prepares_fast_food,268,11,29,12,,,,,valeur moyenne,estimate,false,pizza pepperoni
+puree_de_pommes_de_terre_lait_beurre,Purée de pommes de terre (lait + beurre),plats_prepares_fast_food,100,2,15,3.6,,,,,maison,estimate,false,puree de pommes terre lait + beurre
+quiche_lorraine,Quiche lorraine,plats_prepares_fast_food,270,9,18,18,,,,,valeur moyenne,estimate,false,quiche lorraine
+ratatouille,Ratatouille,plats_prepares_fast_food,55,1.2,6,3,,,,,maison,estimate,false,ratatouille
+riz_cantonais,Riz cantonais,plats_prepares_fast_food,170,6,25,5,,,,,valeur moyenne,estimate,false,riz cantonais
+sandwich_jambon_beurre_baguette,Sandwich jambon-beurre (baguette),plats_prepares_fast_food,260,11,36,8,,,,,valeur moyenne,estimate,false,sandwich jambon-beurre baguette
+soupe_de_legumes,Soupe de légumes,plats_prepares_fast_food,35,1,5,1,,,,,maison / brique,estimate,false,soupe de legumes veloute
+spaghetti_bolognaise,Spaghetti bolognaise,plats_prepares_fast_food,130,6,17,4.5,,,,,plat cuisiné,estimate,false,spaghetti bolognaise pates
+sushi_maki_saumon_avocat,Sushi / maki (saumon-avocat),plats_prepares_fast_food,140,5,25,2,,,,,valeur moyenne,estimate,false,sushi maki saumon-avocat
+taboule_semoule,Taboulé (semoule),plats_prepares_fast_food,140,3,22,4.5,,,,,valeur moyenne,estimate,false,taboule semoule
+tacos_francais_garni,Tacos français (garni),plats_prepares_fast_food,230,12,22,10,,,,,très variable,estimate,false,tacos francais garni
+amlou,Amlou,cuisine_marocaine,600,11,22,52,,,,,argan + amandes + miel,estimate,false,amlou
+baghrir_crepe_mille_trous,Baghrir (crêpe mille trous),cuisine_marocaine,149,5,30,1,,,,,"nature, sans miel/beurre",estimate,false,baghrir crepe mille trous
+batbout,Batbout,cuisine_marocaine,254,8,50,2.5,,,,,valeur moyenne,estimate,false,batbout pain
+bissara_soupe_de_feves,Bissara (soupe de fèves),cuisine_marocaine,86,5,11,2.5,,,,,valeur moyenne,estimate,false,bissara soupe de feves
+briouates_a_la_viande_frites,Briouates à la viande (frites),cuisine_marocaine,284,10,25,16,,,,,valeur moyenne,estimate,false,briouates a la viande frites brick bourek
+briouates_aux_amandes_au_miel,Briouates aux amandes (au miel),cuisine_marocaine,432,9,45,24,,,,,valeur moyenne,estimate,false,briouates aux amandes au miel
+chebakia,Chebakia,cuisine_marocaine,448,7,60,20,,,,,"frite + miel, valeur moyenne",estimate,false,chebakia patisserie ramadan
+cornes_de_gazelle,Cornes de gazelle,cuisine_marocaine,434,9,50,22,,,,,valeur moyenne,estimate,false,cornes de gazelle kaab el ghzal patisserie
+couscous_aux_legumes_et_viande_plat,Couscous aux légumes et viande (plat),cuisine_marocaine,128,8,15,4,,,,,valeur moyenne,estimate,false,couscous aux legumes et viande plat
+harcha,Harcha,cuisine_marocaine,294,6,45,10,,,,,valeur moyenne,estimate,false,harcha galette semoule
+harira_soupe,Harira (soupe),cuisine_marocaine,53,3,7,1.5,,,,,valeur moyenne,estimate,false,harira soupe ramadan
+kefta_de_boeuf_grillee,Kefta de boeuf grillée,cuisine_marocaine,229,17,2,17,,,,,cuite,estimate,false,kefta de boeuf grillee kofta brochette oeuf oeufs viande
+loubia_haricots_blancs_en_sauce,Loubia (haricots blancs en sauce),cuisine_marocaine,86,5,12,2,,,,,valeur moyenne,estimate,false,loubia haricots blancs en sauce
+maakouda_galette_de_pomme_de_terre_frite,Maakouda (galette de pomme de terre frite),cuisine_marocaine,194,4,22,10,,,,,valeur moyenne,estimate,false,maakouda galette de pomme terre frite makouda
+msemen,Msemen,cuisine_marocaine,300,6,42,12,,,,,"cuit, valeur moyenne",estimate,false,msemen rghaif crepe feuilletee
+pastilla_au_poulet,Pastilla au poulet,cuisine_marocaine,248,13,22,12,,,,,valeur moyenne,estimate,false,pastilla au poulet bastilla
+salade_marocaine_tomate_concombre_huile,"Salade marocaine (tomate, concombre, huile)",cuisine_marocaine,51,1,4,3.5,,,,,valeur moyenne,estimate,false,"salade marocaine tomate, concombre, huile"
+sfenj,Sfenj,cuisine_marocaine,348,6,45,16,,,,,"frit, valeur moyenne",estimate,false,sfenj beignet
+tajine_de_boeuf_aux_pruneaux,Tajine de boeuf aux pruneaux,cuisine_marocaine,164,13,10,8,,,,,valeur moyenne,estimate,false,tajine de boeuf aux pruneaux tagine oeuf oeufs viande
+tajine_de_poulet_olives_citron,"Tajine de poulet (olives, citron)",cuisine_marocaine,136,12,4,8,,,,,valeur moyenne,estimate,false,"tajine de poulet olives, citron tagine"
+taktouka,Taktouka,cuisine_marocaine,70,1.5,6,4.5,,,,,valeur moyenne,estimate,false,taktouka salade cuite poivron
+zaalouk,Zaalouk,cuisine_marocaine,83,1.5,7,5.5,,,,,valeur moyenne,estimate,false,zaalouk salade cuite aubergine
+barre_proteinee_moyenne,Barre protéinée (moyenne),complements_sportifs,370,32,35,12,,,,,très variable selon la marque,original,false,barre proteinee moyenne
+caseine_micellaire_poudre,Caséine micellaire (poudre),complements_sportifs,360,80,5,1.5,,,,,"valeur typique, varie selon la marque",original,false,caseine micellaire poudre
+collagene_poudre,Collagène (poudre),complements_sportifs,360,90,0,0,,,,,,estimate,false,collagene poudre
+creatine_monohydrate,Créatine monohydrate,complements_sportifs,0,0,0,0,,,,,,estimate,false,creatine monohydrate
+dextrose,Dextrose,complements_sportifs,365,0,97,0,,,,,,original,false,dextrose
+gainer_mass_gainer_poudre,Gainer / mass gainer (poudre),complements_sportifs,396,20,70,4,,,,,varie selon la marque,estimate,false,gainer mass poudre
+maltodextrine,Maltodextrine,complements_sportifs,380,0,95,0,,,,,,original,false,maltodextrine
+proteine_de_pois_poudre,Protéine de pois (poudre),complements_sportifs,380,80,5,6,,,,,"valeur typique, varie selon la marque",original,false,proteine de pois poudre
+proteine_de_riz_poudre,Protéine de riz (poudre),complements_sportifs,379,80,8,3,,,,,varie selon la marque,estimate,false,proteine de riz poudre
+whey_concentre_80_poudre,Whey - concentré 80% (poudre),complements_sportifs,400,80,7,7,,,,,"valeur typique, varie selon la marque",original,false,whey - concentre 80% poudre
+whey_isolat_poudre,Whey - isolat (poudre),complements_sportifs,370,90,1,1,,,,,"valeur typique, varie selon la marque",original,false,whey - isolat poudre

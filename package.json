@@ -1,0 +1,16 @@
+{
+  "name": "liftr",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Liftr — offline lifting tracker PWA",
+  "scripts": {
+    "serve": "http-server -p 8099 -c-1 .",
+    "test": "playwright test",
+    "test:desktop": "playwright test --project=desktop",
+    "test:mobile": "playwright test --project=mobile"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "http-server": "^14.1.1"
+  }
+}

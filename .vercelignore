@@ -1,0 +1,7 @@
+node_modules
+test-results
+playwright-report
+tests
+playwright.config.js
+.gitignore
+*.log
