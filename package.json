@@ -7,10 +7,14 @@
     "serve": "http-server -p 8099 -c-1 .",
     "test": "playwright test",
     "test:desktop": "playwright test --project=desktop",
-    "test:mobile": "playwright test --project=mobile"
+    "test:mobile": "playwright test --project=mobile",
+    "vendor": "node scripts/vendor.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2"
   }
 }
