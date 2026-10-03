@@ -62,6 +62,8 @@ button{background:none;border:none;cursor:pointer}
   font-size:.78rem;font-weight:600;color:var(--text2);white-space:nowrap;
 }
 .profile-btn:active{background:var(--surface3)}
+.header-actions{display:flex;align-items:center;gap:8px}
+.auth-btn{color:var(--primary);border-color:var(--primary);font-weight:700;padding:7px 11px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
 .dot.off{background:var(--red);box-shadow:0 0 8px var(--red)}
 

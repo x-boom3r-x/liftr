@@ -21,6 +21,9 @@ export function updateSocialGate(){
   const cta = document.getElementById('socialCta');
   if (cta) cta.classList.toggle('hidden', !(SOCIAL_ENABLED && !signed));
 
+  const signIn = document.getElementById('signInBtn');
+  if (signIn) signIn.classList.toggle('hidden', !(SOCIAL_ENABLED && !signed));
+
   if (!on && window.DB && window.currentUser && window.currentTab === 'feed' &&
       typeof window.showTab === 'function'){
     window.showTab('programme');

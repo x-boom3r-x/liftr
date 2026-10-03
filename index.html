@@ -46,10 +46,13 @@
         <div class="header-sub" id="headerUser">—</div>
       </div>
     </div>
-    <button class="profile-btn" onclick="switchUser()">
-      <span class="dot" id="netDot"></span>
-      <span id="netText">Online</span>
-    </button>
+    <div class="header-actions">
+      <button class="profile-btn auth-btn hidden" id="signInBtn" onclick="signInGoogle()">Sign in</button>
+      <button class="profile-btn" onclick="switchUser()">
+        <span class="dot" id="netDot"></span>
+        <span id="netText">Online</span>
+      </button>
+    </div>
   </header>
 
   <main class="app">

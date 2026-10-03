@@ -23,7 +23,7 @@ function signedIn(page, user){
 
 test.describe('Social : socle dormant', () => {
 
-  test('sans configuration : rien ne s’active, aucune requête, aucune clé en plus', async ({ page }) => {
+  test('au boot : aucune requête réseau, aucune clé en plus, rien n’est connecté', async ({ page }) => {
     const errs = [];
     const external = [];
     page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.text()); });
@@ -39,7 +39,7 @@ test.describe('Social : socle dormant', () => {
       keys: Object.keys(localStorage).sort()
     }));
 
-    expect(st.enabled).toBe(false);
+    expect(st.enabled).toBe(true);
     expect(st.createClient).toBe('function');
     expect(st.socialUser).toBeNull();
 
@@ -47,8 +47,11 @@ test.describe('Social : socle dormant', () => {
     expect(st.keys.some(k => /auth|supabase|sb-/i.test(k))).toBe(false);
 
     await expect(page.locator('#tabFeedBtn')).toBeHidden();
-    await expect(page.locator('#socialCta')).toBeHidden();
     await expect(page.locator('#tab-feed')).toBeHidden();
+    await expect(page.locator('#signInBtn')).toBeVisible();
+    // l'invite de connexion est dégagée (le conteneur peut être masqué selon l'écran)
+    expect(await page.evaluate(() =>
+      document.getElementById('socialCta').classList.contains('hidden'))).toBe(false);
 
     expect(external).toEqual([]);
     expect(errs).toEqual([]);
@@ -62,17 +65,19 @@ test.describe('Social : socle dormant', () => {
       redirectTo: 'https://x.test/app.html'
     }))).toBe('https://abc.supabase.co/auth/v1/authorize?provider=google&redirect_to=https%3A%2F%2Fx.test%2Fapp.html');
 
-    expect(await page.evaluate(() => buildAuthUrl()).catch(() => 'err')).toBeNull();
-
-    const auto = await page.evaluate(() => buildAuthUrl({ supabaseUrl: 'https://abc.supabase.co' }));
-    expect(auto).toContain('https://abc.supabase.co/auth/v1/authorize?provider=google');
-    const origin = await page.evaluate(() => location.origin + '/index.html');
-    expect(auto).toContain('redirect_to=' + encodeURIComponent(origin));
+    const real = await page.evaluate(() => buildAuthUrl());
+    const base = await page.evaluate(() => SOCIAL_CONFIG.supabaseUrl.replace(/\/+$/, ''));
+    expect(real).toContain(base + '/auth/v1/authorize?provider=google');
+    expect(real).toContain('redirect_to=');
   });
 
-  test('signInGoogle sans configuration : message, aucune navigation', async ({ page }) => {
+  test('signInGoogle quand le social est coupé : message, aucune navigation', async ({ page }) => {
+    await page.addInitScript(() => { window.LIFTR_SOCIAL_CONFIG = { supabaseUrl: '', anonKey: '' }; });
     await seed(page, {});
     const url = page.url();
+
+    expect(await page.evaluate(() => SOCIAL_ENABLED)).toBe(false);
+    expect(await page.evaluate(() => buildAuthUrl())).toBeNull();
 
     await page.evaluate(() => signInGoogle());
     await page.waitForFunction(() => {
@@ -104,6 +109,7 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
 
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
     await expect(page.locator('#socialCta')).toBeHidden();
+    await expect(page.locator('#signInBtn')).toBeHidden();
 
     await page.locator('#tabFeedBtn').click();
     await expect(page.locator('#tab-feed')).toBeVisible();

@@ -10,9 +10,17 @@
 
    window.LIFTR_SOCIAL_CONFIG (injecté avant le chargement des modules,
    ex. par un script de build) permet de fournir les mêmes valeurs sans
-   modifier ce fichier. */
+   modifier ce fichier.
+
+   La clé publishable/anon est PUBLIQUE par conception : elle ne donne
+   que les droits définis par les policies RLS. La clé secrète
+   (sb_secret_...) ne doit JAMAIS figurer ici. */
 const SOCIAL_CONFIG = Object.assign(
   { supabaseUrl: '', anonKey: '' },
+  {
+    supabaseUrl: 'https://fgpbhosklbcaapijmnkj.supabase.co',
+    anonKey: 'sb_publishable_U1CSWnUnYIeQfxItuEtTqA_fLX46y7y'
+  },
   window.LIFTR_SOCIAL_CONFIG || {}
 );
 
