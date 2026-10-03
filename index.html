@@ -25,6 +25,8 @@
 
   <button class="btn btn-primary btn-block hidden" id="installBtn" style="margin-bottom:14px" onclick="installApp()">📲 Install Liftr on this device</button>
 
+  <button class="btn btn-block hidden" id="socialCta" style="margin-bottom:14px" onclick="signInGoogle()">Continue with Google</button>
+
   <div class="profile-list" id="profileList"></div>
 
   <div class="sep">OR</div>
@@ -206,6 +208,18 @@
       <div id="statsContent"></div>
     </section>
 
+    <!-- ---------- FEED ---------- -->
+    <section id="tab-feed" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Feed</div>
+          <div class="section-hint" id="feedHint">What your crew lifted today.</div>
+        </div>
+        <button class="btn btn-sm" onclick="signOutSocial()">Sign out</button>
+      </div>
+      <div id="feedList"></div>
+    </section>
+
   </main>
 
   <nav class="tabbar">
@@ -225,6 +239,10 @@
       <button class="tab" data-tab="stats" onclick="showTab('stats')">
         <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
         Stats
+      </button>
+      <button class="tab hidden" id="tabFeedBtn" data-tab="feed" onclick="showTab('feed')">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        Feed
       </button>
     </div>
   </nav>

@@ -8,7 +8,9 @@ const JS_FILES = [
   'js/app.js', 'js/state.js', 'js/data.js', 'js/store.js', 'js/ui.js',
   'js/programme.js', 'js/suggest.js', 'js/seance.js', 'js/calendrier.js',
   'js/stats.js', 'js/comments.js', 'js/motivation.js', 'js/install.js',
-  'js/share.js', 'js/idb.js', 'js/export.js'
+  'js/share.js', 'js/idb.js', 'js/export.js',
+  'js/social/config.js', 'js/social/client.js', 'js/social/gate.js',
+  'js/social/auth.js', 'js/social/index.js'
 ];
 
 const KEYWORDS = new Set([

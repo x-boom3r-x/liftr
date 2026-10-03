@@ -58,16 +58,19 @@ function checkNet(){
   if (!dot) return;
   dot.className = 'dot' + (on ? '' : ' off');
   txt.textContent = on ? 'Online' : 'Offline';
+  if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
 }
 window.addEventListener('online', checkNet);
 window.addEventListener('offline', checkNet);
 
 /* ---------------- tabs ---------------- */
 function showTab(name){
+  if (name === 'feed' && typeof window.socialAvailable === 'function' && !window.socialAvailable()) name = 'programme';
   currentTab = name;
   localStorage.setItem('at_tab', name);
-  ['programme','seance','calendrier','stats'].forEach(t => {
-    $('tab-' + t).classList.toggle('hidden', t !== name);
+  ['programme','seance','calendrier','stats','feed'].forEach(t => {
+    const el = $('tab-' + t);
+    if (el) el.classList.toggle('hidden', t !== name);
   });
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   if (name === 'programme') renderProgramme();

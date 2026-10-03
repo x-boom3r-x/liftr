@@ -9,3 +9,4 @@ window.currentTab = 'programme';
 window.calCursor = new Date();
 window.selectedDate = null;
 window.pendingShare = null;
+window.socialUser = null;

@@ -228,7 +228,7 @@ async function setUser(name){
   selectedDate = todayISO();
   calCursor = new Date();
   const wantTab = new URLSearchParams(location.search).get('tab');
-  const validTabs = ['programme','seance','calendrier','stats'];
+  const validTabs = ['programme','seance','calendrier','stats','feed'];
   currentTab = validTabs.includes(wantTab) ? wantTab : (localStorage.getItem('at_tab') || 'programme');
   if (DB.active) currentTab = 'seance';
   renderAll();

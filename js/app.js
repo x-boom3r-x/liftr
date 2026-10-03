@@ -17,6 +17,7 @@ import './motivation.js';
 import './install.js';
 import './share.js';
 import './export.js';
+import './social/index.js';
 
 /* Erreurs globales : on prévient sans casser l'app (une fois par message) */
 let _lastErr = '';
