@@ -15,6 +15,15 @@ async function boot(){
     if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'addExCustom') addExCustom();
     if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'dayNameInput') saveNewDay();
     if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'newProfileInput') createProfile();
+    if (e.key === 'Enter' && document.activeElement &&
+        (document.activeElement.id === 'authEmail' || document.activeElement.id === 'authPass')){
+      e.preventDefault();
+      if (typeof window.submitAuth === 'function') window.submitAuth();
+    }
+    if (e.key === 'Escape'){
+      const box = document.getElementById('authModal');
+      if (box && box.classList.contains('show')) closeModal('authModal');
+    }
   });
 }
 

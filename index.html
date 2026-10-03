@@ -25,7 +25,7 @@
 
   <button class="btn btn-primary btn-block hidden" id="installBtn" style="margin-bottom:14px" onclick="installApp()">📲 Install Liftr on this device</button>
 
-  <button class="btn btn-block hidden" id="socialCta" style="margin-bottom:14px" onclick="signInGoogle()">Continue with Google</button>
+  <button class="btn btn-block hidden" id="socialCta" style="margin-bottom:14px" onclick="openAuth()">Sign in to the Feed</button>
 
   <div class="profile-list" id="profileList"></div>
 
@@ -47,7 +47,7 @@
       </div>
     </div>
     <div class="header-actions">
-      <button class="profile-btn auth-btn hidden" id="signInBtn" onclick="signInGoogle()">Sign in</button>
+      <button class="profile-btn auth-btn hidden" id="signInBtn" onclick="openAuth()">Sign in</button>
       <button class="profile-btn" onclick="switchUser()">
         <span class="dot" id="netDot"></span>
         <span id="netText">Online</span>
@@ -252,6 +252,30 @@
 </div>
 
 <!-- ================= MODALS ================= -->
+
+<!-- Sign in -->
+<div class="overlay" id="authModal" onclick="if(event.target===this)closeModal('authModal')">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-title" id="authTitle">Sign in</div>
+    <div class="modal-sub">The Feed is optional — your training data always stays on this device.</div>
+    <div class="field">
+      <label class="label" for="authEmail">Email</label>
+      <input class="input" id="authEmail" type="email" inputmode="email" autocomplete="email" maxlength="120" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label class="label" for="authPass">Password</label>
+      <input class="input" id="authPass" type="password" autocomplete="current-password" maxlength="72" placeholder="••••••••">
+    </div>
+    <div class="auth-error hidden" id="authError" role="alert"></div>
+    <div class="auth-stack">
+      <button class="btn btn-primary btn-block" id="authSubmit" onclick="submitAuth()">Sign in</button>
+      <button class="btn btn-block" id="authToggle" onclick="toggleAuthMode()">Create an account</button>
+      <button class="btn btn-block hidden" id="authGoogleBtn" onclick="signInGoogle()">Continue with Google</button>
+      <button class="btn btn-ghost btn-block" onclick="closeAuth()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- New day -->
 <div class="overlay" id="newDayModal" onclick="if(event.target===this)closeModal('newDayModal')">

@@ -166,3 +166,184 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
     expect(page.url()).toContain('redirect_to=');
   });
 });
+
+test.describe('Social : email / mot de passe', () => {
+
+  const SESSION = {
+    access_token: 'fake-access-token',
+    token_type: 'bearer',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    refresh_token: 'fake-refresh-token',
+    user: {
+      id: '11111111-1111-4111-8111-111111111111',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: 'mou@liftr.test',
+      email_confirmed_at: '2026-01-01T00:00:00.000Z',
+      phone: '',
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+      app_metadata: { provider: 'email', providers: ['email'] },
+      user_metadata: { name: 'Mouataz' },
+      identities: [],
+      is_anonymous: false
+    }
+  };
+
+  /* Intercepte les endpoints GoTrue et renvoie la liste des URLs appelées.
+     L'utilisateur renvoyé reprend l'email du corps de la requête. */
+  function authRoutes(page, respond){
+    const seen = [];
+    page.route('**/*.supabase.co/auth/v1/**', async route => {
+      const url = route.request().url();
+      seen.push(url);
+      if (respond) return respond(route, url);
+      let email = SESSION.user.email;
+      try {
+        const body = route.request().postDataJSON();
+        if (body && body.email) email = body.email;
+      } catch(e){}
+      const payload = Object.assign({}, SESSION, {
+        user: Object.assign({}, SESSION.user, { email })
+      });
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify(payload)
+      });
+    });
+    return seen;
+  }
+
+  test('le bouton Sign in ouvre le panneau email, sans requête réseau', async ({ page }) => {
+    const external = [];
+    page.on('request', r => { if (!r.url().startsWith('http://127.0.0.1:8099')) external.push(r.url()); });
+
+    await withSocial(page);
+    await seed(page, {});
+    await page.click('#signInBtn');
+
+    await expect(page.locator('#authModal')).toHaveClass(/show/);
+    await expect(page.locator('#authTitle')).toHaveText('Sign in');
+    await expect(page.locator('#authSubmit')).toHaveText('Sign in');
+    await expect(page.locator('#authToggle')).toHaveText('Create an account');
+    await expect(page.locator('#authError')).toBeHidden();
+    await expect(page.locator('#authGoogleBtn')).toBeHidden();
+    expect(await page.evaluate(() => window.socialUser)).toBeNull();
+
+    await page.keyboard.press('Escape');
+    expect(external).toEqual([]);
+  });
+
+  test('openAuth quand le social est coupé : toast, pas de panneau', async ({ page }) => {
+    await page.addInitScript(() => { window.LIFTR_SOCIAL_CONFIG = { supabaseUrl: '', anonKey: '' }; });
+    await seed(page, {});
+
+    expect(await page.evaluate(() => openAuth())).toBe(false);
+    expect(await page.evaluate(() => document.getElementById('authModal').classList.contains('show'))).toBe(false);
+    expect(await page.evaluate(() => buildEmailEndpoint())).toBeNull();
+
+    await page.waitForFunction(() => /configured/i.test(document.getElementById('toast').textContent));
+  });
+
+  test('buildEmailEndpoint construit les endpoints Supabase', async ({ page }) => {
+    await withSocial(page);
+    await seed(page, {});
+
+    expect(await page.evaluate(() => buildEmailEndpoint({ supabaseUrl: 'https://abc.supabase.co/' })))
+      .toBe('https://abc.supabase.co/auth/v1/token?grant_type=password');
+    expect(await page.evaluate(() => buildEmailEndpoint({ supabaseUrl: 'https://abc.supabase.co/', kind: 'signup' })))
+      .toBe('https://abc.supabase.co/auth/v1/signup');
+  });
+
+  test('soumission incomplète : message en ligne, aucune requête', async ({ page }) => {
+    await withSocial(page);
+    await seed(page, {});
+    const seen = authRoutes(page);
+
+    await page.click('#signInBtn');
+    expect(await page.evaluate(() => submitAuth())).toBe(false);
+
+    await expect(page.locator('#authError')).toHaveText('Email and password are required.');
+    await expect(page.locator('#authModal')).toHaveClass(/show/);
+    expect(seen).toEqual([]);
+  });
+
+  test('connexion email réussie : session ouverte et onglet Feed visible', async ({ page }) => {
+    await withSocial(page);
+    await seed(page, {});
+    const seen = authRoutes(page);
+
+    await page.click('#signInBtn');
+    await page.fill('#authEmail', 'mou@liftr.test');
+    await page.fill('#authPass', 'secret123');
+
+    expect(await page.evaluate(() => submitAuth())).toBe(true);
+
+    expect(seen.length).toBe(1);
+    expect(seen[0]).toContain('/auth/v1/token?grant_type=password');
+    expect(seen[0]).toContain('demo-project.supabase.co');
+
+    await expect(page.locator('#authModal')).not.toHaveClass(/show/);
+    await expect(page.locator('#authError')).toBeHidden();
+    expect(await page.evaluate(() => window.socialUser && window.socialUser.email)).toBe('mou@liftr.test');
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();
+    await expect(page.locator('#signInBtn')).toBeHidden();
+    await expect(page.locator('#socialCta')).toBeHidden();
+
+    await page.locator('#tabFeedBtn').click();
+    await expect(page.locator('#tab-feed')).toBeVisible();
+    expect(await page.evaluate(() => currentTab)).toBe('feed');
+  });
+
+  test('mauvais mot de passe : message en ligne, toujours déconnecté', async ({ page }) => {
+    await withSocial(page);
+    await seed(page, {});
+    authRoutes(page, route => route.fulfill({
+      status: 400, contentType: 'application/json',
+      body: JSON.stringify({
+        code: 400, error_code: 'invalid_credentials',
+        msg: 'Invalid login credentials',
+        message: 'Invalid login credentials',
+        error_description: 'Invalid login credentials'
+      })
+    }));
+
+    await page.click('#signInBtn');
+    await page.fill('#authEmail', 'mou@liftr.test');
+    await page.fill('#authPass', 'nope');
+
+    expect(await page.evaluate(() => submitAuth())).toBe(false);
+
+    await expect(page.locator('#authError')).toHaveText('Invalid login credentials');
+    await expect(page.locator('#authModal')).toHaveClass(/show/);
+    await expect(page.locator('#authSubmit')).toHaveText('Sign in');
+    await expect(page.locator('#authSubmit')).toBeEnabled();
+    expect(await page.evaluate(() => window.socialUser)).toBeNull();
+    await expect(page.locator('#tabFeedBtn')).toBeHidden();
+  });
+
+  test('création de compte : bascule du formulaire puis endpoint signup', async ({ page }) => {
+    await withSocial(page);
+    await seed(page, {});
+    const seen = authRoutes(page);
+
+    await page.click('#signInBtn');
+    await page.click('#authToggle');
+
+    await expect(page.locator('#authTitle')).toHaveText('Create account');
+    await expect(page.locator('#authSubmit')).toHaveText('Create account');
+    await expect(page.locator('#authToggle')).toHaveText('I already have an account');
+    expect(await page.evaluate(() => document.getElementById('authPass').getAttribute('autocomplete')))
+      .toBe('new-password');
+
+    await page.fill('#authEmail', 'new@liftr.test');
+    await page.fill('#authPass', 'secret123');
+    expect(await page.evaluate(() => submitAuth())).toBe(true);
+
+    expect(seen.length).toBe(1);
+    expect(seen[0]).toContain('/auth/v1/signup');
+    expect(await page.evaluate(() => window.socialUser && window.socialUser.email)).toBe('new@liftr.test');
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();
+  });
+});

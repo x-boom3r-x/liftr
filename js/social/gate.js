@@ -1,7 +1,7 @@
 /* ==================================================================
    SOCIAL - état de l'entrée "Feed" (synchrone, zéro requête)
    ================================================================== */
-import { SOCIAL_ENABLED } from './config.js';
+import { SOCIAL_ENABLED, GOOGLE_ENABLED } from './config.js';
 
 /* true = on affiche l'onglet Feed : configuré + connecté + en ligne. */
 export function socialAvailable(){
@@ -23,6 +23,9 @@ export function updateSocialGate(){
 
   const signIn = document.getElementById('signInBtn');
   if (signIn) signIn.classList.toggle('hidden', !(SOCIAL_ENABLED && !signed));
+
+  const google = document.getElementById('authGoogleBtn');
+  if (google) google.classList.toggle('hidden', !GOOGLE_ENABLED);
 
   if (!on && window.DB && window.currentUser && window.currentTab === 'feed' &&
       typeof window.showTab === 'function'){
