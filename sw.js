@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v28';
+const CACHE_NAME = 'liftr-v29';
 
 const ASSETS = [
   './',
@@ -35,6 +35,7 @@ const ASSETS = [
   './js/social/client.js',
   './js/social/gate.js',
   './js/social/auth.js',
+  './js/social/feed.js',
   './js/social/index.js',
   './manifest.json',
   './logo.png',
@@ -74,6 +75,10 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
+
+  // Hors origine (Supabase, etc.) : on ne touche pas — jamais intercepté,
+  // jamais mis en cache, l'API est appelée directement par la page.
+  if (!req.url.startsWith(self.location.origin)) return;
 
   // Reste : cache d'abord
   event.respondWith(

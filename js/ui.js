@@ -75,6 +75,9 @@ window.addEventListener('offline', checkNet);
 /* ---------------- tabs ---------------- */
 function showTab(name){
   if (name === 'feed' && typeof window.socialAvailable === 'function' && !window.socialAvailable()) name = 'programme';
+  if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
+    window.saveFeedScroll();
+  }
   currentTab = name;
   localStorage.setItem('at_tab', name);
   ['programme','seance','calendrier','stats','feed'].forEach(t => {
@@ -86,7 +89,9 @@ function showTab(name){
   if (name === 'seance') renderSeance();
   if (name === 'calendrier') renderCalendar();
   if (name === 'stats') renderStats();
-  window.scrollTo({ top: 0 });
+  if (name === 'feed' && typeof window.openFeed === 'function') window.openFeed();
+  /* le Feed gère son propre scroll (restauration) */
+  if (name !== 'feed') window.scrollTo({ top: 0 });
 }
 function renderAll(){
   const n = (DB.programme || []).length;

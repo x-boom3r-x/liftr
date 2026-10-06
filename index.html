@@ -220,7 +220,32 @@
         </div>
         <button class="btn btn-sm" onclick="signOutSocial()">Sign out</button>
       </div>
+
+      <div class="composer" id="composer">
+        <div class="composer-top">
+          <div class="avatar composer-avatar" id="composerAvatar">?</div>
+          <textarea id="postBody" class="composer-input" rows="2" maxlength="2000"
+            placeholder="What did you lift today?" aria-label="Your post"></textarea>
+        </div>
+        <div class="composer-preview hidden" id="postPreview">
+          <img id="postPreviewImg" alt="Photo to publish">
+          <button type="button" class="composer-rm" id="postRemovePhoto"
+            aria-label="Remove photo">&times;</button>
+        </div>
+        <div class="composer-actions">
+          <button type="button" class="chip chip-type composer-photo" id="postPhotoBtn" onclick="pickPhoto()">Photo</button>
+          <input type="file" id="postPhoto" accept="image/*" class="hidden">
+          <span class="composer-count" id="postCount"></span>
+          <button type="button" class="btn btn-primary btn-sm" id="postSubmit" disabled
+            onclick="submitPost()">Post</button>
+        </div>
+        <div class="composer-error hidden" id="postError"></div>
+      </div>
+
       <div id="feedList"></div>
+      <div class="feed-more hidden" id="feedMoreWrap">
+        <button type="button" class="btn btn-ghost" id="feedMore" onclick="loadMorePosts()">Load more</button>
+      </div>
     </section>
 
   </main>

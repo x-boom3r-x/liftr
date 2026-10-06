@@ -9,6 +9,11 @@ import {
   buildEmailEndpoint, signInEmail, signUpEmail,
   openAuth, closeAuth, toggleAuthMode, submitAuth
 } from './auth.js';
+import {
+  initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts,
+  submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
+  postCardHtml, timeAgo, updateComposer, resetFeed
+} from './feed.js';
 
 Object.assign(window, {
   SOCIAL_CONFIG, SOCIAL_ENABLED, GOOGLE_ENABLED,
@@ -16,11 +21,15 @@ Object.assign(window, {
   socialAvailable, updateSocialGate,
   buildAuthUrl, signInGoogle, restoreSession, signOutSocial,
   buildEmailEndpoint, signInEmail, signUpEmail,
-  openAuth, closeAuth, toggleAuthMode, submitAuth
+  openAuth, closeAuth, toggleAuthMode, submitAuth,
+  initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts,
+  submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
+  postCardHtml, timeAgo, updateComposer, resetFeed
 });
 
 function initSocial(){
   updateSocialGate();
+  initFeed();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
 }
 
