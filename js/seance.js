@@ -115,6 +115,10 @@ function renderActive(){
 }
 
 function openAddSet(exIdx){
+  /* Réouverture pendant qu'on ajuste déjà les valeurs : on garde ce que
+     l'utilisateur vient de taper, on ne re-préremplit pas par-dessus. */
+  const box = $('addSetModal');
+  const alreadyOpen = !!(box && box.classList.contains('show'));
   addSetExIdx = exIdx;
   const ex = DB.active.exercises[exIdx];
   const last = ex.sets.length ? ex.sets[ex.sets.length - 1] : null;
@@ -126,6 +130,8 @@ function openAddSet(exIdx){
   if (okBtn) okBtn.textContent = isCardio ? 'Save run' : 'Save set';
   const sub = $('addSetModal').querySelector('.modal-sub');
   if (sub) sub.hidden = isCardio;
+
+  if (alreadyOpen) return;
 
   if (isCardio){
     const p = last && last.cardio ? last : (cardioHistory(ex.name) || null);
@@ -150,26 +156,45 @@ function applySuggestion(){
   $('repsInput').value = sug.reps;
   $('assistedInput').value = 0;
 }
-function stepWeight(d){ const i = $('weightInput'); i.value = Math.max(0, (parseFloat(i.value) || 0) + d); }
-function stepReps(d){ const i = $('repsInput'); i.value = Math.max(0, (parseInt(i.value) || 0) + d); }
-function stepAssisted(d){ const i = $('assistedInput'); i.value = Math.max(0, (parseInt(i.value) || 0) + d); }
-function stepCardioMin(d){ const i = $('cardioMinInput'); i.value = Math.max(1, (parseInt(i.value) || 0) + d); }
-function stepCardioKm(d){ const i = $('cardioKmInput'); i.value = Math.max(0, Math.round(((parseFloat(i.value) || 0) + d) * 10) / 10); }
+/* Steppers : alignés sur le pas de l'input, bornés, jamais de flottant parasite.
+   Tout passe par `snap` (arrondi par division exacte) pour ne jamais produire
+   82.30000000000001 ni sortir des bornes. */
+function snap(v, step, min, max){
+  const k = Math.round(1 / step);
+  const clamped = Math.min(max, Math.max(min, v));
+  return Math.min(max, Math.max(min, Math.round(clamped * k) / k));
+}
+function stepTo(input, d, step, min, max){
+  if (!input) return;
+  const cur = parseFloat(input.value);
+  const base = isNaN(cur) ? min : cur;
+  input.value = String(snap(base + d, step, min, max));
+}
+function stepWeight(d){ stepTo($('weightInput'), d, 0.1, 0, 999); }
+function stepReps(d){ stepTo($('repsInput'), d, 1, 0, 999); }
+function stepAssisted(d){ stepTo($('assistedInput'), d, 1, 0, 999); }
+function stepCardioMin(d){ stepTo($('cardioMinInput'), d, 1, 1, 1440); }
+function stepCardioKm(d){ stepTo($('cardioKmInput'), d, 0.1, 0, 9999); }
+
+function readNum(input, step, min, max){
+  const v = parseFloat((input && input.value) || '');
+  return snap(isNaN(v) ? min : v, step, min, max);
+}
 
 function saveSet(){
   if (addSetExIdx === null || !DB.active) return;
   const ex = DB.active.exercises[addSetExIdx];
   if (ex.cardio){
-    const min = Math.max(1, parseInt($('cardioMinInput').value) || 0);
-    const km = Math.max(0, Math.round((parseFloat($('cardioKmInput').value) || 0) * 10) / 10);
+    const min = readNum($('cardioMinInput'), 1, 1, 1440);
+    const km = readNum($('cardioKmInput'), 0.1, 0, 9999);
     if (!min) return;
     ex.sets.push({ cardio: true, min: min, km: km });
   } else {
-    const weight = Math.max(0, parseFloat($('weightInput').value) || 0);
-    const reps = Math.max(0, parseInt($('repsInput').value) || 0);
-    const assisted = Math.max(0, parseInt($('assistedInput').value) || 0);
+    const weight = readNum($('weightInput'), 0.1, 0, 999);
+    const reps = readNum($('repsInput'), 1, 0, 999);
+    const assisted = readNum($('assistedInput'), 1, 0, 999);
     if (reps + assisted < 1) return;
-    ex.sets.push({ weight, reps, assisted });
+    ex.sets.push({ weight: weight, reps: reps, assisted: assisted });
   }
   save();
   closeModal('addSetModal');

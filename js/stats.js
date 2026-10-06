@@ -631,11 +631,11 @@ function weightCardHtml(){
       '<div class="field" style="margin:0;flex:1">' +
         '<label class="label">Today\'s weight</label>' +
         '<div class="stepper">' +
-          '<button onclick="stepWeightInput(-0.1)" aria-label="Minus 0.1 kg">−</button>' +
+          '<button type="button" onclick="stepWeightInput(-0.1)" aria-label="Minus 0.1 kg">−</button>' +
           '<input id="weightInputVal" type="number" inputmode="decimal" step="0.1" min="20" max="300" ' +
             'placeholder="kg" value="' + seedVal + '">' +
           '<span class="unit">kg</span>' +
-          '<button onclick="stepWeightInput(0.1)" aria-label="Plus 0.1 kg">+</button>' +
+          '<button type="button" onclick="stepWeightInput(0.1)" aria-label="Plus 0.1 kg">+</button>' +
         '</div>' +
       '</div>' +
       '<button class="btn btn-primary" style="flex:none;align-self:flex-end" onclick="logWeight()">' +

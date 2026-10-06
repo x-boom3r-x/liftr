@@ -453,30 +453,30 @@
       <div class="field">
       <label class="label">Weight (kg)</label>
       <div class="stepper">
-        <button onclick="stepWeight(-2.5)">−</button>
-        <input id="weightInput" type="number" inputmode="decimal" step="0.5" min="0" value="20">
+        <button type="button" onclick="stepWeight(-2.5)" aria-label="Less weight">−</button>
+        <input id="weightInput" type="number" inputmode="decimal" step="0.1" min="0" max="999" value="20">
         <span class="unit">kg</span>
-        <button onclick="stepWeight(2.5)">+</button>
+        <button type="button" onclick="stepWeight(2.5)" aria-label="More weight">+</button>
       </div>
     </div>
 
     <div class="field">
       <label class="label">Reps</label>
       <div class="stepper">
-        <button onclick="stepReps(-1)">−</button>
-        <input id="repsInput" type="number" inputmode="numeric" step="1" min="0" value="10">
+        <button type="button" onclick="stepReps(-1)" aria-label="Less reps">−</button>
+        <input id="repsInput" type="number" inputmode="numeric" step="1" min="0" max="999" value="10">
         <span class="unit">reps</span>
-        <button onclick="stepReps(1)">+</button>
+        <button type="button" onclick="stepReps(1)" aria-label="More reps">+</button>
       </div>
     </div>
 
     <div class="field">
       <label class="label">Assisted reps</label>
       <div class="stepper">
-        <button onclick="stepAssisted(-1)">−</button>
-        <input id="assistedInput" type="number" inputmode="numeric" step="1" min="0" value="0">
+        <button type="button" onclick="stepAssisted(-1)" aria-label="Less assisted reps">−</button>
+        <input id="assistedInput" type="number" inputmode="numeric" step="1" min="0" max="999" value="0">
         <span class="unit">assisted</span>
-        <button onclick="stepAssisted(1)">+</button>
+        <button type="button" onclick="stepAssisted(1)" aria-label="More assisted reps">+</button>
       </div>
       <div class="hint">Example: 8 clean reps + 2 assisted → <b>8+2A</b></div>
     </div>
@@ -486,19 +486,19 @@
         <div class="field">
           <label class="label">Duration (min)</label>
           <div class="stepper">
-            <button onclick="stepCardioMin(-5)">-</button>
-            <input id="cardioMinInput" type="number" inputmode="numeric" step="1" min="1" value="30">
+            <button type="button" onclick="stepCardioMin(-5)" aria-label="Less minutes">-</button>
+            <input id="cardioMinInput" type="number" inputmode="numeric" step="1" min="1" max="1440" value="30">
             <span class="unit">min</span>
-            <button onclick="stepCardioMin(5)">+</button>
+            <button type="button" onclick="stepCardioMin(5)" aria-label="More minutes">+</button>
           </div>
         </div>
         <div class="field">
           <label class="label">Distance (km)</label>
           <div class="stepper">
-            <button onclick="stepCardioKm(-1)">-</button>
-            <input id="cardioKmInput" type="number" inputmode="decimal" step="0.1" min="0" value="5">
+            <button type="button" onclick="stepCardioKm(-1)" aria-label="Less distance">-</button>
+            <input id="cardioKmInput" type="number" inputmode="decimal" step="0.1" min="0" max="9999" value="5">
             <span class="unit">km</span>
-            <button onclick="stepCardioKm(1)">+</button>
+            <button type="button" onclick="stepCardioKm(1)" aria-label="More distance">+</button>
           </div>
           <div class="hint">Running, cycling, rowing… enter the distance covered.</div>
         </div>

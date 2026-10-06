@@ -150,7 +150,12 @@ button{background:none;border:none;cursor:pointer}
 
 /* stepper */
 .stepper{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:6px}
-.stepper button{width:40px;height:40px;border-radius:9px;background:var(--surface3);font-size:1.25rem;font-weight:600;color:var(--text);display:grid;place-items:center}
+.stepper button{
+  width:40px;height:40px;border-radius:9px;background:var(--surface3);
+  font-size:1.25rem;font-weight:600;color:var(--text);display:grid;place-items:center;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;flex:none;
+}
 .stepper button:active{background:var(--primary);color:#160802}
 .stepper input{flex:1;text-align:center;background:none;border:none;outline:none;font-size:1.35rem;font-weight:700;min-width:0}
 .stepper .unit{font-size:.72rem;color:var(--text3);font-weight:600}
