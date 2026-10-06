@@ -12,8 +12,17 @@ import {
 import {
   initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts,
   submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
-  postCardHtml, timeAgo, updateComposer, resetFeed
+  postCardHtml, timeAgo, updateComposer, resetFeed,
+  setFeedScope, getFeedScope, refreshCounts, feedFollowChanged
 } from './feed.js';
+import {
+  openComments, closeComments, submitComment, updateCommentComposer,
+  initComments, resetComments
+} from './comments.js';
+import {
+  openPeople, closePeople, toggleFollow, isFollowing, followingIds,
+  initPeople, resetPeople
+} from './people.js';
 
 Object.assign(window, {
   SOCIAL_CONFIG, SOCIAL_ENABLED, GOOGLE_ENABLED,
@@ -24,12 +33,19 @@ Object.assign(window, {
   openAuth, closeAuth, toggleAuthMode, submitAuth,
   initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts,
   submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
-  postCardHtml, timeAgo, updateComposer, resetFeed
+  postCardHtml, timeAgo, updateComposer, resetFeed,
+  setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
+  openComments, closeComments, submitComment, updateCommentComposer,
+  initComments, resetComments,
+  openPeople, closePeople, toggleFollow, isFollowing, followingIds,
+  initPeople, resetPeople
 });
 
 function initSocial(){
   updateSocialGate();
   initFeed();
+  initComments();
+  initPeople();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
 }
 

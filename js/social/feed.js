@@ -11,9 +11,13 @@ const THUMB_EDGE = 320;      /* côté max de la vignette (blur-up) */
 const FULL_Q = 0.85;
 const THUMB_Q = 0.8;
 const MAX_BYTES = 12 * 1024 * 1024;
+const POST_SELECT = 'id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles(username,display_name,avatar_url)';
 
 let posts = [];
 let hasMore = false;
+let counts = {};          /* post_id -> nb de commentaires */
+let scope = 'all';        /* 'all' | 'following' */
+let noFollows = false;    /* filtre « Following » sans aucun abonnement */
 let loading = false;
 let sending = false;
 let photo = null;            /* { full, thumb } : deux Blobs WebP */
@@ -191,13 +195,67 @@ function clearComposer(){
 async function fetchPage(offset){
   const c = sb();
   if (!c) return { rows: [], error: 'Social is not configured yet.' };
-  const { data, error } = await c.from('posts')
-    .select('id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles(username,display_name,avatar_url)')
-    .is('deleted_at', null)
+
+  let q = c.from('posts').select(POST_SELECT).is('deleted_at', null);
+
+  if (scope === 'following'){
+    const me = (window.socialUser || {}).id;
+    const { data: f, error: fe } = await c.from('follows').select('followee_id').eq('follower_id', me);
+    if (fe) return { rows: [], error: fe.message || 'Could not load your crew.' };
+    const ids = (f || []).map(r => r.followee_id);
+    if (!ids.length){ noFollows = true; return { rows: [], error: null }; }
+    noFollows = false;
+    q = q.in('author_id', ids);
+  } else {
+    noFollows = false;
+  }
+
+  const { data, error } = await q
     .order('created_at', { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
   if (error) return { rows: [], error: error.message || 'Could not load the feed.' };
   return { rows: data || [], error: null };
+}
+
+/* Compteurs de commentaires : best-effort, jamais bloquant. */
+async function fetchCounts(){
+  counts = {};
+  const c = sb();
+  if (!c || !posts.length) return;
+  const { data, error } = await c.from('feed_counts')
+    .select('post_id,comment_count')
+    .in('post_id', posts.map(p => p.id));
+  if (error || !data) return;
+  data.forEach(r => { counts[r.post_id] = +r.comment_count || 0; });
+}
+
+export async function refreshCounts(){
+  await fetchCounts();
+  paint();
+}
+
+export function feedFollowChanged(){
+  if (scope !== 'following') return false;
+  posts = [];
+  hasMore = false;
+  renderFeed();
+  return true;
+}
+
+export function getFeedScope(){ return scope; }
+
+export function setFeedScope(next){
+  scope = next === 'following' ? 'following' : 'all';
+  const bar = document.getElementById('feedFilter');
+  if (bar){
+    bar.querySelectorAll('.seg').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
+  }
+  posts = [];
+  hasMore = false;
+  noFollows = false;
+  pendingScroll = null;
+  renderFeed();
+  return scope;
 }
 
 async function uploadPhoto(c, p){
@@ -244,6 +302,15 @@ export function postCardHtml(p){
   const body = p.body ? '<div class="post-body">' + esc(p.body) + '</div>' : '';
   const kind = (p.kind && p.kind !== 'text' && p.kind !== 'photo')
     ? '<span class="chip chip-type post-kind">' + esc(p.kind.toUpperCase()) + '</span>' : '';
+  const n = counts[p.id] || 0;
+  const foot = '<div class="post-foot">' +
+    '<button type="button" class="post-act" data-act="comments" data-post="' + esc(p.id || '') + '" ' +
+      'aria-label="Comments">' +
+      '<span class="post-act-ico" aria-hidden="true">💬</span>' +
+      '<span class="post-act-n">' + n + '</span>' +
+      '<span class="post-act-l">Comment' + (n === 1 ? '' : 's') + '</span>' +
+    '</button>' +
+    '</div>';
 
   return '<article class="post" data-post="' + esc(p.id || '') + '">' +
     '<div class="post-head">' +
@@ -253,7 +320,7 @@ export function postCardHtml(p){
         '<div class="post-time">' + esc(timeAgo(p.created_at)) + '</div>' +
       '</div>' + kind +
     '</div>' +
-    body + media +
+    body + media + foot +
     '</article>';
 }
 
@@ -269,6 +336,14 @@ function skeletonHtml(){
 }
 
 function emptyHtml(){
+  if (scope === 'following' && noFollows){
+    return '<div class="feed-empty">' +
+      '<div class="feed-empty-ico">☺</div>' +
+      '<div class="feed-empty-t">No one in your crew yet</div>' +
+      '<div class="feed-empty-s">Follow a few lifters and their sessions will show up here.</div>' +
+      '<button type="button" class="btn btn-sm" onclick="openPeople()">Find people</button>' +
+      '</div>';
+  }
   return '<div class="feed-empty">' +
     '<div class="feed-empty-ico">▤</div>' +
     '<div class="feed-empty-t">Nothing here yet</div>' +
@@ -321,6 +396,7 @@ export async function renderFeed(opts){
     }
     posts = more ? posts.concat(rows) : rows;
     hasMore = rows.length === PAGE_SIZE;
+    try { await fetchCounts(); } catch(e){}
     paint();
     return true;
   } catch(e){
@@ -368,7 +444,7 @@ export async function submitPost(){
       body: body,
       image_path: paths.image_path,
       thumb_path: paths.thumb_path
-    }).select('id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles(username,display_name,avatar_url)');
+    }).select(POST_SELECT);
     if (error) throw new Error(error.message || 'Could not publish your post.');
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error('Could not publish your post.');
@@ -395,6 +471,8 @@ export function saveFeedScroll(){
 export function resetFeed(){
   posts = [];
   hasMore = false;
+  counts = {};
+  noFollows = false;
   photo = null;
   if (photoUrl){ URL.revokeObjectURL(photoUrl); photoUrl = null; }
   pendingScroll = null;
@@ -425,6 +503,14 @@ export function initFeed(){
   if (rm && !rm.dataset.wired){
     rm.dataset.wired = '1';
     rm.addEventListener('click', removePhoto);
+  }
+  const list = el('feedList');
+  if (list && !list.dataset.wired){
+    list.dataset.wired = '1';
+    list.addEventListener('click', e => {
+      const btn = e.target && e.target.closest && e.target.closest('[data-act="comments"]');
+      if (btn && typeof window.openComments === 'function') window.openComments(btn.getAttribute('data-post'));
+    });
   }
   renderComposer();
   updateComposer();

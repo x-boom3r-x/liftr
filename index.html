@@ -218,7 +218,15 @@
           <div class="section-title">Feed</div>
           <div class="section-hint" id="feedHint">What your crew lifted today.</div>
         </div>
-        <button class="btn btn-sm" onclick="signOutSocial()">Sign out</button>
+        <div class="section-actions">
+          <button class="btn btn-sm btn-ghost" id="peopleBtn" onclick="openPeople()">People</button>
+          <button class="btn btn-sm" onclick="signOutSocial()">Sign out</button>
+        </div>
+      </div>
+
+      <div class="feed-filter" id="feedFilter" role="tablist" aria-label="Feed scope">
+        <button type="button" class="seg active" data-scope="all" onclick="setFeedScope('all')">All</button>
+        <button type="button" class="seg" data-scope="following" onclick="setFeedScope('following')">Following</button>
       </div>
 
       <div class="composer" id="composer">
@@ -299,6 +307,32 @@
       <button class="btn btn-block hidden" id="authGoogleBtn" onclick="signInGoogle()">Continue with Google</button>
       <button class="btn btn-ghost btn-block" onclick="closeAuth()">Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- Comments -->
+<div class="overlay" id="commentsModal" onclick="if(event.target===this)closeModal('commentsModal')">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-title">Comments</div>
+    <div class="modal-sub" id="commentsSub">Join the conversation.</div>
+    <div id="commentList" class="comment-list" aria-live="polite"></div>
+    <div class="comment-compose">
+      <textarea id="commentBody" class="composer-input comment-input" rows="1" maxlength="1000"
+        placeholder="Add a comment…" aria-label="Add a comment"></textarea>
+      <button type="button" class="btn btn-primary btn-sm" id="commentSubmit" disabled
+        onclick="submitComment()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- People -->
+<div class="overlay" id="peopleModal" onclick="if(event.target===this)closeModal('peopleModal')">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-title">People</div>
+    <div class="modal-sub">Lifters on Liftr — follow them to build your crew.</div>
+    <div id="peopleList" class="people-list" aria-live="polite"></div>
   </div>
 </div>
 

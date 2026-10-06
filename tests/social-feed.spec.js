@@ -128,6 +128,8 @@ test.describe('Feed : liste', () => {
     const seen = [];
     supa(page, ({ route, kind, call }) => {
       if (kind !== 'rest') return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      const isPosts = call.url.indexOf('/rest/v1/posts?') !== -1;
+      if (!isPosts) return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
       const m = call.url.match(/offset=(\d+)/);
       const offset = m ? parseInt(m[1], 10) : 0;
       seen.push(offset);

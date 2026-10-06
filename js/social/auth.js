@@ -56,6 +56,8 @@ export async function signOutSocial(){
   if (auth){ try { await auth.signOut(); } catch(e){} }
   window.socialUser = null;
   if (typeof window.resetFeed === 'function') window.resetFeed();
+  if (typeof window.resetComments === 'function') window.resetComments();
+  if (typeof window.resetPeople === 'function') window.resetPeople();
   if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
 }
 

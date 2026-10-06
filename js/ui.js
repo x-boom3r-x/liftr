@@ -21,8 +21,10 @@ async function boot(){
       if (typeof window.submitAuth === 'function') window.submitAuth();
     }
     if (e.key === 'Escape'){
-      const box = document.getElementById('authModal');
-      if (box && box.classList.contains('show')) closeModal('authModal');
+      ['authModal','commentsModal','peopleModal'].forEach(id => {
+        const box = document.getElementById(id);
+        if (box && box.classList.contains('show')) closeModal(id);
+      });
     }
   });
 }

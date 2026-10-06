@@ -782,3 +782,61 @@ button{background:none;border:none;cursor:pointer}
 .post-skeleton .avatar.sk{width:38px;height:38px;border-radius:12px;flex:none}
 @keyframes skRow{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @media (prefers-reduced-motion: reduce){ .post-skeleton .sk{animation:none} }
+
+/* ================= SOCIAL : FILTRE, COMMENTAIRES, PEOPLE ================= */
+.section-actions{display:flex;align-items:center;gap:7px;flex:none}
+
+.feed-filter{display:flex;gap:6px;margin:-4px 0 14px}
+.seg{
+  padding:7px 14px;border-radius:999px;font-size:.78rem;font-weight:700;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+  transition:background .15s,color .15s,border-color .15s,transform .08s;
+}
+.seg:active{transform:scale(.97)}
+.seg.active{background:var(--primary-dim);border-color:rgba(255,107,53,.45);color:#FF8A5B}
+
+.post-foot{
+  display:flex;align-items:center;gap:8px;
+  margin-top:12px;padding-top:11px;border-top:1px solid var(--border);
+}
+.post-act{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 11px;border-radius:10px;background:var(--surface2);
+  color:var(--text2);font-size:.79rem;font-weight:650;min-height:34px;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.post-act:active{background:var(--surface3)}
+.post-act-ico{font-size:.92rem;line-height:1}
+.post-act-n{font-variant-numeric:tabular-nums;color:var(--text)}
+
+.comment-list{display:flex;flex-direction:column;gap:12px;max-height:46vh;overflow-y:auto;padding-right:2px}
+.comment-empty{font-size:.83rem;color:var(--text3);text-align:center;padding:22px 8px}
+.comment{display:flex;gap:10px;align-items:flex-start}
+.comment-avatar{width:32px;height:32px;border-radius:10px;font-size:.8rem;flex:none;overflow:hidden;padding:0}
+.comment-main{
+  min-width:0;flex:1;background:var(--surface2);
+  border:1px solid var(--border);border-radius:12px;padding:9px 11px;
+}
+.comment-head{display:flex;align-items:baseline;gap:8px;min-width:0}
+.comment-name{font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comment-time{font-size:.68rem;color:var(--text3);margin-left:auto;flex:none}
+.comment-body{font-size:.87rem;line-height:1.5;margin-top:4px;white-space:pre-wrap;word-break:break-word}
+.comment-compose{
+  display:flex;gap:9px;align-items:flex-end;
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--border);
+}
+.comment-input{min-height:40px;max-height:120px;resize:none;background:var(--surface2);border-color:var(--border)}
+.comment-compose .btn{flex:none}
+
+.people-list{display:flex;flex-direction:column;gap:9px;max-height:56vh;overflow-y:auto;padding-right:2px}
+.person{
+  display:flex;align-items:center;gap:11px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:14px;padding:11px 12px;
+}
+.person-avatar{width:38px;height:38px;border-radius:12px;flex:none;overflow:hidden;padding:0}
+.person-who{min-width:0;flex:1}
+.person-name{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.person-meta{font-size:.73rem;color:var(--text3);margin-top:2px}
+.person-bio{font-size:.75rem;color:var(--text2);margin-top:4px;line-height:1.4}
+.person .btn{flex:none;min-width:92px}
