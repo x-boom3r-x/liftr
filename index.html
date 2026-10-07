@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="33">
+<html lang="en" data-build="34">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -15,20 +15,47 @@
 <link rel="stylesheet" href="css/app.css">
 <script>
 /* Filet anti-desynchro HTML/JS : le HTML vient du reseau, un JS plus ancien
-   peut encore sortir du cache d'un ancien service worker. Si les builds
-   different, on recharge une fois (jamais en boucle : une fois par build). */
+   peut encore sortir du cache d'un ancien service worker (boutons morts).
+   Si les builds different, on attend que le nouveau service worker prenne le
+   controle puis on recharge — deux tentatives maximum par build (jamais de
+   boucle). Voir le test « builds synchronisés » dans tests/handlers.spec.js. */
 (function(){
   var want = document.documentElement.getAttribute('data-build');
   if (!want) return;
-  function guard(){
+  var KEY = 'liftr-build';
+
+  function fresh(){
     try {
-      if (window.__LIFTR_BUILD__ === want){ sessionStorage.removeItem('liftr-build'); return; }
-      if (sessionStorage.getItem('liftr-build') === want) return;
-      sessionStorage.setItem('liftr-build', want);
+      if (window.__LIFTR_BUILD__ === want){
+        sessionStorage.removeItem(KEY);
+        sessionStorage.removeItem(KEY + '-n');
+        return true;
+      }
+    } catch(e){}
+    return false;
+  }
+  function reloadOnce(){
+    try {
+      var n = parseInt(sessionStorage.getItem(KEY + '-n') || '0', 10);
+      if (n >= 2) return;
+      sessionStorage.setItem(KEY, want);
+      sessionStorage.setItem(KEY + '-n', String(n + 1));
       location.reload();
     } catch(e){}
   }
-  window.addEventListener('load', function(){ setTimeout(guard, 400); });
+  function guard(){
+    if (fresh()) return;
+    var done = false;
+    function fire(){ if (done) return; done = true; reloadOnce(); }
+    var sw = navigator.serviceWorker;
+    if (sw && sw.controller && sw.addEventListener){
+      sw.addEventListener('controllerchange', function(){ fire(); });
+      setTimeout(fire, 4000);
+    } else {
+      fire();
+    }
+  }
+  window.addEventListener('load', function(){ setTimeout(guard, 300); });
 })();
 </script>
 </head>

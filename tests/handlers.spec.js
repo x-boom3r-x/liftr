@@ -89,3 +89,35 @@ test('builds synchronisés : index.html = js/app.js = sw.js', () => {
   expect(inApp, 'js/app.js: __LIFTR_BUILD__ absent').toBe(inHtml);
   expect(inSw, 'sw.js: CACHE_NAME absent').toBe(inHtml);
 });
+
+/* Le filet de index.html recharge la page si HTML et JS ne portent pas le meme
+   build : il doit s'arreter (deux essais max), jamais boucler. Le service
+   worker est empeche ici pour que la divergence persiste apres chaque reload. */
+test('filet anti-desynchro : se recharge au plus deux fois puis se stabilise', async ({ page }) => {
+  await page.addInitScript(() => {
+    try { navigator.serviceWorker.register = () => Promise.reject(new Error('sw bloque')); } catch(e){}
+    try {
+      const n = parseInt(sessionStorage.getItem('__loads') || '0', 10);
+      sessionStorage.setItem('__loads', String(n + 1));
+    } catch(e){}
+  });
+  await page.route('**/index.html', async route => {
+    const res = await route.fetch();
+    const body = (await res.text()).replace(/data-build="\d+"/, 'data-build="999"');
+    await route.fulfill({ response: res, body, headers: { 'content-type': 'text/html; charset=utf-8' } });
+  });
+
+  await page.goto('/index.html');
+  await page.waitForFunction(
+    () => sessionStorage.getItem('__loads') === '3' && sessionStorage.getItem('liftr-build-n') === '2',
+    null, { timeout: 20000 }
+  );
+  const loads = await page.evaluate(() => parseInt(sessionStorage.getItem('__loads') || '0', 10));
+  expect(loads, 'chargements : depart + 2 recharges maximum').toBe(3);
+
+  await page.waitForTimeout(2000);
+  const after = await page.evaluate(() => parseInt(sessionStorage.getItem('__loads') || '0', 10));
+  expect(after, 'le filet ne boucle pas').toBe(loads);
+
+  await page.unroute('**/index.html');
+});
