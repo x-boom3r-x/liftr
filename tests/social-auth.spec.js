@@ -228,11 +228,26 @@ test.describe('Social : email / mot de passe', () => {
     await expect(page.locator('#authSubmit')).toHaveText('Sign in');
     await expect(page.locator('#authToggle')).toHaveText('Create an account');
     await expect(page.locator('#authError')).toBeHidden();
-    await expect(page.locator('#authGoogleBtn')).toBeHidden();
+    await expect(page.locator('#authGoogleBtn')).toBeVisible();
     expect(await page.evaluate(() => window.socialUser)).toBeNull();
 
     await page.keyboard.press('Escape');
     expect(external).toEqual([]);
+  });
+
+  test('googleAuth: false masque le bouton Google même si le social est ouvert', async ({ page }) => {
+    await page.addInitScript(cfg => { window.LIFTR_SOCIAL_CONFIG = cfg; }, {
+      supabaseUrl: 'https://demo-project.supabase.co',
+      anonKey: 'anon-key-for-tests',
+      googleAuth: false
+    });
+    await seed(page, {});
+
+    expect(await page.evaluate(() => GOOGLE_ENABLED)).toBe(false);
+
+    await page.click('#signInBtn');
+    await expect(page.locator('#authModal')).toHaveClass(/show/);
+    await expect(page.locator('#authGoogleBtn')).toBeHidden();
   });
 
   test('openAuth quand le social est coupé : toast, pas de panneau', async ({ page }) => {

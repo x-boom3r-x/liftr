@@ -24,7 +24,7 @@ const SOCIAL_CONFIG = Object.assign(
   {
     supabaseUrl: 'https://fgpbhosklbcaapijmnkj.supabase.co',
     anonKey: 'sb_publishable_U1CSWnUnYIeQfxItuEtTqA_fLX46y7y',
-    googleAuth: false
+    googleAuth: true
   },
   window.LIFTR_SOCIAL_CONFIG || {}
 );
