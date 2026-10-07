@@ -121,3 +121,29 @@ test('filet anti-desynchro : se recharge au plus deux fois puis se stabilise', a
 
   await page.unroute('**/index.html');
 });
+
+/* Regression du fix « boutons morts » : un HTML nouveau servi avec un JS
+   ancien sorti du cache. Le service worker sert maintenant le réseau d'abord. */
+test('service worker : le JS vient du réseau même si le cache est pollué', async ({ page }) => {
+  const build = (fs.readFileSync('index.html', 'utf8').match(/data-build="(\d+)"/) || [])[1];
+
+  await page.goto('/index.html');
+  await page.waitForFunction(
+    () => !!(navigator.serviceWorker && navigator.serviceWorker.controller), null, { timeout: 20000 }
+  );
+
+  await page.evaluate(async () => {
+    const sw = await (await fetch('sw.js')).text();
+    const name = (sw.match(/liftr-v\d+/) || [])[0];
+    const url = new URL('js/app.js', location.href).href;
+    const cache = await caches.open(name);
+    await cache.put(url, new Response('window.__LIFTR_BUILD__ = "pollue";', {
+      headers: { 'content-type': 'text/javascript' }
+    }));
+    sessionStorage.setItem('liftr-build-n', '2');   /* on fige le filet pour lire le resultat */
+  });
+
+  await page.reload();
+  const seen = await page.evaluate(() => window.__LIFTR_BUILD__);
+  expect(seen, 'JS servi depuis le réseau, pas depuis le cache pollué').toBe(build);
+});
