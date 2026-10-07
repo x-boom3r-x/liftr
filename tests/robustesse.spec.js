@@ -104,4 +104,44 @@ test.describe('Robustesse', () => {
     await expect(page.locator('#toast')).toContainText('internal error');
     await expect(page.locator('#mainApp')).toBeVisible();
   });
+
+  /* iOS Safari : un scroll programmaté au changement d'onglet fait réapparaître
+     la barre du navigateur, le viewport rétrécit et la tabbar (fixed;bottom:0) remonte. */
+  test('changement d\'onglet : aucun scroll forcé, la tabbar ne bouge pas', async ({ page }) => {
+    const history = [];
+    for (let i = 0; i < 12; i++){
+      history.push({ id: 'h' + i, date: daysAgo(i * 3 + 1), dayId: 'd1', dayName: 'PUSH',
+        exercises: [{ id: 'e1', name: 'Développé couché', sets: [{ weight: 60, reps: 8 }] }],
+        totalSets: 1, volume: 480, note: '' });
+    }
+    const programme = [];
+    for (let d = 0; d < 10; d++){
+      programme.push({ id: 'p' + d, name: 'Jour ' + (d + 1) + ' — poussée et jambes', type: d % 2 ? 'LEGS' : 'PUSH',
+        exercises: [{ id: 'e' + d, name: 'Exercice ' + (d + 1) }] });
+    }
+    await seed(page, { programme, history }, 'Mouataz');
+
+    await page.evaluate(() => window.scrollTo(0, 40));
+    await page.waitForFunction(() => window.scrollY >= 40);
+    const snap = () => page.evaluate(() => ({
+      y: window.scrollY,
+      top: Math.round(document.querySelector('.tabbar').getBoundingClientRect().top),
+      docH: document.documentElement.scrollHeight
+    }));
+    const before = await snap();
+    expect(before.y).toBeGreaterThanOrEqual(40);
+
+    await page.evaluate(() => window.showTab('stats'));
+    await page.waitForTimeout(250);
+    const stats = await snap();
+    expect(stats.docH).toBeGreaterThan(stats.y + 100); /* pas de clamp : onglet plus haut que la position */
+    expect(stats.y).toBe(before.y);                    /* aucun scroll programmaté */
+    expect(stats.top).toBe(before.top);                /* la tabbar ne bouge pas d'un pixel */
+
+    await page.evaluate(() => window.showTab('programme'));
+    await page.waitForTimeout(250);
+    const back = await snap();
+    expect(back.y).toBe(before.y);
+    expect(back.top).toBe(before.top);
+  });
 });

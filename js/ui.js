@@ -76,6 +76,10 @@ window.addEventListener('online', checkNet);
 window.addEventListener('offline', checkNet);
 
 /* ---------------- tabs ---------------- */
+/* Aucun scroll programmaté au changement d'onglet : sur iOS Safari, remonter la
+   page fait réapparaître la barre du navigateur, le viewport rétrécit, et la
+   tabbar (position:fixed;bottom:0) remonte. Chaque onglet garde la position du
+   navigateur (le Feed continue de gérer/restaurer son propre scroll). */
 function showTab(name){
   if (name === 'feed' && typeof window.socialAvailable === 'function' && !window.socialAvailable()) name = 'programme';
   if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
@@ -93,8 +97,6 @@ function showTab(name){
   if (name === 'calendrier') renderCalendar();
   if (name === 'stats') renderStats();
   if (name === 'feed' && typeof window.openFeed === 'function') window.openFeed();
-  /* le Feed gère son propre scroll (restauration) */
-  if (name !== 'feed') window.scrollTo({ top: 0 });
 }
 function renderAll(){
   const n = (DB.programme || []).length;
