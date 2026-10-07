@@ -11,7 +11,8 @@ const JS_FILES = [
   'js/share.js', 'js/idb.js', 'js/export.js',
   'js/social/config.js', 'js/social/client.js', 'js/social/gate.js',
   'js/social/auth.js', 'js/social/feed.js', 'js/social/comments.js',
-  'js/social/people.js', 'js/social/index.js'
+  'js/social/people.js', 'js/social/shell.js', 'js/social/profile.js',
+  'js/social/search.js', 'js/social/inbox.js', 'js/social/index.js'
 ];
 
 const KEYWORDS = new Set([

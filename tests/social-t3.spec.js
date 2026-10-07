@@ -194,11 +194,11 @@ test.describe('T3 : commentaires, follows, filtre du fil', () => {
     });
 
     await openFeed(page);
-    await expect(page.locator('#feedList .post-act-n').nth(1)).toHaveText('1');
-    await expect(page.locator('#feedList .post-act-l').nth(1)).toHaveText('Comment');
+    await expect(page.locator('#feedList [data-n="comments"]').nth(1)).toHaveText('1');
+    await expect(page.locator('#feedList [data-act="reply"] .post-act-l').nth(1)).toHaveText('Comment');
     expect(api.calls.some(c => c.url.includes('/rest/v1/feed_counts'))).toBe(true);
 
-    await page.locator('#feedList .post-act').nth(1).click();
+    await page.locator('#feedList [data-act="reply"]').nth(1).click();
     await expect(page.locator('#commentList .comment')).toHaveCount(1);
     await expect(page.locator('#commentList .comment-name').first()).toHaveText('Ana');
     expect(errs).toEqual([]);

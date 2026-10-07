@@ -79,7 +79,27 @@ async function load(){
   return true;
 }
 
-export async function openComments(id){
+function renderPost(post){
+  const box = el('commentsPost');
+  if (!box) return;
+  if (!post){ box.innerHTML = ''; box.classList.add('hidden'); return; }
+  const a = post.author || {};
+  const name = a.display_name || a.username || 'Athlete';
+  const avatar = a.avatar_url
+    ? '<img class="post-avatar-img" src="' + esc(a.avatar_url) + '" alt="">'
+    : esc(String(name).trim().charAt(0).toUpperCase() || '?');
+  box.innerHTML =
+    '<div class="cpost-head">' +
+      '<div class="avatar post-avatar fallback">' + avatar + '</div>' +
+      '<div class="post-who"><div class="post-name">' + esc(name) + '</div>' +
+        (a.username ? '<div class="post-meta"><span class="post-handle">@' + esc(a.username) + '</span></div>' : '') +
+      '</div>' +
+    '</div>' +
+    (post.body ? '<div class="post-body">' + esc(post.body) + '</div>' : '');
+  box.classList.remove('hidden');
+}
+
+export async function openComments(id, post){
   if (!id) return false;
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (!gateOk()){ toast('Sign in and go online to comment.'); return false; }
@@ -87,6 +107,7 @@ export async function openComments(id){
   postId = id;
   rows = [];
   clearBody();
+  renderPost(post || null);
   render();
   if (typeof window.openModal === 'function') window.openModal('commentsModal');
   return await load();
@@ -150,5 +171,6 @@ export function resetComments(){
   if (ta) ta.value = '';
   const sub = el('commentsSub');
   if (sub) sub.textContent = 'Join the conversation.';
+  renderPost(null);
   updateCommentComposer();
 }

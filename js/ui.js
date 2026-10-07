@@ -21,7 +21,7 @@ async function boot(){
       if (typeof window.submitAuth === 'function') window.submitAuth();
     }
     if (e.key === 'Escape'){
-      ['authModal','commentsModal','peopleModal'].forEach(id => {
+      ['authModal','commentsModal','peopleModal','profileModal'].forEach(id => {
         const box = document.getElementById(id);
         if (box && box.classList.contains('show')) closeModal(id);
       });

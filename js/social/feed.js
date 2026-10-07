@@ -11,11 +11,11 @@ const THUMB_EDGE = 320;      /* côté max de la vignette (blur-up) */
 const FULL_Q = 0.85;
 const THUMB_Q = 0.8;
 const MAX_BYTES = 12 * 1024 * 1024;
-const POST_SELECT = 'id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles(username,display_name,avatar_url)';
+const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles(id,username,display_name,avatar_url)';
 
 let posts = [];
 let hasMore = false;
-let counts = {};          /* post_id -> nb de commentaires */
+let counts = {};          /* post_id -> { c, l, liked } */
 let scope = 'all';        /* 'all' | 'following' */
 let noFollows = false;    /* filtre « Following » sans aucun abonnement */
 let loading = false;
@@ -217,21 +217,93 @@ async function fetchPage(offset){
   return { rows: data || [], error: null };
 }
 
-/* Compteurs de commentaires : best-effort, jamais bloquant. */
+/* Compteurs de commentaires + likes : best-effort, jamais bloquant. */
 async function fetchCounts(){
   counts = {};
   const c = sb();
   if (!c || !posts.length) return;
-  const { data, error } = await c.from('feed_counts')
-    .select('post_id,comment_count')
-    .in('post_id', posts.map(p => p.id));
-  if (error || !data) return;
-  data.forEach(r => { counts[r.post_id] = +r.comment_count || 0; });
+  const ids = posts.map(p => p.id);
+  const me = (window.socialUser || {}).id || null;
+  const jobs = [
+    c.from('feed_counts').select('post_id,comment_count,like_count').in('post_id', ids)
+  ];
+  if (me){
+    jobs.push(c.from('likes').select('post_id').in('post_id', ids).eq('user_id', me));
+  }
+  const out = await Promise.all(jobs);
+  const rows = out[0] && out[0].data;
+  if (rows) rows.forEach(r => {
+    counts[r.post_id] = { c: +r.comment_count || 0, l: +r.like_count || 0, liked: false };
+  });
+  const mine = out[1] && out[1].data;
+  if (mine) mine.forEach(r => { if (counts[r.post_id]) counts[r.post_id].liked = true; });
 }
 
 export async function refreshCounts(){
   await fetchCounts();
   paint();
+}
+
+/* ------------------------------- likes ----------------------------- */
+export async function toggleLike(id){
+  const c = sb();
+  const me = (window.socialUser || {}).id;
+  const cur = counts[id] || { c: 0, l: 0, liked: false };
+  if (!c || !me || !id) return false;
+
+  const prev = { c: cur.c, l: cur.l, liked: cur.liked };
+  counts[id] = { c: cur.c, l: Math.max(0, cur.l + (cur.liked ? -1 : 1)), liked: !cur.liked };
+  paintOne(id);
+
+  try {
+    let error = null;
+    if (prev.liked){
+      const r = await c.from('likes').delete().eq('post_id', id).eq('user_id', me);
+      error = r && r.error;
+    } else {
+      const r = await c.from('likes').insert({ post_id: id, user_id: me });
+      error = r && r.error;
+    }
+    if (error) throw new Error(error.message);
+    return counts[id].liked;
+  } catch(e){
+    counts[id] = prev;
+    paintOne(id);
+    toast((e && e.message) || 'Could not update your like.');
+    return prev.liked;
+  }
+}
+
+export function sharePost(id){
+  const p = posts.find(x => x.id === id);
+  const url = location.origin + location.pathname;
+  const text = (p && p.body ? String(p.body).slice(0, 90) : 'Liftr');
+  try {
+    if (navigator.share){
+      navigator.share({ title: 'Liftr', text: text, url: url }).catch(() => {});
+      return true;
+    }
+  } catch(e){}
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(() => toast('Link copied.'), () => toast('Link copied.'));
+      return true;
+    }
+  } catch(e){}
+  toast('Link copied.');
+  return true;
+}
+
+function paintOne(id){
+  const list = el('feedList');
+  if (!list) return;
+  const node = list.querySelector('[data-post="' + id + '"]');
+  const p = posts.find(x => x.id === id);
+  if (!node || !p) return;
+  const tpl = document.createElement('div');
+  tpl.innerHTML = postCardHtml(p);
+  const fresh = tpl.firstElementChild;
+  if (fresh) node.replaceWith(fresh);
 }
 
 export function feedFollowChanged(){
@@ -272,9 +344,8 @@ async function uploadPhoto(c, p){
   if (e2) throw new Error(e2.message || 'Photo upload failed.');
   return { image_path: base + '.' + ext, thumb_path: base + '-thumb.' + ext };
 }
-
 /* ------------------------------- rendu ----------------------------- */
-function mediaUrl(path, c){
+export function mediaUrl(path, c){
   if (!path) return null;
   if (/^https?:/i.test(path)) return path;
   try {
@@ -283,10 +354,31 @@ function mediaUrl(path, c){
   } catch(e){ return null; }
 }
 
+function statStrip(p){
+  const m = p.meta || null;
+  if (!m) return '';
+  const num = v => typeof v === 'number' || /^-?\d+([.,]\d+)?$/.test(String(v).trim());
+  const withUnit = (v, u) => (num(v) ? v + ' ' + u : String(v));
+  const cells = [];
+  if (m.volume != null) cells.push(['Volume', withUnit(m.volume, 'kg')]);
+  if (m.duration != null) cells.push(['Durée', withUnit(m.duration, 'min')]);
+  if (m.intensity != null) cells.push(['Intensité', m.intensity]);
+  if (m.reps != null) cells.push(['Reps', m.reps]);
+  if (!cells.length) return '';
+  let h = '<div class="post-stats">';
+  for (let i = 0; i < cells.length; i++){
+    h += '<div class="post-stat"><span class="post-stat-v">' + esc(String(cells[i][1])) + '</span>' +
+         '<span class="post-stat-k">' + esc(cells[i][0]) + '</span></div>';
+  }
+  return h + '</div>';
+}
+
 export function postCardHtml(p){
   const c = sb();
   const a = p.author || {};
+  const uid = a.id || p.author_id || '';
   const name = a.display_name || a.username || 'Athlete';
+  const handle = a.username ? '@' + a.username : '';
   const avatar = a.avatar_url
     ? '<img class="post-avatar-img" src="' + esc(a.avatar_url) + '" alt="">'
     : esc(String(name).trim().charAt(0).toUpperCase() || '?');
@@ -302,25 +394,41 @@ export function postCardHtml(p){
   const body = p.body ? '<div class="post-body">' + esc(p.body) + '</div>' : '';
   const kind = (p.kind && p.kind !== 'text' && p.kind !== 'photo')
     ? '<span class="chip chip-type post-kind">' + esc(p.kind.toUpperCase()) + '</span>' : '';
-  const n = counts[p.id] || 0;
+  const k = counts[p.id] || { c: 0, l: 0, liked: false };
+
   const foot = '<div class="post-foot">' +
-    '<button type="button" class="post-act" data-act="comments" data-post="' + esc(p.id || '') + '" ' +
+    '<button type="button" class="post-act" data-act="reply" data-post="' + esc(p.id || '') + '" ' +
       'aria-label="Comments">' +
       '<span class="post-act-ico" aria-hidden="true">💬</span>' +
-      '<span class="post-act-n">' + n + '</span>' +
-      '<span class="post-act-l">Comment' + (n === 1 ? '' : 's') + '</span>' +
+      '<span class="post-act-n" data-n="comments">' + k.c + '</span>' +
+      '<span class="post-act-l">Comment' + (k.c === 1 ? '' : 's') + '</span>' +
+    '</button>' +
+    '<button type="button" class="post-act post-act-like' + (k.liked ? ' on' : '') + '" ' +
+      'data-act="like" data-post="' + esc(p.id || '') + '" aria-label="Like">' +
+      '<span class="post-act-ico" aria-hidden="true">♥</span>' +
+      '<span class="post-act-n post-act-l-like" data-n="likes">' + k.l + '</span>' +
+      '<span class="post-act-l">Like</span>' +
+    '</button>' +
+    '<button type="button" class="post-act post-act-share" data-act="share" ' +
+      'data-post="' + esc(p.id || '') + '" aria-label="Share">' +
+      '<span class="post-act-ico" aria-hidden="true">↗</span>' +
+      '<span class="post-act-l">Share</span>' +
     '</button>' +
     '</div>';
 
   return '<article class="post" data-post="' + esc(p.id || '') + '">' +
     '<div class="post-head">' +
-      '<div class="avatar post-avatar">' + avatar + '</div>' +
+      '<button type="button" class="avatar post-avatar ring' + (a.avatar_url ? '' : ' fallback') + '" ' +
+        'data-act="profile" data-uid="' + esc(uid) + '" aria-label="Open profile">' + avatar + '</button>' +
       '<div class="post-who">' +
         '<div class="post-name">' + esc(name) + '</div>' +
-        '<div class="post-time">' + esc(timeAgo(p.created_at)) + '</div>' +
+        '<div class="post-meta">' +
+          (handle ? '<span class="post-handle">' + esc(handle) + '</span><span class="post-dot" aria-hidden="true">·</span>' : '') +
+          '<span class="post-time">' + esc(timeAgo(p.created_at)) + '</span>' +
+        '</div>' +
       '</div>' + kind +
     '</div>' +
-    body + media + foot +
+    body + statStrip(p) + media + foot +
     '</article>';
 }
 
@@ -473,6 +581,7 @@ export function resetFeed(){
   hasMore = false;
   counts = {};
   noFollows = false;
+  crewLoaded = false;
   photo = null;
   if (photoUrl){ URL.revokeObjectURL(photoUrl); photoUrl = null; }
   pendingScroll = null;
@@ -508,12 +617,128 @@ export function initFeed(){
   if (list && !list.dataset.wired){
     list.dataset.wired = '1';
     list.addEventListener('click', e => {
-      const btn = e.target && e.target.closest && e.target.closest('[data-act="comments"]');
-      if (btn && typeof window.openComments === 'function') window.openComments(btn.getAttribute('data-post'));
+      const btn = e.target && e.target.closest && e.target.closest('[data-act]');
+      if (!btn) return;
+      const act = btn.getAttribute('data-act');
+      const id = btn.getAttribute('data-post') || '';
+      const p = posts.find(x => x.id === id);
+      if (act === 'reply'){
+        if (typeof window.openComments === 'function') window.openComments(id, p || null);
+      } else if (act === 'like'){
+        toggleLike(id);
+      } else if (act === 'share'){
+        sharePost(id);
+      } else if (act === 'profile'){
+        const uid = btn.getAttribute('data-uid');
+        if (uid && typeof window.openProfile === 'function') window.openProfile(uid);
+      }
+    });
+  }
+  const crew = el('crewRow');
+  if (crew && !crew.dataset.wired){
+    crew.dataset.wired = '1';
+    crew.addEventListener('click', e => {
+      const cell = e.target && e.target.closest && e.target.closest('[data-crew]');
+      if (!cell) return;
+      const kind = cell.getAttribute('data-crew');
+      if (kind === 'compose') focusComposer();
+      else if (kind === 'people' && typeof window.openPeople === 'function') window.openPeople();
+      else if (kind === 'profile'){
+        const uid = cell.getAttribute('data-uid');
+        if (uid && typeof window.openProfile === 'function') window.openProfile(uid);
+      }
     });
   }
   renderComposer();
   updateComposer();
+  renderCrew();
+}
+
+/* --------------------------- crew (stories) ------------------------ */
+let crewLoaded = false;
+
+export async function renderCrew(){
+  const row = el('crewRow');
+  if (!row) return;
+  const c = sb();
+  const me = (window.socialUser || {}).id;
+  if (!c || !me){ row.classList.add('hidden'); return; }
+  if (crewLoaded) return;
+  row.classList.remove('hidden');
+  row.innerHTML = '<div class="crew-cell skeleton"><span class="crew-ring"><span class="avatar crew-av sk"></span></span></div>'.repeat(4);
+  try {
+    const { data: f } = await c.from('follows').select('followee_id').eq('follower_id', me).limit(12);
+    const ids = (f || []).map(r => r.followee_id);
+    let people = [];
+    if (ids.length){
+      const { data: pr } = await c.from('profiles')
+        .select('id,username,display_name,avatar_url').in('id', ids).limit(12);
+      people = pr || [];
+    }
+    const meP = await myProfile(c, me);
+    const you = meP
+      ? { id: '', username: meP.username, display_name: meP.display_name || meP.username, avatar_url: meP.avatar_url, me: 1 }
+      : { id: '', username: '', display_name: (window.socialUser && window.socialUser.email) || 'You', avatar_url: '', me: 1 };
+    let html = crewCell(you) + people.map(x => crewCell(x)).join('');
+    if (people.length < 6) html += crewFindCell();
+    row.innerHTML = html;
+    row.classList.toggle('hidden', !html);
+    crewLoaded = true;
+  } catch(e){
+    row.innerHTML = '';
+    row.classList.add('hidden');
+    crewLoaded = true;
+  }
+}
+
+function crewCell(u){
+  const name = u.display_name || u.username || 'Athlete';
+  const initial = String(name).trim().charAt(0).toUpperCase() || '?';
+  const av = u.avatar_url
+    ? '<img class="crew-av-img" src="' + esc(u.avatar_url) + '" alt="">'
+    : esc(initial);
+  const label = u.me ? 'You' : esc(String(name).slice(0, 10));
+  const act = u.me ? 'data-crew="compose"' : 'data-crew="profile" data-uid="' + esc(u.id) + '"';
+  return '<button type="button" class="crew-cell' + (u.me ? ' is-me' : '') + '" ' + act + '>' +
+    '<span class="crew-ring' + (u.me ? ' me' : '') + '">' +
+      '<span class="avatar crew-av' + (u.avatar_url ? '' : ' fallback') + '">' + av + '</span>' +
+      (u.me ? '<span class="crew-plus" aria-hidden="true">+</span>' : '') +
+    '</span>' +
+    '<span class="crew-label">' + label + '</span>' +
+    '</button>';
+}
+
+function crewFindCell(){
+  return '<button type="button" class="crew-cell crew-find" data-crew="people">' +
+    '<span class="crew-ring find"><span class="avatar crew-av fallback">⌕</span></span>' +
+    '<span class="crew-label">Find</span>' +
+    '</button>';
+}
+
+async function myProfile(c, me){
+  const { data } = await c.from('profiles').select('id,username,display_name,avatar_url').eq('id', me).limit(1);
+  const row = Array.isArray(data) ? data[0] : data;
+  return row || null;
+}
+
+export function initCrew(){
+  crewLoaded = false;
+  renderCrew();
+}
+
+/* After a profile change (photo / name): refresh everything. */
+export function refreshIdentity(){
+  renderComposer();
+  crewLoaded = false;
+  renderCrew();
+}
+
+export function focusComposer(){
+  if (typeof window.enterSView === 'function') window.enterSView('home');
+  const ta = el('postBody');
+  const card = el('composer');
+  if (card) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  if (ta){ try { ta.focus({ preventScroll: true }); } catch(e){ ta.focus(); } }
 }
 
 export function openFeed(){

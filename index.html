@@ -211,12 +211,12 @@
       <div id="statsContent"></div>
     </section>
 
-    <!-- ---------- FEED ---------- -->
+    <!-- ---------- FEED / SOCIAL ---------- -->
     <section id="tab-feed" class="panel hidden">
       <div class="section-head">
         <div>
-          <div class="section-title">Feed</div>
-          <div class="section-hint" id="feedHint">What your crew lifted today.</div>
+          <div class="section-title" id="socialTitle">Home</div>
+          <div class="section-hint" id="socialHint">What your crew lifted today.</div>
         </div>
         <div class="section-actions">
           <button class="btn btn-sm btn-ghost" id="peopleBtn" onclick="openPeople()">People</button>
@@ -224,36 +224,125 @@
         </div>
       </div>
 
-      <div class="feed-filter" id="feedFilter" role="tablist" aria-label="Feed scope">
-        <button type="button" class="seg active" data-scope="all" onclick="setFeedScope('all')">All</button>
-        <button type="button" class="seg" data-scope="following" onclick="setFeedScope('following')">Following</button>
+      <nav class="snav" id="socialNav" aria-label="Social">
+        <button type="button" class="snav-item active" data-view="home" onclick="setSView('home')">
+          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></span>
+          <span class="snav-lbl">Home</span>
+        </button>
+        <button type="button" class="snav-item" data-view="search" onclick="setSView('search')">
+          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></span>
+          <span class="snav-lbl">Search</span>
+        </button>
+        <button type="button" class="snav-item" data-view="inbox" onclick="setSView('inbox')">
+          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v11H8l-4 3z"/></svg></span>
+          <span class="snav-lbl">Messages</span>
+          <span class="snav-dot hidden" id="inboxDot" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="snav-item" data-view="profile" onclick="setSView('profile')">
+          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
+          <span class="snav-lbl">Profile</span>
+        </button>
+      </nav>
+
+      <!-- ---------- HOME ---------- -->
+      <div class="sview" id="view-home">
+        <div class="feed-filter" id="feedFilter" role="tablist" aria-label="Feed scope">
+          <button type="button" class="seg active" data-scope="all" onclick="setFeedScope('all')">All</button>
+          <button type="button" class="seg" data-scope="following" onclick="setFeedScope('following')">Following</button>
+        </div>
+
+        <div class="crew hidden" id="crewRow" aria-label="Your crew"></div>
+
+        <div class="composer" id="composer">
+          <div class="composer-top">
+            <div class="avatar composer-avatar" id="composerAvatar">?</div>
+            <textarea id="postBody" class="composer-input" rows="2" maxlength="2000"
+              placeholder="What did you lift today?" aria-label="Your post"></textarea>
+          </div>
+          <div class="composer-preview hidden" id="postPreview">
+            <img id="postPreviewImg" alt="Photo to publish">
+            <button type="button" class="composer-rm" id="postRemovePhoto"
+              aria-label="Remove photo">&times;</button>
+          </div>
+          <div class="composer-actions">
+            <button type="button" class="chip chip-type composer-photo" id="postPhotoBtn" onclick="pickPhoto()">Photo</button>
+            <input type="file" id="postPhoto" accept="image/*" class="hidden">
+            <span class="composer-count" id="postCount"></span>
+            <button type="button" class="btn btn-primary btn-sm" id="postSubmit" disabled
+              onclick="submitPost()">Post</button>
+          </div>
+          <div class="composer-error hidden" id="postError"></div>
+        </div>
+
+        <div id="feedList"></div>
+        <div class="feed-more hidden" id="feedMoreWrap">
+          <button type="button" class="btn btn-ghost" id="feedMore" onclick="loadMorePosts()">Load more</button>
+        </div>
       </div>
 
-      <div class="composer" id="composer">
-        <div class="composer-top">
-          <div class="avatar composer-avatar" id="composerAvatar">?</div>
-          <textarea id="postBody" class="composer-input" rows="2" maxlength="2000"
-            placeholder="What did you lift today?" aria-label="Your post"></textarea>
+      <!-- ---------- SEARCH ---------- -->
+      <div class="sview hidden" id="view-search">
+        <div class="search-bar">
+          <span class="search-ico" aria-hidden="true">⌕</span>
+          <input id="searchInput" class="input search-input" type="search" maxlength="40"
+            placeholder="Search lifters" aria-label="Search lifters">
+          <button type="button" class="btn btn-sm btn-ghost hidden" id="searchClear"
+            onclick="clearSearch()">Clear</button>
         </div>
-        <div class="composer-preview hidden" id="postPreview">
-          <img id="postPreviewImg" alt="Photo to publish">
-          <button type="button" class="composer-rm" id="postRemovePhoto"
-            aria-label="Remove photo">&times;</button>
-        </div>
-        <div class="composer-actions">
-          <button type="button" class="chip chip-type composer-photo" id="postPhotoBtn" onclick="pickPhoto()">Photo</button>
-          <input type="file" id="postPhoto" accept="image/*" class="hidden">
-          <span class="composer-count" id="postCount"></span>
-          <button type="button" class="btn btn-primary btn-sm" id="postSubmit" disabled
-            onclick="submitPost()">Post</button>
-        </div>
-        <div class="composer-error hidden" id="postError"></div>
+        <div id="searchList" class="people-list" aria-live="polite"></div>
       </div>
 
-      <div id="feedList"></div>
-      <div class="feed-more hidden" id="feedMoreWrap">
-        <button type="button" class="btn btn-ghost" id="feedMore" onclick="loadMorePosts()">Load more</button>
+      <!-- ---------- INBOX ---------- -->
+      <div class="sview hidden" id="view-inbox">
+        <div id="inboxList" class="people-list" aria-live="polite"></div>
       </div>
+
+      <!-- ---------- THREAD ---------- -->
+      <div class="sview hidden" id="view-thread">
+        <div class="thread-head">
+          <button type="button" class="icon-btn" id="threadBack" onclick="closeThread()"
+            aria-label="Back to messages">&#8249;</button>
+          <div class="avatar thread-avatar" id="threadAvatar">?</div>
+          <div class="thread-who">
+            <div class="thread-name" id="threadName">&nbsp;</div>
+            <div class="thread-meta" id="threadMeta">&nbsp;</div>
+          </div>
+        </div>
+        <div class="thread-list" id="threadList" aria-live="polite"></div>
+        <div class="thread-compose">
+          <textarea id="threadBody" class="composer-input thread-input" rows="1" maxlength="4000"
+            placeholder="Message…" aria-label="Message"></textarea>
+          <button type="button" class="btn btn-primary btn-sm" id="threadSend" disabled
+            onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+
+      <!-- ---------- PROFILE ---------- -->
+      <div class="sview hidden" id="view-profile">
+        <div class="prof-top">
+          <button type="button" class="prof-av" id="profAvatarBtn" aria-label="Profile photo">?</button>
+          <div class="prof-stats">
+            <div class="pstat"><b id="statPosts">0</b><span>Posts</span></div>
+            <div class="pstat"><button type="button" id="statFollowersBtn" class="pstat-n">0</button><span>Followers</span></div>
+            <div class="pstat"><button type="button" id="statFollowingBtn" class="pstat-n">0</button><span>Following</span></div>
+          </div>
+        </div>
+        <div class="prof-id">
+          <div class="prof-name" id="profName">&nbsp;</div>
+          <div class="prof-handle" id="profHandle">&nbsp;</div>
+          <div class="prof-bio hidden" id="profBio"></div>
+        </div>
+        <div class="prof-actions" id="profActions"></div>
+        <div class="prof-tabs" id="profTabs">
+          <button type="button" class="ptab active" data-ptab="grid" onclick="setProfileTab('grid')">Posts</button>
+          <button type="button" class="ptab" data-ptab="liked" onclick="setProfileTab('liked')">Liked</button>
+        </div>
+        <div class="prof-grid" id="profGrid"></div>
+        <div class="prof-grid hidden" id="profGridLiked"></div>
+      </div>
+
+      <button type="button" class="fab hidden" id="newPostFab" onclick="focusComposer()"
+        aria-label="New post"><span aria-hidden="true">+</span></button>
     </section>
 
   </main>
@@ -310,12 +399,59 @@
   </div>
 </div>
 
+<!-- Edit profile -->
+<div class="overlay" id="profileModal" onclick="if(event.target===this)closeModal('profileModal')">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-title">Edit profile</div>
+    <div class="modal-sub">Your photo, your @username, your bio.</div>
+
+    <div class="edit-av">
+      <div class="prof-av edit-av-img" id="editAvatarPreview">?</div>
+      <div class="edit-av-btns">
+        <button type="button" class="btn btn-sm" onclick="pickAvatar()">Change photo</button>
+        <button type="button" class="btn btn-sm btn-ghost hidden" id="editAvatarRemove"
+          onclick="removeAvatar()">Remove</button>
+      </div>
+      <input type="file" id="editAvatarFile" accept="image/*" class="hidden">
+    </div>
+
+    <div class="field">
+      <label class="label" for="editUsername">Username</label>
+      <div class="handle-input">
+        <span class="handle-at" aria-hidden="true">@</span>
+        <input class="input" id="editUsername" maxlength="24" placeholder="yourname"
+          autocapitalize="none" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="hint">3–24 characters: a–z, 0–9 and _</div>
+    </div>
+    <div class="field">
+      <label class="label" for="editName">Name</label>
+      <input class="input" id="editName" maxlength="50" placeholder="How you show up in the feed">
+    </div>
+    <div class="field">
+      <label class="label" for="editBio">Bio</label>
+      <textarea class="input" id="editBio" rows="3" maxlength="300"
+        placeholder="Push · Pull · Legs — chasing a 2x bodyweight squat"></textarea>
+      <div class="hint" id="editBioCount">0 / 300</div>
+    </div>
+
+    <div class="auth-error hidden" id="profileError" role="alert"></div>
+    <div class="auth-stack">
+      <button type="button" class="btn btn-primary btn-block" id="profileSubmit"
+        onclick="submitProfile()">Save</button>
+      <button type="button" class="btn btn-ghost btn-block" onclick="closeModal('profileModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Comments -->
 <div class="overlay" id="commentsModal" onclick="if(event.target===this)closeModal('commentsModal')">
   <div class="modal">
     <div class="grabber"></div>
     <div class="modal-title">Comments</div>
     <div class="modal-sub" id="commentsSub">Join the conversation.</div>
+    <div id="commentsPost" class="cpost hidden"></div>
     <div id="commentList" class="comment-list" aria-live="polite"></div>
     <div class="comment-compose">
       <textarea id="commentBody" class="composer-input comment-input" rows="1" maxlength="1000"
@@ -331,7 +467,7 @@
   <div class="modal">
     <div class="grabber"></div>
     <div class="modal-title">People</div>
-    <div class="modal-sub">Lifters on Liftr — follow them to build your crew.</div>
+    <div class="modal-sub" id="peopleSub">Lifters on Liftr — follow them to build your crew.</div>
     <div id="peopleList" class="people-list" aria-live="polite"></div>
   </div>
 </div>

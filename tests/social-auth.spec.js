@@ -113,7 +113,7 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
 
     await page.locator('#tabFeedBtn').click();
     await expect(page.locator('#tab-feed')).toBeVisible();
-    await expect(page.locator('#feedHint')).toBeVisible();
+    await expect(page.locator('#socialHint')).toBeVisible();
     await expect(page.locator('#tab-feed button:has-text("Sign out")')).toBeVisible();
     expect(await page.evaluate(() => currentTab)).toBe('feed');
   });
