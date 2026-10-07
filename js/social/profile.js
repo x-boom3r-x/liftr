@@ -10,7 +10,7 @@ const AVATAR_Q = 0.85;
 const USER_RE = /^[a-z0-9_]{3,24}$/;
 const GRID_LIMIT = 90;
 
-const POST_GRID = 'id,body,image_path,thumb_path,kind,created_at';
+const POST_GRID = 'id,author_id,body,image_path,thumb_path,kind,created_at';
 
 let targetId = null;      /* null = moi */
 let current = null;       /* dernier profil rendu */
@@ -92,7 +92,7 @@ function paintProfile(){
 }
 
 function tileHtml(p, countsRow){
-  const url = mediaUrl(p.image_path);
+  const url = mediaUrl(p.image_path, sb());
   const inner = url
     ? '<img src="' + esc(url) + '" alt="" loading="lazy">'
     : '<span class="ptile-text">' + esc((p.body || '').slice(0, 120)) + '</span>';
@@ -357,6 +357,7 @@ export function openEditProfile(){
   const input = el('editAvatarFile');
   if (input) input.value = '';
   paintPreview();
+  if (typeof window.fillAccount === 'function') window.fillAccount();
 
   if (typeof window.openModal === 'function') window.openModal('profileModal');
   return true;
@@ -397,16 +398,38 @@ export async function onAvatarChosen(e){
   }
 }
 
+/* `avatars/<uid>/avatar-...` -> chemin objet (pour nettoyer l'ancienne photo) */
+function avatarKeyFromUrl(url){
+  if (!url) return null;
+  const mark = '/avatars/';
+  const i = url.indexOf(mark);
+  if (i < 0) return null;
+  return url.slice(i + mark.length).split('?')[0] || null;
+}
+
+function dropAvatarFile(c, url){
+  const key = avatarKeyFromUrl(url);
+  if (!c || !key) return;
+  try { c.storage.from('avatars').remove([key]).catch(() => {}); } catch(e){}
+}
+
 async function uploadAvatar(c, blob){
   const id = meId();
   const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
-  const path = id + '/avatar.' + ext;
+  /* chemin unique : le CDN garde `cache-control: 1 an` sur la meme URL,
+     donc re-televerser sur le meme chemin affiche l'ancienne photo. */
+  const path = id + '/avatar-' + Date.now() + '-' +
+    Math.random().toString(36).slice(2, 8) + '.' + ext;
   const { error } = await c.storage.from('avatars').upload(path, blob, {
-    contentType: blob.type, cacheControl: '31536000', upsert: true
+    contentType: blob.type, cacheControl: '31536000', upsert: false
   });
   if (error) throw new Error(error.message || 'Could not upload your photo.');
   const r = c.storage.from('avatars').getPublicUrl(path);
-  return (r && r.data && r.data.publicUrl) || '';
+  const url = (r && r.data && r.data.publicUrl) || '';
+  if (!url) throw new Error('Could not upload your photo.');
+  const prev = (current && current.avatar_url) || null;
+  if (prev && avatarKeyFromUrl(prev) !== path) dropAvatarFile(c, prev);
+  return url;
 }
 
 export async function submitProfile(){
@@ -432,7 +455,7 @@ export async function submitProfile(){
   try {
     let url = current && current.avatar_url ? current.avatar_url : null;
     if (avatarFile) url = await uploadAvatar(c, avatarFile);
-    else if (avatarDrop) url = null;
+    else if (avatarDrop){ dropAvatarFile(c, url); url = null; }
 
     const { error } = await c.from('profiles')
       .update({ username: username, display_name: display, bio: bio, avatar_url: url })
@@ -472,7 +495,13 @@ function wireTiles(id, source){
     if (!t) return;
     const pid = t.getAttribute('data-post');
     const post = source().find(p => p.id === pid);
-    if (typeof window.openComments === 'function') window.openComments(pid, post || null);
+    if (!post) return;
+    if (String(post.author_id || '') === String(meId() || '') &&
+        typeof window.openPostMenu === 'function'){
+      window.openPostMenu(pid, post);
+      return;
+    }
+    if (typeof window.openComments === 'function') window.openComments(pid, post);
   });
 }
 

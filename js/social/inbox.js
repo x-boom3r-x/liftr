@@ -113,6 +113,7 @@ export async function renderInbox(){
     }
     paintInbox();
     await refreshInboxBadge();
+    if (typeof window.renderNotes === 'function') window.renderNotes();
     return true;
   } catch(e){
     if (list) list.innerHTML = '<div class="feed-empty">' +
@@ -298,6 +299,7 @@ export function initInbox(){
       if (t) openThread(t.getAttribute('data-peer'));
     });
   }
+  if (typeof window.initNotes === 'function') window.initNotes();
 }
 
 export function resetInbox(){
@@ -314,4 +316,5 @@ export function resetInbox(){
   if (box) box.innerHTML = '';
   const dot = el('inboxDot');
   if (dot){ dot.classList.add('hidden'); dot.textContent = ''; }
+  if (typeof window.resetNotes === 'function') window.resetNotes();
 }

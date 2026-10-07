@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="34">
+<html lang="en" data-build="35">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -339,6 +339,7 @@
 
       <!-- ---------- INBOX ---------- -->
       <div class="sview hidden" id="view-inbox">
+        <div class="notes hidden" id="notesRow" aria-label="Notes"></div>
         <div id="inboxList" class="people-list" aria-live="polite"></div>
       </div>
 
@@ -479,6 +480,42 @@
       <textarea class="input" id="editBio" rows="3" maxlength="300"
         placeholder="Push · Pull · Legs — chasing a 2x bodyweight squat"></textarea>
       <div class="hint" id="editBioCount">0 / 300</div>
+    </div>
+
+    <!-- Account -->
+    <div class="acct">
+      <div class="acct-h">Account</div>
+
+      <div class="acct-row">
+        <label class="label" for="acctEmail">Email</label>
+        <div class="acct-line">
+          <input class="input" id="acctEmail" type="email" maxlength="120"
+            placeholder="you@example.com" autocapitalize="none" autocomplete="email">
+          <button type="button" class="btn btn-sm" id="acctEmailSave"
+            onclick="saveEmail()">Save</button>
+        </div>
+      </div>
+
+      <div class="acct-row">
+        <label class="label" for="acctPass">Password</label>
+        <div class="acct-line">
+          <input class="input" id="acctPass" type="password" minlength="8" maxlength="72"
+            placeholder="New password" autocomplete="new-password">
+          <button type="button" class="btn btn-sm" id="acctPassSave"
+            onclick="savePassword()">Update</button>
+        </div>
+        <div class="hint">At least 8 characters.</div>
+      </div>
+
+      <div class="acct-row acct-row-between">
+        <span class="label" style="margin:0">Session</span>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="signOutNow()">Sign out</button>
+      </div>
+
+      <div class="auth-error hidden" id="acctError" role="alert"></div>
+
+      <button type="button" class="btn btn-red btn-block acct-danger" id="acctDelete"
+        onclick="deleteMyAccount()">Delete my account</button>
     </div>
 
     <div class="auth-error hidden" id="profileError" role="alert"></div>
@@ -814,6 +851,65 @@
   <div class="liftr-text" id="liftrText" data-filter="" data-id=""></div>
 </div>
 
+<!-- Note (60 car., 24 h) -->
+<div class="overlay" id="noteModal" onclick="if(event.target===this)closeModal('noteModal')">
+  <div class="modal" style="max-width:440px">
+    <div class="grabber"></div>
+    <div class="modal-title" id="noteTitle">Your note</div>
+    <div class="modal-sub">60 characters, visible for 24 hours.</div>
+    <textarea id="noteBody" class="composer-input" rows="2" maxlength="60"
+      placeholder="Share a note…" aria-label="Your note"></textarea>
+    <div class="composer-error hidden" id="noteError" role="alert"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost btn-sm hidden" id="noteRemove"
+        onclick="removeNote()">Remove</button>
+      <button type="button" class="btn btn-primary btn-sm" id="noteSubmit"
+        onclick="submitNote()">Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- Story : creation -->
+<div class="overlay" id="storyModal" onclick="if(event.target===this)closeModal('storyModal')">
+  <div class="modal" style="max-width:460px">
+    <div class="grabber"></div>
+    <div class="modal-title">Your story</div>
+    <div class="modal-sub">Photo, words, or both. Shared for 24 hours.</div>
+    <textarea id="storyBody" class="composer-input" rows="3" maxlength="400"
+      placeholder="Say something…" aria-label="Your story"></textarea>
+    <div class="story-preview hidden" id="storyPreview">
+      <img id="storyPreviewImg" alt="Story photo">
+    </div>
+    <div class="composer-error hidden" id="storyError" role="alert"></div>
+    <div class="modal-actions">
+      <button type="button" class="chip chip-type" onclick="pickStoryPhoto()">Photo</button>
+      <input type="file" id="storyPhoto" accept="image/*" class="hidden">
+      <button type="button" class="btn btn-primary btn-sm" id="storySubmit"
+        onclick="submitStory()">Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- Story : visionneuse plein ecran -->
+<div class="story-view" id="storyView" role="dialog" aria-modal="true" aria-label="Story">
+  <div class="sv-top">
+    <div class="sv-progress" id="svProgress"></div>
+    <div class="sv-head">
+      <span class="avatar sv-av" id="svAvatar">?</span>
+      <span class="sv-who"><b id="svName">Story</b><span id="svTime"></span></span>
+      <button type="button" class="sv-close" onclick="closeStoryViewer()"
+        aria-label="Close story">&#10005;</button>
+    </div>
+  </div>
+  <div class="sv-stage" id="svStage"></div>
+  <div class="sv-foot">
+    <button type="button" class="btn btn-sm btn-red hidden" id="svDelete"
+      onclick="deleteCurrentStory()">Delete</button>
+    <button type="button" class="btn btn-sm btn-ghost" onclick="openStoryComposer()">
+      Add to your story</button>
+  </div>
+</div>
+
 <!-- Generic confirmation (related deletions) -->
 <div class="overlay" id="confirmModal" onclick="if(event.target===this)closeConfirm(false)">
   <div class="modal" style="max-width:460px">
@@ -829,6 +925,19 @@
     <div class="modal-actions">
       <button class="btn" onclick="closeConfirm(false)">Cancel</button>
       <button class="btn btn-red" id="cfOk" onclick="closeConfirm(true)">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Action sheet (menus contextuels, style iOS) -->
+<div class="overlay overlay-sheet" id="actionSheet" onclick="if(event.target===this)closeActionSheet()">
+  <div class="action-sheet" role="dialog" aria-modal="true">
+    <div class="as-group">
+      <div class="as-title hidden" id="asTitle"></div>
+      <div id="asList" class="as-list"></div>
+    </div>
+    <div class="as-group as-cancel">
+      <button type="button" class="as-item" onclick="closeActionSheet()">Cancel</button>
     </div>
   </div>
 </div>

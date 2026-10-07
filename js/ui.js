@@ -5,6 +5,7 @@
 
 async function boot(){
   migrateProfileNames();
+  wireActionSheet();
   const sp = new URLSearchParams(location.search).get('share');
   if (sp) pendingShare = sp;
   await renderProfiles();
@@ -140,7 +141,40 @@ function toast(msg){
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+/* ---------------- action sheet (style iOS) ----------------
+   actions : [{ label, style: 'default' | 'destructive', fn }] */
+let _sheetActions = [];
+function openActionSheet(title, actions){
+  _sheetActions = (actions || []).slice();
+  const t = $('asTitle');
+  t.textContent = title || '';
+  t.classList.toggle('hidden', !title);
+  $('asList').innerHTML = _sheetActions.map((a, i) =>
+    '<button type="button" class="as-item' + (a.style === 'destructive' ? ' danger' : '') +
+    '" data-i="' + i + '">' + esc(a.label) + '</button>').join('');
+  openModal('actionSheet');
+  return true;
+}
+function closeActionSheet(){
+  _sheetActions = [];
+  closeModal('actionSheet');
+  return true;
+}
+function wireActionSheet(){
+  const list = $('asList');
+  if (!list || list.dataset.wired) return;
+  list.dataset.wired = '1';
+  list.addEventListener('click', e => {
+    const btn = e.target && e.target.closest && e.target.closest('[data-i]');
+    if (!btn) return;
+    const a = _sheetActions[parseInt(btn.getAttribute('data-i'), 10)];
+    closeActionSheet();
+    if (a && typeof a.fn === 'function') setTimeout(a.fn, 0);
+  });
+}
+
 Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, renderAll,
-  openModal, closeModal, askConfirm, closeConfirm, toast
+  openModal, closeModal, askConfirm, closeConfirm, toast,
+  openActionSheet, closeActionSheet
 });

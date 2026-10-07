@@ -147,3 +147,16 @@ test('service worker : le JS vient du réseau même si le cache est pollué', as
   const seen = await page.evaluate(() => window.__LIFTR_BUILD__);
   expect(seen, 'JS servi depuis le réseau, pas depuis le cache pollué').toBe(build);
 });
+
+/* Les modules sociaux ajout�s au fil des iterations ont ete oublies une fois
+   dans la liste de pre-cache : l'app cassait hors-ligne. On verifie que tout
+   ce qui existe sur disque est dans ASSETS. */
+test('service worker : ASSETS precache tous les modules sociaux', () => {
+  const sw = fs.readFileSync('sw.js', 'utf8');
+  const listed = (sw.match(/'\.\/js\/social\/[^']+'/g) || []).map(s => s.replace(/'/g, ''));
+  const onDisk = require('fs').readdirSync('js/social')
+    .filter(f => f.endsWith('.js'))
+    .map(f => './js/social/' + f);
+  expect(onDisk.length, 'dossier js/social vide ?').toBeGreaterThan(0);
+  expect(onDisk.filter(f => !listed.includes(f))).toEqual([]);
+});

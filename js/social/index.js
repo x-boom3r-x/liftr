@@ -15,7 +15,7 @@ import {
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
   toggleLike, sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
-  refreshIdentity
+  refreshIdentity, deletePost, openPostMenu
 } from './feed.js';
 import {
   openComments, closeComments, submitComment, updateCommentComposer,
@@ -41,6 +41,17 @@ import {
   renderInbox, refreshInboxBadge, loadThread, openThread, closeThread,
   sendMessage, initInbox, resetInbox
 } from './inbox.js';
+import {
+  renderStories, initStories, initStoryViewer, openStoryViewer,
+  closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
+  deleteStory, deleteCurrentStory, resetStories
+} from './stories.js';
+import {
+  renderNotes, initNotes, openNoteComposer, submitNote, removeNote, resetNotes
+} from './notes.js';
+import {
+  initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount
+} from './account.js';
 
 Object.assign(window, {
   SOCIAL_CONFIG, SOCIAL_ENABLED, GOOGLE_ENABLED,
@@ -54,7 +65,7 @@ Object.assign(window, {
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
   toggleLike, sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
-  refreshIdentity,
+  refreshIdentity, deletePost, openPostMenu,
   openComments, closeComments, submitComment, updateCommentComposer,
   initComments, resetComments,
   openPeople, closePeople, toggleFollow, isFollowed, mergeFollows,
@@ -67,6 +78,11 @@ Object.assign(window, {
   openSearch, runSearch, clearSearch, renderSearch, resetSearch,
   renderInbox, refreshInboxBadge, loadThread, openThread, closeThread,
   sendMessage, initInbox, resetInbox,
+  renderStories, initStories, initStoryViewer, openStoryViewer,
+  closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
+  deleteStory, deleteCurrentStory, resetStories,
+  renderNotes, initNotes, openNoteComposer, submitNote, removeNote, resetNotes,
+  initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,
   onFollowChanged
 });
 
@@ -84,9 +100,12 @@ function initSocial(){
   updateSocialGate();
   initShell();
   initFeed();
+  initStories();
+  initStoryViewer();
   initComments();
   initPeople();
   initProfile();
+  initAccount();
   initInbox();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
 }

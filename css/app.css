@@ -748,6 +748,14 @@ button{background:none;border:none;cursor:pointer}
 .post-name{font-size:.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .post-time{font-size:.73rem;color:var(--text3);margin-top:2px}
 .post-kind{flex:none}
+.post-more{
+  flex:none;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;color:var(--text3);
+  font-size:1.15rem;line-height:1;font-weight:700;
+  transition:background .14s ease,color .14s ease,transform .1s ease;
+}
+.post-more:active{background:var(--surface3);color:var(--text);transform:scale(.9)}
+
 .post-body{
   font-size:.92rem;line-height:1.52;color:var(--text);margin-top:11px;
   white-space:pre-wrap;word-break:break-word;
@@ -842,7 +850,7 @@ button{background:none;border:none;cursor:pointer}
 .person .btn{flex:none;min-width:92px}
 
 /* ================================================================
-   SOCIAL V2 — shell, glass, crew stories, profil, messages
+   SOCIAL V2 ï¿½ shell, glass, crew stories, profil, messages
    ================================================================ */
 :root{
   --gx1:#FFD60A; --gx2:#FF3D8B; --gx3:#8B5CF6; --gx4:#22D3EE;
@@ -976,7 +984,7 @@ button{background:none;border:none;cursor:pointer}
 .post-act-share{margin-left:auto}
 .post-act-l{letter-spacing:.01em}
 
-/* ---------- en-tête post dans les commentaires ---------- */
+/* ---------- en-tï¿½te post dans les commentaires ---------- */
 .cpost{
   background:var(--surface2);border:1px solid var(--border);
   border-radius:14px;padding:11px 12px;margin-bottom:14px;
@@ -1056,7 +1064,7 @@ button{background:none;border:none;cursor:pointer}
 .thread-input{min-height:42px;max-height:120px;resize:none;background:var(--surface2)}
 .thread-compose .btn{flex:none}
 
-/* ---------- profil façon Instagram ---------- */
+/* ---------- profil faï¿½on Instagram ---------- */
 .prof-top{
   display:flex;align-items:center;gap:18px;padding:6px 2px 14px;
 }
@@ -1149,3 +1157,302 @@ button{background:none;border:none;cursor:pointer}
 .crew-cell.skeleton .crew-av{background:var(--surface3)}
 .crew-cell.skeleton .crew-ring{background:var(--border)}
 @media (prefers-reduced-motion: reduce){ .ptile img{transition:none} }
+
+/* ================================================================
+   ACTION SHEET (style iOS) â€” menus contextuels
+   ================================================================ */
+.overlay-sheet{
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:12px;padding-bottom:calc(12px + var(--safe-bottom));
+  background:rgba(0,0,0,.42);
+  backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+}
+.overlay-sheet:not(.show){display:none}
+.action-sheet{
+  width:100%;max-width:520px;display:flex;flex-direction:column;gap:9px;
+  transform:translateY(24px) scale(.98);opacity:0;
+  transition:transform .34s cubic-bezier(.32,.72,0,1),opacity .18s ease;
+}
+.overlay-sheet.show .action-sheet{transform:none;opacity:1}
+.as-group{
+  background:rgba(28,28,33,.86);
+  backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 18px 44px rgba(0,0,0,.5);
+}
+.as-title{
+  padding:13px 16px 11px;font-size:.73rem;color:var(--text3);text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.07);line-height:1.4;
+}
+.as-list{display:flex;flex-direction:column}
+.as-item{
+  padding:16px 16px;font-size:1.02rem;font-weight:500;color:var(--text);
+  text-align:center;border-top:1px solid rgba(255,255,255,.07);
+  transition:background .12s ease;min-height:56px;
+}
+.as-list .as-item:first-child{border-top:none}
+.as-title + .as-list .as-item:first-child{border-top:none}
+.as-item:active{background:rgba(255,255,255,.09)}
+.as-item.danger{color:#FF6A62;font-weight:600}
+.as-cancel{border:1px solid rgba(255,255,255,.12)}
+.as-cancel .as-item{border-top:none;font-weight:700;color:var(--primary);min-height:56px}
+@media (prefers-reduced-motion: reduce){
+  .action-sheet{transition:opacity .16s ease;transform:none !important}
+}
+/* ==================================================================
+   STORIES (24 h) : anneau, visionneuse, creation
+   ================================================================== */
+.crew-cell.live .crew-ring{
+  background:linear-gradient(45deg,#ffb347,#ff4d6d 50%,#8a5cff);
+  padding:3px;
+}
+.crew-cell.seen .crew-ring{background:var(--line)}
+.crew-ring.none{background:linear-gradient(135deg,var(--surface3),var(--border))}
+.crew-cell.live .crew-label{color:var(--text);font-weight:750}
+
+.story-preview{
+  margin-top:12px;border-radius:14px;overflow:hidden;background:var(--surface2);
+}
+.story-preview img{width:100%;max-height:260px;object-fit:cover;display:block}
+
+.story-view{
+  position:fixed;inset:0;z-index:50;background:#000;
+  display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .2s ease;
+}
+.story-view.show{opacity:1;visibility:visible;pointer-events:auto}
+.sv-top{
+  position:absolute;top:0;left:0;right:0;z-index:3;
+  padding:10px 12px 10px;
+  background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0));
+}
+.sv-progress{display:flex;gap:4px;margin-bottom:10px}
+.sv-seg{
+  flex:1;height:3px;border-radius:3px;overflow:hidden;
+  background:rgba(255,255,255,.32);
+}
+.sv-seg>span{
+  display:block;height:100%;width:100%;background:#fff;
+  transform:scaleX(0);transform-origin:left center;
+}
+.sv-seg.done>span{transform:scaleX(1)}
+.sv-head{display:flex;align-items:center;gap:10px;color:#fff}
+.sv-av{
+  width:36px;height:36px;font-size:.9rem;flex:none;overflow:hidden;
+  background:rgba(255,255,255,.18);color:#fff;
+}
+.sv-who{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.sv-who b{font-size:.92rem;font-weight:750}
+.sv-who span{font-size:.74rem;opacity:.78}
+.sv-close{
+  width:36px;height:36px;flex:none;border-radius:50%;color:#fff;font-size:1rem;
+  background:rgba(255,255,255,.16);display:grid;place-items:center;
+}
+.sv-close:active{transform:scale(.9);background:rgba(255,255,255,.3)}
+.sv-stage{
+  position:absolute;inset:0;display:grid;place-items:center;
+  overflow:hidden;background:#0b0b0d;
+}
+.sv-img{width:100%;height:100%;object-fit:cover;display:block}
+.sv-caption{
+  position:absolute;left:0;right:0;bottom:0;padding:64px 18px 72px;
+  color:#fff;font-size:1.02rem;line-height:1.5;text-align:center;
+  text-shadow:0 1px 12px rgba(0,0,0,.55);
+  background:linear-gradient(transparent,rgba(0,0,0,.62));
+}
+.sv-stage.plain{background:radial-gradient(120% 90% at 50% 15%,#1e1738,#0b0b0d)}
+.sv-stage.plain .sv-caption{
+  position:static;padding:24px;max-width:32ch;background:none;
+  font-size:1.15rem;font-weight:600;
+}
+.sv-loading,.sv-empty{
+  color:rgba(255,255,255,.82);font-size:.92rem;padding:24px;text-align:center;
+}
+.sv-hit{position:absolute;inset:0;display:flex;z-index:2}
+.sv-tap{flex:1;background:transparent;border:none;-webkit-tap-highlight-color:transparent}
+.sv-foot{
+  position:absolute;left:0;right:0;bottom:0;z-index:3;
+  display:flex;gap:10px;justify-content:center;align-items:center;
+  padding:16px 16px calc(16px + var(--safe-bottom));
+  background:linear-gradient(transparent,rgba(0,0,0,.6));
+}
+.sv-foot .btn-ghost{color:#fff;border-color:rgba(255,255,255,.4);background:rgba(0,0,0,.3)}
+.sv-foot .btn-red{background:rgba(226,61,61,.92);color:#fff;border:none}
+@media (prefers-reduced-motion:reduce){
+  .story-view{transition:none}
+}
+
+/* ==================================================================
+   NOTES (60 car., 24 h) au-dessus des messages
+   ================================================================== */
+.notes{
+  display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;
+  padding:2px 2px 14px;margin:0 -2px 8px;
+}
+.notes::-webkit-scrollbar{display:none}
+.note-cell{
+  flex:none;width:74px;display:flex;flex-direction:column;
+  align-items:center;gap:7px;background:none;border:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.note-cell:active .note-av{transform:scale(.94)}
+.note-bubble{
+  max-width:74px;padding:6px 9px;border-radius:14px;
+  background:var(--surface3);border:1px solid var(--border);
+  color:var(--text);font-size:.67rem;line-height:1.35;text-align:center;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;
+  -webkit-box-orient:vertical;word-break:break-word;
+}
+.note-bubble.empty{
+  color:var(--text3);background:var(--surface2);
+  border-style:dashed;font-weight:700;
+}
+.note-av{
+  width:46px;height:46px;border-radius:50%;overflow:hidden;flex:none;
+  background:var(--surface2);color:var(--text3);
+  display:grid;place-items:center;font-size:.95rem;font-weight:800;
+  transition:transform .12s ease;
+}
+.note-av-img{width:100%;height:100%;object-fit:cover;display:block}
+.note-cell.is-me .note-av{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--line)}
+
+/* ==================================================================
+   COMPTE : photo plus grande, email, mot de passe, session, delete
+   ================================================================== */
+.prof-av.edit-av-img{width:96px;height:96px;font-size:2rem}
+.edit-av{gap:18px;align-items:center}
+.acct{
+  margin-top:22px;padding-top:18px;
+  border-top:1px solid var(--line);
+}
+.acct-h{
+  font-size:.74rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text3);margin-bottom:14px;
+}
+.acct-row{margin-bottom:14px}
+.acct-row .label{display:block;margin-bottom:6px}
+.acct-line{display:flex;gap:8px;align-items:center}
+.acct-line .input{flex:1;min-width:0}
+.acct-line .btn{flex:none;min-width:74px;justify-content:center}
+.acct-row-between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.acct-row-between .label{margin:0}
+.acct-danger{
+  margin-top:6px;background:rgba(255,69,58,.12);
+  border-color:rgba(255,69,58,.34);color:#FF6A62;font-weight:750;
+}
+.acct-danger:active{background:rgba(255,69,58,.22)}
+
+/* ================================================================
+   PASS APPLE - reponse au pointer-down, matieres, reduced-motion
+   ================================================================ */
+
+/* --- 1. Reponse : pas de tache fantome, geste immediat ----------- */
+.btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.post-more,.fab,.as-item,
+.type-opt,.stepper button,.profile-btn,.file-btn,.chip,.crew-cell,.dm,
+.person,.ptile,.note-cell,.hist-item.tap,.lib-item,.plan-cell,.card,
+.profile-card,.ctx-sug,.add-set-btn,.add-ex-btn,.liftr-refresh,
+.set-del,.hist-del,.prog-del,.composer-photo{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+
+/* --- 2. Pression continue : une seule courbe partout ------------- */
+.btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.post-more,.fab,.as-item,
+.type-opt,.stepper button,.profile-btn,.file-btn,.chip,.crew-cell,.dm,
+.person,.ptile,.note-cell,.hist-item.tap,.lib-item,.plan-cell,
+.ctx-sug,.add-set-btn,.add-ex-btn,.liftr-refresh,.composer-photo{
+  transition:transform 110ms cubic-bezier(.22,.61,.36,1),
+             background-color .18s ease,border-color .18s ease,
+             color .18s ease,box-shadow .18s ease;
+}
+/* les controlles qui n'avaient pas de pression en recoivent une */
+.tab:active,.crew-cell:active,.person:active,.type-opt:active,.chip:active,
+.profile-btn:active,.file-btn:active,.ctx-sug:active{transform:scale(.96)}
+.icon-btn:active,.post-more:active,.post-act:active,.as-item:active,
+.add-set-btn:active,.add-ex-btn:active{transform:scale(.95)}
+.dm:active{transform:scale(.99)}
+.card:active,.profile-card:active{transform:scale(.99)}
+/* la ou la pression porte sur un enfant, on n'empile pas d'echelle */
+.note-cell:active,.ptile:active{transform:none}
+
+/* --- 3. Survol (souris uniquement) ------------------------------- */
+@media (hover:hover) and (pointer:fine){
+  .btn:hover{background:var(--surface3);border-color:rgba(255,255,255,.14)}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .icon-btn:hover,.stepper button:hover{background:var(--surface3);color:var(--text)}
+  .seg:hover,.tab:hover,.snav-item:hover{color:var(--text)}
+  .dm:hover,.person:hover{background:var(--surface2)}
+  .post:hover,.card:hover,.profile-card:hover{border-color:rgba(255,255,255,.16)}
+  .post-act:hover,.post-more:hover{background:var(--surface3);color:var(--text)}
+  .ptile:hover img{transform:scale(1.05);transition:transform .5s cubic-bezier(.22,.61,.36,1)}
+  .as-item:hover{background:rgba(255,255,255,.1)}
+}
+
+/* --- 4. Cibles tactiles : 44px sans changer le dessin ------------ */
+.icon-btn{position:relative}
+.icon-btn::after{
+  content:"";position:absolute;top:50%;left:50%;
+  width:44px;height:44px;transform:translate(-50%,-50%);
+}
+
+/* --- 5. Matieres : chrome translucide, bords qui attrapent la lumiere */
+.header{
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 1px 0 rgba(255,255,255,.05);
+}
+.tabbar{
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 -1px 0 rgba(255,255,255,.05) inset;
+}
+.snav{
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+}
+.modal{
+  transform-origin:bottom center;
+  box-shadow:0 -18px 60px rgba(0,0,0,.55);
+}
+.action-sheet{transform-origin:bottom center}
+.overlay-sheet .action-sheet{will-change:transform,opacity}
+.sview{will-change:opacity}
+
+/* --- 6. Comportement d'app : pas de selection parasite, pas de rebond */
+.header,.tabbar,.snav,.crew,.action-sheet,.notes,.fab,.stepper{
+  user-select:none;-webkit-user-select:none;
+}
+.modal,.action-sheet,.crew,.sview,.feed{overscroll-behavior:contain}
+
+/* --- 7. Focus clavier visible, jamais sur les champs (ring maison) - */
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.input:focus-visible,.textarea:focus-visible,select.input:focus-visible,
+.composer-input:focus-visible{outline:none}
+
+/* --- 8. Reduced motion : fondu, plus de glisse ni d'echelle -------- */
+@media (prefers-reduced-motion: reduce){
+  .btn:active,.icon-btn:active,.seg:active,.tab:active,.snav-item:active,
+  .post-act:active,.post-more:active,.fab:active,.as-item:active,
+  .type-opt:active,.stepper button:active,.profile-btn:active,.file-btn:active,
+  .chip:active,.crew-cell:active,.dm:active,.person:active,.ptile:active,
+  .note-cell:active,.hist-item.tap:active,.lib-item:active,.plan-cell:active,
+  .card:active,.profile-card:active,.ctx-sug:active,.add-set-btn:active,
+  .add-ex-btn:active,.liftr-refresh:active,.composer-photo:active{
+    transform:none !important;
+  }
+  .btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.fab,.as-item,.dm,.person,
+  .ptile,.note-cell,.crew-cell,.card,.profile-card,.ctx-sug{
+    transition:background-color .15s ease,border-color .15s ease,color .15s ease !important;
+  }
+  .modal{animation:fade .16s ease !important}
+  .overlay-sheet .action-sheet,
+  .overlay-sheet.show .action-sheet{
+    transition:opacity .16s ease !important;transform:none !important;
+  }
+  .story-view,.sv-seg,.sv-seg>span{transition:none !important;animation:none !important}
+  .ptile img,.ptile:hover img{transition:none !important;transform:none !important}
+  .toast{transition:opacity .16s ease !important;transform:translate(-50%,0)}
+  .post-skeleton .sk,.story-preview img{animation:none !important}
+}

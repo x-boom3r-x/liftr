@@ -27,6 +27,7 @@ let pendingScroll = null;
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
 function gateOk(){ return typeof window.socialAvailable === 'function' ? window.socialAvailable() : SOCIAL_ENABLED; }
+function meId(){ return (window.socialUser || {}).id || null; }
 
 /* ------------------------------ temps ------------------------------ */
 export function timeAgo(iso){
@@ -294,6 +295,71 @@ export function sharePost(id){
   return true;
 }
 
+/* ----------------------------- suppression -------------------------- */
+export function openPostMenu(id, source){
+  const p = source || posts.find(x => x.id === id);
+  if (!p) return false;
+  if (String(p.author_id || '') !== String(meId() || '')){
+    toast('You can only manage your own posts.');
+    return false;
+  }
+  if (typeof window.openActionSheet !== 'function') return false;
+  window.openActionSheet('Your post', [
+    { label: 'Open post', fn: () => {
+        if (typeof window.openComments === 'function') window.openComments(id, p);
+      } },
+    { label: 'Delete post', style: 'destructive', fn: () => { deletePost(id, p); } }
+  ]);
+  return true;
+}
+
+export async function deletePost(id, source){
+  const c = sb();
+  const idx = posts.findIndex(x => x.id === id);
+  const p = idx >= 0 ? posts[idx] : (source || null);
+  if (!p || !c) return false;
+  if (String(p.author_id || '') !== String(meId() || '')){
+    toast('You can only delete your own posts.');
+    return false;
+  }
+
+  if (typeof window.askConfirm === 'function'){
+    const r = await window.askConfirm(
+      'Delete this post?',
+      'The post, its photo, its comments and its likes disappear for everyone. This cannot be undone.',
+      'Delete');
+    if (!r || !r.ok) return false;
+  }
+
+  const had = idx >= 0;
+  const keepCount = counts[id];
+  if (had){
+    posts.splice(idx, 1);
+    delete counts[id];
+    paint();
+  }
+
+  try {
+    const { error } = await c.from('posts').delete().eq('id', id);
+    if (error) throw new Error(error.message || 'Could not delete this post.');
+    const paths = [p.image_path, p.thumb_path].filter(Boolean);
+    if (paths.length) c.storage.from('posts').remove(paths).catch(() => {});
+    toast('Post deleted.');
+    const view = document.getElementById('view-profile');
+    if (view && !view.classList.contains('hidden') &&
+        typeof window.renderProfile === 'function') window.renderProfile();
+    return true;
+  } catch(e){
+    if (had){
+      posts.splice(Math.min(idx, posts.length), 0, p);
+      if (keepCount) counts[id] = keepCount;
+      paint();
+    }
+    toast((e && e.message) || 'Could not delete this post.');
+    return false;
+  }
+}
+
 function paintOne(id){
   const list = el('feedList');
   if (!list) return;
@@ -395,6 +461,11 @@ export function postCardHtml(p){
   const kind = (p.kind && p.kind !== 'text' && p.kind !== 'photo')
     ? '<span class="chip chip-type post-kind">' + esc(p.kind.toUpperCase()) + '</span>' : '';
   const k = counts[p.id] || { c: 0, l: 0, liked: false };
+  const mine = !!p.id && String(p.author_id || '') === String(meId() || '');
+  const more = mine
+    ? '<button type="button" class="post-more" data-act="menu" data-post="' + esc(p.id) + '" ' +
+      'aria-label="Post options" title="Post options"><span aria-hidden="true">⋯</span></button>'
+    : '';
 
   const foot = '<div class="post-foot">' +
     '<button type="button" class="post-act" data-act="reply" data-post="' + esc(p.id || '') + '" ' +
@@ -426,7 +497,7 @@ export function postCardHtml(p){
           (handle ? '<span class="post-handle">' + esc(handle) + '</span><span class="post-dot" aria-hidden="true">·</span>' : '') +
           '<span class="post-time">' + esc(timeAgo(p.created_at)) + '</span>' +
         '</div>' +
-      '</div>' + kind +
+      '</div>' + kind + more +
     '</div>' +
     body + statStrip(p) + media + foot +
     '</article>';
@@ -581,7 +652,7 @@ export function resetFeed(){
   hasMore = false;
   counts = {};
   noFollows = false;
-  crewLoaded = false;
+  if (typeof window.resetStories === 'function') window.resetStories();
   photo = null;
   if (photoUrl){ URL.revokeObjectURL(photoUrl); photoUrl = null; }
   pendingScroll = null;
@@ -628,109 +699,37 @@ export function initFeed(){
         toggleLike(id);
       } else if (act === 'share'){
         sharePost(id);
+      } else if (act === 'menu'){
+        openPostMenu(id);
       } else if (act === 'profile'){
         const uid = btn.getAttribute('data-uid');
         if (uid && typeof window.openProfile === 'function') window.openProfile(uid);
       }
     });
   }
-  const crew = el('crewRow');
-  if (crew && !crew.dataset.wired){
-    crew.dataset.wired = '1';
-    crew.addEventListener('click', e => {
-      const cell = e.target && e.target.closest && e.target.closest('[data-crew]');
-      if (!cell) return;
-      const kind = cell.getAttribute('data-crew');
-      if (kind === 'compose') focusComposer();
-      else if (kind === 'people' && typeof window.openPeople === 'function') window.openPeople();
-      else if (kind === 'profile'){
-        const uid = cell.getAttribute('data-uid');
-        if (uid && typeof window.openProfile === 'function') window.openProfile(uid);
-      }
-    });
-  }
+  if (typeof window.initStories === 'function') window.initStories();
   renderComposer();
   updateComposer();
   renderCrew();
 }
 
-/* --------------------------- crew (stories) ------------------------ */
-let crewLoaded = false;
-
-export async function renderCrew(){
-  const row = el('crewRow');
-  if (!row) return;
-  const c = sb();
-  const me = (window.socialUser || {}).id;
-  if (!c || !me){ row.classList.add('hidden'); return; }
-  if (crewLoaded) return;
-  row.classList.remove('hidden');
-  row.innerHTML = '<div class="crew-cell skeleton"><span class="crew-ring"><span class="avatar crew-av sk"></span></span></div>'.repeat(4);
-  try {
-    const { data: f } = await c.from('follows').select('followee_id').eq('follower_id', me).limit(12);
-    const ids = (f || []).map(r => r.followee_id);
-    let people = [];
-    if (ids.length){
-      const { data: pr } = await c.from('profiles')
-        .select('id,username,display_name,avatar_url').in('id', ids).limit(12);
-      people = pr || [];
-    }
-    const meP = await myProfile(c, me);
-    const you = meP
-      ? { id: '', username: meP.username, display_name: meP.display_name || meP.username, avatar_url: meP.avatar_url, me: 1 }
-      : { id: '', username: '', display_name: (window.socialUser && window.socialUser.email) || 'You', avatar_url: '', me: 1 };
-    let html = crewCell(you) + people.map(x => crewCell(x)).join('');
-    if (people.length < 6) html += crewFindCell();
-    row.innerHTML = html;
-    row.classList.toggle('hidden', !html);
-    crewLoaded = true;
-  } catch(e){
-    row.innerHTML = '';
-    row.classList.add('hidden');
-    crewLoaded = true;
-  }
-}
-
-function crewCell(u){
-  const name = u.display_name || u.username || 'Athlete';
-  const initial = String(name).trim().charAt(0).toUpperCase() || '?';
-  const av = u.avatar_url
-    ? '<img class="crew-av-img" src="' + esc(u.avatar_url) + '" alt="">'
-    : esc(initial);
-  const label = u.me ? 'You' : esc(String(name).slice(0, 10));
-  const act = u.me ? 'data-crew="compose"' : 'data-crew="profile" data-uid="' + esc(u.id) + '"';
-  return '<button type="button" class="crew-cell' + (u.me ? ' is-me' : '') + '" ' + act + '>' +
-    '<span class="crew-ring' + (u.me ? ' me' : '') + '">' +
-      '<span class="avatar crew-av' + (u.avatar_url ? '' : ' fallback') + '">' + av + '</span>' +
-      (u.me ? '<span class="crew-plus" aria-hidden="true">+</span>' : '') +
-    '</span>' +
-    '<span class="crew-label">' + label + '</span>' +
-    '</button>';
-}
-
-function crewFindCell(){
-  return '<button type="button" class="crew-cell crew-find" data-crew="people">' +
-    '<span class="crew-ring find"><span class="avatar crew-av fallback">⌕</span></span>' +
-    '<span class="crew-label">Find</span>' +
-    '</button>';
-}
-
-async function myProfile(c, me){
-  const { data } = await c.from('profiles').select('id,username,display_name,avatar_url').eq('id', me).limit(1);
-  const row = Array.isArray(data) ? data[0] : data;
-  return row || null;
+/* --------------------------- crew (stories) ------------------------
+   La rangée est pilotee par ./stories.js (anneaux 24 h, visionneuse). */
+export function renderCrew(){
+  if (typeof window.renderStories === 'function') return window.renderStories();
+  return false;
 }
 
 export function initCrew(){
-  crewLoaded = false;
-  renderCrew();
+  if (typeof window.resetStories === 'function') window.resetStories();
+  if (typeof window.initStories === 'function') window.initStories();
+  return renderCrew();
 }
 
 /* After a profile change (photo / name): refresh everything. */
 export function refreshIdentity(){
   renderComposer();
-  crewLoaded = false;
-  renderCrew();
+  return initCrew();
 }
 
 export function focusComposer(){
