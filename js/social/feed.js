@@ -11,7 +11,7 @@ const THUMB_EDGE = 320;      /* côté max de la vignette (blur-up) */
 const FULL_Q = 0.85;
 const THUMB_Q = 0.8;
 const MAX_BYTES = 12 * 1024 * 1024;
-const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles(id,username,display_name,avatar_url)';
+const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles!posts_author_id_fkey(id,username,display_name,avatar_url)';
 
 let posts = [];
 let hasMore = false;

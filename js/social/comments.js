@@ -6,7 +6,7 @@ import { sb } from './client.js';
 import { timeAgo } from './feed.js';
 
 const MAX_BODY = 1000;
-const CMT_SELECT = 'id,body,created_at,post_id,author:profiles(username,display_name,avatar_url)';
+const CMT_SELECT = 'id,body,created_at,post_id,author:profiles!comments_author_id_fkey(username,display_name,avatar_url)';
 
 let postId = null;
 let rows = [];
