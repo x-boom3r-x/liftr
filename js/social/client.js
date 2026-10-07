@@ -20,7 +20,9 @@ export function sb(){
         /* JWT d'une heure : sans rafraichissement automatique, les boutons du
            feed echouent silencieusement (401) des que l'onglet vieillit. */
         autoRefreshToken: true,
-        detectSessionInUrl: false,
+        /* Sans cela, le retour OAuth (#access_token=...) n'est jamais lu :
+           la session Google n'ouvre jamais, l'utilisateur reste deconnecte. */
+        detectSessionInUrl: true,
         storageKey: 'liftr-auth'
       }
     });

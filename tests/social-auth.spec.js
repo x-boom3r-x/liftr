@@ -165,6 +165,42 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
     expect(page.url()).toContain('provider=google');
     expect(page.url()).toContain('redirect_to=');
   });
+
+  test('retour OAuth : le fragment #access_token ouvre la session (sans reconnexion manuelle)', async ({ page }) => {
+    const user = {
+      id: '22222222-2222-4222-8222-222222222222', aud: 'authenticated', role: 'authenticated',
+      email: 'mou@liftr.test', email_confirmed_at: '2026-01-01T00:00:00.000Z', phone: '',
+      created_at: '2026-01-01T00:00:00.000Z', updated_at: '2026-01-01T00:00:00.000Z',
+      app_metadata: { provider: 'google', providers: ['email', 'google'] },
+      user_metadata: { name: 'Mouataz' }, identities: [], is_anonymous: false
+    };
+    const seen = [];
+    await page.route('**/*.supabase.co/auth/v1/**', async route => {
+      const url = route.request().url();
+      seen.push(url);
+      if (url.includes('/auth/v1/user')) {
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) });
+      }
+      return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await withSocial(page);
+    await seed(page, {});
+
+    const frag = '#access_token=google-access-token&token_type=bearer&expires_in=3600' +
+      '&expires_at=' + (Math.floor(Date.now() / 1000) + 3600) + '&refresh_token=google-refresh-token';
+    await page.goto('/index.html' + frag);
+    await page.reload();
+    await page.waitForFunction(() => !!window.socialUser, { timeout: 7000 });
+
+    expect(await page.evaluate(() => window.socialUser.email)).toBe('mou@liftr.test');
+    expect(await page.evaluate(() => location.hash)).toBe('');
+    expect(await page.evaluate(() => Object.keys(localStorage).some(k => k.indexOf('liftr-auth') >= 0))).toBe(true);
+    expect(seen.some(u => u.indexOf('/auth/v1/user') >= 0)).toBe(true);
+
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();
+    await expect(page.locator('#signInBtn')).toBeHidden();
+    expect(await page.evaluate(() => currentTab)).toBe('programme');
+  });
 });
 
 test.describe('Social : email / mot de passe', () => {
