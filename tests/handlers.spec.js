@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
 
 /* Chaque handler inline (HTML statique + chaînes générées par le JS) doit
    exister en global : filet de sécurité du découpage en modules ES
@@ -72,4 +73,19 @@ test('chargement du script principal : zéro erreur console', async ({ page }) =
   await page.goto('/index.html');
   await page.waitForSelector('#welcomeScreen');
   expect(errors.filter(e => !/favicon|apple-touch/i.test(e))).toEqual([]);
+});
+
+/* HTML (data-build), JS (window.__LIFTR_BUILD__) et service worker (liftr-vXX)
+   portent le même numéro : le filet anti-desynchro de index.html recharge la
+   page quand un HTML nouveau s'apparie à un JS plus ancien. */
+test('builds synchronisés : index.html = js/app.js = sw.js', () => {
+  const html = fs.readFileSync('index.html', 'utf8');
+  const app = fs.readFileSync('js/app.js', 'utf8');
+  const sw = fs.readFileSync('sw.js', 'utf8');
+  const inHtml = (html.match(/data-build="(\d+)"/) || [])[1];
+  const inApp = (app.match(/__LIFTR_BUILD__\s*=\s*'(\d+)'/) || [])[1];
+  const inSw = (sw.match(/liftr-v(\d+)/) || [])[1];
+  expect(inHtml, 'index.html: data-build absent').toBeTruthy();
+  expect(inApp, 'js/app.js: __LIFTR_BUILD__ absent').toBe(inHtml);
+  expect(inSw, 'sw.js: CACHE_NAME absent').toBe(inHtml);
 });

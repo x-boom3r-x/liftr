@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-build="33">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -13,6 +13,24 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
+<script>
+/* Filet anti-desynchro HTML/JS : le HTML vient du reseau, un JS plus ancien
+   peut encore sortir du cache d'un ancien service worker. Si les builds
+   different, on recharge une fois (jamais en boucle : une fois par build). */
+(function(){
+  var want = document.documentElement.getAttribute('data-build');
+  if (!want) return;
+  function guard(){
+    try {
+      if (window.__LIFTR_BUILD__ === want){ sessionStorage.removeItem('liftr-build'); return; }
+      if (sessionStorage.getItem('liftr-build') === want) return;
+      sessionStorage.setItem('liftr-build', want);
+      location.reload();
+    } catch(e){}
+  }
+  window.addEventListener('load', function(){ setTimeout(guard, 400); });
+})();
+</script>
 </head>
 <body>
 

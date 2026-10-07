@@ -17,7 +17,9 @@ export function sb(){
     _client = window.supabase.createClient(SOCIAL_CONFIG.supabaseUrl, SOCIAL_CONFIG.anonKey, {
       auth: {
         persistSession: true,
-        autoRefreshToken: false,
+        /* JWT d'une heure : sans rafraichissement automatique, les boutons du
+           feed echouent silencieusement (401) des que l'onglet vieillit. */
+        autoRefreshToken: true,
         detectSessionInUrl: false,
         storageKey: 'liftr-auth'
       }

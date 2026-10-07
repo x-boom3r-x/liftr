@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v32';
+const CACHE_NAME = 'liftr-v33';
 
 const ASSETS = [
   './',
@@ -68,26 +68,36 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
-  // Pages HTML : réseau d'abord, cache en secours (pour mettre à jour l'app)
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put('./index.html', copy));
-          return res;
-        })
-        .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
-    );
-    return;
-  }
-
   // Hors origine (Supabase, etc.) : on ne touche pas — jamais intercepté,
   // jamais mis en cache, l'API est appelée directement par la page.
   if (!req.url.startsWith(self.location.origin)) return;
 
-  // Reste : cache d'abord
-  event.respondWith(
-    caches.match(req).then(cached => cached || fetch(req))
-  );
+  // Origine : réseau d'abord, cache en secours (hors ligne).
+  // Auparavant le HTML venait du réseau et les JS du cache : un déploiement
+  // pouvait servir du HTML nouveau avec du JS ancien (boutons morts).
+  const navig = req.mode === 'navigate';
+
+  event.respondWith((async () => {
+    try {
+      const res = await fetch(req);
+      if (res && res.ok){
+        const copyReq = res.clone();
+        const copyIdx = navig ? res.clone() : null;
+        caches.open(CACHE_NAME).then(c => {
+          const jobs = [c.put(req, copyReq)];
+          if (copyIdx) jobs.push(c.put('./index.html', copyIdx));
+          return Promise.all(jobs);
+        }).catch(() => {});
+      }
+      return res;
+    } catch(e){
+      const hit = await caches.match(req);
+      if (hit) return hit;
+      if (navig){
+        const app = await caches.match('./index.html') || await caches.match('./');
+        if (app) return app;
+      }
+      throw e;
+    }
+  })());
 });
