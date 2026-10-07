@@ -3,6 +3,12 @@
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
+import { openImageEditor } from './editor.js';
+import { filterPrivatePosts } from './privacy.js';
+import {
+  withMusic, musicChipForBody, hydrateMusic,
+  getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
+} from './music.js';
 
 const PAGE_SIZE = 20;
 const SCROLL_KEY = 'at_feedScroll';
@@ -165,10 +171,17 @@ export async function onPhotoChosen(e){
   if (input) input.value = '';
   if (!/^image\//.test(file.type || '')){ toast('Please choose an image file.'); return false; }
   if (file.size > MAX_BYTES){ toast('That photo is too large (12 MB max).'); return false; }
+  /* la photo passe par l'éditeur (recadrage, rotation, filtres) avant
+     d'entrer dans le composeur : rien ne part sans avoir été vu. */
+  return openImageEditor(
+    { file: file, maxEdge: FULL_EDGE, aspect: 'free', title: 'Edit photo' },
+    edited => applyEditedPhoto(edited));
+}
+
+async function applyEditedPhoto(blob){
   try {
-    const full = await compressImage(file, FULL_EDGE, FULL_Q);
-    const thumb = await compressImage(file, THUMB_EDGE, THUMB_Q);
-    setPhoto(full, thumb);
+    const thumb = await compressImage(blob, THUMB_EDGE, THUMB_Q);
+    setPhoto(blob, thumb);
     return true;
   } catch(err){
     toast('Could not read that photo.');
@@ -188,6 +201,7 @@ function clearComposer(){
   const ta = el('postBody');
   if (ta) ta.value = '';
   clearPhoto();
+  clearComposerMusic('post');
   showPostError('');
   updateComposer();
 }
@@ -215,7 +229,10 @@ async function fetchPage(offset){
     .order('created_at', { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
   if (error) return { rows: [], error: error.message || 'Could not load the feed.' };
-  return { rows: data || [], error: null };
+  const raw = data || [];
+  /* les comptes privés que l'on ne suit pas sont masqués côté client */
+  const rows = await filterPrivatePosts(raw);
+  return { rows: rows, more: raw.length === PAGE_SIZE, error: null };
 }
 
 /* Compteurs de commentaires + likes : best-effort, jamais bloquant. */
@@ -457,7 +474,9 @@ export function postCardHtml(p){
         '<img class="post-img" src="' + esc(full) + '" alt="" loading="lazy">' +
       '</div>'
     : '';
-  const body = p.body ? '<div class="post-body">' + esc(p.body) + '</div>' : '';
+  const parts = musicChipForBody(p.body || '');
+  const body = parts.text ? '<div class="post-body">' + esc(parts.text) + '</div>' : '';
+  const music = parts.html ? '<div class="post-music">' + parts.html + '</div>' : '';
   const kind = (p.kind && p.kind !== 'text' && p.kind !== 'photo')
     ? '<span class="chip chip-type post-kind">' + esc(p.kind.toUpperCase()) + '</span>' : '';
   const k = counts[p.id] || { c: 0, l: 0, liked: false };
@@ -475,10 +494,11 @@ export function postCardHtml(p){
       '<span class="post-act-l">Comment' + (k.c === 1 ? '' : 's') + '</span>' +
     '</button>' +
     '<button type="button" class="post-act post-act-like' + (k.liked ? ' on' : '') + '" ' +
-      'data-act="like" data-post="' + esc(p.id || '') + '" aria-label="Like">' +
-      '<span class="post-act-ico" aria-hidden="true">♥</span>' +
+      'data-act="like" data-post="' + esc(p.id || '') + '" ' +
+      'aria-label="Upvote" title="Upvote">' +
+      '<span class="post-act-ico" aria-hidden="true">▲</span>' +
       '<span class="post-act-n post-act-l-like" data-n="likes">' + k.l + '</span>' +
-      '<span class="post-act-l">Like</span>' +
+      '<span class="post-act-l">Upvote</span>' +
     '</button>' +
     '<button type="button" class="post-act post-act-share" data-act="share" ' +
       'data-post="' + esc(p.id || '') + '" aria-label="Share">' +
@@ -499,7 +519,7 @@ export function postCardHtml(p){
         '</div>' +
       '</div>' + kind + more +
     '</div>' +
-    body + statStrip(p) + media + foot +
+    body + music + statStrip(p) + media + foot +
     '</article>';
 }
 
@@ -543,6 +563,7 @@ function paint(){
   const list = el('feedList');
   if (!list) return;
   list.innerHTML = posts.length ? posts.map(postCardHtml).join('') : emptyHtml();
+  hydrateMusic(list);
   const wrap = el('feedMoreWrap');
   if (wrap) wrap.classList.toggle('hidden', !hasMore);
   if (pendingScroll !== null){
@@ -562,7 +583,9 @@ export async function renderFeed(opts){
   const list = el('feedList');
   if (!more && list && !posts.length) list.innerHTML = skeletonHtml();
   try {
-    const { rows, error } = await fetchPage(more ? posts.length : 0);
+    const page = await fetchPage(more ? posts.length : 0);
+    const rows = page.rows;
+    const error = page.error;
     if (error){
       if (!more){
         posts = [];
@@ -574,7 +597,7 @@ export async function renderFeed(opts){
       return false;
     }
     posts = more ? posts.concat(rows) : rows;
-    hasMore = rows.length === PAGE_SIZE;
+    hasMore = page.more === true;
     try { await fetchCounts(); } catch(e){}
     paint();
     return true;
@@ -598,7 +621,9 @@ export function loadMorePosts(){
 
 export async function submitPost(){
   const ta = el('postBody');
-  const body = ((ta && ta.value) || '').replace(/\r\n/g, '\n').trim().slice(0, 2000);
+  let body = ((ta && ta.value) || '').replace(/\r\n/g, '\n').trim().slice(0, 2000);
+  const track = getComposerMusic('post');
+  if (track && track.id) body = withMusic(body.slice(0, 1990), track.id);
   if (!body && !photo) return false;
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (sending) return false;
@@ -654,6 +679,7 @@ export function resetFeed(){
   noFollows = false;
   if (typeof window.resetStories === 'function') window.resetStories();
   photo = null;
+  clearComposerMusic('post');
   if (photoUrl){ URL.revokeObjectURL(photoUrl); photoUrl = null; }
   pendingScroll = null;
   const ta = el('postBody');
@@ -738,6 +764,27 @@ export function focusComposer(){
   const card = el('composer');
   if (card) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
   if (ta){ try { ta.focus({ preventScroll: true }); } catch(e){ ta.focus(); } }
+}
+
+/* Le bouton « + » ouvre un choix de type de publication. */
+export function openPostTypeSheet(){
+  if (typeof window.openActionSheet !== 'function') return false;
+  window.openActionSheet('New post', [
+    { label: 'Text', fn: () => focusComposer() },
+    { label: 'Photo', fn: () => { focusComposer(); setTimeout(pickPhoto, 80); } },
+    { label: 'Music', fn: () => { focusComposer(); setTimeout(pickPostMusic, 80); } },
+    { label: 'Story', fn: () => {
+        if (typeof window.openStoryComposer === 'function') window.openStoryComposer();
+      } },
+    { label: 'Note', fn: () => {
+        if (typeof window.openNoteComposer === 'function') window.openNoteComposer();
+      } }
+  ]);
+  return true;
+}
+
+export function pickPostMusic(){
+  return openMusicPicker(t => setComposerMusic('post', t));
 }
 
 export function openFeed(){

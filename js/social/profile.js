@@ -4,6 +4,10 @@
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
 import { compressImage, mediaUrl } from './feed.js';
+import {
+  privacyMode, isPrivateProfile, stripPrivacy, withPrivacy,
+  canSeePosts, writePrivacy
+} from './privacy.js';
 
 const AVATAR_EDGE = 512;
 const AVATAR_Q = 0.85;
@@ -25,6 +29,7 @@ let busy = false;
 let avatarFile = null;    /* nouveau Blob en attente */
 let avatarDrop = false;   /* supprimer la photo actuelle */
 let previewUrl = null;
+let pendingPrivate = false;  /* état du bascule « Private » dans la modale */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -59,10 +64,13 @@ function paintProfile(){
 
   const bio = el('profBio');
   if (bio){
-    const b = (current && current.bio) || '';
+    const b = stripPrivacy((current && current.bio) || '');
     bio.textContent = b;
     bio.classList.toggle('hidden', !b);
   }
+
+  const priv = el('profPriv');
+  if (priv) priv.classList.toggle('hidden', !isPrivateProfile(current));
 
   const actions = el('profActions');
   if (actions){
@@ -117,6 +125,11 @@ function paintTiles(){
   if (wrap) wrap.classList.add('hidden');
   if (!g) return;
   const isMe = !!current && current.id === meId();
+  if (current && !isMe && isPrivateProfile(current) && !following){
+    g.className = 'prof-grid empty';
+    g.innerHTML = emptyTile('This account is private', 'Follow to see their posts.');
+    return;
+  }
   if (!grid.length){
     g.className = 'prof-grid empty';
     g.innerHTML = isMe
@@ -135,7 +148,7 @@ function paintLiked(){
   if (ptab !== 'liked') return;
   if (!liked.length){
     wrap.className = 'prof-grid empty';
-    wrap.innerHTML = emptyTile('No liked posts yet', 'Tap the heart on a post to keep it here.');
+    wrap.innerHTML = emptyTile('No liked posts yet', 'Tap the upvote on a post to keep it here.');
     return;
   }
   wrap.className = 'prof-grid';
@@ -156,6 +169,7 @@ function skeleton(){
   const av = el('profAvatarBtn');
   if (av) av.textContent = '…';
   const bio = el('profBio'); if (bio) bio.classList.add('hidden');
+  const priv = el('profPriv'); if (priv) priv.classList.add('hidden');
   const g = el('profGrid'); if (g){ g.className = 'prof-grid empty'; g.innerHTML = ''; }
   const a = el('profActions'); if (a) a.innerHTML = '';
 }
@@ -208,6 +222,7 @@ export async function renderProfile(){
   skeleton();
 
   try {
+    await privacyMode();
     const reqs = [
       c.from('profiles').select('*').eq('id', id).limit(1),
       c.from('posts').select(POST_GRID, { count: 'exact' })
@@ -237,6 +252,8 @@ export async function renderProfile(){
     };
     const rel = res[4] && (Array.isArray(res[4].data) ? res[4].data[0] : res[4].data);
     following = isMe ? false : !!rel;
+    /* compte privé non suivi : la grille reste verrouillée */
+    if (!isMe && isPrivateProfile(current) && !following) grid = [];
     paintProfile();
     fetchGridCounts(c, grid.map(p => p.id));
     if (ptab === 'liked') loadLiked(c);
@@ -350,9 +367,11 @@ export function openEditProfile(){
   const set = (id, v) => { const n = el(id); if (n) n.value = v; };
   set('editUsername', (current && current.username) || '');
   set('editName', (current && current.display_name) || '');
-  set('editBio', (current && current.bio) || '');
+  const plainBio = stripPrivacy((current && current.bio) || '');
+  set('editBio', plainBio);
   const cnt = el('editBioCount');
-  if (cnt) cnt.textContent = ((current && current.bio) || '').length + ' / 300';
+  if (cnt) cnt.textContent = plainBio.length + ' / 300';
+  setPrivateSwitch(isPrivateProfile(current));
 
   const input = el('editAvatarFile');
   if (input) input.value = '';
@@ -368,6 +387,21 @@ export function pickAvatar(){
   if (!input) return false;
   input.click();
   return true;
+}
+
+/* Compte privé : bascule dans la modale, appliquée à l'enregistrement. */
+function setPrivateSwitch(on){
+  pendingPrivate = !!on;
+  const sw = el('editPrivate');
+  if (sw){
+    sw.classList.toggle('on', pendingPrivate);
+    sw.setAttribute('aria-checked', pendingPrivate ? 'true' : 'false');
+  }
+  return pendingPrivate;
+}
+
+export function togglePrivateEdit(){
+  return setPrivateSwitch(!pendingPrivate);
 }
 
 export function removeAvatar(){
@@ -457,13 +491,20 @@ export async function submitProfile(){
     if (avatarFile) url = await uploadAvatar(c, avatarFile);
     else if (avatarDrop){ dropAvatarFile(c, url); url = null; }
 
+    /* le drapeau privé vit dans la colonne `is_private` si elle existe,
+       sinon dans un marqueur invisible du bio (voir js/social/privacy.js) */
+    const mode = await privacyMode();
+    const privacyChanged = pendingPrivate !== isPrivateProfile(current);
+    const bioOut = mode === 'column' ? bio : withPrivacy(bio, pendingPrivate);
+
     const { error } = await c.from('profiles')
-      .update({ username: username, display_name: display, bio: bio, avatar_url: url })
+      .update({ username: username, display_name: display, bio: bioOut, avatar_url: url })
       .eq('id', me);
     if (error) throw new Error(friendlyProfileError(error));
+    if (privacyChanged && mode === 'column') await writePrivacy(pendingPrivate);
 
     current = Object.assign({}, current || { id: me },
-      { username: username, display_name: display, bio: bio, avatar_url: url });
+      { username: username, display_name: display, bio: bioOut, avatar_url: url });
     paintProfile();
 
     if (typeof window.closeModal === 'function') window.closeModal('profileModal');
@@ -558,6 +599,7 @@ export function resetProfile(){
   current = null;
   counts = { posts: 0, followers: 0, following: 0 };
   following = false;
+  pendingPrivate = false;
   grid = [];
   gridCounts = {};
   liked = [];

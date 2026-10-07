@@ -281,7 +281,10 @@ test.describe('T4 : shell social (nav, crew, bouton flottant)', () => {
     await expect(page.locator('#view-home')).toBeVisible();
     await expect(page.locator('#newPostFab')).toBeVisible();
     await page.locator('#newPostFab').click();
-    expect(await page.evaluate(() => document.activeElement.id)).toBe('postBody');
+    /* le « + » ouvre le choix du type de publication : « Text » amene au composeur */
+    await expect(page.locator('#actionSheet')).toBeVisible();
+    await page.locator('#asList .as-item', { hasText: 'Text' }).click();
+    await page.waitForFunction(() => document.activeElement.id === 'postBody');
     expect(errs).toEqual([]);
   });
 

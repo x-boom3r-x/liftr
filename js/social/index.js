@@ -6,7 +6,7 @@ import { supabaseLoaded, sb, sbAuth } from './client.js';
 import { socialAvailable, updateSocialGate } from './gate.js';
 import {
   buildAuthUrl, signInGoogle, restoreSession, signOutSocial,
-  buildEmailEndpoint, signInEmail, signUpEmail,
+  buildEmailEndpoint, signInEmail, signUpEmail, ensureMyProfile,
   openAuth, closeAuth, toggleAuthMode, submitAuth
 } from './auth.js';
 import {
@@ -15,7 +15,8 @@ import {
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
   toggleLike, sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
-  refreshIdentity, deletePost, openPostMenu
+  refreshIdentity, deletePost, openPostMenu,
+  openPostTypeSheet, pickPostMusic
 } from './feed.js';
 import {
   openComments, closeComments, submitComment, updateCommentComposer,
@@ -32,7 +33,8 @@ import {
 import {
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
   openThreadOfTarget, openEditProfile, pickAvatar, removeAvatar,
-  submitProfile, initProfile, resetProfile, setProfileTab, shareProfile
+  submitProfile, initProfile, resetProfile, setProfileTab, shareProfile,
+  togglePrivateEdit
 } from './profile.js';
 import {
   openSearch, runSearch, clearSearch, renderSearch, resetSearch
@@ -44,21 +46,32 @@ import {
 import {
   renderStories, initStories, initStoryViewer, openStoryViewer,
   closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
-  deleteStory, deleteCurrentStory, resetStories
+  deleteStory, deleteCurrentStory, resetStories, pickStoryMusic
 } from './stories.js';
 import {
-  renderNotes, initNotes, openNoteComposer, submitNote, removeNote, resetNotes
+  renderNotes, initNotes, openNoteComposer, submitNote, removeNote,
+  resetNotes, pickNoteMusic
 } from './notes.js';
 import {
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount
 } from './account.js';
+import {
+  openImageEditor, closeEditor, useEditedImage, initEditor
+} from './editor.js';
+import {
+  openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
+  stopMusic, hydrateMusic, splitMusic, withMusic
+} from './music.js';
+import {
+  privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts
+} from './privacy.js';
 
 Object.assign(window, {
   SOCIAL_CONFIG, SOCIAL_ENABLED, GOOGLE_ENABLED,
   supabaseLoaded, sb, sbAuth,
   socialAvailable, updateSocialGate,
   buildAuthUrl, signInGoogle, restoreSession, signOutSocial,
-  buildEmailEndpoint, signInEmail, signUpEmail,
+  buildEmailEndpoint, signInEmail, signUpEmail, ensureMyProfile,
   openAuth, closeAuth, toggleAuthMode, submitAuth,
   initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts,
   submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
@@ -66,6 +79,7 @@ Object.assign(window, {
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
   toggleLike, sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu,
+  openPostTypeSheet, pickPostMusic,
   openComments, closeComments, submitComment, updateCommentComposer,
   initComments, resetComments,
   openPeople, closePeople, toggleFollow, isFollowed, mergeFollows,
@@ -80,9 +94,15 @@ Object.assign(window, {
   sendMessage, initInbox, resetInbox,
   renderStories, initStories, initStoryViewer, openStoryViewer,
   closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
-  deleteStory, deleteCurrentStory, resetStories,
-  renderNotes, initNotes, openNoteComposer, submitNote, removeNote, resetNotes,
+  deleteStory, deleteCurrentStory, resetStories, pickStoryMusic,
+  renderNotes, initNotes, openNoteComposer, submitNote, removeNote,
+  resetNotes, pickNoteMusic,
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,
+  togglePrivateEdit,
+  openImageEditor, closeEditor, useEditedImage, initEditor,
+  openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
+  stopMusic, hydrateMusic, splitMusic, withMusic,
+  privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts,
   onFollowChanged
 });
 
@@ -107,6 +127,8 @@ function initSocial(){
   initProfile();
   initAccount();
   initInbox();
+  initMusic();
+  initEditor();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
 }
 

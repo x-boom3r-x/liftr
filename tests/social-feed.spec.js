@@ -283,6 +283,11 @@ test.describe('Feed : composer', () => {
     await page.fill('#postBody', 'Leg day.');
     await page.setInputFiles('#postPhoto', { name: 'leg.png', mimeType: 'image/png', buffer: PNG });
 
+    /* la photo passe par l'éditeur avant d'entrer dans le composeur */
+    await expect(page.locator('#editorModal')).toBeVisible();
+    await page.locator('#editorUse').click();
+    await expect(page.locator('#editorModal')).toBeHidden();
+
     await expect(page.locator('#postPreview')).toBeVisible();
     await expect(page.locator('#postPreviewImg')).toHaveAttribute('src', /^blob:/);
 

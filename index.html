@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="36">
+<html lang="en" data-build="37">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -309,8 +309,11 @@
             <button type="button" class="composer-rm" id="postRemovePhoto"
               aria-label="Remove photo">&times;</button>
           </div>
+          <div class="music-slot hidden" id="postMusicSlot"></div>
           <div class="composer-actions">
             <button type="button" class="chip chip-type composer-photo" id="postPhotoBtn" onclick="pickPhoto()">Photo</button>
+            <button type="button" class="chip chip-type composer-photo" id="postMusicBtn"
+              onclick="pickPostMusic()">Music</button>
             <input type="file" id="postPhoto" accept="image/*" class="hidden">
             <span class="composer-count" id="postCount"></span>
             <button type="button" class="btn btn-primary btn-sm" id="postSubmit" disabled
@@ -376,6 +379,10 @@
         <div class="prof-id">
           <div class="prof-name" id="profName">&nbsp;</div>
           <div class="prof-handle" id="profHandle">&nbsp;</div>
+          <div class="prof-priv hidden" id="profPriv">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            Private account
+          </div>
           <div class="prof-bio hidden" id="profBio"></div>
         </div>
         <div class="prof-actions" id="profActions"></div>
@@ -387,7 +394,7 @@
         <div class="prof-grid hidden" id="profGridLiked"></div>
       </div>
 
-      <button type="button" class="fab hidden" id="newPostFab" onclick="focusComposer()"
+      <button type="button" class="fab hidden" id="newPostFab" onclick="openPostTypeSheet()"
         aria-label="New post"><span aria-hidden="true">+</span></button>
     </section>
 
@@ -480,6 +487,17 @@
       <textarea class="input" id="editBio" rows="3" maxlength="300"
         placeholder="Push · Pull · Legs — chasing a 2x bodyweight squat"></textarea>
       <div class="hint" id="editBioCount">0 / 300</div>
+    </div>
+
+    <div class="field edit-privacy">
+      <div class="edit-privacy-txt">
+        <div class="label">Private account</div>
+        <div class="hint">Only people you already follow can see your posts. Switch off to open your account.</div>
+      </div>
+      <button type="button" class="switch" id="editPrivate" role="switch"
+        aria-checked="false" aria-label="Private account" onclick="togglePrivateEdit()">
+        <span class="switch-knob" aria-hidden="true"></span>
+      </button>
     </div>
 
     <!-- Account -->
@@ -851,16 +869,25 @@
   <div class="liftr-text" id="liftrText" data-filter="" data-id=""></div>
 </div>
 
-<!-- Note (60 car., 24 h) -->
+<!-- Note (60 car., durée au choix) -->
 <div class="overlay" id="noteModal" onclick="if(event.target===this)closeModal('noteModal')">
   <div class="modal" style="max-width:440px">
     <div class="grabber"></div>
     <div class="modal-title" id="noteTitle">Your note</div>
-    <div class="modal-sub">60 characters, visible for 24 hours.</div>
+    <div class="modal-sub">60 characters — you choose how long it stays up.</div>
     <textarea id="noteBody" class="composer-input" rows="2" maxlength="60"
       placeholder="Share a note…" aria-label="Your note"></textarea>
+    <div class="music-slot hidden" id="noteMusicSlot"></div>
+    <div class="seg-row" id="noteDur" role="group" aria-label="How long the note stays">
+      <button type="button" class="seg active" data-dur="1">24 h</button>
+      <button type="button" class="seg" data-dur="7">7 days</button>
+      <button type="button" class="seg" data-dur="30">30 days</button>
+      <button type="button" class="seg" data-dur="0">Forever</button>
+    </div>
     <div class="composer-error hidden" id="noteError" role="alert"></div>
     <div class="modal-actions">
+      <button type="button" class="chip chip-type" id="noteMusicBtn"
+        onclick="pickNoteMusic()">Music</button>
       <button type="button" class="btn btn-ghost btn-sm hidden" id="noteRemove"
         onclick="removeNote()">Remove</button>
       <button type="button" class="btn btn-primary btn-sm" id="noteSubmit"
@@ -874,15 +901,24 @@
   <div class="modal" style="max-width:460px">
     <div class="grabber"></div>
     <div class="modal-title">Your story</div>
-    <div class="modal-sub">Photo, words, or both. Shared for 24 hours.</div>
+    <div class="modal-sub">Photo, words, or both — you choose how long it stays up.</div>
     <textarea id="storyBody" class="composer-input" rows="3" maxlength="400"
       placeholder="Say something…" aria-label="Your story"></textarea>
     <div class="story-preview hidden" id="storyPreview">
       <img id="storyPreviewImg" alt="Story photo">
     </div>
+    <div class="music-slot hidden" id="storyMusicSlot"></div>
+    <div class="seg-row" id="storyDur" role="group" aria-label="How long the story stays">
+      <button type="button" class="seg active" data-dur="1">24 h</button>
+      <button type="button" class="seg" data-dur="3">3 days</button>
+      <button type="button" class="seg" data-dur="7">7 days</button>
+      <button type="button" class="seg" data-dur="0">Forever</button>
+    </div>
     <div class="composer-error hidden" id="storyError" role="alert"></div>
     <div class="modal-actions">
       <button type="button" class="chip chip-type" onclick="pickStoryPhoto()">Photo</button>
+      <button type="button" class="chip chip-type" id="storyMusicBtn"
+        onclick="pickStoryMusic()">Music</button>
       <input type="file" id="storyPhoto" accept="image/*" class="hidden">
       <button type="button" class="btn btn-primary btn-sm" id="storySubmit"
         onclick="submitStory()">Share</button>
@@ -907,6 +943,71 @@
       onclick="deleteCurrentStory()">Delete</button>
     <button type="button" class="btn btn-sm btn-ghost" onclick="openStoryComposer()">
       Add to your story</button>
+  </div>
+</div>
+
+<!-- Edition d'image (post / story) -->
+<div class="overlay editor-overlay" id="editorModal" onclick="if(event.target===this)closeEditor()">
+  <div class="editor">
+    <div class="editor-top">
+      <button type="button" class="btn btn-sm btn-ghost" id="editorCancel"
+        onclick="closeEditor()">Cancel</button>
+      <div class="editor-title" id="editorTitle">Edit photo</div>
+      <button type="button" class="btn btn-sm btn-primary" id="editorUse"
+        onclick="useEditedImage()">Use photo</button>
+    </div>
+    <div class="editor-stage" id="editorStage">
+      <canvas id="editorCanvas"></canvas>
+    </div>
+    <div class="editor-tools">
+      <div class="editor-row" id="editorPresets" role="group" aria-label="Filters">
+        <button type="button" class="seg active" data-preset="none">Original</button>
+        <button type="button" class="seg" data-preset="mono">Mono</button>
+        <button type="button" class="seg" data-preset="warm">Warm</button>
+        <button type="button" class="seg" data-preset="cool">Cool</button>
+        <button type="button" class="seg" data-preset="fade">Fade</button>
+        <button type="button" class="seg" data-preset="vivid">Vivid</button>
+      </div>
+      <div class="editor-row" id="editorAspect" role="group" aria-label="Crop">
+        <button type="button" class="seg active" data-aspect="free">Free</button>
+        <button type="button" class="seg" data-aspect="1:1">1:1</button>
+        <button type="button" class="seg" data-aspect="4:5">4:5</button>
+        <button type="button" class="seg" data-aspect="9:16">9:16</button>
+        <button type="button" class="seg" data-aspect="16:9">16:9</button>
+      </div>
+      <div class="editor-row editor-sliders">
+        <label class="editor-slider"><span>Zoom</span>
+          <input type="range" id="editorZoom" min="1" max="4" step="0.05" value="1"></label>
+        <label class="editor-slider"><span>Light</span>
+          <input type="range" id="editorLight" min="0.7" max="1.4" step="0.01" value="1"></label>
+        <label class="editor-slider"><span>Color</span>
+          <input type="range" id="editorColor" min="0" max="2" step="0.02" value="1"></label>
+      </div>
+      <div class="editor-row editor-turn">
+        <button type="button" class="btn btn-sm" id="editorRotate" aria-label="Rotate">⟳ Rotate</button>
+        <button type="button" class="btn btn-sm" id="editorFlip" aria-label="Mirror">⇋ Mirror</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Musique : recherche -->
+<div class="overlay" id="musicModal" onclick="if(event.target===this)closeMusicPicker()">
+  <div class="modal" style="max-width:480px">
+    <div class="grabber"></div>
+    <div class="modal-title">Add music</div>
+    <div class="modal-sub">Search a song — a 30-second preview travels with your post.</div>
+    <div class="search-bar music-bar">
+      <span class="search-ico" aria-hidden="true">⌕</span>
+      <input id="musicInput" class="input search-input" type="search" maxlength="60"
+        placeholder="Title or artist" aria-label="Search music">
+      <button type="button" class="btn btn-sm btn-ghost" id="musicSearchBtn">Search</button>
+    </div>
+    <div class="music-list" id="musicList" aria-live="polite"></div>
+    <div class="composer-error hidden" id="musicError" role="alert"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeMusicPicker()">Close</button>
+    </div>
   </div>
 </div>
 

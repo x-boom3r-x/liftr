@@ -2,7 +2,7 @@
    SOCIAL - connexion (Google + email/mot de passe), session, panneau
    ================================================================== */
 import { SOCIAL_CONFIG, SOCIAL_ENABLED } from './config.js';
-import { sbAuth } from './client.js';
+import { sbAuth, sb } from './client.js';
 
 function socialToast(msg){
   if (typeof window.toast === 'function') window.toast(msg);
@@ -48,7 +48,45 @@ export async function restoreSession(){
     window.socialUser = null;
   }
   if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
+  if (window.socialUser) ensureMyProfile();
   return window.socialUser;
+}
+
+/* Le trigger SQL crée le profil au signup. Si la ligne manque (trigger
+   absent, base réinitialisée, signup sans metadata), on la crée ici pour
+   que le nouvel inscrit apparaisse tout de suite dans « Find people ».
+   Best-effort : jamais bloquant, jamais d'exception propagée. */
+export function ensureMyProfile(){
+  try {
+    const c = sb();
+    const user = window.socialUser;
+    if (!c || !user || !user.id) return false;
+    const p = Promise.resolve(
+      c.from('profiles').select('id').eq('id', user.id).limit(1)
+    ).then(res => {
+      if (res.error) return false;
+      const row = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (row) return false;
+      const base = String((user.email || '').split('@')[0] || '')
+        .toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
+      let username = base.length >= 3 ? base : (base + 'lifter').slice(0, 24);
+      if (username.length < 3) username = 'lifter' + Date.now().toString(36);
+      const meta = user.user_metadata || {};
+      const display = String(meta.name || meta.display_name || username).slice(0, 50);
+      return c.from('profiles').insert({
+        id: user.id, username: username, display_name: display
+      }).then(r2 => {
+        if (r2.error) return false;
+        /* la ligne existe maintenant : elle apparaît dans « Find people » */
+        if (typeof window.resetSearch === 'function') window.resetSearch();
+        return true;
+      });
+    }).catch(() => false);
+    if (typeof p.catch === 'function') p.catch(() => {});
+    return true;
+  } catch(e){
+    return false;
+  }
 }
 
 export async function signOutSocial(){
@@ -70,6 +108,7 @@ export async function signOutSocial(){
 function adoptUser(user){
   window.socialUser = user || null;
   if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
+  if (window.socialUser) ensureMyProfile();
 }
 
 /* Endpoint Supabase — pur, testable sans navigateur. */

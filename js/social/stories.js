@@ -4,11 +4,17 @@
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
 import { compressImage, mediaUrl } from './feed.js';
+import { openImageEditor } from './editor.js';
+import {
+  withMusic, splitMusic, musicChipHtml, hydrateMusic,
+  getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
+} from './music.js';
 
 const STORY_EDGE = 1080;
 const STORY_Q = 0.85;
 const MAX_BYTES = 12 * 1024 * 1024;
 const SLIDE_MS = 5000;
+const FOREVER_MS = 100 * 365 * 24 * 3600 * 1000;   /* « forever » = RLS > now() */
 const STORY_SELECT = 'id,author_id,body,image_path,created_at,expires_at,' +
   'author:profiles!stories_author_id_fkey(id,username,display_name,avatar_url)';
 
@@ -19,6 +25,7 @@ let idx = 0;
 let timer = null;
 let photo = null;
 let photoUrl = null;
+let durDays = 1;       /* durée choisie dans le composeur (1 = 24 h) */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -141,6 +148,32 @@ export function initStories(){
     input.dataset.wired = '1';
     input.addEventListener('change', onStoryPhoto);
   }
+  wireDuration();
+}
+
+/* Durée de la story : 24 h par défaut, 3 j, 7 j, ou « forever ». */
+function setStoryDuration(days){
+  durDays = Math.max(0, parseInt(days, 10) || 0);
+  const box = el('storyDur');
+  if (box){
+    box.querySelectorAll('.seg').forEach(b =>
+      b.classList.toggle('active', parseInt(b.getAttribute('data-dur'), 10) === durDays));
+  }
+  return durDays;
+}
+
+function wireDuration(){
+  const box = el('storyDur');
+  if (!box || box.dataset.wired) return;
+  box.dataset.wired = '1';
+  box.addEventListener('click', e => {
+    const b = e.target && e.target.closest && e.target.closest('[data-dur]');
+    if (b) setStoryDuration(b.getAttribute('data-dur'));
+  });
+}
+
+export function pickStoryMusic(){
+  return openMusicPicker(t => setComposerMusic('story', t));
 }
 
 /* --------------------------- visualiseur ---------------------------- */
@@ -177,10 +210,14 @@ function paintSlide(){
   const stage = el('svStage');
   if (!stage || !s) return;
   const url = s.image_path ? mediaUrl(s.image_path, sb()) : null;
+  const parts = splitMusic(s.body || '');
   stage.classList.toggle('plain', !url);
   stage.innerHTML =
     (url ? '<img class="sv-img" src="' + esc(url) + '" alt="">' : '') +
-    '<div class="sv-caption' + (url ? ' over' : '') + '">' + esc(s.body || '') + '</div>';
+    '<div class="sv-caption' + (url ? ' over' : '') + '">' + esc(parts.text || '') + '</div>' +
+    (parts.trackId ? '<div class="sv-music">' + musicChipHtml(parts.trackId) + '</div>' : '');
+  hydrateMusic(stage);
+  initStoryViewer();
 
   const t = el('svTime');
   if (t) t.textContent = typeof window.timeAgo === 'function' ? window.timeAgo(s.created_at) : '';
@@ -306,6 +343,8 @@ export function openStoryComposer(){
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (!gateOk()){ toast('Sign in and go online to post a story.'); return false; }
   clearStoryPhoto();
+  setStoryDuration(1);
+  clearComposerMusic('story');
   const ta = el('storyBody');
   if (ta) ta.value = '';
   const err = el('storyError');
@@ -331,28 +370,35 @@ export async function onStoryPhoto(e){
   if (input) input.value = '';
   if (!/^image\//.test(file.type || '')){ toast('Please choose an image file.'); return false; }
   if (file.size > MAX_BYTES){ toast('That photo is too large (12 MB max).'); return false; }
-  try {
-    photo = await compressImage(file, STORY_EDGE, STORY_Q);
-    const box = el('storyPreview');
-    if (box){
-      if (photoUrl) URL.revokeObjectURL(photoUrl);
-      photoUrl = URL.createObjectURL(photo);
-      const img = box.querySelector('img');
-      if (img) img.src = photoUrl;
-      box.classList.remove('hidden');
-    }
-    return true;
-  } catch(err){
-    toast('Could not read that photo.');
-    return false;
-  }
+  /* la photo de story est éditée (recadrage 9:16, filtres) avant partage */
+  return openImageEditor(
+    { file: file, maxEdge: STORY_EDGE, aspect: '9:16', title: 'Edit story photo' },
+    async edited => {
+      try {
+        photo = await compressImage(edited, STORY_EDGE, STORY_Q);
+        const box = el('storyPreview');
+        if (box){
+          if (photoUrl) URL.revokeObjectURL(photoUrl);
+          photoUrl = URL.createObjectURL(photo);
+          const img = box.querySelector('img');
+          if (img) img.src = photoUrl;
+          box.classList.remove('hidden');
+        }
+        return true;
+      } catch(err){
+        toast('Could not read that photo.');
+        return false;
+      }
+    });
 }
 
 let sending = false;
 export async function submitStory(){
   if (sending) return false;
   const ta = el('storyBody');
-  const body = ((ta && ta.value) || '').replace(/\r\n/g, '\n').trim().slice(0, 400);
+  let body = ((ta && ta.value) || '').replace(/\r\n/g, '\n').trim().slice(0, 400);
+  const track = getComposerMusic('story');
+  if (track && track.id) body = withMusic(body.slice(0, 380), track.id);
   if (!body && !photo) return false;
   const c = sb();
   const me = meId();
@@ -372,11 +418,17 @@ export async function submitStory(){
       if (up) throw new Error(up.message || 'Could not upload your story.');
       image_path = path;
     }
-    const { error } = await c.from('stories').insert({ author_id: me, body: body, image_path: image_path });
+    const now = Date.now();
+    const ttl = durDays > 0 ? durDays * 86400000 : FOREVER_MS;
+    const { error } = await c.from('stories').insert({
+      author_id: me, body: body, image_path: image_path,
+      expires_at: new Date(now + ttl).toISOString()
+    });
     if (error) throw new Error(error.message || 'Could not share your story.');
 
     if (typeof window.closeModal === 'function') window.closeModal('storyModal');
     clearStoryPhoto();
+    clearComposerMusic('story');
     if (ta) ta.value = '';
     crewLoaded = false;
     if (typeof window.renderStories === 'function') window.renderStories();
@@ -426,20 +478,18 @@ export function deleteCurrentStory(){
 
 export function initStoryViewer(){
   const stage = el('svStage');
-  if (stage && !stage.dataset.wired){
-    stage.dataset.wired = '1';
-    const hit = document.createElement('div');
-    hit.className = 'sv-hit';
-    hit.innerHTML = '<button type="button" class="sv-tap left" aria-label="Previous"></button>' +
-                    '<button type="button" class="sv-tap right" aria-label="Next"></button>';
-    stage.appendChild(hit);
-    hit.addEventListener('click', e => {
-      const b = e.target && e.target.closest && e.target.closest('.sv-tap');
-      if (!b) return;
-      if (b.classList.contains('left')) prevSlide();
-      else nextSlide();
-    });
-  }
+  if (!stage || stage.querySelector('.sv-hit')) return;
+  const hit = document.createElement('div');
+  hit.className = 'sv-hit';
+  hit.innerHTML = '<button type="button" class="sv-tap left" aria-label="Previous"></button>' +
+                  '<button type="button" class="sv-tap right" aria-label="Next"></button>';
+  stage.appendChild(hit);
+  hit.addEventListener('click', e => {
+    const b = e.target && e.target.closest && e.target.closest('.sv-tap');
+    if (!b) return;
+    if (b.classList.contains('left')) prevSlide();
+    else nextSlide();
+  });
 }
 
 export function resetStories(){
@@ -447,6 +497,8 @@ export function resetStories(){
   queue = [];
   slides = [];
   idx = 0;
+  durDays = 1;
+  clearComposerMusic('story');
   stopTimer();
   clearStoryPhoto();
   const row = el('crewRow');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v36';
+const CACHE_NAME = 'liftr-v37';
 
 const ASSETS = [
   './',
@@ -35,6 +35,9 @@ const ASSETS = [
   './js/social/client.js',
   './js/social/gate.js',
   './js/social/auth.js',
+  './js/social/editor.js',
+  './js/social/music.js',
+  './js/social/privacy.js',
   './js/social/feed.js',
   './js/social/comments.js',
   './js/social/people.js',

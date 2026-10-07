@@ -3,15 +3,22 @@
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
+import {
+  splitMusic, withMusic, musicChipHtml, hydrateMusic,
+  getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
+} from './music.js';
 
 const NOTE_SELECT = 'id,author_id,body,created_at,expires_at,updated_at,' +
   'author:profiles!notes_author_id_fkey(id,username,display_name,avatar_url)';
+const NOTE_MAX = 60;
+const FOREVER_MS = 100 * 365 * 24 * 3600 * 1000;   /* « forever » = RLS > now() */
 
 let loaded = false;
 let mine = null;
 let others = [];   /* [{ note, author }] */
 let profiles = {};
 let busy = false;
+let durDays = 1;   /* durée choisie dans le composeur (1 = 24 h) */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -27,7 +34,8 @@ function face(author){
 
 function cell(note, author, isMe){
   const uid = note.author_id;
-  const text = note.body ? esc(note.body) : '';
+  const parts = splitMusic(note.body || '');
+  const text = parts.text ? esc(parts.text) : '';
   const bubble = text
     ? '<span class="note-bubble">' + text + '</span>'
     : '<span class="note-bubble empty">+ Note</span>';
@@ -40,9 +48,13 @@ function cell(note, author, isMe){
   const name = isMe
     ? 'You'
     : esc(String(((author && (author.display_name || author.username)) || '').slice(0, 12)));
-  return '<button type="button" class="note-cell' + (isMe ? ' is-me' : '') +
+  const song = parts.trackId
+    ? '<div class="note-music">' + musicChipHtml(parts.trackId) + '</div>'
+    : '';
+  return '<div class="note-item">' +
+    '<button type="button" class="note-cell' + (isMe ? ' is-me' : '') +
     (text ? '' : ' blank') + '" ' + attrs + ' aria-label="Note from ' + name + '">' +
-    bubble + avatar + '</button>';
+    bubble + avatar + '</button>' + song + '</div>';
 }
 
 function paintNotes(){
@@ -56,6 +68,7 @@ function paintNotes(){
   html += others.map(x => cell(x.note, x.author, false)).join('');
   row.innerHTML = html;
   row.classList.toggle('hidden', !html);
+  hydrateMusic(row);
   return true;
 }
 
@@ -127,6 +140,32 @@ export function initNotes(){
       }
     });
   }
+  wireDuration();
+}
+
+/* Durée de la note : 24 h par défaut, 7 j, 30 j, ou « forever ». */
+function setNoteDuration(days){
+  durDays = Math.max(0, parseInt(days, 10) || 0);
+  const box = el('noteDur');
+  if (box){
+    box.querySelectorAll('.seg').forEach(b =>
+      b.classList.toggle('active', parseInt(b.getAttribute('data-dur'), 10) === durDays));
+  }
+  return durDays;
+}
+
+function wireDuration(){
+  const box = el('noteDur');
+  if (!box || box.dataset.wired) return;
+  box.dataset.wired = '1';
+  box.addEventListener('click', e => {
+    const b = e.target && e.target.closest && e.target.closest('[data-dur]');
+    if (b) setNoteDuration(b.getAttribute('data-dur'));
+  });
+}
+
+export function pickNoteMusic(){
+  return openMusicPicker(t => setComposerMusic('note', t));
 }
 
 /* ----------------------------- composer ---------------------------- */
@@ -141,13 +180,32 @@ export function openNoteComposer(){
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (!gateOk()){ toast('Sign in and go online to use notes.'); return false; }
   const body = el('noteBody');
-  if (body) body.value = (mine && mine.body) || '';
+  if (body) body.value = mine ? splitMusic(mine.body || '').text : '';
   showError('');
   const rm = el('noteRemove');
   if (rm) rm.classList.toggle('hidden', !(mine && mine.id));
+  /* on restitue la durée et la musique déjà posées sur la note */
+  if (mine && mine.id){
+    const until = Date.parse(mine.expires_at || '');
+    setNoteDuration(isNaN(until) ? 1 : Math.max(1, Math.round((until - Date.now()) / 86400000)));
+    const prev = splitMusic(mine.body || '');
+    setComposerMusic('note', prev.trackId ? { id: prev.trackId } : null);
+  } else {
+    setNoteDuration(1);
+    clearComposerMusic('note');
+  }
   if (typeof window.openModal === 'function') window.openModal('noteModal');
   if (body) setTimeout(() => { try { body.focus(); } catch(e){} }, 60);
   return true;
+}
+
+/* Le corps fait 60 caractères : on réserve la place du pion musical. */
+function packNote(text, trackId){
+  const base = String(text || '');
+  if (!trackId) return base.slice(0, NOTE_MAX);
+  const token = '♪' + trackId;
+  const room = Math.max(0, NOTE_MAX - token.length - 1);
+  return withMusic(base.slice(0, room), trackId);
 }
 
 export async function submitNote(){
@@ -156,7 +214,9 @@ export async function submitNote(){
   const me = meId();
   if (!c || !me){ showError('Sign in to leave a note.'); return false; }
   const body = el('noteBody');
-  const text = ((body && body.value) || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  const raw = ((body && body.value) || '').replace(/\s+/g, ' ').trim().slice(0, NOTE_MAX);
+  const track = getComposerMusic('note');
+  const text = packNote(raw, track && track.id ? track.id : null);
   if (!text){ showError('Write something first.'); return false; }
 
   const btn = el('noteSubmit');
@@ -165,12 +225,13 @@ export async function submitNote(){
   showError('');
   try {
     const now = Date.now();
+    const ttl = durDays > 0 ? durDays * 86400000 : FOREVER_MS;
     const { error } = await c.from('notes').upsert({
       author_id: me,
       body: text,
       created_at: new Date(now).toISOString(),
       updated_at: new Date(now).toISOString(),
-      expires_at: new Date(now + 86400000).toISOString()
+      expires_at: new Date(now + ttl).toISOString()
     }, { onConflict: 'author_id' });
     if (error) throw new Error(error.message || 'Could not share your note.');
     loaded = false;
@@ -214,6 +275,8 @@ export function resetNotes(){
   mine = null;
   others = [];
   profiles = {};
+  durDays = 1;
+  clearComposerMusic('note');
   const row = el('notesRow');
   if (row){ row.innerHTML = ''; row.classList.add('hidden'); }
 }

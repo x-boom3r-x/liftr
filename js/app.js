@@ -4,7 +4,7 @@
 
 /* Build partage avec index.html (data-build) et sw.js (liftr-vXX) :
    on le bump a chaque deploiement (test handlers.spec.js l'impose). */
-window.__LIFTR_BUILD__ = '36';
+window.__LIFTR_BUILD__ = '37';
 
 import './state.js';
 import './data.js';
