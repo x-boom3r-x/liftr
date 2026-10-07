@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const zlib = require('zlib');
 const { seed } = require('./helpers');
 const { ME, ANA, ME_P, ANA_P, withSocial, signedIn, consoleWatch,
   openFeed, post, story, mockApi } = require('./social-mock');
@@ -12,6 +13,56 @@ const PNG = {
     'base64')
 };
 
+/* PNG RGB 64x64 en 4 quadrants colorés : indispensable pour vérifier qu'un
+   filtre change vraiment les pixels (une image mono ne bougerait pas). */
+function crc32(buf){
+  let c, table = crc32.t;
+  if (!table){
+    table = crc32.t = [];
+    for (let n = 0; n < 256; n++){
+      c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      table[n] = c >>> 0;
+    }
+  }
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) crc = table[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function pngChunk(type, data){
+  const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+  const td = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
+  return Buffer.concat([len, td, crc]);
+}
+function colorPng(){
+  const w = 64, h = 64;
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  let o = 0;
+  for (let y = 0; y < h; y++){
+    raw[o++] = 0;
+    for (let x = 0; x < w; x++){
+      const top = y < h / 2, left = x < w / 2;
+      if (top && left){ raw[o++] = 230; raw[o++] = 30;  raw[o++] = 40; }   /* rouge  */
+      else if (top){     raw[o++] = 20;  raw[o++] = 220; raw[o++] = 60; }   /* vert   */
+      else if (left){    raw[o++] = 30;  raw[o++] = 60;  raw[o++] = 230; }   /* bleu   */
+      else {             raw[o++] = 240; raw[o++] = 210; raw[o++] = 40; }    /* jaune  */
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', zlib.deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0))
+  ]);
+}
+const COLOR_PNG = {
+  name: 'color.png', mimeType: 'image/png', buffer: colorPng()
+};
+
 const TRACK = {
   trackId: 1234567890, trackName: 'Neon Skyline', artistName: 'The Lifters',
   collectionName: 'Iron Age', artworkUrl100: 'https://cdn.example/art.jpg',
@@ -19,7 +70,18 @@ const TRACK = {
 };
 
 /* iTunes est hors origine : on le route pour rester deterministe. */
+async function routeCdn(page){
+  /* pochettes/aperçus : sans route, le navigateur tente un vrai DNS
+     (ERR_NAME_NOT_RESOLVED) et le watch console échoue de façon aléatoire. */
+  await page.route('**/cdn.example/**', route => route.fulfill({
+    status: 200, contentType: 'image/png',
+    headers: { 'access-control-allow-origin': '*' },
+    buffer: PNG.buffer
+  }));
+}
+
 async function routeMusic(page){
+  await routeCdn(page);
   await page.route('**/itunes.apple.com/**', route => route.fulfill({
     status: 200, contentType: 'application/json',
     headers: { 'access-control-allow-origin': '*' },
@@ -307,5 +369,170 @@ test.describe('V4 : éditeur d’image avant publication', () => {
     await expect(page.locator('#postPreview')).toBeHidden();
     expect(api.calls.filter(c => c.method !== 'GET')).toEqual([]);
     expect(errs).toEqual([]);
+  });
+
+  /* Safari/iOS ne supporte pas `ctx.filter` : les filtres doivent être
+     calculés au pixel, sinon les presets et les curseurs ne changent rien. */
+  test('les presets et les curseurs modifient réellement les pixels', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    const api = mockApi(page);
+
+    await openFeed(page);
+    await page.setInputFiles('#postPhoto', COLOR_PNG);
+    await expect(page.locator('#editorModal')).toBeVisible();
+    await page.waitForTimeout(250);
+
+    const px = async () => page.evaluate(() => {
+      const cv = document.getElementById('editorCanvas');
+      if (!cv) return null;
+      /* copie dans un canvas de lecture : évite l'avertissement
+         Chrome « willReadFrequently » sans toucher au rendu réel */
+      const tmp = document.createElement('canvas');
+      tmp.width = cv.width; tmp.height = cv.height;
+      const ctx = tmp.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(cv, 0, 0);
+      const d = ctx.getImageData(
+        Math.floor(cv.width * 0.3), Math.floor(cv.height * 0.3), 1, 1).data;
+      return { r: d[0], g: d[1], b: d[2] };
+    });
+    const sat = p => Math.max(p.r, p.g, p.b) - Math.min(p.r, p.g, p.b);
+    const sum = p => p.r + p.g + p.b;
+
+    const before = await px();
+    expect(before).toBeTruthy();
+    expect(sat(before)).toBeGreaterThan(60);          /* source bien colorée */
+
+    await page.locator('#editorPresets [data-preset="mono"]').click();
+    await page.waitForTimeout(150);
+    const mono = await px();
+    expect(sat(mono)).toBeLessThanOrEqual(6);          /* désaturé = filtre appliqué */
+    expect(sum(mono)).not.toBe(sum(before));
+
+    await page.locator('#editorLight').fill('1.4');
+    await page.locator('#editorLight').dispatchEvent('input');
+    await page.waitForTimeout(200);
+    const lit = await px();
+    expect(sum(lit)).toBeGreaterThan(sum(mono));       /* le curseur agit aussi */
+
+    await page.locator('#editorPresets [data-preset="warm"]').click();
+    await page.waitForTimeout(150);
+    const warm = await px();
+    expect(sat(warm)).toBeGreaterThan(6);
+
+    /* l'export part de la même image filtrée que l'aperçu */
+    await page.locator('#editorUse').click();
+    await expect(page.locator('#editorModal')).toBeHidden();
+    await expect(page.locator('#postPreview')).toBeVisible();
+    expect(api.calls.filter(c => c.method !== 'GET')).toEqual([]);
+    expect(errs).toEqual([]);
+  });
+});
+
+test.describe('V4 : barre du bas', () => {
+
+  test('la tabbar reste collée au bas de l’écran, même si le viewport rétrécit', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    mockApi(page);
+    await openFeed(page);
+
+    /* état nominal : bas de la tabbar = bas de l'écran */
+    const at = async () => page.evaluate(() => {
+      const b = document.querySelector('.tabbar').getBoundingClientRect();
+      return { bottom: Math.round(b.bottom), vh: Math.round(window.innerHeight),
+               transform: document.querySelector('.tabbar').style.transform || '' };
+    });
+    let r = await at();
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
+    expect(r.transform).toBe('');
+
+    /* simulation iOS : le visualViewport est plus bas que le layout
+       (barre du navigateur qui réapparaît) → la tabbar doit suivre */
+    await page.evaluate(() => {
+      const vv = window.visualViewport;
+      Object.defineProperty(vv, 'height', { value: window.innerHeight - 60, configurable: true });
+      Object.defineProperty(vv, 'offsetTop', { value: 0, configurable: true });
+      vv.dispatchEvent(new Event('resize'));
+    });
+    await page.waitForTimeout(120);
+    r = await at();
+    expect(r.transform).toBe('translateY(-60px)');
+    expect(Math.abs(r.bottom - (r.vh - 60))).toBeLessThanOrEqual(2);
+
+    /* retour à la normale : plus aucune correction */
+    await page.evaluate(() => {
+      const vv = window.visualViewport;
+      delete vv.height;
+      delete vv.offsetTop;
+      vv.dispatchEvent(new Event('resize'));
+    });
+    await page.waitForTimeout(120);
+    r = await at();
+    expect(r.transform).toBe('');
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
+
+    /* la correction reste appliquée pendant les changements d'onglet */
+    await page.evaluate(() => showTab('stats'));
+    r = await at();
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
+    expect(errs).toEqual([]);
+  });
+});
+
+test.describe('V4 : musique — secours si iTunes ne répond pas', () => {
+
+  test('iTunes en échec → la recherche bascule sur Deezer et trouve le morceau', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    await routeCdn(page);
+
+    await page.route('**/itunes.apple.com/**', route => route.fulfill({
+      status: 500, contentType: 'text/plain', body: 'upstream down'
+    }));
+    await page.route('**/api.deezer.com/**', route => {
+      const cb = new URL(route.request().url()).searchParams.get('callback');
+      const payload = JSON.stringify({
+        data: [{
+          id: 99887766, title: 'Deep Squat', duration: 30,
+          artist: { name: 'The Lifters' },
+          album: { title: 'Iron Age', cover_medium: 'https://cdn.example/dz.jpg' },
+          preview: 'https://cdn.example/dz.mp3'
+        }]
+      });
+      route.fulfill({
+        status: 200, contentType: 'application/javascript',
+        body: cb + '(' + payload + ');'
+      });
+    });
+    const api = mockApi(page);
+
+    await openFeed(page);
+    await page.locator('#postMusicBtn').click();
+    await expect(page.locator('#musicModal')).toBeVisible();
+    await page.locator('#musicInput').fill('deep squat');
+    await page.locator('#musicSearchBtn').click();
+
+    await expect(page.locator('#musicList .music-row')).toHaveCount(1);
+    await expect(page.locator('#musicList .music-row')).toContainText('Deep Squat');
+    await expect(page.locator('#musicError')).toBeHidden();
+
+    await page.locator('#musicList .music-add').click();
+    await expect(page.locator('#musicModal')).toBeHidden();
+    await expect(page.locator('#postMusicSlot .mchip-t')).toHaveText('Deep Squat');
+
+    await page.locator('#postBody').fill('Squats with the band');
+    await page.locator('#postSubmit').click();
+    await expect.poll(() => api.st.posts.length).toBe(3);
+    expect(api.st.posts[0].body).toBe('Squats with the band ♪99887766');
+
+    /* on ignore les erreurs réseau provoquées volontairement par le test */
+    expect(errs.filter(e => !/Failed to load resource/.test(e))).toEqual([]);
   });
 });

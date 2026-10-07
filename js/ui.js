@@ -80,6 +80,32 @@ window.addEventListener('offline', checkNet);
    page fait réapparaître la barre du navigateur, le viewport rétrécit, et la
    tabbar (position:fixed;bottom:0) remonte. Chaque onglet garde la position du
    navigateur (le Feed continue de gérer/restaurer son propre scroll). */
+
+/* Colle la tabbar sur le bas RÉEL de l'écran. Quand iOS réduit le viewport
+   (barre du navigateur qui réapparaît, clavier), `bottom:0` fixe ne suffit
+   plus : la barre remonte et laisse un trou en dessous. On la recale sur le
+   bas du visualViewport (delta = bas visible - bas du layout). */
+let _pinRaf = 0;
+function pinTabbar(){
+  if (_pinRaf) return;
+  _pinRaf = requestAnimationFrame(() => {
+    _pinRaf = 0;
+    const bar = document.querySelector('.tabbar');
+    if (!bar) return;
+    const vv = window.visualViewport;
+    const delta = vv ? Math.round((vv.offsetTop + vv.height) - window.innerHeight) : 0;
+    if (Math.abs(delta) > 1) bar.style.transform = 'translateY(' + delta + 'px)';
+    else if (bar.style.transform) bar.style.transform = '';
+  });
+}
+window.addEventListener('resize', pinTabbar);
+window.addEventListener('scroll', pinTabbar, { passive: true });
+if (window.visualViewport){
+  window.visualViewport.addEventListener('resize', pinTabbar);
+  window.visualViewport.addEventListener('scroll', pinTabbar);
+}
+pinTabbar();
+
 function showTab(name){
   if (name === 'feed' && typeof window.socialAvailable === 'function' && !window.socialAvailable()) name = 'programme';
   if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
@@ -176,7 +202,7 @@ function wireActionSheet(){
 }
 
 Object.assign(window, {
-  boot, renderProfiles, createProfile, checkNet, showTab, renderAll,
+  boot, renderProfiles, createProfile, checkNet, showTab, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet
 });

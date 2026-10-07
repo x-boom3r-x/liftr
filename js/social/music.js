@@ -84,18 +84,89 @@ function normTrack(raw){
 }
 
 /* ---------------------------- recherche --------------------------- */
+function normList(rows){
+  const all = (rows || []).map(normTrack).filter(Boolean);
+  const withPv = all.filter(t => t.preview);
+  /* si aucun résultat n'a d'aperçu, on garde quand même la liste :
+     l'utilisateur doit voir que la recherche a trouvé quelque chose. */
+  return (withPv.length ? withPv : all).map(t => cacheSet(t));
+}
+
+/* Secours JSONP (Deezer n'expose pas d'en-tête CORS) : utilisé quand
+   iTunes est injoignable ou ne renvoie rien. */
+function jsonp(name, url){
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    let done = false;
+    let timer = 0;
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { delete window[name]; } catch(e){ window[name] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+    };
+    timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 9000);
+    window[name] = data => { cleanup(); resolve(data); };
+    s.onerror = () => { cleanup(); reject(new Error('network')); };
+    s.src = url;
+    document.head.appendChild(s);
+  });
+}
+
+function jsonpName(){ return '__liftr_jsonp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+async function searchDeezer(term){
+  const name = jsonpName();
+  const data = await jsonp(name, 'https://api.deezer.com/search?limit=15&output=jsonp&callback=' + name +
+    '&q=' + encodeURIComponent(term));
+  return normList(((data && data.data) || []).map(d => ({
+    trackId: d.id,
+    trackName: d.title,
+    artistName: d.artist && d.artist.name,
+    collectionName: d.album && d.album.title,
+    artworkUrl100: d.album && (d.album.cover_medium || d.album.cover_big),
+    previewUrl: d.preview,
+    trackTimeMillis: d.duration ? d.duration * 1000 : 0
+  })));
+}
+
+async function lookupDeezer(key){
+  const name = jsonpName();
+  const data = await jsonp(name, 'https://api.deezer.com/track/' + encodeURIComponent(key) +
+    '?output=jsonp&callback=' + name);
+  if (!data || !data.id) return null;
+  return cacheSet(normTrack({
+    trackId: data.id,
+    trackName: data.title,
+    artistName: data.artist && data.artist.name,
+    collectionName: data.album && data.album.title,
+    artworkUrl100: data.album && (data.album.cover_medium || data.album.cover_big),
+    previewUrl: data.preview,
+    trackTimeMillis: data.duration ? data.duration * 1000 : 0
+  }));
+}
+
 export async function searchTracks(term){
   const q = String(term || '').trim();
   if (!q) return [];
   const url = API + '/search?term=' + encodeURIComponent(q) +
     '&media=music&entity=song&limit=15';
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error('Music search is unavailable.');
-  const data = await res.json();
-  const rows = (data && data.results) || [];
-  /* on met chaque fiche en cache tout de suite : le bouton « Add » doit
-     fonctionner immédiatement, sans attendre un éventuel lookup. */
-  return rows.map(normTrack).filter(t => t && t.preview).map(t => cacheSet(t));
+  let unreachable = null;
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rows = normList(data && data.results);
+    if (rows.length) return rows;
+  } catch(e){ unreachable = e; }
+  /* secours : Deezer en JSONP, puis on rend la main */
+  try {
+    const alt = await searchDeezer(q);
+    if (alt.length) return alt;
+  } catch(e2){ if (!unreachable) unreachable = e2; }
+  if (unreachable) throw new Error('Music search is unreachable. Check your connection, then retry.');
+  return [];
 }
 
 export async function resolveTrack(id){
@@ -109,18 +180,21 @@ export async function resolveTrack(id){
     try {
       const res = await fetch(API + '/lookup?id=' + encodeURIComponent(key) + '&entity=song',
         { headers: { Accept: 'application/json' } });
-      if (!res.ok) return null;
-      const data = await res.json();
-      const rows = (data && data.results) || [];
-      const raw = rows.find(r => String(r.trackId) === key) || rows[0];
-      const t = normTrack(raw);
-      return t ? cacheSet(t) : null;
-    } catch(e){
-      return null;
-    } finally {
-      delete pending[key];
-    }
-  })();
+      if (res.ok){
+        const data = await res.json();
+        const rows = (data && data.results) || [];
+        const raw = rows.find(r => String(r.trackId) === key) || rows[0];
+        const t = normTrack(raw);
+        if (t) return cacheSet(t);
+      }
+    } catch(e){}
+    /* secours : la fiche vient peut-être de Deezer (pion ♪id) */
+    try {
+      const alt = await lookupDeezer(key);
+      if (alt) return alt;
+    } catch(e2){}
+    return null;
+  })().finally(() => { delete pending[key]; });
   return pending[key];
 }
 
@@ -166,8 +240,15 @@ export function playTrack(id){
   const key = String(id || '');
   if (!key) return false;
   const t = cacheGet(key);
-  if (t && t.preview) return startAudio(t);
-  resolveTrack(key).then(found => { if (found && found.preview) startAudio(found); });
+  if (t){
+    if (t.preview) return startAudio(t);
+    toast('No preview for this track.');
+    return false;
+  }
+  resolveTrack(key).then(found => {
+    if (found && found.preview) startAudio(found);
+    else toast('No preview for this track.');
+  });
   return true;
 }
 
@@ -274,19 +355,23 @@ export function closeMusicPicker(){
   return true;
 }
 
+let searchSeq = 0;
 export async function runMusicSearch(){
   const input = el('musicInput');
   const term = ((input && input.value) || '').trim();
   if (!term){ showMusicError('Type a title or an artist.'); return false; }
+  const seq = ++searchSeq;
   const list = el('musicList');
   if (list) list.innerHTML = '<div class="music-hint">Searching…</div>';
   showMusicError('');
   try {
     const rows = await searchTracks(term);
+    if (seq !== searchSeq) return false;   /* une recherche plus récente a pris la main */
     paintRows(rows);
     return true;
   } catch(e){
-    showMusicError((e && e.message) || 'Music search is unavailable.');
+    if (seq !== searchSeq) return false;
+    showMusicError((e && e.message) || 'Music search is unreachable. Check your connection, then retry.');
     if (list) list.innerHTML = '';
     return false;
   }

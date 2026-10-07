@@ -5,13 +5,16 @@
    intermédiaire sur le disque.
    ================================================================== */
 
+/* Filtres définis comme une chaîne d'opérations (matrice 3x4) appliquées
+   au pixel : Safari ne supporte pas `ctx.filter`, donc aucun effet canvas
+   filtre ne fonctionnerait sur iPhone. On fait le calcul nous-mêmes. */
 const PRESETS = [
-  { k: 'none',  label: 'Original', css: '' },
-  { k: 'mono',  label: 'Mono',     css: 'grayscale(1) contrast(1.06)' },
-  { k: 'warm',  label: 'Warm',     css: 'sepia(.22) saturate(1.35) hue-rotate(-6deg)' },
-  { k: 'cool',  label: 'Cool',     css: 'saturate(1.12) hue-rotate(10deg) brightness(1.03)' },
-  { k: 'fade',  label: 'Fade',     css: 'contrast(.9) brightness(1.07) saturate(.85)' },
-  { k: 'vivid', label: 'Vivid',    css: 'saturate(1.55) contrast(1.08)' }
+  { k: 'none',  label: 'Original', ops: [] },
+  { k: 'mono',  label: 'Mono',     ops: [['gray', 1], ['contrast', 1.06]] },
+  { k: 'warm',  label: 'Warm',     ops: [['sepia', .22], ['sat', 1.35], ['hue', -6]] },
+  { k: 'cool',  label: 'Cool',     ops: [['sat', 1.12], ['hue', 10], ['bright', 1.03]] },
+  { k: 'fade',  label: 'Fade',     ops: [['contrast', .9], ['bright', 1.07], ['sat', .85]] },
+  { k: 'vivid', label: 'Vivid',    ops: [['sat', 1.55], ['contrast', 1.08]] }
 ];
 
 const RATIOS = {
@@ -22,7 +25,7 @@ const RATIOS = {
   '16:9': 16 / 9
 };
 
-let state = null;      /* { img, maxEdge, aspect, rot, flip, zoom, tx, ty, preset, light, color } */
+let state = null;      /* { src, img, imgKey, maxEdge, aspect, rot, flip, zoom, tx, ty, preset, light, color } */
 let onDone = null;
 let dragging = false;
 let lastPt = null;
@@ -45,29 +48,114 @@ function decode(file){
   });
 }
 
-let filterSupported = null;
-function filtersOk(){
-  if (filterSupported === null){
-    try {
-      const ctx = document.createElement('canvas').getContext('2d');
-      filterSupported = typeof ctx.filter === 'string';
-    } catch(e){ filterSupported = false; }
-  }
-  return filterSupported;
-}
-
-function filterCss(){
-  if (!state || !filtersOk()) return '';
-  const preset = PRESETS.find(p => p.k === state.preset) || PRESETS[0];
-  const parts = [];
-  if (preset.css) parts.push(preset.css);
-  if (state.light !== 1) parts.push('brightness(' + state.light + ')');
-  if (state.color !== 1) parts.push('saturate(' + state.color + ')');
-  return parts.join(' ');
-}
-
 function ratio(){
   return RATIOS[state ? state.aspect : 'free'] || 0;
+}
+
+/* --------------------- filtres au pixel (matrice) ------------------ */
+const LUM = [.2126, .7152, .0722];
+
+function opMatrix(op, k){
+  const m = [1,0,0, 0,1,0, 0,0,1, 0,0,0];
+  if (op === 'bright'){
+    m[0] = m[4] = m[8] = k;
+  } else if (op === 'contrast'){
+    const b = 127.5 * (1 - k);
+    m[0] = m[4] = m[8] = k;
+    m[9] = m[10] = m[11] = b;
+  } else if (op === 'sat'){
+    const l = LUM;
+    m[0] = l[0] + (1 - l[0]) * k; m[1] = -l[1] * k;              m[2] = -l[2] * k;
+    m[3] = -l[0] * k;              m[4] = l[1] + (1 - l[1]) * k; m[5] = -l[2] * k;
+    m[6] = -l[0] * k;              m[7] = -l[1] * k;              m[8] = l[2] + (1 - l[2]) * k;
+  } else if (op === 'gray'){
+    const l = LUM;
+    m[0] = 1 - k + l[0] * k; m[1] = l[1] * k;        m[2] = l[2] * k;
+    m[3] = l[0] * k;         m[4] = 1 - k + l[1] * k; m[5] = l[2] * k;
+    m[6] = l[0] * k;         m[7] = l[1] * k;         m[8] = 1 - k + l[2] * k;
+  } else if (op === 'sepia'){
+    const s = [.393,.769,.189, .349,.686,.168, .272,.534,.131];
+    m[0] = 1 - k + s[0] * k; m[1] = s[1] * k;        m[2] = s[2] * k;
+    m[3] = s[3] * k;         m[4] = 1 - k + s[4] * k; m[5] = s[5] * k;
+    m[6] = s[6] * k;         m[7] = s[7] * k;         m[8] = 1 - k + s[8] * k;
+  } else if (op === 'hue'){
+    const a = k * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    m[0] = .213 + c * .787 - s * .213; m[1] = .715 - c * .715 - s * .715; m[2] = .072 - c * .072 + s * .928;
+    m[3] = .213 - c * .213 + s * .143; m[4] = .715 + c * .285 + s * .140; m[5] = .072 - c * .072 - s * .283;
+    m[6] = .213 - c * .213 - s * .787; m[7] = .715 - c * .715 + s * .715; m[8] = .072 + c * .928 + s * .072;
+  }
+  return m;
+}
+
+/* compose : on applique `acc` puis `next` (ordre de la chaîne) */
+function compose(next, acc){
+  const out = new Array(12);
+  for (let r = 0; r < 3; r++){
+    for (let c = 0; c < 3; c++){
+      out[r * 3 + c] = next[r * 3] * acc[c] + next[r * 3 + 1] * acc[3 + c] + next[r * 3 + 2] * acc[6 + c];
+    }
+    out[9 + r] = next[r * 3] * acc[9] + next[r * 3 + 1] * acc[10] + next[r * 3 + 2] * acc[11] + next[9 + r];
+  }
+  return out;
+}
+
+function matrixOf(ops){
+  let m = [1,0,0, 0,1,0, 0,0,1, 0,0,0];
+  for (let i = 0; i < ops.length; i++) m = compose(opMatrix(ops[i][0], ops[i][1]), m);
+  return m;
+}
+
+function applyMatrix(data, m){
+  const m0 = m[0], m1 = m[1], m2 = m[2], m3 = m[3], m4 = m[4], m5 = m[5],
+        m6 = m[6], m7 = m[7], m8 = m[8], b0 = m[9], b1 = m[10], b2 = m[11];
+  for (let i = 0; i < data.length; i += 4){
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    const nr = m0 * r + m1 * g + m2 * b + b0;
+    const ng = m3 * r + m4 * g + m5 * b + b1;
+    const nb = m6 * r + m7 * g + m8 * b + b2;
+    data[i]     = nr < 0 ? 0 : (nr > 255 ? 255 : nr);
+    data[i + 1] = ng < 0 ? 0 : (ng > 255 ? 255 : ng);
+    data[i + 2] = nb < 0 ? 0 : (nb > 255 ? 255 : nb);
+  }
+}
+
+function colorOps(){
+  if (!state) return [];
+  const preset = PRESETS.find(p => p.k === state.preset) || PRESETS[0];
+  const ops = preset.ops.slice();
+  if (state.light !== 1) ops.push(['bright', state.light]);
+  if (state.color !== 1) ops.push(['sat', state.color]);
+  return ops;
+}
+
+/* Recalcule `state.img` (source filtrée) uniquement quand les couleurs
+   changent : la géométrie (rotation/zoom/décalage) s'applique dessus. */
+function rebuildImage(){
+  if (!state || !state.src) return;
+  const ops = colorOps();
+  const key = ops.map(o => o[0] + ':' + o[1]).join('|');
+  if (state.imgKey === key && state.img) return;
+  if (!ops.length){
+    state.img = state.src;
+    state.imgKey = key;
+    return;
+  }
+  const src = state.src;
+  const maxWork = 2048;
+  const scale = Math.min(1, maxWork / Math.max(src.width, src.height));
+  const w = Math.max(1, Math.round(src.width * scale));
+  const h = Math.max(1, Math.round(src.height * scale));
+  let cv = state.filterCv;
+  if (!cv){ cv = document.createElement('canvas'); state.filterCv = cv; }
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  ctx.clearRect(0, 0, w, h);
+  ctx.drawImage(src, 0, 0, w, h);
+  const imgData = ctx.getImageData(0, 0, w, h);
+  applyMatrix(imgData.data, matrixOf(ops));
+  ctx.putImageData(imgData, 0, 0);
+  state.img = cv;
+  state.imgKey = key;
 }
 
 function stageSize(){
@@ -120,8 +208,6 @@ function drawTo(ctx, box){
   ctx.rotate(t.rot * Math.PI / 180);
   ctx.scale(state.flip ? -1 : 1, 1);
   ctx.scale(t.s, t.s);
-  const css = filterCss();
-  if (css) ctx.filter = css;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, -img.width / 2, -img.height / 2, img.width, img.height);
   ctx.restore();
@@ -129,6 +215,7 @@ function drawTo(ctx, box){
 
 function renderPreview(){
   if (!state) return;
+  rebuildImage();
   const cv = el('editorCanvas');
   const st = el('editorStage');
   if (!cv || !st) return;
@@ -199,6 +286,7 @@ function webpOk(){
 }
 
 async function exportBlob(){
+  rebuildImage();
   const box = cropBox();
   const r = ratio();
   const maxEdge = state.maxEdge || 1080;
@@ -263,9 +351,10 @@ export function openImageEditor(opts, done){
   const maxEdge = (opts && opts.maxEdge) || 1080;
   const aspect = (opts && opts.aspect) || 'free';
 
-  decode(file).then(img => {
+  decode(file).then(src => {
     state = {
-      img: img, maxEdge: maxEdge, aspect: RATIOS.hasOwnProperty(aspect) ? aspect : 'free',
+      src: src, img: src, imgKey: null, filterCv: null,
+      maxEdge: maxEdge, aspect: RATIOS.hasOwnProperty(aspect) ? aspect : 'free',
       rot: 0, flip: false, zoom: 1, tx: 0, ty: 0, preset: 'none', light: 1, color: 1
     };
     onDone = typeof done === 'function' ? done : null;
@@ -280,8 +369,14 @@ export function openImageEditor(opts, done){
 }
 
 export function closeEditor(){
-  if (state && state.img && typeof state.img.close === 'function'){
-    try { state.img.close(); } catch(e){}
+  if (state){
+    const s = state.src;
+    if (s && typeof s.close === 'function'){
+      try { s.close(); } catch(e){}
+    }
+    if (state.filterCv){
+      try { state.filterCv.width = state.filterCv.height = 0; } catch(e){}
+    }
   }
   state = null;
   onDone = null;
