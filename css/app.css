@@ -1581,18 +1581,6 @@ button{background:none;border:none;cursor:pointer}
 
 
 /* ---------- iPhone / Safari viewport fixes ---------- */
-/* Hauteur pilotée par le contenu (base : padding 8px + 8px safe-area) :
-   une hauteur fixe + padding-bottom écrasé collait les onglets au bord bas
-   (pilule coupée). On garde uniquement la couche GPU (anti-flicker iOS). */
-.tabbar{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
-  transform:translateZ(0);
-  -webkit-transform:translateZ(0);
-}
-
 .story-view{
   top:0;
   right:0;
@@ -1617,4 +1605,44 @@ button{background:none;border:none;cursor:pointer}
 .crew-plus{
   line-height:1;
   margin:0;
+}
+
+/* ==================================================================
+   APP SHELL (iPhone) — la tabbar ne dépend plus de position:fixed
+   sur le document. #mainApp occupe exactement l'écran visible ;
+   le header et la tabbar sont des éléments de flex (jamais déplacés),
+   seul .app défile. Aucun contenu ne peut plus élargir le document
+   ni changer la hauteur du viewport => la barre reste collée en bas
+   sur TOUS les onglets.
+   ================================================================== */
+#mainApp{
+  position:fixed;top:0;right:0;bottom:0;left:0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  background:var(--bg);
+}
+#mainApp > .header{flex:none;position:relative;top:auto}
+.app{
+  flex:1 1 auto;min-height:0;
+  width:100%;max-width:none;margin:0;
+  overflow-x:hidden;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  padding:0 16px 24px;
+  padding:0 max(16px,calc((100% - 608px) / 2)) 24px;
+}
+/* padding-top sur le panneau (pas sur .app) : le .snav sticky se colle
+   ainsi pile sous le header, sans 18px de vide */
+.app > .panel{min-width:0;max-width:100%;padding-top:18px}
+#tab-feed{padding-bottom:72px}
+.tabbar{
+  position:relative;flex:none;
+  top:auto;left:auto;right:auto;bottom:auto;
+  transform:none;-webkit-transform:none;
+}
+.snav{top:0}
+
+/* iOS zoome la page au focus d'un champ < 16px (viewport décalé) */
+@media (hover:none) and (pointer:coarse){
+  .input,.textarea,select.input,.composer-input,.search-input{font-size:16px}
 }

@@ -569,7 +569,10 @@ function paint(){
   if (pendingScroll !== null){
     const y = pendingScroll;
     pendingScroll = null;
-    requestAnimationFrame(() => window.scrollTo(0, y));
+    requestAnimationFrame(() => {
+      const sc = document.querySelector('.app');
+      if (sc) sc.scrollTop = y;
+    });
   }
 }
 
@@ -669,7 +672,10 @@ export async function submitPost(){
 }
 
 export function saveFeedScroll(){
-  try { sessionStorage.setItem(SCROLL_KEY, String(Math.max(0, Math.round(window.scrollY)))); } catch(e){}
+  try {
+    const sc = document.querySelector('.app');
+    sessionStorage.setItem(SCROLL_KEY, String(Math.max(0, Math.round(sc ? sc.scrollTop : 0))));
+  } catch(e){}
 }
 
 export function resetFeed(){

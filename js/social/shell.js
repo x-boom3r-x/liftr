@@ -73,7 +73,8 @@ export function setSView(name){
   setSocialHead(head[0], head[1]);
 
   if (view !== 'thread') stopThreadPoll();
-  window.scrollTo(0, 0);
+  const sc = document.querySelector('.app');
+  if (sc) sc.scrollTop = 0;
   loader(view);
   return view;
 }

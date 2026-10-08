@@ -106,7 +106,9 @@ test.describe('Robustesse', () => {
   });
 
   /* iOS Safari : un scroll programmaté au changement d'onglet fait réapparaître
-     la barre du navigateur, le viewport rétrécit et la tabbar (fixed;bottom:0) remonte. */
+     la barre du navigateur. Le document ne défile plus (app shell : c'est .app
+     qui défile) — on vérifie qu'aucun scroll n'est forcé et que la tabbar ne
+     bouge pas d'un pixel. */
   test('changement d\'onglet : aucun scroll forcé, la tabbar ne bouge pas', async ({ page }) => {
     const history = [];
     for (let i = 0; i < 12; i++){
@@ -121,13 +123,16 @@ test.describe('Robustesse', () => {
     }
     await seed(page, { programme, history }, 'Mouataz');
 
-    await page.evaluate(() => window.scrollTo(0, 40));
-    await page.waitForFunction(() => window.scrollY >= 40);
-    const snap = () => page.evaluate(() => ({
-      y: window.scrollY,
-      top: Math.round(document.querySelector('.tabbar').getBoundingClientRect().top),
-      docH: document.documentElement.scrollHeight
-    }));
+    await page.evaluate(() => { document.querySelector('.app').scrollTop = 40; });
+    await page.waitForFunction(() => document.querySelector('.app').scrollTop >= 40);
+    const snap = () => page.evaluate(() => {
+      const sc = document.querySelector('.app');
+      return {
+        y: sc.scrollTop,
+        top: Math.round(document.querySelector('.tabbar').getBoundingClientRect().top),
+        docH: sc.scrollHeight
+      };
+    });
     const before = await snap();
     expect(before.y).toBeGreaterThanOrEqual(40);
 
@@ -143,5 +148,6 @@ test.describe('Robustesse', () => {
     const back = await snap();
     expect(back.y).toBe(before.y);
     expect(back.top).toBe(before.top);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0); /* le document ne défile plus */
   });
 });

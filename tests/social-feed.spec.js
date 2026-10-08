@@ -185,15 +185,17 @@ test.describe('Feed : liste', () => {
     await openFeed(page);
     await expect(page.locator('#feedList .post')).toHaveCount(PAGE_SIZE);
 
-    await page.evaluate(() => window.scrollTo(0, 620));
-    await page.waitForFunction(() => window.scrollY > 200);
+    /* le conteneur qui défile est .app (app shell), plus le document */
+    await page.evaluate(() => { document.querySelector('.app').scrollTop = 620; });
+    await page.waitForFunction(() => document.querySelector('.app').scrollTop > 200);
 
     await page.evaluate(() => showTab('programme'));
+    expect(await page.evaluate(() => document.querySelector('.app').scrollTop)).toBeLessThan(620);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
     await page.evaluate(() => showTab('feed'));
-    await page.waitForFunction(() => window.scrollY > 200);
-    const y = await page.evaluate(() => window.scrollY);
+    await page.waitForFunction(() => document.querySelector('.app').scrollTop > 200);
+    const y = await page.evaluate(() => document.querySelector('.app').scrollTop);
     expect(Math.abs(y - 620)).toBeLessThan(3);
   });
 });
