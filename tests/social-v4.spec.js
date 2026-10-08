@@ -482,6 +482,58 @@ test.describe('V4 : barre du bas', () => {
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
     expect(errs).toEqual([]);
   });
+
+  test('rebond iOS (visualViewport.offsetTop négatif) : la tabbar ne remonte pas', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    mockApi(page);
+    await openFeed(page);
+
+    const at = async () => page.evaluate(() => {
+      const b = document.querySelector('.tabbar').getBoundingClientRect();
+      return { bottom: Math.round(b.bottom), vh: Math.round(window.innerHeight),
+               transform: document.querySelector('.tabbar').style.transform || '' };
+    });
+    let r = await at();
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
+
+    /* pendant un scroll rebond, iOS décale le visualViewport vers le haut SANS
+       réduire sa hauteur visible → aucun translateY n'est autorisé */
+    await page.evaluate(() => {
+      const vv = window.visualViewport;
+      Object.defineProperty(vv, 'offsetTop', { value: -90, configurable: true });
+      vv.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('scroll'));
+    });
+    await page.waitForTimeout(150);
+    r = await at();
+    expect(r.transform).toBe('');
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
+
+    /* la hauteur réellement réduite reste corrigée (la vraie toolbar) */
+    await page.evaluate(() => {
+      const vv = window.visualViewport;
+      Object.defineProperty(vv, 'height', { value: window.innerHeight - 60, configurable: true });
+      vv.dispatchEvent(new Event('resize'));
+    });
+    await page.waitForTimeout(150);
+    r = await at();
+    expect(r.transform).toBe('translateY(-60px)');
+
+    await page.evaluate(() => {
+      const vv = window.visualViewport;
+      delete vv.offsetTop;
+      delete vv.height;
+      vv.dispatchEvent(new Event('resize'));
+    });
+    await page.waitForTimeout(150);
+    r = await at();
+    expect(r.transform).toBe('');
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
+    expect(errs).toEqual([]);
+  });
 });
 
 test.describe('V4 : musique — secours si iTunes ne répond pas', () => {

@@ -81,10 +81,16 @@ window.addEventListener('offline', checkNet);
    tabbar (position:fixed;bottom:0) remonte. Chaque onglet garde la position du
    navigateur (le Feed continue de gérer/restaurer son propre scroll). */
 
-/* Colle la tabbar sur le bas RÉEL de l'écran. Quand iOS réduit le viewport
-   (barre du navigateur qui réapparaît, clavier), `bottom:0` fixe ne suffit
-   plus : la barre remonte et laisse un trou en dessous. On la recale sur le
-   bas du visualViewport (delta = bas visible - bas du layout). */
+/* Colle la tabbar sur le bas RÉEL de l'écran. Quand iOS réduit la HAUTEUR du
+   viewport (barre du navigateur qui réapparaît, clavier), `bottom:0` fixe ne
+   suffit plus : la barre remonte et laisse un trou en dessous. On la recale sur
+   le bas du visualViewport.
+
+   On utilise UNIQUEMENT `vv.height - innerHeight` et JAMAIS `vv.offsetTop` :
+   pendant un rebond de scroll iOS (ou un zoom), offsetTop devient temporairement
+   négatif alors que la hauteur visible est inchangée → l'ancienne formule
+   appliquait un translateY parasite et la barre restait bloquée trop haut
+   ("la barre remonte un peu"). Un viewport réduit = hauteur plus petite. */
 let _pinRaf = 0;
 function pinTabbar(){
   if (_pinRaf) return;
@@ -93,8 +99,8 @@ function pinTabbar(){
     const bar = document.querySelector('.tabbar');
     if (!bar) return;
     const vv = window.visualViewport;
-    const delta = vv ? Math.round((vv.offsetTop + vv.height) - window.innerHeight) : 0;
-    if (Math.abs(delta) > 1) bar.style.transform = 'translateY(' + delta + 'px)';
+    const delta = vv ? Math.round(vv.height - window.innerHeight) : 0;
+    if (delta < -1) bar.style.transform = 'translateY(' + delta + 'px)';
     else if (bar.style.transform) bar.style.transform = '';
   });
 }

@@ -1581,14 +1581,14 @@ button{background:none;border:none;cursor:pointer}
 
 
 /* ---------- iPhone / Safari viewport fixes ---------- */
+/* Hauteur pilotée par le contenu (base : padding 8px + 8px safe-area) :
+   une hauteur fixe + padding-bottom écrasé collait les onglets au bord bas
+   (pilule coupée). On garde uniquement la couche GPU (anti-flicker iOS). */
 .tabbar{
   position:fixed;
   left:0;
   right:0;
   bottom:0;
-  height:calc(66px + var(--safe-bottom));
-  padding-bottom:var(--safe-bottom);
-  box-sizing:border-box;
   transform:translateZ(0);
   -webkit-transform:translateZ(0);
 }
