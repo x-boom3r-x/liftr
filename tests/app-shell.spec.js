@@ -125,4 +125,38 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     expect(t.bottom, 'le toast reste au-dessus de la barre').toBeLessThanOrEqual(t.barTop + 1);
     expect(t.z).toBeGreaterThan(0);
   });
+
+  test('contenu trop large (bug 916px) : le document ne s\'élargit pas, la barre bouge pas', async ({ page }) => {
+    await page.evaluate(t => window.showTab(t), 'programme');
+    await page.waitForTimeout(150);
+    await page.evaluate(() => {
+      const sc = document.querySelector('.app');
+      const wide = document.createElement('div');
+      wide.id = 'wideTest';
+      wide.style.cssText = 'width:916px;height:40px;background:#555;color:#fff';
+      wide.textContent = 'contenu anormalement large';
+      (sc.querySelector('.panel') || sc.firstElementChild || sc).appendChild(wide);
+      sc.scrollTop = sc.scrollHeight;
+    });
+    await page.waitForTimeout(250);
+    const r = await page.evaluate(() => {
+      const bar = document.querySelector('.tabbar').getBoundingClientRect();
+      const sc = document.querySelector('.app');
+      return {
+        docSW: document.documentElement.scrollWidth,
+        docCW: document.documentElement.clientWidth,
+        innerW: window.innerWidth,
+        gap: +(innerHeight - bar.bottom).toFixed(1),
+        scSW: sc.scrollWidth,
+        scCW: sc.clientWidth,
+        docScrollY: window.scrollY
+      };
+    });
+    expect(r.docSW, 'le document reste aussi large que l\'écran malgré l\'enfant à 916px')
+      .toBeLessThanOrEqual(r.docCW);
+    expect(r.scSW, 'le conteneur .app absorbe le débordement (scrollWidth > clientWidth)')
+      .toBeGreaterThan(r.scCW);
+    expect(r.gap, 'la barre reste collée en bas').toBeLessThanOrEqual(1);
+    expect(r.docScrollY, 'la fenêtre ne défile pas').toBe(0);
+  });
 });
