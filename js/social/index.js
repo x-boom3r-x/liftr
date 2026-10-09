@@ -46,7 +46,8 @@ import {
 import {
   renderStories, initStories, initStoryViewer, openStoryViewer,
   closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
-  deleteStory, deleteCurrentStory, resetStories, pickStoryMusic
+  deleteStory, deleteCurrentStory, resetStories, pickStoryMusic,
+  refreshStoryRings
 } from './stories.js';
 import {
   renderNotes, initNotes, openNoteComposer, submitNote, removeNote,
@@ -94,7 +95,7 @@ Object.assign(window, {
   sendMessage, initInbox, resetInbox,
   renderStories, initStories, initStoryViewer, openStoryViewer,
   closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
-  deleteStory, deleteCurrentStory, resetStories, pickStoryMusic,
+  deleteStory, deleteCurrentStory, resetStories, pickStoryMusic, refreshStoryRings,
   renderNotes, initNotes, openNoteComposer, submitNote, removeNote,
   resetNotes, pickNoteMusic,
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,

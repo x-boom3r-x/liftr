@@ -4,6 +4,7 @@
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
 import { compressImage, mediaUrl } from './feed.js';
+import { storyRingClass } from './rings.js';
 import {
   privacyMode, isPrivateProfile, stripPrivacy, withPrivacy,
   canSeePosts, writePrivacy
@@ -51,7 +52,13 @@ function paintProfile(){
   const handle = current && current.username ? '@' + current.username : '@—';
 
   const av = el('profAvatarBtn');
-  if (av) av.innerHTML = faceHtml(current && current.avatar_url, name);
+  if (av){
+    av.innerHTML = faceHtml(current && current.avatar_url, name);
+    av.setAttribute('data-uid', String((current && current.id) || ''));
+    const ring = storyRingClass(current && current.id);
+    av.classList.toggle('has-story', ring.indexOf('has-story') >= 0);
+    av.classList.toggle('seen', ring.indexOf('seen') >= 0);
+  }
   if (el('profAvatarBtn')) el('profAvatarBtn').setAttribute('aria-label',
     isMe ? 'Change your profile photo' : name);
 

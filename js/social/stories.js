@@ -9,6 +9,10 @@ import {
   withMusic, splitMusic, musicChipHtml, hydrateMusic,
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
 } from './music.js';
+import {
+  setStoryRings, markStorySeen, clearStoryRings, applyStoryRings,
+  ringsFresh, ringAuthorsKey, RING_TTL
+} from './rings.js';
 
 const STORY_EDGE = 1080;
 const STORY_Q = 0.85;
@@ -106,6 +110,10 @@ export async function renderStories(){
 
     queue = rows.map(p => ({ id: p.id, name: p.display_name || p.username || 'Athlete' }))
       .filter(x => st[x.id]);
+    /* alimente le Set partagé : les avatars de post / profil / commentaires
+       portent alors has-story (et seen) sans requête supplémentaire */
+    setStoryRings(st);
+    applyStoryRings();
 
     const you = mine
       ? { id: me, username: mine.username, display_name: mine.display_name || mine.username,
@@ -124,6 +132,44 @@ export async function renderStories(){
     crewLoaded = true;
     return false;
   }
+}
+
+/* ---------------- anneaux partagés : rafraîchissement ----------------
+   Le Set unique vit dans ./rings.js ; ici on l'alimente en dehors du
+   rendu de la rangée : timer 60 s (expiration), retour en avant-plan,
+   et (via renderStories) après publication / suppression d'une story. */
+export async function refreshStoryRings(force){
+  const c = sb();
+  const me = meId();
+  if (!c || !me || !gateOk()) return false;
+  if (!force && ringsFresh()) return true;
+  const before = ringAuthorsKey();
+  try {
+    const { data: f } = await c.from('follows').select('followee_id')
+      .eq('follower_id', me).limit(200);
+    const ids = [me].concat((f || []).map(r => r.followee_id));
+    const st = await storyState(c, ids);
+    setStoryRings(st);
+    applyStoryRings();
+    if (ringAuthorsKey() !== before){
+      /* le jeu d'auteurs a bougé : une story est apparue ou a expiré */
+      crewLoaded = false;
+      if (typeof window.renderStories === 'function') window.renderStories();
+    }
+    return true;
+  } catch(e){ return false; }
+}
+
+let ringsWired = false;
+function wireRingRefresh(){
+  if (ringsWired) return;
+  ringsWired = true;
+  /* une story qui arrive à terme doit disparaître des anneaux et de la
+     rangée sans aucune interaction de l'utilisateur */
+  setInterval(() => { refreshStoryRings(true); }, RING_TTL);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshStoryRings(true);
+  });
 }
 
 export function initStories(){
@@ -149,6 +195,7 @@ export function initStories(){
     input.addEventListener('change', onStoryPhoto);
   }
   wireDuration();
+  wireRingRefresh();
 }
 
 /* Durée de la story : 24 h par défaut, 3 j, 7 j, ou « forever ». */
@@ -254,6 +301,8 @@ async function markSeen(s){
   try {
     await c.from('story_views').upsert({ story_id: s.id, viewer_id: me },
       { onConflict: 'story_id,viewer_id' });
+    /* vue immédiatement : l'anneau de l'auteur passe en « seen » partout */
+    if (markStorySeen(s.author_id)) applyStoryRings();
   } catch(e){}
 }
 
@@ -503,4 +552,6 @@ export function resetStories(){
   clearStoryPhoto();
   const row = el('crewRow');
   if (row) row.innerHTML = '';
+  clearStoryRings();
+  applyStoryRings();
 }

@@ -5,6 +5,7 @@ import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
 import { openImageEditor } from './editor.js';
 import { filterPrivatePosts } from './privacy.js';
+import { storyRingClass } from './rings.js';
 import {
   withMusic, musicChipForBody, hydrateMusic,
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
@@ -509,7 +510,7 @@ export function postCardHtml(p){
 
   return '<article class="post" data-post="' + esc(p.id || '') + '">' +
     '<div class="post-head">' +
-      '<button type="button" class="avatar post-avatar ring' + (a.avatar_url ? '' : ' fallback') + '" ' +
+      '<button type="button" class="avatar post-avatar ring' + storyRingClass(uid) + (a.avatar_url ? '' : ' fallback') + '" ' +
         'data-act="profile" data-uid="' + esc(uid) + '" aria-label="Open profile">' + avatar + '</button>' +
       '<div class="post-who">' +
         '<div class="post-name">' + esc(name) + '</div>' +

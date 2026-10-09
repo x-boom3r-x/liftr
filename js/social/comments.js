@@ -4,9 +4,10 @@
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
 import { timeAgo } from './feed.js';
+import { storyRingClass } from './rings.js';
 
 const MAX_BODY = 1000;
-const CMT_SELECT = 'id,body,created_at,post_id,author:profiles!comments_author_id_fkey(username,display_name,avatar_url)';
+const CMT_SELECT = 'id,body,created_at,post_id,author_id,author:profiles!comments_author_id_fkey(username,display_name,avatar_url)';
 
 let postId = null;
 let rows = [];
@@ -25,7 +26,8 @@ function commentHtml(r){
     ? '<img class="post-avatar-img" src="' + esc(a.avatar_url) + '" alt="">'
     : esc(String(name).trim().charAt(0).toUpperCase() || '?');
   return '<div class="comment">' +
-    '<div class="avatar comment-avatar">' + avatar + '</div>' +
+    '<div class="avatar comment-avatar' + storyRingClass(r.author_id) +
+      '" data-uid="' + esc(r.author_id || '') + '">' + avatar + '</div>' +
     '<div class="comment-main">' +
       '<div class="comment-head">' +
         '<span class="comment-name">' + esc(name) + '</span>' +
@@ -90,7 +92,8 @@ function renderPost(post){
     : esc(String(name).trim().charAt(0).toUpperCase() || '?');
   box.innerHTML =
     '<div class="cpost-head">' +
-      '<div class="avatar post-avatar fallback">' + avatar + '</div>' +
+      '<div class="avatar post-avatar ring' + storyRingClass(a.id || post.author_id) +
+        ' fallback" data-uid="' + esc(a.id || post.author_id || '') + '">' + avatar + '</div>' +
       '<div class="post-who"><div class="post-name">' + esc(name) + '</div>' +
         (a.username ? '<div class="post-meta"><span class="post-handle">@' + esc(a.username) + '</span></div>' : '') +
       '</div>' +

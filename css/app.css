@@ -22,6 +22,7 @@
   --text3:#6A6A72;
   --safe-top:env(safe-area-inset-top);
   --safe-bottom:env(safe-area-inset-bottom);
+  --line:#3A3A42;                       /* anneau « vu », séparateurs (voyait déjà var(--line)) */
   /* espace SOUS les libellés de la tabbar. Réglable : -2px = plus bas, +2px = plus haut.
      iPhone (safe 34px) => 10px ; sans encoche => 8px */
   --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
@@ -873,15 +874,18 @@ button{background:none;border:none;cursor:pointer}
 }
 
 /* ---------- avatars + anneau degrade ---------- */
-.avatar.ring{
-  border:2px solid transparent;
+/* anneau de story : le dégradé n'existe QUE si l'auteur a une story
+   active (classes posées par js/social/rings.js) ; .seen = anneau éteint */
+.avatar.ring{border:2px solid transparent;background:transparent}
+.avatar.ring.has-story{
   background:
     linear-gradient(var(--surface),var(--surface)) padding-box,
     var(--gx) border-box;
 }
-.avatar.ring.fallback{background:
+.avatar.ring.has-story.seen{
+  background:
     linear-gradient(var(--surface),var(--surface)) padding-box,
-    var(--gx) border-box;
+    var(--line) border-box;
 }
 .av-img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
 
@@ -1079,12 +1083,22 @@ button{background:none;border:none;cursor:pointer}
 .prof-av{
   width:86px;height:86px;border-radius:50%;flex:none;overflow:hidden;
   display:grid;place-items:center;font-size:1.8rem;font-weight:800;
-  color:#FF8A5B;background:var(--surface2);
+  color:#FF8A5B;  background:var(--surface2);
   border:3px solid transparent;
   background:
     linear-gradient(var(--bg),var(--bg)) padding-box,
-    var(--gx) border-box;
+    var(--border) border-box;
   padding:0;
+}
+.prof-av.has-story{
+  background:
+    linear-gradient(var(--bg),var(--bg)) padding-box,
+    var(--gx) border-box;
+}
+.prof-av.has-story.seen{
+  background:
+    linear-gradient(var(--bg),var(--bg)) padding-box,
+    var(--line) border-box;
 }
 .prof-av img{width:100%;height:100%;object-fit:cover;display:block}
 .prof-av.edit-av-img{width:78px;height:78px}
@@ -1216,7 +1230,7 @@ button{background:none;border:none;cursor:pointer}
   padding:3px;
 }
 .crew-cell.seen .crew-ring{background:var(--line)}
-.crew-ring.none{background:linear-gradient(135deg,var(--surface3),var(--border))}
+.crew-ring.none{background:transparent}
 .crew-cell.live .crew-label{color:var(--text);font-weight:750}
 
 .story-preview{
