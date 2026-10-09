@@ -159,4 +159,37 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     expect(r.gap, 'la barre reste collée en bas').toBeLessThanOrEqual(1);
     expect(r.docScrollY, 'la fenêtre ne défile pas').toBe(0);
   });
+
+  test('zone safe-area : 34px d\'inset ne remontent plus les onglets (12px gagnés)', async ({ page }) => {
+    await page.evaluate(t => window.showTab(t), 'programme');
+    await page.waitForTimeout(150);
+    const measure = () => page.evaluate(() => {
+      const bar = document.querySelector('.tabbar');
+      const tab = bar.querySelector('.tab');
+      const br = bar.getBoundingClientRect(), tr = tab.getBoundingClientRect();
+      return {
+        barH: Math.round(br.height * 100) / 100,
+        tabGap: Math.round((window.innerHeight - tr.bottom) * 100) / 100,
+        barBottom: Math.round(br.bottom * 100) / 100,
+        innerH: window.innerHeight
+      };
+    });
+
+    const sansInset = await measure();                      /* safe-area = 0 */
+    await page.evaluate(() =>
+      document.documentElement.style.setProperty('--safe-bottom', '34px'));
+    await page.waitForTimeout(150);
+    const avecInset = await measure();                      /* iPhone avec home indicator */
+
+    expect(sansInset.barBottom, 'barre collée en bas (sans inset)')
+      .toBeLessThanOrEqual(sansInset.innerH + 0.5);
+    expect(avecInset.barBottom, 'barre toujours collée en bas (avec inset)')
+      .toBeLessThanOrEqual(avecInset.innerH + 0.5);
+    expect(avecInset.barH - sansInset.barH,
+      '34px d\'inset ne doivent ajouter que 22px à la barre (12px de gagnés)')
+      .toBeCloseTo(34 - 12, 1);
+    expect(avecInset.tabGap - sansInset.tabGap,
+      'les onglets descendent de 12px')
+      .toBeCloseTo(34 - 12, 1);
+  });
 });
