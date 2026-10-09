@@ -160,7 +160,7 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     expect(r.docScrollY, 'la fenêtre ne défile pas').toBe(0);
   });
 
-  test('zone safe-area : 34px d\'inset ne remontent plus les onglets (12px gagnés)', async ({ page }) => {
+  test('zone safe-area : --tabbar-pad-b = max(8px, safe − 24px)', async ({ page }) => {
     await page.evaluate(t => window.showTab(t), 'programme');
     await page.waitForTimeout(150);
     const measure = () => page.evaluate(() => {
@@ -175,7 +175,7 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
       };
     });
 
-    const sansInset = await measure();                      /* safe-area = 0 */
+    const sansInset = await measure();                      /* safe-area = 0 → 8px */
     await page.evaluate(() =>
       document.documentElement.style.setProperty('--safe-bottom', '34px'));
     await page.waitForTimeout(150);
@@ -185,11 +185,38 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
       .toBeLessThanOrEqual(sansInset.innerH + 0.5);
     expect(avecInset.barBottom, 'barre toujours collée en bas (avec inset)')
       .toBeLessThanOrEqual(avecInset.innerH + 0.5);
+    expect(sansInset.tabGap, 'sans inset : libellés à 8px du bord')
+      .toBeCloseTo(8, 1);
+    expect(avecInset.tabGap, 'avec 34px d\'inset : libellés à 10px du bord (max(8, 34−24))')
+      .toBeCloseTo(10, 1);
     expect(avecInset.barH - sansInset.barH,
-      '34px d\'inset ne doivent ajouter que 22px à la barre (12px de gagnés)')
-      .toBeCloseTo(34 - 12, 1);
-    expect(avecInset.tabGap - sansInset.tabGap,
-      'les onglets descendent de 12px')
-      .toBeCloseTo(34 - 12, 1);
+      '34px d\'inset n\'ajoutent que 2px à la barre (69 → 71px)')
+      .toBeCloseTo(2, 1);
+  });
+
+  test('--tabbar-h : hauteur réelle mesurée, fab et toast s\'y calent', async ({ page }) => {
+    await openFeed(page);
+    await page.waitForTimeout(250);
+    const r = await page.evaluate(() => {
+      const bar = document.querySelector('.tabbar');
+      const varH = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--tabbar-h'));
+      const fab = document.getElementById('newPostFab');
+      const toastEl = document.getElementById('toast');
+      return {
+        varH,
+        realH: Math.round(bar.getBoundingClientRect().height * 100) / 100,
+        fabHidden: fab ? fab.classList.contains('hidden') : true,
+        fabBottom: fab ? parseFloat(getComputedStyle(fab).bottom) : null,
+        toastBottom: toastEl ? parseFloat(getComputedStyle(toastEl).bottom) : null
+      };
+    });
+    expect(r.varH, '--tabbar-h reflète la hauteur mesurée de la barre')
+      .toBeCloseTo(r.realH, 0);
+    expect(r.fabHidden, 'le fab du feed est visible').toBe(false);
+    expect(r.fabBottom, 'le fab flotte à --tabbar-h + 14px')
+      .toBeCloseTo(r.realH + 14, 0);
+    expect(r.toastBottom, 'le toast flotte à --tabbar-h + 20px')
+      .toBeCloseTo(r.realH + 20, 0);
   });
 });

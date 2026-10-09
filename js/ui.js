@@ -112,6 +112,18 @@ if (window.visualViewport){
 }
 pinTabbar();
 
+/* --tabbar-h : hauteur RÉELLE de la barre, mesurée (fab / toast s'y calent,
+   plus de 78 / 96 px en dur). ResizeObserver : le padding change avec
+   l'orientation ou l'apparition de la barre d'accueil. */
+const _tabbarEl = document.querySelector('.tabbar');
+if (_tabbarEl){
+  const _setTabbarH = () =>
+    document.documentElement.style.setProperty('--tabbar-h', _tabbarEl.offsetHeight + 'px');
+  if (window.ResizeObserver) new ResizeObserver(_setTabbarH).observe(_tabbarEl);
+  window.addEventListener('orientationchange', _setTabbarH);
+  _setTabbarH();
+}
+
 function showTab(name){
   if (name === 'feed' && typeof window.socialAvailable === 'function' && !window.socialAvailable()) name = 'programme';
   if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
