@@ -1,9 +1,19 @@
 /* ==================================================================
-   SOCIAL - éditeur d'image (recadrage, rotation, miroir, filtres)
-   Ouvert avant la publication d'une photo de post ou d'une story.
-   Tout est fait en canvas : aucune requête réseau, aucun fichier
+   SOCIAL - éditeur d'image : crop + zoom (js/lib/cropper.js), filtres
+   au pixel, rotation et miroir. Trois modes :
+     post   : ratios Original / 1:1 / 4:5 / 16:9, export JPEG ≤ 1440 px
+     story  : 9:16 imposé, export 1080 x 1920
+     avatar : 1:1 + masque rond, export 512 x 512
+   Tout se passe en canvas : aucune requête réseau, aucun fichier
    intermédiaire sur le disque.
+
+   Résolutions : l'aperçu travaille sur une copie bornée (2048 px)
+   recalculée au plus une fois par frame (rAF) ; l'export repart de la
+   source pleine résolution (4096 px max) et rend sur fond blanc en JPEG.
+   Le recadrage n'est jamais redessiné depuis la copie basse résolution.
    ================================================================== */
+
+import { createCropper } from '../lib/cropper.js';
 
 /* Filtres définis comme une chaîne d'opérations (matrice 3x4) appliquées
    au pixel : Safari ne supporte pas `ctx.filter`, donc aucun effet canvas
@@ -17,22 +27,41 @@ const PRESETS = [
   { k: 'vivid', label: 'Vivid',    ops: [['sat', 1.55], ['contrast', 1.08]] }
 ];
 
-const RATIOS = {
-  'free': 0,
-  '1:1': 1,
-  '4:5': 0.8,
-  '9:16': 9 / 16,
-  '16:9': 16 / 9
+const RATIOS = { '1:1': 1, '4:5': .8, '9:16': 9 / 16, '16:9': 16 / 9 };
+
+const POST_MIN = .8;        /* un post reste « portrait » ou « paysage » */
+const POST_MAX = 1.91;
+const WORK_MAX = 2048;      /* copie de travail filtrée (aperçu) */
+const FULL_MAX = 4096;      /* source bornée + export pleine résolution */
+
+const MODES = {
+  post: {
+    ratios: ['free', '1:1', '4:5', '16:9'], def: 'free', round: false,
+    export: { maxSide: 1440, quality: .9 }
+  },
+  story: {
+    ratios: ['9:16'], def: '9:16', round: false,
+    export: { width: 1080, height: 1920, quality: .9 }
+  },
+  avatar: {
+    ratios: ['1:1'], def: '1:1', round: true,
+    export: { width: 512, height: 512, quality: .9 }
+  }
 };
 
-let state = null;      /* { src, img, imgKey, maxEdge, aspect, rot, flip, zoom, tx, ty, preset, light, color } */
+const UNSUPPORTED = "This format isn't supported — choose a JPEG or PNG.";
+
+/* state : { mode, src, work, workKey, aspect, freeAspect,
+             preset, light, color, workRaf, exportCv } */
+let state = null;
 let onDone = null;
-let dragging = false;
-let lastPt = null;
-let rafId = 0;
+let crop = null;
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
+function dispose(cv){
+  try { if (cv && typeof cv.width === 'number' && cv.width) cv.width = cv.height = 0; } catch(e){}
+}
 
 function decode(file){
   if (typeof createImageBitmap === 'function'){
@@ -48,8 +77,21 @@ function decode(file){
   });
 }
 
-function ratio(){
-  return RATIOS[state ? state.aspect : 'free'] || 0;
+/* Une source unique, bornée à FULL_MAX : iOS plafonne les canvas ~16 Mpx
+   et l'export pleine résolution doit partir de quelque chose de prévisible. */
+function decodeBounded(file){
+  return decode(file).then(bmp => {
+    const w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight;
+    if (!w || !h){ if (bmp.close) bmp.close(); throw new Error('empty image'); }
+    const k = Math.min(1, FULL_MAX / Math.max(w, h));
+    if (k >= 1) return bmp;
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * k));
+    c.height = Math.max(1, Math.round(h * k));
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    if (bmp.close) bmp.close();
+    return c;
+  });
 }
 
 /* --------------------- filtres au pixel (matrice) ------------------ */
@@ -128,201 +170,69 @@ function colorOps(){
   return ops;
 }
 
-/* Recalcule `state.img` (source filtrée) uniquement quand les couleurs
-   changent : la géométrie (rotation/zoom/décalage) s'applique dessus. */
-function rebuildImage(){
-  if (!state || !state.src) return;
+/* Filtre `src` dans un canvas borné à `maxSide` (alpha conservé).
+   Sans opération : on renvoie la source telle quelle. */
+function applyOps(src, ops, maxSide){
+  const sw = src.width || src.naturalWidth, sh = src.height || src.naturalHeight;
+  if (!sw || !sh || !ops.length) return src;
+  const k = Math.min(1, maxSide / Math.max(sw, sh));
+  const w = Math.max(1, Math.round(sw * k)), h = Math.max(1, Math.round(sh * k));
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const g = cv.getContext('2d', { willReadFrequently: true });
+  g.drawImage(src, 0, 0, w, h);
+  const data = g.getImageData(0, 0, w, h);
+  applyMatrix(data.data, matrixOf(ops));
+  g.putImageData(data, 0, 0);
+  return cv;
+}
+
+/* Copie de travail : au plus un recalcul par frame pendant qu'on tire
+   sur un curseur / un preset (jamais en pleine résolution). */
+function refreshWork(){
+  if (!state || !crop) return;
   const ops = colorOps();
   const key = ops.map(o => o[0] + ':' + o[1]).join('|');
-  if (state.imgKey === key && state.img) return;
-  if (!ops.length){
-    state.img = state.src;
-    state.imgKey = key;
-    return;
-  }
-  const src = state.src;
-  const maxWork = 2048;
-  const scale = Math.min(1, maxWork / Math.max(src.width, src.height));
-  const w = Math.max(1, Math.round(src.width * scale));
-  const h = Math.max(1, Math.round(src.height * scale));
-  let cv = state.filterCv;
-  if (!cv){ cv = document.createElement('canvas'); state.filterCv = cv; }
-  cv.width = w; cv.height = h;
-  const ctx = cv.getContext('2d', { willReadFrequently: true });
-  ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(src, 0, 0, w, h);
-  const imgData = ctx.getImageData(0, 0, w, h);
-  applyMatrix(imgData.data, matrixOf(ops));
-  ctx.putImageData(imgData, 0, 0);
-  state.img = cv;
-  state.imgKey = key;
+  if (state.workKey === key && state.work) return;
+  const next = applyOps(state.src, ops, WORK_MAX);
+  const prev = state.work;
+  state.work = next;
+  state.workKey = key;
+  crop.setSource(next);                 // no-op si identique à la source courante
+  if (prev && prev !== state.src && prev !== next) dispose(prev);
 }
 
-function stageSize(){
-  const st = el('editorStage');
-  const r = st ? st.getBoundingClientRect() : { width: 320, height: 320 };
-  return { w: Math.max(120, Math.round(r.width)), h: Math.max(120, Math.round(r.height)) };
-}
-
-function cropBox(){
-  const s = stageSize();
-  const pad = 10;
-  const aw = s.w - pad * 2;
-  const ah = s.h - pad * 2;
-  const r = ratio();
-  let w = aw, h = ah;
-  if (r){
-    if (aw / ah > r){ h = ah; w = ah * r; }
-    else { w = aw; h = aw / r; }
-  }
-  return { x: (s.w - w) / 2, y: (s.h - h) / 2, w: w, h: h };
-}
-
-function transformedSize(box){
-  const img = state.img;
-  const rot = ((state.rot % 360) + 360) % 360;
-  const swapped = rot === 90 || rot === 270;
-  const dw = swapped ? img.height : img.width;
-  const dh = swapped ? img.width : img.height;
-  const cover = Math.max(box.w / dw, box.h / dh);
-  const s = cover * state.zoom;
-  return { w: dw * s, h: dh * s, s: s, rot: rot };
-}
-
-function clampPan(box){
-  const t = transformedSize(box);
-  const maxX = Math.max(0, (t.w - box.w) / 2);
-  const maxY = Math.max(0, (t.h - box.h) / 2);
-  state.tx = Math.max(-maxX, Math.min(maxX, state.tx));
-  state.ty = Math.max(-maxY, Math.min(maxY, state.ty));
-}
-
-function drawTo(ctx, box){
-  const img = state.img;
-  const t = transformedSize(box);
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(box.x, box.y, box.w, box.h);
-  ctx.clip();
-  ctx.translate(box.x + box.w / 2 + state.tx, box.y + box.h / 2 + state.ty);
-  ctx.rotate(t.rot * Math.PI / 180);
-  ctx.scale(state.flip ? -1 : 1, 1);
-  ctx.scale(t.s, t.s);
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(img, -img.width / 2, -img.height / 2, img.width, img.height);
-  ctx.restore();
-}
-
-function renderPreview(){
-  if (!state) return;
-  rebuildImage();
-  const cv = el('editorCanvas');
-  const st = el('editorStage');
-  if (!cv || !st) return;
-  const s = stageSize();
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  cv.width = Math.round(s.w * dpr);
-  cv.height = Math.round(s.h * dpr);
-  cv.style.width = s.w + 'px';
-  cv.style.height = s.h + 'px';
-  const ctx = cv.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#131316';
-  ctx.fillRect(0, 0, s.w, s.h);
-
-  const box = cropBox();
-  clampPan(box);
-  drawTo(ctx, box);
-
-  ctx.fillStyle = 'rgba(0,0,0,.5)';
-  ctx.fillRect(0, 0, s.w, box.y);
-  ctx.fillRect(0, box.y + box.h, s.w, s.h - box.y - box.h);
-  ctx.fillRect(0, box.y, box.x, box.h);
-  ctx.fillRect(box.x + box.w, box.y, s.w - box.x - box.w, box.h);
-
-  ctx.strokeStyle = 'rgba(255,255,255,.9)';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(box.x + .75, box.y + .75, box.w - 1.5, box.h - 1.5);
-
-  ctx.strokeStyle = 'rgba(255,255,255,.28)';
-  ctx.lineWidth = 1;
-  for (let i = 1; i < 3; i++){
-    ctx.beginPath();
-    ctx.moveTo(box.x + (box.w * i) / 3, box.y);
-    ctx.lineTo(box.x + (box.w * i) / 3, box.y + box.h);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(box.x, box.y + (box.h * i) / 3);
-    ctx.lineTo(box.x + box.w, box.y + (box.h * i) / 3);
-    ctx.stroke();
-  }
-}
-
-function scheduleRender(){
-  if (rafId) return;
-  rafId = requestAnimationFrame(() => { rafId = 0; renderPreview(); });
-}
-
-/* ------------------------------ export ---------------------------- */
-function encode(canvas, mime, quality){
-  return new Promise((resolve, reject) => {
-    if (canvas.toBlob) return canvas.toBlob(b => b ? resolve(b) : reject(new Error('encode failed')), mime, quality);
-    try {
-      const data = canvas.toDataURL(mime, quality);
-      const bin = atob(data.split(',')[1]);
-      const buf = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-      resolve(new Blob([buf], { type: mime }));
-    } catch(e){ reject(e); }
+function scheduleWorkFilter(){
+  if (!state || state.workRaf) return;
+  state.workRaf = requestAnimationFrame(() => {
+    if (!state) return;
+    state.workRaf = 0;
+    refreshWork();
   });
 }
 
-function webpOk(){
-  try {
-    const c = document.createElement('canvas');
-    c.width = c.height = 1;
-    return c.toDataURL('image/webp').indexOf('data:image/webp') === 0;
-  } catch(e){ return false; }
-}
-
-async function exportBlob(){
-  rebuildImage();
-  const box = cropBox();
-  const r = ratio();
-  const maxEdge = state.maxEdge || 1080;
-  let outW, outH;
-  if (r){
-    if (r >= 1){ outW = maxEdge; outH = Math.max(1, Math.round(maxEdge / r)); }
-    else { outH = maxEdge; outW = Math.max(1, Math.round(maxEdge * r)); }
-  } else {
-    const k = maxEdge / Math.max(box.w, box.h);
-    outW = Math.max(1, Math.round(box.w * k));
-    outH = Math.max(1, Math.round(box.h * k));
-  }
-
-  const cv = document.createElement('canvas');
-  cv.width = outW;
-  cv.height = outH;
-  const ctx = cv.getContext('2d');
-  ctx.fillStyle = '#0B0B0D';
-  ctx.fillRect(0, 0, outW, outH);
-  ctx.setTransform(outW / box.w, 0, 0, outH / box.h, -box.x * (outW / box.w), -box.y * (outH / box.h));
-  drawTo(ctx, box);
-  const mime = webpOk() ? 'image/webp' : 'image/jpeg';
-  const blob = await encode(cv, mime, 0.9);
-  cv.width = cv.height = 0;
-  return blob;
-}
-
 /* ------------------------------ état ------------------------------ */
+function aspectValue(k){
+  if (!state) return null;
+  if (k === 'free') return state.freeAspect;
+  return RATIOS.hasOwnProperty(k) ? RATIOS[k] : state.freeAspect;
+}
+
+function applyModeChips(){
+  const ratios = state ? MODES[state.mode].ratios : [];
+  document.querySelectorAll('#editorAspect .seg').forEach(b =>
+    b.classList.toggle('hidden', ratios.indexOf(b.getAttribute('data-aspect')) < 0));
+}
+
 function setAspect(k){
-  if (!state || !RATIOS.hasOwnProperty(k)) return;
+  if (!state || !crop) return;
+  if (k === 'free'){
+    if (MODES[state.mode].ratios.indexOf('free') < 0) return;
+  } else if (!RATIOS.hasOwnProperty(k)) return;
   state.aspect = k;
-  state.tx = 0;
-  state.ty = 0;
   document.querySelectorAll('#editorAspect .seg').forEach(b =>
     b.classList.toggle('active', b.getAttribute('data-aspect') === k));
-  renderPreview();
+  crop.setAspect(aspectValue(k), { round: !!MODES[state.mode].round });
 }
 
 function setPreset(k){
@@ -331,67 +241,163 @@ function setPreset(k){
   state.preset = found ? k : 'none';
   document.querySelectorAll('#editorPresets .seg').forEach(b =>
     b.classList.toggle('active', b.getAttribute('data-preset') === state.preset));
-  renderPreview();
+  scheduleWorkFilter();
+}
+
+/* `window.__editorState` : copie plane, lecture seule, pour les tests
+   (géométrie du cadre/visible sans toucher à l'implémentation). */
+function emitState(s){
+  if (!state || !crop){ window.__editorState = null; return; }
+  const st = s || crop.getState();
+  const r = st.rect;
+  window.__editorState = Object.freeze({
+    zoom: st.zoom,
+    rect: r ? { x: r.x, y: r.y, w: r.w, h: r.h } : null,
+    frame: { x: st.frame.x, y: st.frame.y, w: st.frame.w, h: st.frame.h },
+    iw: st.iw, ih: st.ih, rot: st.rot, flip: st.flip,
+    aspect: state.aspect,
+    round: !!MODES[state.mode].round,
+    mode: state.mode
+  });
+}
+
+function onCropChange(s){
+  const z = el('editorZoom');
+  if (z) z.value = String(s.zoom);
+  emitState(s);
 }
 
 function syncControls(){
+  setAspect(state.aspect);
   const z = el('editorZoom');
-  if (z) z.value = String(state.zoom);
+  if (z && crop) z.value = String(crop.getZoom());
   const l = el('editorLight');
   if (l) l.value = String(state.light);
   const c = el('editorColor');
   if (c) c.value = String(state.color);
-  setAspect(state.aspect);
-  setPreset(state.preset);
+  document.querySelectorAll('#editorPresets .seg').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-preset') === state.preset));
 }
 
+/* ------------------------------ export ---------------------------- */
+async function encodeJpeg(cv, quality){
+  const q = quality || .9;
+  const blob = await new Promise((res, rej) => {
+    try { cv.toBlob(b => b ? res(b) : rej(new Error('encode failed')), 'image/jpeg', q); }
+    catch(e){ rej(e); }
+  });
+  if (blob && blob.type === 'image/jpeg') return blob;
+  /* Safari renvoie parfois un PNG quand on demande un JPEG : on repasse
+     par dataURL, sinon on jette (le toast prévient l'utilisateur). */
+  const data = cv.toDataURL('image/jpeg', q);
+  const bin = atob(data.split(',')[1]);
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return new Blob([buf], { type: 'image/jpeg' });
+}
+
+async function exportEdited(){
+  if (!state || !crop) throw new Error('editor closed');
+  const mode = MODES[state.mode];
+  const full = applyOps(state.src, colorOps(), FULL_MAX);
+  crop.setSource(full);                 // la vue est reportée sur la nouvelle résolution
+  if (full !== state.src){
+    if (state.exportCv && state.exportCv !== state.src) dispose(state.exportCv);
+    state.exportCv = full;
+  }
+  const e = mode.export;
+  const st = crop.getState();
+  const r = st.rect || { w: 1, h: 1 };
+  let w, h;
+  if (e.width && e.height){ w = e.width; h = e.height; }
+  else {
+    const k = Math.min(1, e.maxSide / Math.max(r.w, r.h));
+    w = Math.max(1, Math.round(r.w * k));
+    h = Math.max(1, Math.round(r.h * k));
+  }
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const g = cv.getContext('2d');
+  g.imageSmoothingQuality = 'high';
+  g.fillStyle = '#FFFFFF';              /* PNG transparent -> blanc (pas de noir) */
+  g.fillRect(0, 0, w, h);
+  crop.drawTo(g, w, h);
+  const out = await encodeJpeg(cv, e.quality);
+  dispose(cv);
+  return out;
+}
+
+/* ------------------------------ ouverture ------------------------- */
 export function openImageEditor(opts, done){
   const file = opts && opts.file;
   if (!file) return false;
-  const maxEdge = (opts && opts.maxEdge) || 1080;
-  const aspect = (opts && opts.aspect) || 'free';
+  const modeKey = (opts && MODES[opts.mode]) ? opts.mode : 'post';
+  const title = opts && opts.title ? opts.title : 'Edit photo';
+  if (state) closeEditor();
+  decodeBounded(file)
+    .then(src => openWith(src, modeKey, title, done))
+    .catch(() => toast(UNSUPPORTED));
+  return true;
+}
 
-  decode(file).then(src => {
-    state = {
-      src: src, img: src, imgKey: null, filterCv: null,
-      maxEdge: maxEdge, aspect: RATIOS.hasOwnProperty(aspect) ? aspect : 'free',
-      rot: 0, flip: false, zoom: 1, tx: 0, ty: 0, preset: 'none', light: 1, color: 1
-    };
-    onDone = typeof done === 'function' ? done : null;
-    syncControls();
-    const title = el('editorTitle');
-    if (title) title.textContent = opts && opts.title ? opts.title : 'Edit photo';
-    if (typeof window.openModal === 'function') window.openModal('editorModal');
-    renderPreview();
-    return true;
-  }).catch(() => toast('Could not read that photo.'));
+async function openWith(src, modeKey, title, done){
+  const mode = MODES[modeKey];
+  const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight;
+  state = {
+    mode: modeKey, src: src, work: src, workKey: null,
+    aspect: mode.def, freeAspect: Math.min(POST_MAX, Math.max(POST_MIN, w / h)),
+    preset: 'none', light: 1, color: 1, workRaf: 0, exportCv: null
+  };
+  onDone = typeof done === 'function' ? done : null;
+  const t = el('editorTitle');
+  if (t) t.textContent = title;
+  if (typeof window.openModal !== 'function'){ state = null; onDone = null; return false; }
+  window.openModal('editorModal');                 /* le stage est dimensionné avant le cropper */
+
+  const stage = el('editorStage');
+  crop = createCropper(stage, { aspect: aspectValue(state.aspect), round: mode.round });
+  try {
+    await crop.load(src);
+  } catch(e){
+    crop.destroy(); crop = null; state = null; onDone = null;
+    window.__editorState = null;
+    if (typeof window.closeModal === 'function') window.closeModal('editorModal');
+    toast(UNSUPPORTED);
+    return false;
+  }
+  if (!state){ crop.destroy(); crop = null; return false; }   /* fermé pendant le chargement */
+  applyModeChips();
+  crop.onChange(onCropChange);
+  syncControls();
+  emitState();
   return true;
 }
 
 export function closeEditor(){
   if (state){
+    if (state.workRaf){ cancelAnimationFrame(state.workRaf); state.workRaf = 0; }
+    if (crop){ try { crop.destroy(); } catch(e){} crop = null; }
+    const work = state.work;
+    if (work && work !== state.src) dispose(work);
+    if (state.exportCv && state.exportCv !== state.src) dispose(state.exportCv);
     const s = state.src;
-    if (s && typeof s.close === 'function'){
-      try { s.close(); } catch(e){}
-    }
-    if (state.filterCv){
-      try { state.filterCv.width = state.filterCv.height = 0; } catch(e){}
-    }
+    /* la source n'est libérée qu'ici : rotate()/mirror() en ont besoin. */
+    if (s && typeof s.close === 'function'){ try { s.close(); } catch(e){} }
+    else if (s && s.tagName === 'CANVAS') dispose(s);
   }
   state = null;
   onDone = null;
-  dragging = false;
-  if (rafId){ cancelAnimationFrame(rafId); rafId = 0; }
+  window.__editorState = null;
   if (typeof window.closeModal === 'function') window.closeModal('editorModal');
   return true;
 }
 
 export async function useEditedImage(){
-  if (!state) return false;
+  if (!state || !crop) return false;
   const btn = el('editorUse');
   if (btn){ btn.disabled = true; btn.textContent = 'Processing…'; }
   try {
-    const blob = await exportBlob();
+    const blob = await exportEdited();
     const cb = onDone;
     closeEditor();
     if (cb) cb(blob);
@@ -408,23 +414,10 @@ export function initEditor(){
   const stage = el('editorStage');
   if (stage && !stage.dataset.wired){
     stage.dataset.wired = '1';
-    stage.addEventListener('pointerdown', e => {
-      if (!state) return;
-      dragging = true;
-      lastPt = { x: e.clientX, y: e.clientY };
-      try { stage.setPointerCapture(e.pointerId); } catch(err){}
-    });
-    stage.addEventListener('pointermove', e => {
-      if (!dragging || !state || !lastPt) return;
-      state.tx += e.clientX - lastPt.x;
-      state.ty += e.clientY - lastPt.y;
-      lastPt = { x: e.clientX, y: e.clientY };
-      scheduleRender();
-    });
-    const stop = () => { dragging = false; lastPt = null; };
-    stage.addEventListener('pointerup', stop);
-    stage.addEventListener('pointercancel', stop);
-    stage.addEventListener('pointerleave', stop);
+    /* iOS : le pinch natif (gesture*) ferait zoommer la page sous le crop. */
+    const stopGestures = e => { if (e && e.cancelable) e.preventDefault(); };
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(t =>
+      stage.addEventListener(t, stopGestures, { passive: false }));
   }
 
   const presets = el('editorPresets');
@@ -445,41 +438,36 @@ export function initEditor(){
     });
   }
 
-  const bind = (id, key, parse) => {
+  const zoom = el('editorZoom');
+  if (zoom && !zoom.dataset.wired){
+    zoom.dataset.wired = '1';
+    zoom.addEventListener('input', () => {
+      if (!crop) return;
+      crop.setZoom(Math.max(1, Math.min(5, parseFloat(zoom.value) || 1)));
+    });
+  }
+
+  const slider = (id, key, min, max) => {
     const node = el(id);
     if (!node || node.dataset.wired) return;
     node.dataset.wired = '1';
     node.addEventListener('input', () => {
       if (!state) return;
-      state[key] = parse(node.value);
-      scheduleRender();
+      state[key] = Math.max(min, Math.min(max, parseFloat(node.value) || 1));
+      scheduleWorkFilter();
     });
   };
-  bind('editorZoom', 'zoom', v => Math.max(1, Math.min(4, parseFloat(v) || 1)));
-  bind('editorLight', 'light', v => Math.max(.7, Math.min(1.4, parseFloat(v) || 1)));
-  bind('editorColor', 'color', v => Math.max(0, Math.min(2, parseFloat(v) || 1)));
+  slider('editorLight', 'light', .7, 1.4);
+  slider('editorColor', 'color', 0, 2);
 
   const rot = el('editorRotate');
   if (rot && !rot.dataset.wired){
     rot.dataset.wired = '1';
-    rot.addEventListener('click', () => {
-      if (!state) return;
-      state.rot = (state.rot + 90) % 360;
-      state.tx = 0;
-      state.ty = 0;
-      renderPreview();
-    });
+    rot.addEventListener('click', () => { if (crop) crop.rotate(); });
   }
   const flip = el('editorFlip');
   if (flip && !flip.dataset.wired){
     flip.dataset.wired = '1';
-    flip.addEventListener('click', () => {
-      if (!state) return;
-      state.flip = !state.flip;
-      state.tx = 0;
-      renderPreview();
-    });
+    flip.addEventListener('click', () => { if (crop) crop.mirror(); });
   }
-
-  window.addEventListener('resize', () => { if (state) scheduleRender(); });
 }

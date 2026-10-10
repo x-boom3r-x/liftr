@@ -387,17 +387,24 @@ test.describe('V4 : éditeur d’image avant publication', () => {
     await expect(page.locator('#editorModal')).toBeVisible();
     await page.waitForTimeout(250);
 
+    /* on échantillonne au cœur du cadre (jamais dessus : les 4 quadrants
+       se croisent au centre exact et le lissage les mélangerait), toujours
+       à l'intérieur de la zone recadrée. */
     const px = async () => page.evaluate(() => {
       const cv = document.getElementById('editorCanvas');
-      if (!cv) return null;
+      const stage = document.getElementById('editorStage');
+      const st = window.__editorState;
+      if (!cv || !stage || !st || !st.frame) return null;
+      const k = stage.clientWidth ? cv.width / stage.clientWidth : 1;
+      const x = Math.max(0, Math.min(cv.width - 1, Math.round((st.frame.x + st.frame.w * 0.75) * k)));
+      const y = Math.max(0, Math.min(cv.height - 1, Math.round((st.frame.y + st.frame.h * 0.75) * k)));
       /* copie dans un canvas de lecture : évite l'avertissement
          Chrome « willReadFrequently » sans toucher au rendu réel */
       const tmp = document.createElement('canvas');
       tmp.width = cv.width; tmp.height = cv.height;
       const ctx = tmp.getContext('2d', { willReadFrequently: true });
       ctx.drawImage(cv, 0, 0);
-      const d = ctx.getImageData(
-        Math.floor(cv.width * 0.3), Math.floor(cv.height * 0.3), 1, 1).data;
+      const d = ctx.getImageData(x, y, 1, 1).data;
       return { r: d[0], g: d[1], b: d[2] };
     });
     const sat = p => Math.max(p.r, p.g, p.b) - Math.min(p.r, p.g, p.b);

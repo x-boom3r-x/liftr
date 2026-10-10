@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v48';
+const CACHE_NAME = 'liftr-v49';
 
 const ASSETS = [
   './',
@@ -31,6 +31,7 @@ const ASSETS = [
   './js/share.js',
   './js/export.js',
   './js/vendor/supabase.js',
+  './js/lib/cropper.js',
   './js/social/config.js',
   './js/social/client.js',
   './js/social/gate.js',

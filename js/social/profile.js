@@ -3,15 +3,14 @@
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
-import { compressImage, mediaUrl } from './feed.js';
+import { mediaUrl } from './feed.js';
+import { openImageEditor } from './editor.js';
 import { storyRingClass } from './rings.js';
 import {
   privacyMode, isPrivateProfile, stripPrivacy, withPrivacy,
   canSeePosts, writePrivacy
 } from './privacy.js';
 
-const AVATAR_EDGE = 512;
-const AVATAR_Q = 0.85;
 const USER_RE = /^[a-z0-9_]{3,24}$/;
 const GRID_LIMIT = 90;
 
@@ -419,24 +418,24 @@ export function removeAvatar(){
   return true;
 }
 
-export async function onAvatarChosen(e){
+export function onAvatarChosen(e){
   const input = e && e.target;
   const file = input && input.files && input.files[0];
   if (!file) return false;
   if (input) input.value = '';
   if (!/^image\//.test(file.type || '')){ toast('Please choose an image file.'); return false; }
   if (file.size > 12 * 1024 * 1024){ toast('That photo is too large (12 MB max).'); return false; }
-  try {
-    avatarFile = await compressImage(file, AVATAR_EDGE, AVATAR_Q);
-    avatarDrop = false;
-    clearPreview();
-    previewUrl = URL.createObjectURL(avatarFile);
-    paintPreview();
-    return true;
-  } catch(err){
-    toast('Could not read that photo.');
-    return false;
-  }
+  /* la photo de profil passe par l'éditeur (carré, masque rond) */
+  return openImageEditor(
+    { file: file, mode: 'avatar', title: 'Profile photo' },
+    edited => {
+      avatarFile = edited;
+      avatarDrop = false;
+      clearPreview();
+      previewUrl = URL.createObjectURL(edited);
+      paintPreview();
+      return true;
+    });
 }
 
 /* `avatars/<uid>/avatar-...` -> chemin objet (pour nettoyer l'ancienne photo) */
@@ -473,6 +472,25 @@ async function uploadAvatar(c, blob){
   return url;
 }
 
+/* Le CDN met 1 an de cache sur chaque URL d'avatar : après un changement,
+   toutes les <img> déjà rendues (profil, fil, commentaires, stories) sont
+   rafraîchies avec un `?v=` frais — sans rechargement de page. */
+function bustAvatarImgs(ts){
+  const me = String(meId() || '');
+  if (!me || !ts) return false;
+  let n = 0;
+  document.querySelectorAll('[data-uid]').forEach(node => {
+    if (String(node.getAttribute('data-uid')) !== me) return;
+    node.querySelectorAll('img').forEach(img => {
+      const src = img.getAttribute('src');
+      if (!src || /^(blob:|data:)/.test(src)) return;
+      const next = src.split('?')[0] + '?v=' + ts;
+      if (src !== next){ img.setAttribute('src', next); n++; }
+    });
+  });
+  return n > 0;
+}
+
 export async function submitProfile(){
   if (busy) return false;
   if (!SOCIAL_ENABLED){ showError('Social is not configured yet.'); return false; }
@@ -495,8 +513,13 @@ export async function submitProfile(){
   if (btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
   try {
     let url = current && current.avatar_url ? current.avatar_url : null;
+    const avatarChanged = !!(avatarFile || avatarDrop);
     if (avatarFile) url = await uploadAvatar(c, avatarFile);
     else if (avatarDrop){ dropAvatarFile(c, url); url = null; }
+    /* en base : URL propre (sans `?v=`) ; côté client : `?v=<ts>` pour
+       forcer le rafraîchissement des images déjà affichées. */
+    const cleanUrl = url ? String(url).split('?')[0] : null;
+    const bustTs = avatarChanged && cleanUrl ? Date.now() : 0;
 
     /* le drapeau privé vit dans la colonne `is_private` si elle existe,
        sinon dans un marqueur invisible du bio (voir js/social/privacy.js) */
@@ -505,18 +528,22 @@ export async function submitProfile(){
     const bioOut = mode === 'column' ? bio : withPrivacy(bio, pendingPrivate);
 
     const { error } = await c.from('profiles')
-      .update({ username: username, display_name: display, bio: bioOut, avatar_url: url })
+      .update({ username: username, display_name: display, bio: bioOut, avatar_url: cleanUrl })
       .eq('id', me);
     if (error) throw new Error(friendlyProfileError(error));
     if (privacyChanged && mode === 'column') await writePrivacy(pendingPrivate);
 
     current = Object.assign({}, current || { id: me },
-      { username: username, display_name: display, bio: bioOut, avatar_url: url });
+      { username: username, display_name: display, bio: bioOut,
+        avatar_url: bustTs ? cleanUrl + '?v=' + bustTs : url });
     paintProfile();
 
     if (typeof window.closeModal === 'function') window.closeModal('profileModal');
     if (typeof window.refreshIdentity === 'function') window.refreshIdentity();
-    if (typeof window.renderFeed === 'function' && !targetId) window.renderFeed();
+    if (typeof window.renderFeed === 'function' && !targetId){
+      try { await window.renderFeed(); } catch(e){}
+    }
+    if (bustTs) bustAvatarImgs(bustTs);
     toast('Profile updated.');
     return true;
   } catch(e){

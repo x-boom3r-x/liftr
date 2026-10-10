@@ -454,7 +454,7 @@ export async function onStoryPhoto(e){
   if (file.size > MAX_BYTES){ toast('That photo is too large (12 MB max).'); return false; }
   /* la photo de story est éditée (recadrage 9:16, filtres) avant partage */
   return openImageEditor(
-    { file: file, maxEdge: STORY_EDGE, aspect: '9:16', title: 'Edit story photo' },
+    { file: file, mode: 'story', title: 'Edit story photo' },
     async edited => {
       try {
         photo = await compressImage(edited, STORY_EDGE, STORY_Q);

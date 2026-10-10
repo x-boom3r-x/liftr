@@ -1238,8 +1238,11 @@ button{background:none;border:none;cursor:pointer}
 
 .story-preview{
   margin-top:12px;border-radius:14px;overflow:hidden;background:var(--surface2);
+  max-width:calc(42vh * 9 / 16);margin-inline:auto;
 }
-.story-preview img{width:100%;max-height:260px;object-fit:cover;display:block}
+.story-preview img{
+  display:block;width:100%;aspect-ratio:9/16;max-height:42vh;object-fit:cover;
+}
 
 .story-view{
   position:fixed;inset:0;z-index:50;background:#000;
@@ -1617,29 +1620,48 @@ button{background:none;border:none;cursor:pointer}
 .music-footer .btn-primary{flex:1}
 .music-footer .btn-ghost{flex:none}
 
-/* ---------- edition d'image ---------- */
-.overlay.editor-overlay{align-items:flex-end}
+/* ---------- edition d'image : plein écran (crop / zoom) ---------- */
+.overlay.editor-overlay{align-items:stretch;background:#000}
 .editor{
-  width:100%;max-width:560px;max-height:94vh;overflow-y:auto;
-  display:flex;flex-direction:column;gap:12px;
-  background:var(--surface);border:1px solid var(--border);border-bottom:none;
-  border-radius:22px 22px 0 0;padding:10px 16px calc(18px + var(--safe-bottom));
+  width:100%;max-width:none;height:100%;max-height:none;overflow:hidden;
+  display:flex;flex-direction:column;gap:10px;
+  padding:calc(var(--safe-top) + 8px) 12px calc(var(--safe-bottom) + 10px);
+  background:#0B0B0D;border:0;border-radius:0;
   animation:slideup .24s cubic-bezier(.2,.9,.3,1);
 }
-.editor-top{display:flex;align-items:center;gap:10px}
+.editor-top{display:flex;align-items:center;gap:10px;flex:none}
 .editor-top .btn{flex:none}
 .editor-title{flex:1;text-align:center;font-size:.95rem;font-weight:750;letter-spacing:-.02em}
 .editor-stage{
-  position:relative;width:100%;aspect-ratio:1/1;max-height:46vh;
-  border-radius:16px;overflow:hidden;background:#131316;
+  position:relative;flex:1 1 auto;min-height:0;
+  width:100%;aspect-ratio:auto;max-height:none;
+  border-radius:14px;overflow:hidden;background:#000;
   touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none;
 }
 .editor-stage:active{cursor:grabbing}
-.editor-stage canvas{display:block;width:100%;height:100%}
-.editor-tools{display:flex;flex-direction:column;gap:10px}
-.editor-row{display:flex;flex-wrap:wrap;gap:7px}
-.editor-row .seg{padding:6px 11px;font-size:.72rem}
-.editor-sliders{display:flex;flex-direction:column;gap:6px}
+/* le canvas est dimensionné en JS (clientWidth x dpr) : jamais étiré par le CSS */
+.editor-stage canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+.crop-frame{
+  position:absolute;pointer-events:none;
+  border:1.5px solid rgba(255,255,255,.92);
+  box-shadow:0 0 0 100vmax rgba(0,0,0,.58);   /* assombrit tout ce qui est hors cadre */
+  border-radius:4px;
+}
+.crop-frame.round{border-radius:50%}
+.crop-frame::before,.crop-frame::after{content:"";position:absolute;inset:0;pointer-events:none}
+.crop-frame:not(.round)::before{
+  background:
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 33.33% 0/1px 100% no-repeat,
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 66.66% 0/1px 100% no-repeat,
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 0 33.33%/100% 1px no-repeat,
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 0 66.66%/100% 1px no-repeat;
+}
+.editor-tools{display:flex;flex-direction:column;gap:8px;flex:none}
+.editor-row{display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;scrollbar-width:none}
+.editor-row::-webkit-scrollbar{display:none}
+.editor-row .seg{padding:6px 11px;font-size:.72rem;flex:none}
+.editor-sliders{display:flex;flex-direction:column;gap:6px;overflow:visible}
 .editor-slider{
   display:flex;align-items:center;gap:10px;font-size:.72rem;color:var(--text3);
 }

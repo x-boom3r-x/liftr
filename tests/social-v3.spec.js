@@ -124,6 +124,10 @@ test.describe('V3 : profil, suppression de post, photo de profil', () => {
     await expect(page.locator('#profileModal')).toBeVisible();
 
     await page.locator('#editAvatarFile').setInputFiles(PNG);
+    /* la photo passe par l'éditeur (carré + masque rond) avant l'aperçu */
+    await expect(page.locator('#editorModal')).toBeVisible();
+    await page.locator('#editorUse').click();
+    await expect(page.locator('#editorModal')).toBeHidden();
     await expect(page.locator('#editAvatarPreview img')).toBeVisible();
     await page.locator('#profileSubmit').click();
     await expect(page.locator('#profileModal')).toBeHidden();
@@ -138,6 +142,8 @@ test.describe('V3 : profil, suppression de post, photo de profil', () => {
     expect(url).toContain('/avatars/');
     expect(url).toContain('avatar-');
     expect(url).not.toBe(OLD);
+    /* en base : URL propre, sans cache-buster (le `?v=` est local au DOM) */
+    expect(url).not.toContain('?');
 
     await page.reload();
     await signedIn(page);

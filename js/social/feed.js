@@ -13,7 +13,6 @@ import {
 
 const PAGE_SIZE = 20;
 const SCROLL_KEY = 'at_feedScroll';
-const FULL_EDGE = 1080;      /* côté max de la photo publiée */
 const THUMB_EDGE = 320;      /* côté max de la vignette (blur-up) */
 const FULL_Q = 0.85;
 const THUMB_Q = 0.8;
@@ -27,7 +26,7 @@ let scope = 'all';        /* 'all' | 'following' */
 let noFollows = false;    /* filtre « Following » sans aucun abonnement */
 let loading = false;
 let sending = false;
-let photo = null;            /* { full, thumb } : deux Blobs WebP */
+let photo = null;            /* { full, thumb } : JPEG plein axe + vignette WebP */
 let photoUrl = null;
 let pendingScroll = null;
 
@@ -175,7 +174,7 @@ export async function onPhotoChosen(e){
   /* la photo passe par l'éditeur (recadrage, rotation, filtres) avant
      d'entrer dans le composeur : rien ne part sans avoir été vu. */
   return openImageEditor(
-    { file: file, maxEdge: FULL_EDGE, aspect: 'free', title: 'Edit photo' },
+    { file: file, mode: 'post', title: 'Edit photo' },
     edited => applyEditedPhoto(edited));
 }
 
@@ -419,14 +418,18 @@ async function uploadPhoto(c, p){
   const stamp = Date.now();
   const rand = Math.random().toString(36).slice(2, 8);
   const base = (user.id || 'anon') + '/' + stamp + '-' + rand;
-  const ext = p.full.type === 'image/webp' ? 'webp' : 'jpg';
-  const opts = { contentType: p.full.type, cacheControl: '31536000', upsert: false };
+  /* la photo pleine taille et la vignette peuvent être encodées
+     différemment (JPEG plein axe / WebP 320 px) : extension par blob. */
+  const extOf = b => (b && b.type === 'image/webp') ? 'webp' : 'jpg';
+  const extFull = extOf(p.full), extThumb = extOf(p.thumb);
 
-  const { error: e1 } = await c.storage.from('posts').upload(base + '.' + ext, p.full, opts);
+  const { error: e1 } = await c.storage.from('posts').upload(base + '.' + extFull, p.full,
+    { contentType: p.full.type, cacheControl: '31536000', upsert: false });
   if (e1) throw new Error(e1.message || 'Photo upload failed.');
-  const { error: e2 } = await c.storage.from('posts').upload(base + '-thumb.' + ext, p.thumb, opts);
+  const { error: e2 } = await c.storage.from('posts').upload(base + '-thumb.' + extThumb, p.thumb,
+    { contentType: p.thumb.type, cacheControl: '31536000', upsert: false });
   if (e2) throw new Error(e2.message || 'Photo upload failed.');
-  return { image_path: base + '.' + ext, thumb_path: base + '-thumb.' + ext };
+  return { image_path: base + '.' + extFull, thumb_path: base + '-thumb.' + extThumb };
 }
 /* ------------------------------- rendu ----------------------------- */
 export function mediaUrl(path, c){

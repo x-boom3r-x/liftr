@@ -298,12 +298,12 @@ test.describe('Feed : composer', () => {
 
     expect(uploads).toHaveLength(2);
     expect(uploads[0]).toContain('/storage/v1/object/posts/');
-    expect(uploads[0]).toMatch(/\/11111111-1111-4111-8111-111111111111\/\d+-\w+\.webp$/);
+    expect(uploads[0]).toMatch(/\/11111111-1111-4111-8111-111111111111\/\d+-\w+\.jpg$/);
     expect(uploads[1]).toMatch(/-thumb\.webp$/);
 
     expect(inserts).toHaveLength(1);
     expect(inserts[0].kind).toBe('photo');
-    expect(inserts[0].image_path).toMatch(/\.webp$/);
+    expect(inserts[0].image_path).toMatch(/\.jpg$/);
     expect(inserts[0].thumb_path).toMatch(/-thumb\.webp$/);
     await expect(page.locator('#postPreview')).toBeHidden();
     expect(errs).toEqual([]);
