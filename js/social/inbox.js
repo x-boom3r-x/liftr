@@ -4,6 +4,7 @@
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
 import { timeAgo } from './feed.js';
+import { pushLayer, popLayer } from '../gestures.js';
 
 const CONV_SELECT = 'id,user_a,user_b,last_message_at,last_preview,last_sender_id';
 const PROFILE_SELECT = 'id,username,display_name,avatar_url';
@@ -242,6 +243,7 @@ export async function openThread(peerId){
   const box = el('threadList');
   if (box) box.innerHTML = '<div class="thread-empty">Loading…</div>';
   if (typeof window.setSView === 'function') window.setSView('thread');
+  pushLayer('thread', closeThread);
 
   await loadThread();
   if (typeof window.startThreadPoll === 'function') window.startThreadPoll();
@@ -249,6 +251,7 @@ export async function openThread(peerId){
 }
 
 export function closeThread(){
+  popLayer('thread');
   active = null;
   activePeer = null;
   msgs = [];

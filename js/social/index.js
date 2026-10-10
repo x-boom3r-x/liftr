@@ -34,7 +34,7 @@ import {
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
   openThreadOfTarget, openEditProfile, openAvatarView, pickAvatar, removeAvatar,
   submitProfile, initProfile, resetProfile, setProfileTab, shareProfile,
-  togglePrivateEdit
+  togglePrivateEdit, popProfileLayer
 } from './profile.js';
 import {
   openSearch, runSearch, clearSearch, renderSearch, resetSearch
@@ -90,6 +90,7 @@ Object.assign(window, {
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
   openThreadOfTarget, openEditProfile, openAvatarView, pickAvatar, removeAvatar,
   submitProfile, initProfile, resetProfile, setProfileTab, shareProfile,
+  popProfileLayer,
   openSearch, runSearch, clearSearch, renderSearch, resetSearch,
   renderInbox, refreshInboxBadge, loadThread, openThread, closeThread,
   sendMessage, initInbox, resetInbox,

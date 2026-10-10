@@ -10,6 +10,8 @@ import {
   privacyMode, isPrivateProfile, stripPrivacy, withPrivacy,
   canSeePosts, writePrivacy
 } from './privacy.js';
+import { pushLayer, popLayer } from '../gestures.js';
+import { profileBack } from './shell.js';
 
 const USER_RE = /^[a-z0-9_]{3,24}$/;
 const GRID_LIMIT = 90;
@@ -17,6 +19,7 @@ const GRID_LIMIT = 90;
 const POST_GRID = 'id,author_id,body,image_path,thumb_path,kind,created_at';
 
 let targetId = null;      /* null = moi */
+let layerId = null;       /* id de la couche retour (profil d'un autre) */
 let current = null;       /* dernier profil rendu */
 let counts = { posts: 0, followers: 0, following: 0 };
 let following = false;
@@ -284,9 +287,29 @@ export async function renderProfile(){
 
 export function openProfile(id){
   targetId = (id && id !== meId()) ? id : null;
+  /* couche retour (chantier E) : profil d'un autre = sous-vue empilée */
+  if (targetId){
+    const lid = 'prof-' + targetId;
+    if (layerId !== lid){
+      if (layerId) popLayer(layerId);
+      layerId = lid;
+      pushLayer(lid, () => { layerId = null; profileBack(); });
+    }
+  } else if (layerId){
+    popLayer(layerId); layerId = null;
+  }
   if (typeof window.setSView === 'function') window.setSView('profile');
   else renderProfile();
   return true;
+}
+
+/* Appelé par setSView en quittant la vue profile : la couche ne doit pas
+   survivre dans la pile retour. */
+export function popProfileLayer(){
+  if (!layerId) return;
+  const l = layerId;
+  layerId = null;
+  popLayer(l);
 }
 
 export function showMyProfile(){
@@ -649,6 +672,7 @@ export function initProfile(){
 }
 
 export function resetProfile(){
+  popProfileLayer();
   targetId = null;
   current = null;
   counts = { posts: 0, followers: 0, following: 0 };

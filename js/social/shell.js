@@ -3,6 +3,7 @@
    (tout est dans l'onglet Feed ; aucune barre d'onglets n'est touchée)
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
+import { popLayer } from '../gestures.js';
 
 const VIEWS = ['home', 'search', 'inbox', 'thread', 'profile'];
 
@@ -66,6 +67,13 @@ export function setSView(name){
   const leaving = view;
   if (leaving === 'home' && next !== 'home' && typeof window.saveFeedScroll === 'function')
     window.saveFeedScroll();
+
+  /* quitter une sous-vue = retirer sa couche de la pile retour (chantier E) */
+  if (leaving !== next){
+    if (next !== 'thread') popLayer('thread');
+    if (next !== 'profile' && typeof window.popProfileLayer === 'function')
+      window.popProfileLayer();
+  }
 
   /* entrée en profil depuis un autre écran : on retient d'où l'on vient
      (thread = sous-vue de la messagerie → la sortie renvoie à inbox) */

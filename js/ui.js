@@ -1,7 +1,7 @@
 /* ==================================================================
    LIFTR - interface : boot, profils, onglets, modals, toast
    ================================================================== */
-
+import { pushLayer, popLayer, dragToDismiss, installEdgeBack } from './gestures.js';
 
 async function boot(){
   migrateProfileNames();
@@ -28,6 +28,9 @@ async function boot(){
       });
     }
   });
+  wireSheetGestures();
+  installEdgeBack(document.body, { ignore: 'input,textarea,select,[data-no-swipe],.crew,.notes,.ex-chips' });
+  document.body.style.touchAction = '';
 }
 
 async function renderProfiles(){
@@ -155,10 +158,29 @@ function renderAll(){
 function openModal(id){
   if (typeof window.stopMusic === 'function') window.stopMusic();
   $(id).classList.add('show');
+  pushLayer(id, () => closeModal(id));
 }
 function closeModal(id){
   if (typeof window.stopMusic === 'function') window.stopMusic();
   $(id).classList.remove('show');
+  popLayer(id);
+}
+
+/* Chantier E — la feuille d'une modale suit le doigt sur son .grabber.
+   La fermeture re-clic le fond de l'overlay : chaque modal garde son propre
+   handler onclick (closeModal / closeEditor / closeMusicPicker…). */
+function wireSheetGestures(){
+  document.querySelectorAll('.overlay .grabber').forEach(g => {
+    if (g.dataset.gw) return;
+    g.dataset.gw = '1';
+    const sheet = g.closest('.modal') || g.parentElement;
+    const overlay = g.closest('.overlay');
+    if (!sheet || !overlay) return;
+    dragToDismiss(sheet, {
+      handle: g,
+      close: () => overlay.dispatchEvent(new MouseEvent('click', { bubbles: true })),
+    });
+  });
 }
 
 /* Confirmation générique (suppressions en cascade) */

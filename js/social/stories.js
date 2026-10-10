@@ -13,6 +13,7 @@ import {
   setStoryRings, markStorySeen, clearStoryRings, applyStoryRings,
   ringsFresh, ringAuthorsKey, RING_TTL
 } from './rings.js';
+import { pushLayer, popLayer, installStoryGestures } from '../gestures.js';
 
 const STORY_EDGE = 1080;
 const STORY_Q = 0.85;
@@ -364,6 +365,7 @@ export async function openStoryViewer(uid, queuePos){
 
   const box = el('storyView');
   if (box) box.classList.add('show');
+  pushLayer('storyView', closeStoryViewer);
   const stage = el('svStage');
   if (stage) stage.innerHTML = '<div class="sv-loading">Loading…</div>';
   stopTimer();
@@ -413,6 +415,7 @@ export async function openStoryViewer(uid, queuePos){
 export function closeStoryViewer(){
   stopTimer();
   stopMusic();
+  popLayer('storyView');
   const box = el('storyView');
   if (box) box.classList.remove('show');
   slides = [];
@@ -583,6 +586,29 @@ export function initStoryViewer(){
     if (b.classList.contains('left')) prevSlide();
     else nextSlide();
   });
+  /* chantier E : swipe bas = fermer, swipe gauche/droite = auteur suivant /
+     précédent, appui long = pause (relâcher = reprise). */
+  const viewer = el('storyView');
+  if (viewer && !viewer.dataset.gestures){
+    viewer.dataset.gestures = '1';
+    installStoryGestures(viewer, {
+      close: closeStoryViewer,
+      nextUser: () => stepAuthor(1),
+      prevUser: () => stepAuthor(-1),
+      pause: () => stopTimer(),
+      resume: () => { if (slides.length && !timer) timer = setTimeout(nextSlide, SLIDE_MS); },
+    });
+  }
+}
+
+/* Enchaînement horizontal sur la file des auteurs (geste swipe). */
+function stepAuthor(delta){
+  const cur = slides[0] && slides[0].author_id;
+  const at = queue.findIndex(q => q && q.id === cur);
+  if (at < 0) return;
+  const nxt = queue[at + delta];
+  if (nxt) openStoryViewer(nxt.id, at + delta);
+  else if (delta > 0) closeStoryViewer();
 }
 
 export function resetStories(){

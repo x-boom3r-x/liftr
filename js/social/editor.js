@@ -14,6 +14,7 @@
    ================================================================== */
 
 import { createCropper } from '../lib/cropper.js';
+import { dragToDismiss } from '../gestures.js';
 
 /* Filtres définis comme une chaîne d'opérations (matrice 3x4) appliquées
    au pixel : Safari ne supporte pas `ctx.filter`, donc aucun effet canvas
@@ -416,8 +417,19 @@ export function initEditor(){
     stage.dataset.wired = '1';
     /* iOS : le pinch natif (gesture*) ferait zoommer la page sous le crop. */
     const stopGestures = e => { if (e && e.cancelable) e.preventDefault(); };
-    ['gesturestart', 'gesturechange', 'gestureend'].forEach(t =>
+    ['gesturestart','gesturechange','gestureend'].forEach(t =>
       stage.addEventListener(t, stopGestures, { passive: false }));
+  }
+
+  /* chantier E : swipe bas depuis l'en-tête = annuler (ferme l'éditeur). */
+  const modal = document.getElementById('editorModal');
+  const top = document.querySelector('.editor-top');
+  if (modal && top && !top.dataset.gestures){
+    top.dataset.gestures = '1';
+    dragToDismiss(modal, {
+      handle: top,
+      close: () => { if (typeof window.closeEditor === 'function') window.closeEditor(); },
+    });
   }
 
   const presets = el('editorPresets');
