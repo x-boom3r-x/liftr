@@ -6,7 +6,7 @@ import { sb } from './client.js';
 import { compressImage, mediaUrl } from './feed.js';
 import { openImageEditor } from './editor.js';
 import {
-  withMusic, splitMusic, musicChipHtml, hydrateMusic,
+  withMusic, splitMusic, musicChipHtml, hydrateMusic, stopMusic,
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
 } from './music.js';
 import {
@@ -278,7 +278,7 @@ function paintSlide(){
   stage.innerHTML =
     (url ? '<img class="sv-img" src="' + esc(url) + '" alt="">' : '') +
     '<div class="sv-caption' + (url ? ' over' : '') + '">' + esc(parts.text || '') + '</div>' +
-    (parts.trackId ? '<div class="sv-music">' + musicChipHtml(parts.trackId) + '</div>' : '');
+    (parts.trackId ? '<div class="sv-music">' + musicChipHtml(parts.trackId, '', parts) + '</div>' : '');
   if (url){
     const img = stage.querySelector('.sv-img');
     if (img){
@@ -309,6 +309,7 @@ function paintSlide(){
 
 function nextSlide(){
   stopTimer();
+  stopMusic();
   if (idx + 1 < slides.length){ idx++; paintSlide(); return; }
   const cur = slides[0] && slides[0].author_id;
   const at = queue.findIndex(q => q.id === cur);
@@ -319,6 +320,7 @@ function nextSlide(){
 
 function prevSlide(){
   stopTimer();
+  stopMusic();
   if (idx > 0){ idx--; paintSlide(); return; }
   closeStoryViewer();
 }
@@ -401,6 +403,7 @@ export async function openStoryViewer(uid, queuePos){
 
 export function closeStoryViewer(){
   stopTimer();
+  stopMusic();
   const box = el('storyView');
   if (box) box.classList.remove('show');
   slides = [];
@@ -477,7 +480,7 @@ export async function submitStory(){
   const ta = el('storyBody');
   let body = ((ta && ta.value) || '').replace(/\r\n/g, '\n').trim().slice(0, 400);
   const track = getComposerMusic('story');
-  if (track && track.id) body = withMusic(body.slice(0, 380), track.id);
+  if (track && track.id) body = withMusic(body.slice(0, 380), track.id, track);
   if (!body && !photo) return false;
   const c = sb();
   const me = meId();

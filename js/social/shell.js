@@ -59,6 +59,7 @@ function loader(name){
 export function setSView(name){
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (!gateOk()){ toast('Sign in and go online to use the Feed.'); return false; }
+  if (typeof window.stopMusic === 'function') window.stopMusic();
 
   const next = VIEWS.indexOf(name) >= 0 ? name : view;
   const leaving = view;

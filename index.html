@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="47">
+<html lang="en" data-build="48">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -998,7 +998,7 @@
   <div class="modal" style="max-width:480px">
     <div class="grabber"></div>
     <div class="modal-title">Add music</div>
-    <div class="modal-sub">Search a song — a 30-second preview travels with your post.</div>
+    <div class="modal-sub">Search a song — pick a row, then choose a 15-second clip.</div>
     <div class="search-bar music-bar">
       <span class="search-ico" aria-hidden="true">⌕</span>
       <input id="musicInput" class="input search-input" type="search" maxlength="60"
@@ -1007,8 +1007,15 @@
     </div>
     <div class="music-list" id="musicList" aria-live="polite"></div>
     <div class="composer-error hidden" id="musicError" role="alert"></div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-ghost btn-sm" onclick="closeMusicPicker()">Close</button>
+    <div class="music-clip" id="musicClip">
+      <label for="musicClipRange">Start of the 15s clip</label>
+      <input type="range" id="musicClipRange" min="0" max="15" step="1" value="0"
+        aria-label="Clip start">
+      <output id="musicClipOut">0s → 15s</output>
+    </div>
+    <div class="modal-actions music-footer">
+      <button type="button" class="btn btn-primary" id="musicUseBtn" disabled>Use this track</button>
+      <button type="button" class="btn btn-ghost" onclick="closeMusicPicker()">Cancel</button>
     </div>
   </div>
 </div>

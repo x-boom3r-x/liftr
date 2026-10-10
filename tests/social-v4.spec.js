@@ -93,7 +93,9 @@ async function addMusic(page){
   await page.locator('#musicInput').fill('neon');
   await page.locator('#musicSearchBtn').click();
   await expect(page.locator('#musicList .music-row')).toHaveCount(1);
-  await page.locator('#musicList .music-add').click();
+  await page.locator('#musicList .music-row').click();
+  await expect(page.locator('#musicList .music-row')).toHaveClass(/sel/);
+  await page.locator('#musicUseBtn').click();
   await expect(page.locator('#musicModal')).toBeHidden();
 }
 
@@ -305,7 +307,7 @@ test.describe('V4 : musique', () => {
     await page.locator('#postBody').fill('Big pull day');
     await page.locator('#postSubmit').click();
     await expect.poll(() => api.st.posts.length).toBe(3);
-    expect(api.st.posts[0].body).toBe('Big pull day ♪1234567890');
+    expect(api.st.posts[0].body).toBe('Big pull day ♪1234567890@0-15');
 
     const chip = page.locator('#feedList .post-music .mchip').first();
     await expect(chip).toBeVisible();
@@ -337,7 +339,7 @@ test.describe('V4 : musique', () => {
     await expect.poll(() => api.st.notes.length).toBe(1);
 
     const body = api.st.notes[0].body;
-    expect(body.endsWith('♪1234567890')).toBe(true);
+    expect(body.endsWith('♪1234567890@0-15')).toBe(true);
     expect(body.length).toBeLessThanOrEqual(60);
 
     await expect(page.locator('#notesRow .note-music .mchip-t')).toHaveText('Neon Skyline');
@@ -575,14 +577,17 @@ test.describe('V4 : musique — secours si iTunes ne répond pas', () => {
     await expect(page.locator('#musicList .music-row')).toContainText('Deep Squat');
     await expect(page.locator('#musicError')).toBeHidden();
 
-    await page.locator('#musicList .music-add').click();
+    await page.locator('#musicList .music-row').click();
+    await expect(page.locator('#musicList .music-row')).toHaveClass(/sel/);
+    await page.locator('#musicUseBtn').click();
     await expect(page.locator('#musicModal')).toBeHidden();
     await expect(page.locator('#postMusicSlot .mchip-t')).toHaveText('Deep Squat');
 
     await page.locator('#postBody').fill('Squats with the band');
     await page.locator('#postSubmit').click();
     await expect.poll(() => api.st.posts.length).toBe(3);
-    expect(api.st.posts[0].body).toBe('Squats with the band ♪99887766');
+    /* Deezer n'a pas de durée exploitable ? le token reste au format ancien */
+    expect(api.st.posts[0].body.startsWith('Squats with the band ♪99887766')).toBe(true);
 
     /* on ignore les erreurs réseau provoquées volontairement par le test */
     expect(errs.filter(e => !/Failed to load resource/.test(e))).toEqual([]);

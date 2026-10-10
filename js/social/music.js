@@ -1,10 +1,12 @@
 /* ==================================================================
-   SOCIAL - musique : recherche iTunes, pion « ♪trackId » dans le
-   corps des contenus, lecteur de prévisualisation, sélecteur.
+   SOCIAL - musique : recherche iTunes, pion « ♪trackId[@start-end] »
+   dans le corps des contenus, lecteur de prévisualisation, sélecteur.
 
    Le morceau est stocké dans le corps sous forme de pion compact
-   (♪1234567890) : aucun changement de schéma est nécessaire pour
-   l'attacher à une publication, une story ou une note (60 car. max).
+   (♪1234567890 ou ♪1234567890@5-20 pour un extrait) : aucun changement
+   de schéma est nécessaire pour l'attacher à une publication, une
+   story ou une note (60 car. max). Le pion ancien format (sans @)
+   continue d'être lu — extrait plein preview (30 s).
    La fiche (titre / pochette / prévisualisation 30 s) est résolue
    côté client puis mise en cache (sessionStorage, jamais localStorage
    : la liste des clés autorisées est verrouillée par les tests).
@@ -12,31 +14,50 @@
 
 const API = 'https://itunes.apple.com';
 const MARK = '♪';
+const CLIP_LEN = 15;   /* durée de l'extrait choisi dans le sélecteur */
+const CLIP_MAX = 30;   /* durée max d'un extrait encodé dans le pion */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
 function openModal(id){ if (typeof window.openModal === 'function') window.openModal(id); }
 function closeModal(id){ if (typeof window.closeModal === 'function') window.closeModal(id); }
 
-/* --------------------------- corpus ♪id --------------------------- */
+/* --------------------------- corpus ♪id[@s-e] -------------------- */
+/* Le suffixe est avalé « tel quel » puis validé en JS : un suffixe
+   malformé (@abc, @20-5, @0-99) n'empêche pas de lire le trackId —
+   seul l'extrait est ignoré (ancien format plein preview). */
 function tokenRe(){
-  return new RegExp('(?:^|\\s)' + MARK + '(\\d{5,15})(?=\\s|$)');
+  return new RegExp('(?:^|\\s)' + MARK + '(\\d{5,15})(?:@([^\\s]+))?(?=\\s|$)');
+}
+
+function validClip(start, end){
+  return Number.isFinite(start) && Number.isFinite(end) &&
+    start >= 0 && end > start && (end - start) <= CLIP_MAX;
 }
 
 export function splitMusic(text){
   const s = String(text == null ? '' : text);
   const re = tokenRe();
   const m = s.match(re);
-  if (!m) return { text: s.replace(/\s+/g, ' ').trim(), trackId: null };
+  if (!m) return { text: s.replace(/\s+/g, ' ').trim(), trackId: null, start: 0, end: 0 };
   const rest = s.replace(re, ' ').replace(/\s+/g, ' ').trim();
-  return { text: rest, trackId: m[1] };
+  let start = 0, end = 0;
+  if (m[2] != null){
+    const mm = m[2].match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/);
+    if (mm){ start = parseFloat(mm[1]); end = parseFloat(mm[2]); }
+  }
+  if (!validClip(start, end)) return { text: rest, trackId: m[1], start: 0, end: 0 };
+  return { text: rest, trackId: m[1], start: start, end: end };
 }
 
-export function withMusic(text, trackId){
+export function withMusic(text, trackId, clip){
   const base = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
   const id = trackId ? String(trackId) : '';
   if (!id) return base;
-  const token = MARK + id;
+  let token = MARK + id;
+  const start = clip && +clip.start > 0 ? +clip.start : 0;
+  const end = clip && +clip.end > start ? +clip.end : 0;
+  if (validClip(start, end)) token += '@' + start + '-' + end;
   if (splitMusic(base).trackId === id) return base;
   return (base ? base + ' ' : '') + token;
 }
@@ -147,21 +168,28 @@ async function lookupDeezer(key){
   }));
 }
 
-export async function searchTracks(term){
+export async function searchTracks(term, signal){
   const q = String(term || '').trim();
   if (!q) return [];
   const url = API + '/search?term=' + encodeURIComponent(q) +
     '&media=music&entity=song&limit=15';
   let unreachable = null;
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: signal || undefined
+    });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const rows = normList(data && data.results);
     if (rows.length) return rows;
-  } catch(e){ unreachable = e; }
+  } catch(e){
+    if (signal && signal.aborted) throw e;
+    unreachable = e;
+  }
   /* secours : Deezer en JSONP, puis on rend la main */
   try {
+    if (signal && signal.aborted) throw new Error('abort');
     const alt = await searchDeezer(q);
     if (alt.length) return alt;
   } catch(e2){ if (!unreachable) unreachable = e2; }
@@ -199,8 +227,12 @@ export async function resolveTrack(id){
 }
 
 /* ------------------------------ lecteur --------------------------- */
+/* Singleton conservé (audio-controller.js n'est PAS un remplaçant ici) :
+   un seul <audio>, stop sur ended/error/fin d'extrait, stop sur
+   changement d'onglet, de vue, de slide, de modal et pagehide. */
 let audio = null;
 let playingId = null;
+let clipEnd = 0;
 
 function paintPlayStates(){
   document.querySelectorAll('[data-mplay]').forEach(btn => {
@@ -219,34 +251,51 @@ function stopAudio(){
     audio = null;
   }
   playingId = null;
+  clipEnd = 0;
   paintPlayStates();
 }
 
-function startAudio(track){
+/* play() doit être SYNCHRONE dans le handler de clic (exigence iOS) :
+   aucun await avant le premier play. Le seek au début de l'extrait se
+   fait sur loadedmetadata (une fois les métadonnées disponibles). */
+function startAudio(track, clip){
   const wasPlaying = String(playingId) === String(track.id);
   stopAudio();
   if (wasPlaying || !track.preview) return false;
+  const start = clip && +clip.start > 0 ? +clip.start : 0;
+  clipEnd = clip && +clip.end > start ? +clip.end : 0;
   audio = new Audio(track.preview);
   playingId = String(track.id);
   audio.addEventListener('ended', stopAudio);
-  audio.addEventListener('error', () => { toast('Preview unavailable.'); stopAudio(); });
+  /* pas de toast : play() rejeté ou erreur réseau → retour au ▶ */
+  audio.addEventListener('error', () => { stopAudio(); });
+  if (start > 0){
+    audio.addEventListener('loadedmetadata', () => {
+      if (audio){ try { audio.currentTime = start; } catch(e){} }
+    }, { once: true });
+  }
+  if (clipEnd > start){
+    audio.addEventListener('timeupdate', () => {
+      if (audio && audio.currentTime >= clipEnd) stopAudio();
+    });
+  }
   const p = audio.play();
-  if (p && typeof p.catch === 'function') p.catch(() => { toast('Preview unavailable.'); stopAudio(); });
+  if (p && typeof p.catch === 'function') p.catch(() => { stopAudio(); });
   paintPlayStates();
   return true;
 }
 
-export function playTrack(id){
+export function playTrack(id, clip){
   const key = String(id || '');
   if (!key) return false;
   const t = cacheGet(key);
   if (t){
-    if (t.preview) return startAudio(t);
+    if (t.preview) return startAudio(t, clip);
     toast('No preview for this track.');
     return false;
   }
   resolveTrack(key).then(found => {
-    if (found && found.preview) startAudio(found);
+    if (found && found.preview) startAudio(found, clip);
     else toast('No preview for this track.');
   });
   return true;
@@ -256,13 +305,15 @@ export function stopMusic(){ stopAudio(); }
 export function musicPlayingId(){ return playingId; }
 
 /* --------------------------- pion en ligne ------------------------ */
-export function musicChipHtml(trackId, cls){
+export function musicChipHtml(trackId, cls, clip){
   const id = String(trackId || '');
   if (!id) return '';
   const t = cacheGet(id);
+  const start = clip && +clip.start > 0 ? ' data-start="' + esc(+clip.start) + '"' : '';
+  const end = clip && +clip.end > +clip.start ? ' data-end="' + esc(+clip.end) + '"' : '';
   const art = t && t.art
     ? ' style="background-image:url(' + esc(t.art) + ')"' : '';
-  return '<div class="mchip ' + (cls || '') + '" data-track="' + esc(id) + '">' +
+  return '<div class="mchip ' + (cls || '') + '" data-track="' + esc(id) + '"' + start + end + '>' +
     '<button type="button" class="mchip-play" data-mplay="' + esc(id) + '" ' +
       'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">▶</span></button>' +
     '<span class="mchip-art" aria-hidden="true"' + art + '></span>' +
@@ -273,7 +324,7 @@ export function musicChipHtml(trackId, cls){
 
 export function musicChipForBody(body, cls){
   const parts = splitMusic(body);
-  return { text: parts.text, html: parts.trackId ? musicChipHtml(parts.trackId, cls) : '' };
+  return { text: parts.text, html: parts.trackId ? musicChipHtml(parts.trackId, cls, parts) : '' };
 }
 
 /* Remplit les pions déjà posés dans le DOM (titre, pochette, play). */
@@ -288,7 +339,9 @@ export function hydrateMusic(root){
       play.addEventListener('click', e => {
         e.preventDefault();
         e.stopPropagation();
-        playTrack(id);
+        const cs = parseFloat(chip.getAttribute('data-start')) || 0;
+        const ce = parseFloat(chip.getAttribute('data-end')) || 0;
+        playTrack(id, ce > cs ? { start: cs, end: ce } : null);
       });
     }
     if (cacheGet(id)) return;
@@ -308,6 +361,9 @@ export function hydrateMusic(root){
 /* ----------------------- sélecteur (modale) ----------------------- */
 let pickCb = null;
 let searchTimer = null;
+let searchAbort = null;
+let selectedId = null;
+let clipStart = 0;
 
 function showMusicError(msg){
   const box = el('musicError');
@@ -323,7 +379,6 @@ function rowHtml(t){
     '<span class="music-txt"><b>' + esc(t.title) + '</b><i>' + esc(t.artist) + '</i></span>' +
     '<button type="button" class="music-play" data-mplay="' + esc(t.id) + '" ' +
       'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">▶</span></button>' +
-    '<button type="button" class="btn btn-sm btn-primary music-add" data-add="' + esc(t.id) + '">Add</button>' +
     '</div>';
 }
 
@@ -336,13 +391,67 @@ function paintRows(rows){
   hydrateMusic(list);
 }
 
+function selectRow(id){
+  const key = String(id || '');
+  const hit = key ? cacheGet(key) : null;
+  if (!hit){ toast('Could not load that track.'); return false; }
+  selectedId = key;
+  clipStart = 0;
+  document.querySelectorAll('#musicList .music-row').forEach(r => {
+    r.classList.toggle('sel', r.getAttribute('data-track') === selectedId);
+  });
+  const use = el('musicUseBtn');
+  if (use) use.disabled = !selectedId;
+  paintClip();
+  return true;
+}
+
+function paintClip(){
+  const box = el('musicClip');
+  const t = selectedId ? cacheGet(selectedId) : null;
+  const dur = t && t.ms ? t.ms / 1000 : 30;
+  const maxStart = Math.max(0, Math.min(CLIP_LEN, dur - CLIP_LEN));
+  if (box) box.classList.toggle('show', !!(t && t.preview));
+  const range = el('musicClipRange');
+  const out = el('musicClipOut');
+  if (range){
+    range.max = String(Math.floor(maxStart));
+    range.value = String(Math.min(Math.floor(clipStart), Math.floor(maxStart)));
+  }
+  if (out){
+    const start = Math.min(clipStart, maxStart);
+    out.textContent = Math.round(start) + 's → ' + Math.round(start + CLIP_LEN) + 's';
+  }
+}
+
+function useTrack(){
+  const t = selectedId ? cacheGet(selectedId) : null;
+  const cb = pickCb;
+  if (!t){ toast('Could not load that track.'); return false; }
+  const dur = t.ms ? t.ms / 1000 : 30;
+  const maxStart = Math.max(0, Math.min(CLIP_LEN, dur - CLIP_LEN));
+  const start = Math.max(0, Math.min(clipStart, maxStart));
+  const end = Math.min(start + CLIP_LEN, dur);
+  const track = Object.assign({}, t, {
+    start: start, end: end, clipStart: start, clipEnd: end
+  });
+  if (cb) cb(track);
+  closeMusicPicker();
+  return true;
+}
+
 export function openMusicPicker(cb){
   pickCb = typeof cb === 'function' ? cb : null;
+  selectedId = null;
+  clipStart = 0;
   const input = el('musicInput');
   if (input) input.value = '';
   showMusicError('');
   const list = el('musicList');
-  if (list) list.innerHTML = '<div class="music-hint">Search a song, then tap Add.</div>';
+  if (list) list.innerHTML = '<div class="music-hint">Search a song, then tap a row.</div>';
+  const use = el('musicUseBtn');
+  if (use) use.disabled = true;
+  paintClip();
   openModal('musicModal');
   if (input) setTimeout(() => { try { input.focus(); } catch(e){} }, 60);
   return true;
@@ -350,6 +459,9 @@ export function openMusicPicker(cb){
 
 export function closeMusicPicker(){
   pickCb = null;
+  selectedId = null;
+  clipStart = 0;
+  if (searchAbort){ try { searchAbort.abort(); } catch(e){} searchAbort = null; }
   stopAudio();
   closeModal('musicModal');
   return true;
@@ -361,29 +473,23 @@ export async function runMusicSearch(){
   const term = ((input && input.value) || '').trim();
   if (!term){ showMusicError('Type a title or an artist.'); return false; }
   const seq = ++searchSeq;
+  if (searchAbort){ try { searchAbort.abort(); } catch(e){} }
+  searchAbort = new AbortController();
+  const signal = searchAbort.signal;
   const list = el('musicList');
   if (list) list.innerHTML = '<div class="music-hint">Searching…</div>';
   showMusicError('');
   try {
-    const rows = await searchTracks(term);
-    if (seq !== searchSeq) return false;   /* une recherche plus récente a pris la main */
+    const rows = await searchTracks(term, signal);
+    if (seq !== searchSeq || signal.aborted) return false;
     paintRows(rows);
     return true;
   } catch(e){
-    if (seq !== searchSeq) return false;
+    if (seq !== searchSeq || (signal && signal.aborted)) return false;
     showMusicError((e && e.message) || 'Music search is unreachable. Check your connection, then retry.');
     if (list) list.innerHTML = '';
     return false;
   }
-}
-
-function chooseTrack(id){
-  const t = cacheGet(id);
-  const cb = pickCb;
-  if (!t){ toast('Could not load that track.'); return false; }
-  if (cb) cb(t);
-  closeMusicPicker();
-  return true;
 }
 
 /* ----------------- emplacements dans les composeurs ---------------- */
@@ -407,7 +513,7 @@ function paintSlot(target){
   const t = slots[target];
   box.classList.toggle('hidden', !t);
   box.innerHTML = t
-    ? musicChipHtml(t.id, 'is-editable') +
+    ? musicChipHtml(t.id, 'is-editable', t) +
       '<button type="button" class="mchip-rm" data-mrm="' + esc(t.id) + '" ' +
       'aria-label="Remove music">&times;</button>'
     : '';
@@ -415,6 +521,8 @@ function paintSlot(target){
 }
 
 /* ------------------------------ wiring ---------------------------- */
+let lifecycleWired = false;
+
 export function initMusic(){
   const input = el('musicInput');
   if (input && !input.dataset.wired){
@@ -439,12 +547,24 @@ export function initMusic(){
     list.addEventListener('click', e => {
       const t = e.target && e.target.closest ? e.target : null;
       if (!t) return;
-      const add = t.closest('[data-add]');
-      if (add){ chooseTrack(add.getAttribute('data-add')); return; }
       const play = t.closest('[data-mplay]');
       if (play){ playTrack(play.getAttribute('data-mplay')); return; }
       const row = t.closest('[data-track]');
-      if (row) chooseTrack(row.getAttribute('data-track'));
+      if (row) selectRow(row.getAttribute('data-track'));
+    });
+  }
+
+  const use = el('musicUseBtn');
+  if (use && !use.dataset.wired){
+    use.dataset.wired = '1';
+    use.addEventListener('click', useTrack);
+  }
+  const range = el('musicClipRange');
+  if (range && !range.dataset.wired){
+    range.dataset.wired = '1';
+    range.addEventListener('input', () => {
+      clipStart = Math.max(0, parseFloat(range.value) || 0);
+      paintClip();
     });
   }
 
@@ -458,13 +578,27 @@ export function initMusic(){
       const rm = t.closest('[data-mrm]');
       if (rm){ setComposerMusic(target, null); return; }
       const play = t.closest('[data-mplay]');
-      if (play) playTrack(play.getAttribute('data-mplay'));
+      if (play){
+        const chip = play.closest('.mchip');
+        const cs = chip ? parseFloat(chip.getAttribute('data-start')) || 0 : 0;
+        const ce = chip ? parseFloat(chip.getAttribute('data-end')) || 0 : 0;
+        playTrack(play.getAttribute('data-mplay'), ce > cs ? { start: cs, end: ce } : null);
+      }
     });
   });
+
+  if (!lifecycleWired){
+    lifecycleWired = true;
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stopAudio(); });
+    window.addEventListener('pagehide', () => stopAudio());
+  }
 }
 
 export function resetMusic(){
   pickCb = null;
+  selectedId = null;
+  clipStart = 0;
+  if (searchAbort){ try { searchAbort.abort(); } catch(e){} searchAbort = null; }
   stopAudio();
   Object.keys(SLOTS).forEach(k => { slots[k] = null; paintSlot(k); });
 }

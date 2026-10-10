@@ -49,7 +49,7 @@ function cell(note, author, isMe){
     ? 'You'
     : esc(String(((author && (author.display_name || author.username)) || '').slice(0, 12)));
   const song = parts.trackId
-    ? '<div class="note-music">' + musicChipHtml(parts.trackId) + '</div>'
+    ? '<div class="note-music">' + musicChipHtml(parts.trackId, '', parts) + '</div>'
     : '';
   return '<div class="note-item">' +
     '<button type="button" class="note-cell' + (isMe ? ' is-me' : '') +
@@ -199,13 +199,14 @@ export function openNoteComposer(){
   return true;
 }
 
-/* Le corps fait 60 caractères : on réserve la place du pion musical. */
-function packNote(text, trackId){
+/* Le corps fait 60 caractères : on réserve la place du pion musical
+   (avec extrait éventuel @s-e, ~17 car. au total). */
+function packNote(text, track){
   const base = String(text || '');
-  if (!trackId) return base.slice(0, NOTE_MAX);
-  const token = '♪' + trackId;
+  if (!track || !track.id) return base.slice(0, NOTE_MAX);
+  const token = withMusic('', track.id, track);
   const room = Math.max(0, NOTE_MAX - token.length - 1);
-  return withMusic(base.slice(0, room), trackId);
+  return withMusic(base.slice(0, room), track.id, track);
 }
 
 export async function submitNote(){
@@ -216,7 +217,7 @@ export async function submitNote(){
   const body = el('noteBody');
   const raw = ((body && body.value) || '').replace(/\s+/g, ' ').trim().slice(0, NOTE_MAX);
   const track = getComposerMusic('note');
-  const text = packNote(raw, track && track.id ? track.id : null);
+  const text = packNote(raw, track);
   if (!text){ showError('Write something first.'); return false; }
 
   const btn = el('noteSubmit');

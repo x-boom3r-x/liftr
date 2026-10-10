@@ -627,7 +627,7 @@ export async function submitPost(){
   const ta = el('postBody');
   let body = ((ta && ta.value) || '').replace(/\r\n/g, '\n').trim().slice(0, 2000);
   const track = getComposerMusic('post');
-  if (track && track.id) body = withMusic(body.slice(0, 1990), track.id);
+  if (track && track.id) body = withMusic(body.slice(0, 1990), track.id, track);
   if (!body && !photo) return false;
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (sending) return false;

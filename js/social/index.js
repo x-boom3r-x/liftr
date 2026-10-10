@@ -61,7 +61,7 @@ import {
 } from './editor.js';
 import {
   openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
-  stopMusic, hydrateMusic, splitMusic, withMusic
+  stopMusic, hydrateMusic, splitMusic, withMusic, musicPlayingId
 } from './music.js';
 import {
   privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts
@@ -102,7 +102,7 @@ Object.assign(window, {
   togglePrivateEdit,
   openImageEditor, closeEditor, useEditedImage, initEditor,
   openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
-  stopMusic, hydrateMusic, splitMusic, withMusic,
+  stopMusic, hydrateMusic, splitMusic, withMusic, musicPlayingId,
   privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts,
   onFollowChanged
 });

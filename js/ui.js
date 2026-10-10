@@ -125,6 +125,7 @@ if (_tabbarEl){
 }
 
 function showTab(name){
+  if (typeof window.stopMusic === 'function') window.stopMusic();
   if (name === 'feed' && typeof window.socialAvailable === 'function' && !window.socialAvailable()) name = 'programme';
   if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
     window.saveFeedScroll();
@@ -151,8 +152,14 @@ function renderAll(){
 }
 
 /* ---------------- modals ---------------- */
-function openModal(id){ $(id).classList.add('show'); }
-function closeModal(id){ $(id).classList.remove('show'); }
+function openModal(id){
+  if (typeof window.stopMusic === 'function') window.stopMusic();
+  $(id).classList.add('show');
+}
+function closeModal(id){
+  if (typeof window.stopMusic === 'function') window.stopMusic();
+  $(id).classList.remove('show');
+}
 
 /* Confirmation générique (suppressions en cascade) */
 let _confirmCb = null;
