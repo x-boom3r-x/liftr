@@ -62,6 +62,37 @@ test.describe('V3 : profil, suppression de post, photo de profil', () => {
     expect(errs).toEqual([]);
   });
 
+  test('tuile photo d\'un autre profil : le post (photo) s\'affiche au-dessus des commentaires', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    mockApi(page, {
+      posts: [post(1, ANA, { kind: 'photo', body: '',
+        image_path: 'ana/session-push.webp', thumb_path: 'ana/session-push_thumb.webp' })]
+    });
+    /* la photo du post (route apres mockApi = prioritaire) */
+    await page.route('**/session-push.webp', route => route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"></svg>'
+    }));
+
+    await goProfile(page);   /* ouvre l'onglet Feed + la vue profil (meme profil) */
+    await page.evaluate(id => window.openProfile(id), ANA);
+    await expect(page.locator('#profName')).toHaveText('Ana');
+    await page.locator('#profGrid .ptile').first().click();
+    await expect(page.locator('#commentsModal')).toBeVisible();
+
+    /* le post doit etre visible : corps + photo, pas la liste seule */
+    const cp = page.locator('#commentsPost');
+    await expect(cp).toBeVisible();
+    await expect(cp.locator('img.cpost-img')).toBeVisible();
+    expect(await cp.locator('img.cpost-img').getAttribute('src')).toContain('session-push.webp');
+    /* l'auteur du profil rendu est stamp (display_name du profil) */
+    await expect(cp.locator('.post-name')).toHaveText('Ana');
+    expect(errs).toEqual([]);
+  });
+
   test('supprimer mon post depuis la grille du profil', async ({ page }) => {
     const errs = consoleWatch(page);
     await withSocial(page);

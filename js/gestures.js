@@ -68,10 +68,10 @@ export function onSwipe(el, opts = {}) {
   };
   const cancel = e => { if (e.pointerId === id) { live = false; id = null; lock && o.onCancel && o.onCancel(); } };
 
-  el.addEventListener('pointerdown', down);
-  el.addEventListener('pointermove', move);
-  el.addEventListener('pointerup', end);
-  el.addEventListener('pointercancel', cancel);
+  el.addEventListener('pointerdown', down, { passive: true });
+  el.addEventListener('pointermove', move, { passive: true });
+  el.addEventListener('pointerup', end, { passive: true });
+  el.addEventListener('pointercancel', cancel, { passive: true });
   // pan-y : le défilement vertical natif reste possible quand on n'écoute que l'horizontal
   if (o.axis === 'x') el.style.touchAction = 'pan-y';
   else if (o.axis === 'y') el.style.touchAction = 'pan-x';
@@ -177,13 +177,16 @@ export function installStoryGestures(viewer, api) {
   // api: { close, nextUser, prevUser, pause, resume }
   const offs = [];
   offs.push(dragToDismiss(viewer, {
-    fade: true, distance: 110, ignore: '.sv-foot,.sv-head,.sv-close,.sv-music,input,textarea',
+    fade: true, distance: 85, ignore: '.sv-foot,.sv-head,.sv-close,.sv-music,input,textarea',
     close: api.close, onProgress: r => (r > 0 ? api.pause() : api.resume()),
   }));
   offs.push(onSwipe(viewer, {
-    axis: 'x', threshold: 70, ignore: '.sv-foot,.sv-head,.sv-close,.sv-music,input,textarea',
+    axis: 'x', threshold: 56, ignore: '.sv-foot,.sv-head,.sv-close,.sv-music,input,textarea',
     onSwipe: dir => (dir === 'left' ? api.nextUser() : api.prevUser()),
   }));
+  /* le dernier onSwipe avait pose pan-y : iOS volerait alors les gestes
+     verticaux (scroll/bounce). La visionneuse ne deroule rien : none. */
+  viewer.style.touchAction = 'none';
   // appui long = pause
   let timer = 0, held = false;
   const start = e => { if (e.target.closest('.sv-foot,.sv-head,.sv-close,.sv-music')) return; timer = setTimeout(() => { held = true; api.pause(); }, 220); };

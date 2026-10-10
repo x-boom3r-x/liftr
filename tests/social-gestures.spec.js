@@ -27,9 +27,9 @@ async function setup(page, opts){
     contentType: 'image/svg+xml',
     body: '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="100"></svg>'
   }));
-  mockApi(page, opts || {});
+  const api = mockApi(page, opts || {});
   await openFeed(page);
-  return errs;
+  return { errs, api };
 }
 
 /* swipe synthétique : down → 6 moves → up (dt ≈ 0 → vélocité haute) */
@@ -48,7 +48,7 @@ function swipe(page, sel, dx, dy, x0, y0){
 test.describe('E : gestes — swipe retour / fermeture', () => {
 
   test('story : swipe vers le bas ferme la visionneuse', async ({ page }) => {
-    const errs = await setup(page, {
+    const { errs } = await setup(page, {
       stories: [story(0, ANA, { image_path: 'https://img916.test/s.svg' })],
       people: [ANA_P]
     });
@@ -62,7 +62,7 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
   });
 
   test('story : swipe gauche = auteur suivant, droite = précédent', async ({ page }) => {
-    const errs = await setup(page, {
+    const { errs } = await setup(page, {
       follows: [{ follower_id: ME.id, followee_id: ANA }],
       stories: [
         story(0, ANA, { image_path: 'https://img916.test/s.svg' }),
@@ -84,7 +84,7 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
 
   test('story : appui long = pause (le slide ne défile pas)', async ({ page }) => {
     test.slow();
-    const errs = await setup(page, {
+    const { errs } = await setup(page, {
       stories: [
         story(0, ANA, { image_path: 'https://img916.test/s.svg' }),
         story(1, ANA, { body: 'Second', created_at: new Date().toISOString(),
@@ -114,7 +114,7 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
   });
 
   test('modale : le grabber suit le doigt et ferme (storyModal)', async ({ page }) => {
-    const errs = await setup(page);
+    const { errs } = await setup(page);
     await page.evaluate(() => window.openStoryComposer());
     await expect(page.locator('#storyModal')).toHaveClass(/show/);
 
@@ -124,7 +124,7 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
   });
 
   test('éditeur : swipe bas depuis l’en-tête = annuler', async ({ page }) => {
-    const errs = await setup(page, { posts: [] });
+    const { errs } = await setup(page, { posts: [] });
     await page.setInputFiles('#postPhoto', PNG);
     await expect(page.locator('#editorModal')).toBeVisible();
     await page.locator('#editorStage canvas, #editorStage img').first().waitFor({ state: 'visible' });
@@ -135,7 +135,7 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
   });
 
   test('edge-back : le swipe du bord ferme la couche du dessus (profil d’un autre)', async ({ page }) => {
-    const errs = await setup(page, { people: [ANA_P, ME_P] });
+    const { errs } = await setup(page, { people: [ANA_P, ME_P] });
     await page.evaluate(id => window.openProfile(id), ANA_ID);
     await expect(page.locator('#view-profile')).toBeVisible();
     await expect(page.locator('#profName')).toHaveText('Ana');
@@ -148,7 +148,7 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
   });
 
   test('edge-back : sans couche empilée, le geste ne fait rien', async ({ page }) => {
-    const errs = await setup(page, { people: [ANA_P] });
+    const { errs } = await setup(page, { people: [ANA_P] });
     await expect(page.locator('#view-home')).toBeVisible();
 
     await swipe(page, 'body', 180, 0, 12, 400);
@@ -157,7 +157,7 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
   });
 
   test('history.back() ferme la story sans quitter l’app', async ({ page }) => {
-    const errs = await setup(page, {
+    const { errs } = await setup(page, {
       stories: [story(0, ANA, { image_path: 'https://img916.test/s.svg' })],
       people: [ANA_P]
     });
@@ -167,6 +167,25 @@ test.describe('E : gestes — swipe retour / fermeture', () => {
     await page.evaluate(() => history.back());
     await expect(page.locator('#storyView')).not.toHaveClass(/show/);
     await expect(page.locator('#tab-feed')).toBeVisible();
+    expect(errs).toEqual([]);
+  });
+
+  test('story : la fermeture ne re-fetch pas le crew (perf)', async ({ page }) => {
+    const { errs, api } = await setup(page, {
+      follows: [{ follower_id: ME.id, followee_id: ANA }],
+      stories: [story(0, ANA, { image_path: 'https://img916.test/s.svg' })],
+      people: [ANA_P, ME_P]
+    });
+    const n = () => api.calls.filter(c => c.url.includes('/rest/v1/') && c.url.includes('stories')).length;
+
+    await page.evaluate(id => window.openStoryViewer(id), ANA_ID);
+    await expect(page.locator('#storyView')).toHaveClass(/show/);
+    const afterOpen = n();
+
+    await page.evaluate(() => window.closeStoryViewer());
+    await expect(page.locator('#storyView')).not.toHaveClass(/show/);
+    await page.waitForTimeout(500);
+    expect(n(), 'aucun re-fetch stories/crew a la fermeture').toBe(afterOpen);
     expect(errs).toEqual([]);
   });
 });

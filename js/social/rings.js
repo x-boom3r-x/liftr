@@ -54,5 +54,17 @@ export function applyStoryRings(root){
     if (av.classList.contains('has-story') !== wantStory){ av.classList.toggle('has-story', wantStory); n++; }
     if (av.classList.contains('seen') !== wantSeen){ av.classList.toggle('seen', wantSeen); n++; }
   });
+  /* cellules de la rangée crew : live -> seen quand toute la story de
+     l'auteur a ete vue (sans re-fetch du crew). */
+  scope.querySelectorAll('.crew-cell[data-uid]').forEach(cell => {
+    const k = String(cell.getAttribute('data-uid') || '');
+    if (!ringUsers.has(k)) return;
+    const wantSeen = ringUsers.get(k);
+    if (wantSeen !== cell.classList.contains('seen')){
+      cell.classList.toggle('seen', wantSeen);
+      cell.classList.toggle('live', !wantSeen);
+      n++;
+    }
+  });
   return n;
 }

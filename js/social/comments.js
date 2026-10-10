@@ -3,7 +3,7 @@
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
-import { timeAgo } from './feed.js';
+import { timeAgo, mediaUrl } from './feed.js';
 import { storyRingClass } from './rings.js';
 
 const MAX_BODY = 1000;
@@ -92,6 +92,9 @@ function renderPost(post){
   const avatar = a.avatar_url
     ? '<img class="post-avatar-img" src="' + esc(a.avatar_url) + '" alt="">'
     : esc(String(name).trim().charAt(0).toUpperCase() || '?');
+  /* le post doit SE VOIR au-dessus des commentaires : corps + photo */
+  const img = post.image_path && mediaUrl(post.image_path, sb())
+    ? '<img class="cpost-img" src="' + esc(mediaUrl(post.image_path, sb())) + '" alt="">' : '';
   box.innerHTML =
     '<div class="cpost-head">' +
       '<button type="button" class="avatar post-avatar ring' + storyRingClass(a.id || post.author_id) +
@@ -101,7 +104,8 @@ function renderPost(post){
         (a.username ? '<div class="post-meta"><span class="post-handle">@' + esc(a.username) + '</span></div>' : '') +
       '</div>' +
     '</div>' +
-    (post.body ? '<div class="post-body">' + esc(post.body) + '</div>' : '');
+    (post.body ? '<div class="post-body">' + esc(post.body) + '</div>' : '') +
+    img;
   box.classList.remove('hidden');
 }
 

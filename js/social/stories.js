@@ -420,8 +420,9 @@ export function closeStoryViewer(){
   if (box) box.classList.remove('show');
   slides = [];
   idx = 0;
-  crewLoaded = false;
-  if (typeof window.renderStories === 'function') window.renderStories();
+  /* les anneaux seen sont deja appliques en direct a chaque paint
+     (markStorySeen + applyStoryRings) : pas de re-fetch du crew ici. */
+  applyStoryRings();
   return true;
 }
 

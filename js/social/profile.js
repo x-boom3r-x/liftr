@@ -612,6 +612,12 @@ function wireTiles(id, source){
     const pid = t.getAttribute('data-post');
     const post = source().find(p => p.id === pid);
     if (!post) return;
+    /* les posts de grille n'ont pas d'auteur joint : on stamp le profil
+       rendu (grille = ses posts ; liked = posts d'autres, sans auteur). */
+    if (!post.author && current && String(post.author_id || '') === String(current.id || '')){
+      post.author = { id: current.id, username: current.username,
+        display_name: current.display_name, avatar_url: current.avatar_url };
+    }
     if (String(post.author_id || '') === String(meId() || '') &&
         typeof window.openPostMenu === 'function'){
       window.openPostMenu(pid, post);
