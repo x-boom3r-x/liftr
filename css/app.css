@@ -1080,6 +1080,34 @@ button{background:none;border:none;cursor:pointer}
 .thread-compose .btn{flex:none}
 
 /* ---------- profil fa�on Instagram ---------- */
+.prof-back{
+  display:inline-flex;align-items:center;gap:3px;
+  margin:2px 0 6px;padding:6px 13px 6px 9px;border-radius:999px;
+  background:var(--surface2);border:1px solid var(--line);
+  color:var(--text);font-size:.82rem;font-weight:700;min-height:34px;
+}
+.prof-back svg{
+  width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round;
+}
+.prof-back:active{opacity:.7}
+
+/* ---------- photo de profil en grand ---------- */
+.overlay.avatar-view{
+  flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:rgba(0,0,0,.94);padding:24px;
+}
+.avatar-view img{
+  max-width:min(88vw,520px);max-height:70vh;object-fit:contain;display:block;
+  border-radius:14px;background:var(--surface2);
+}
+.avw-name{color:#fff;font-weight:800;font-size:1rem;text-align:center}
+.avw-close{
+  position:absolute;top:calc(var(--safe-top,14px) + 8px);right:16px;
+  width:40px;height:40px;border:0;border-radius:50%;
+  background:rgba(255,255,255,.16);color:#fff;font-size:1.05rem;cursor:pointer;
+}
+.avw-close:active{opacity:.7}
 .prof-top{
   display:flex;align-items:center;gap:18px;padding:6px 2px 14px;
 }

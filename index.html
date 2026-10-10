@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="49">
+<html lang="en" data-build="50">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -283,7 +283,7 @@
           <span class="snav-lbl">Messages</span>
           <span class="snav-dot hidden" id="inboxDot" aria-hidden="true"></span>
         </button>
-        <button type="button" class="snav-item" data-view="profile" onclick="setSView('profile')">
+        <button type="button" class="snav-item" data-view="profile" onclick="showMyProfile()">
           <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
           <span class="snav-lbl">Profile</span>
         </button>
@@ -368,6 +368,11 @@
 
       <!-- ---------- PROFILE ---------- -->
       <div class="sview hidden" id="view-profile">
+        <button type="button" class="prof-back hidden" id="profBack" onclick="profileBack()"
+          aria-label="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          <span>Back</span>
+        </button>
         <div class="prof-top">
           <button type="button" class="prof-av" id="profAvatarBtn" aria-label="Profile photo">?</button>
           <div class="prof-stats">
@@ -991,6 +996,13 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Photo de profil en grand (autre profil) -->
+<div class="overlay avatar-view" id="avatarView" onclick="if(event.target===this)closeModal('avatarView')">
+  <button type="button" class="avw-close" onclick="closeModal('avatarView')" aria-label="Close">✕</button>
+  <img id="avatarViewImg" alt="">
+  <div class="avw-name" id="avatarViewName"></div>
 </div>
 
 <!-- Musique : recherche -->

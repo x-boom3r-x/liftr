@@ -152,6 +152,95 @@ test.describe('V3 : profil, suppression de post, photo de profil', () => {
     expect(await page.locator('#profAvatarBtn img').getAttribute('src')).toContain('avatar-');
     expect(errs).toEqual([]);
   });
+
+  test('nav Profile ramène sur mon profil, même après un autre profil', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    mockApi(page, {});
+
+    await openFeed(page);
+    await page.evaluate(id => window.openProfile(id), ANA);
+    await expect(page.locator('#profName')).toHaveText('Ana');
+
+    await page.locator('#socialNav [data-view="profile"]').click();
+    await expect(page.locator('#profName')).toHaveText('Mouataz');
+    await expect(page.locator('#editProfileBtn')).toBeVisible();
+    await expect(page.locator('#profBack')).toBeHidden();
+    expect(errs).toEqual([]);
+  });
+
+  test("retour du profil : vers l'écran précédent, jamais sur mon profil", async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    mockApi(page, {});
+
+    /* ouvert depuis Home → retour à Home */
+    await openFeed(page);
+    await page.evaluate(id => window.openProfile(id), ANA);
+    await expect(page.locator('#profName')).toHaveText('Ana');
+    await expect(page.locator('#profBack')).toBeVisible();
+    await page.locator('#profBack').click();
+    await expect(page.locator('#view-home')).toBeVisible();
+    await expect(page.locator('#view-profile')).toBeHidden();
+
+    /* ouvert depuis Search → retour à Search */
+    await page.locator('#socialNav [data-view="search"]').click();
+    await expect(page.locator('#view-search')).toBeVisible();
+    await page.evaluate(id => window.openProfile(id), ANA);
+    await expect(page.locator('#profBack')).toBeVisible();
+    await page.locator('#profBack').click();
+    await expect(page.locator('#view-search')).toBeVisible();
+
+    /* mon profil : aucun bouton retour */
+    await page.locator('#socialNav [data-view="profile"]').click();
+    await expect(page.locator('#profName')).toHaveText('Mouataz');
+    await expect(page.locator('#profBack')).toBeHidden();
+    expect(errs).toEqual([]);
+  });
+
+  test('photo de profil en grand sur le profil des autres', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    const AV = 'https://demo-project.supabase.co/storage/v1/object/public/avatars/' +
+      ANA + '/avatar-1.jpg';
+    const api = mockApi(page, { people: [{ ...ANA_P, avatar_url: AV }, ME_P] });
+
+    await openFeed(page);
+    await page.evaluate(id => window.openProfile(id), ANA);
+    await expect(page.locator('#profAvatarBtn img')).toBeVisible();
+    await expect(page.locator('#profAvatarBtn'))
+      .toHaveAttribute('aria-label', 'View profile photo');
+
+    await page.locator('#profAvatarBtn').click();
+    await expect(page.locator('#avatarView')).toBeVisible();
+    expect(await page.locator('#avatarViewImg').getAttribute('src')).toBe(AV);
+    expect(await page.locator('#avatarViewName').textContent()).toBe('@ana');
+
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#avatarView')).toBeHidden();
+
+    /* pas de photo : rien ne s'ouvre, juste un toast */
+    api.st.people = [{ ...ANA_P, avatar_url: null }, ME_P];
+    await page.evaluate(id => window.openProfile(id), ANA);
+    await expect(page.locator('#profAvatarBtn img')).toHaveCount(0);
+    await page.locator('#profAvatarBtn').click();
+    await expect(page.locator('#avatarView')).toBeHidden();
+    await expect(page.locator('#toast')).toContainText('No profile photo yet.');
+
+    /* mon profil : la photo ouvre l'édition, pas la visionneuse */
+    await page.locator('#socialNav [data-view="profile"]').click();
+    await expect(page.locator('#profName')).toHaveText('Mouataz');
+    await page.locator('#profAvatarBtn').click();
+    await expect(page.locator('#profileModal')).toBeVisible();
+    await expect(page.locator('#avatarView')).toBeHidden();
+    expect(errs).toEqual([]);
+  });
 });
 
 test.describe('V3 : stories (24 h)', () => {
@@ -219,6 +308,36 @@ test.describe('V3 : stories (24 h)', () => {
 
     await expect.poll(() => api.st.stories.length).toBe(0);
     await expect(page.locator('#storyView')).not.toHaveClass(/show/);
+    expect(errs).toEqual([]);
+  });
+
+  test('photo de story : URL depuis le bucket stories (pas posts)', async ({ page }) => {
+    const errs = consoleWatch(page);
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+    mockApi(page, {
+      stories: [ story(0, ME.id, { body: 'Leg day', image_path: ME.id + '/123-abc.jpg' }) ]
+    });
+    /* l'objet existe : on sert une vraie image à la place du JSON factice */
+    await page.route('**/storage/v1/object/public/stories/**', route => route.fulfill({
+      status: 200, contentType: 'image/png', body: PNG.buffer
+    }));
+
+    await openFeed(page);
+    await page.locator('#crewRow .crew-cell[data-crew="story"]').first().click();
+    await expect(page.locator('#storyView')).toHaveClass(/show/);
+
+    const img = page.locator('#svStage .sv-img');
+    await expect(img).toBeVisible();
+    const src = await img.getAttribute('src');
+    expect(src).toContain('/storage/v1/object/public/stories/');
+    expect(src).toContain('/123-abc.jpg');
+    expect(src).not.toContain('/object/public/posts/');
+
+    /* l'image se charge vraiment : pas de retrait d'erreur */
+    await page.waitForTimeout(400);
+    await expect(img).toBeVisible();
     expect(errs).toEqual([]);
   });
 });

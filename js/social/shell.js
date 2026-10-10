@@ -15,6 +15,7 @@ const HEADS = {
 };
 
 let view = 'home';
+let backTo = 'home';   /* écran d'origine : le « retour » du profil y revient */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -66,6 +67,10 @@ export function setSView(name){
   if (leaving === 'home' && next !== 'home' && typeof window.saveFeedScroll === 'function')
     window.saveFeedScroll();
 
+  /* entrée en profil depuis un autre écran : on retient d'où l'on vient
+     (thread = sous-vue de la messagerie → la sortie renvoie à inbox) */
+  if (next === 'profile' && view !== 'profile') backTo = (view === 'thread') ? 'inbox' : view;
+
   view = next;
   showView(view);
   paintNav();
@@ -82,6 +87,12 @@ export function setSView(name){
 
 /* Revenir sur l'onglet Feed sans forcer de vue. */
 export function enterSView(name){ return setSView(name || view); }
+
+/* Retour du profil : l'écran précédant (où le profil a été ouvert). */
+export function profileBack(){
+  if (view !== 'profile') return false;
+  return setSView(backTo === 'profile' ? 'home' : backTo);
+}
 
 /* --- filtres de discussion (polling léger, seulement si visible) --- */
 let threadTimer = null;
@@ -136,6 +147,7 @@ export function initShell(){
 
 export function resetShell(){
   view = 'home';
+  backTo = 'home';
   stopThreadPoll();
   showView('home');
   paintNav();

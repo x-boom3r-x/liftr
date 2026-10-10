@@ -269,7 +269,7 @@ function paintSlide(){
   const s = slides[idx];
   const stage = el('svStage');
   if (!stage || !s) return;
-  const url = s.image_path ? mediaUrl(s.image_path, sb()) : null;
+  const url = s.image_path ? mediaUrl(s.image_path, sb(), 'stories') : null;
   const parts = splitMusic(s.body || '');
   stage.classList.toggle('plain', !url);
   stage.classList.remove('is-916');
@@ -291,6 +291,15 @@ function paintSlide(){
       };
       if (img.complete) mark916();
       else img.addEventListener('load', mark916, { once: true });
+      /* image introuvable : jamais de stage muet */
+      img.addEventListener('error', () => {
+        img.remove();
+        stage.classList.remove('is-916');
+        stage.classList.add('plain');
+        stage.style.removeProperty('--sv-src');
+        const cap = stage.querySelector('.sv-caption');
+        if (cap && !(cap.textContent || '').trim()) cap.textContent = 'Photo unavailable.';
+      }, { once: true });
     }
   }
   hydrateMusic(stage);

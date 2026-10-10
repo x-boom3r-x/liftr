@@ -27,12 +27,12 @@ import {
   followingIds, personRowHtml, initPeople, resetPeople
 } from './people.js';
 import {
-  setSView, currentSView, enterSView, setSocialHead,
+  setSView, currentSView, enterSView, setSocialHead, profileBack,
   startThreadPoll, stopThreadPoll, initShell, resetShell
 } from './shell.js';
 import {
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
-  openThreadOfTarget, openEditProfile, pickAvatar, removeAvatar,
+  openThreadOfTarget, openEditProfile, openAvatarView, pickAvatar, removeAvatar,
   submitProfile, initProfile, resetProfile, setProfileTab, shareProfile,
   togglePrivateEdit
 } from './profile.js';
@@ -85,10 +85,10 @@ Object.assign(window, {
   initComments, resetComments,
   openPeople, closePeople, toggleFollow, isFollowed, mergeFollows,
   followingIds, personRowHtml, initPeople, resetPeople,
-  setSView, currentSView, enterSView, setSocialHead,
+  setSView, currentSView, enterSView, setSocialHead, profileBack,
   startThreadPoll, stopThreadPoll, initShell, resetShell,
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
-  openThreadOfTarget, openEditProfile, pickAvatar, removeAvatar,
+  openThreadOfTarget, openEditProfile, openAvatarView, pickAvatar, removeAvatar,
   submitProfile, initProfile, resetProfile, setProfileTab, shareProfile,
   openSearch, runSearch, clearSearch, renderSearch, resetSearch,
   renderInbox, refreshInboxBadge, loadThread, openThread, closeThread,

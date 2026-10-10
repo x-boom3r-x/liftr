@@ -432,11 +432,11 @@ async function uploadPhoto(c, p){
   return { image_path: base + '.' + extFull, thumb_path: base + '-thumb.' + extThumb };
 }
 /* ------------------------------- rendu ----------------------------- */
-export function mediaUrl(path, c){
+export function mediaUrl(path, c, bucket){
   if (!path) return null;
   if (/^https?:/i.test(path)) return path;
   try {
-    const r = c && c.storage.from('posts').getPublicUrl(path);
+    const r = c && c.storage.from(bucket || 'posts').getPublicUrl(path);
     return (r && r.data && r.data.publicUrl) || null;
   } catch(e){ return null; }
 }

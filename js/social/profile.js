@@ -50,6 +50,10 @@ function paintProfile(){
   const name = (current && current.display_name) || (current && current.username) || 'Athlete';
   const handle = current && current.username ? '@' + current.username : '@—';
 
+  /* retour visible uniquement sur le profil d'un autre */
+  const back = el('profBack');
+  if (back) back.classList.toggle('hidden', isMe);
+
   const av = el('profAvatarBtn');
   if (av){
     av.innerHTML = faceHtml(current && current.avatar_url, name);
@@ -59,7 +63,8 @@ function paintProfile(){
     av.classList.toggle('seen', ring.indexOf('seen') >= 0);
   }
   if (el('profAvatarBtn')) el('profAvatarBtn').setAttribute('aria-label',
-    isMe ? 'Change your profile photo' : name);
+    isMe ? 'Change your profile photo'
+      : ((current && current.avatar_url) ? 'View profile photo' : name));
 
   const set = (id, v) => { const n = el(id); if (n) n.textContent = v; };
   set('statPosts', String(counts.posts));
@@ -332,6 +337,19 @@ export function shareProfile(){
     }
   } catch(e){}
   toast('Profile link copied.');
+  return true;
+}
+
+/* Photo de profil d'un autre : affichée en grand (overlay). */
+export function openAvatarView(){
+  const url = current && current.avatar_url;
+  if (!url){ toast('No profile photo yet.'); return false; }
+  const name = (current.display_name || current.username || 'Athlete');
+  const img = el('avatarViewImg');
+  if (img){ img.src = url; img.alt = name + ' profile photo'; }
+  const nm = el('avatarViewName');
+  if (nm) nm.textContent = current.username ? '@' + current.username : name;
+  if (typeof window.openModal === 'function') window.openModal('avatarView');
   return true;
 }
 
@@ -608,7 +626,9 @@ export function initProfile(){
   if (av && !av.dataset.wired){
     av.dataset.wired = '1';
     av.addEventListener('click', () => {
-      if (targetId || !gateOk()) return;
+      /* quelqu'un d'autre : la photo s'affiche en grand ; la mienne s'édite */
+      if (targetId){ openAvatarView(); return; }
+      if (!gateOk()) return;
       openEditProfile();
     });
   }
