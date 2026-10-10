@@ -26,11 +26,13 @@ function commentHtml(r){
     ? '<img class="post-avatar-img" src="' + esc(a.avatar_url) + '" alt="">'
     : esc(String(name).trim().charAt(0).toUpperCase() || '?');
   return '<div class="comment">' +
-    '<div class="avatar comment-avatar' + storyRingClass(r.author_id) +
-      '" data-uid="' + esc(r.author_id || '') + '">' + avatar + '</div>' +
+    '<button type="button" class="avatar comment-avatar' + storyRingClass(r.author_id) +
+      '" data-act="profile" data-uid="' + esc(r.author_id || '') + '" ' +
+      'aria-label="Open profile">' + avatar + '</button>' +
     '<div class="comment-main">' +
       '<div class="comment-head">' +
-        '<span class="comment-name">' + esc(name) + '</span>' +
+        '<button type="button" class="comment-name" data-act="profile" ' +
+          'data-uid="' + esc(r.author_id || '') + '" aria-label="Open profile">' + esc(name) + '</button>' +
         '<span class="comment-time">' + esc(timeAgo(r.created_at)) + '</span>' +
       '</div>' +
       '<div class="comment-body">' + esc(r.body) + '</div>' +
@@ -92,8 +94,9 @@ function renderPost(post){
     : esc(String(name).trim().charAt(0).toUpperCase() || '?');
   box.innerHTML =
     '<div class="cpost-head">' +
-      '<div class="avatar post-avatar ring' + storyRingClass(a.id || post.author_id) +
-        ' fallback" data-uid="' + esc(a.id || post.author_id || '') + '">' + avatar + '</div>' +
+      '<button type="button" class="avatar post-avatar ring' + storyRingClass(a.id || post.author_id) +
+        ' fallback" data-act="profile" data-uid="' + esc(a.id || post.author_id || '') + '" ' +
+        'aria-label="Open profile">' + avatar + '</button>' +
       '<div class="post-who"><div class="post-name">' + esc(name) + '</div>' +
         (a.username ? '<div class="post-meta"><span class="post-handle">@' + esc(a.username) + '</span></div>' : '') +
       '</div>' +
@@ -162,6 +165,21 @@ export function initComments(){
     ta.dataset.wired = '1';
     ta.addEventListener('input', updateCommentComposer);
   }
+  /* avatars et noms cliquables : ouvrent le profil de l'auteur */
+  [['commentList'], ['commentsPost']].forEach(pair => {
+    const box = el(pair[0]);
+    if (!box || box.dataset.profWired) return;
+    box.dataset.profWired = '1';
+    box.addEventListener('click', e => {
+      const t = e.target && e.target.closest
+        ? e.target.closest('[data-act="profile"][data-uid]') : null;
+      if (!t) return;
+      const uid = t.getAttribute('data-uid');
+      if (!uid) return;
+      closeComments();
+      if (typeof window.openProfile === 'function') window.openProfile(uid);
+    });
+  });
 }
 
 export function resetComments(){

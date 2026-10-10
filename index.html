@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="46">
+<html lang="en" data-build="47">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -931,8 +931,10 @@
   <div class="sv-top">
     <div class="sv-progress" id="svProgress"></div>
     <div class="sv-head">
-      <span class="avatar sv-av" id="svAvatar">?</span>
-      <span class="sv-who"><b id="svName">Story</b><span id="svTime"></span></span>
+      <button type="button" class="sv-profile" id="svProfile" aria-label="Open profile">
+        <span class="avatar sv-av" id="svAvatar">?</span>
+        <span class="sv-who"><b id="svName">Story</b><span id="svTime"></span></span>
+      </button>
       <button type="button" class="sv-close" onclick="closeStoryViewer()"
         aria-label="Close story">&#10005;</button>
     </div>

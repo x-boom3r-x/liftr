@@ -189,6 +189,19 @@ export function initStories(){
       }
     });
   }
+  /* en-tête de la visionneuse : ouvre le profil de l'auteur.
+     NOTE chantier E : .sv-profile fait partie des éléments ignorés par les
+     gestes (pause / swipe) de la visionneuse. */
+  const prof = el('svProfile');
+  if (prof && !prof.dataset.wired){
+    prof.dataset.wired = '1';
+    prof.addEventListener('click', () => {
+      const s = slides[0];
+      if (!s || !s.author_id) return;
+      closeStoryViewer();
+      if (typeof window.openProfile === 'function') window.openProfile(s.author_id);
+    });
+  }
   const input = el('storyPhoto');
   if (input && !input.dataset.wired){
     input.dataset.wired = '1';
@@ -259,10 +272,27 @@ function paintSlide(){
   const url = s.image_path ? mediaUrl(s.image_path, sb()) : null;
   const parts = splitMusic(s.body || '');
   stage.classList.toggle('plain', !url);
+  stage.classList.remove('is-916');
+  if (url) stage.style.setProperty('--sv-src', 'url("' + String(url).replace(/"/g, '%22') + '")');
+  else stage.style.removeProperty('--sv-src');
   stage.innerHTML =
     (url ? '<img class="sv-img" src="' + esc(url) + '" alt="">' : '') +
     '<div class="sv-caption' + (url ? ' over' : '') + '">' + esc(parts.text || '') + '</div>' +
     (parts.trackId ? '<div class="sv-music">' + musicChipHtml(parts.trackId) + '</div>' : '');
+  if (url){
+    const img = stage.querySelector('.sv-img');
+    if (img){
+      /* photo déjà cadrée 9:16 par l'éditeur : plein cadre (cover) ;
+         sinon : contain + fond flou (var(--sv-src)) */
+      const mark916 = () => {
+        if (!img.naturalWidth || !img.naturalHeight) return;
+        const r = img.naturalWidth / img.naturalHeight;
+        stage.classList.toggle('is-916', Math.abs(r - 9 / 16) < 0.02);
+      };
+      if (img.complete) mark916();
+      else img.addEventListener('load', mark916, { once: true });
+    }
+  }
   hydrateMusic(stage);
   initStoryViewer();
 
@@ -480,6 +510,7 @@ export async function submitStory(){
     clearComposerMusic('story');
     if (ta) ta.value = '';
     crewLoaded = false;
+    refreshStoryRings(true);
     if (typeof window.renderStories === 'function') window.renderStories();
     toast('Story shared.');
     return true;
@@ -510,6 +541,7 @@ export async function deleteStory(id){
     if (!slides.length){ closeStoryViewer(); }
     else { if (idx >= slides.length) idx = slides.length - 1; paintSlide(); }
     crewLoaded = false;
+    refreshStoryRings(true);
     if (typeof window.renderStories === 'function') window.renderStories();
     toast('Story deleted.');
     return true;

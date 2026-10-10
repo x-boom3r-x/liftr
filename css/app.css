@@ -23,6 +23,7 @@
   --safe-top:env(safe-area-inset-top);
   --safe-bottom:env(safe-area-inset-bottom);
   --line:#3A3A42;                       /* anneau « vu », séparateurs (voyait déjà var(--line)) */
+  --story-ring:linear-gradient(45deg,#ffb347,#ff4d6d 50%,#8a5cff);
   /* espace SOUS les libellés de la tabbar. Réglable : -2px = plus bas, +2px = plus haut.
      iPhone (safe 34px) => 10px ; sans encoche => 8px */
   --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
@@ -688,7 +689,7 @@ button{background:none;border:none;cursor:pointer}
   position:fixed;left:50%;top:calc(var(--safe-top) + 76px);
   transform:translateX(-50%);
   width:min(440px,calc(100% - 24px));
-  z-index:55;
+  z-index:45;
   padding:13px 15px 14px 16px;
   background:linear-gradient(180deg, rgba(255,107,53,.10), rgba(255,255,255,.03));
   border:1px solid rgba(255,107,53,.30);border-radius:18px;
@@ -876,11 +877,14 @@ button{background:none;border:none;cursor:pointer}
 /* ---------- avatars + anneau degrade ---------- */
 /* anneau de story : le dégradé n'existe QUE si l'auteur a une story
    active (classes posées par js/social/rings.js) ; .seen = anneau éteint */
-.avatar.ring{border:2px solid transparent;background:transparent}
-.avatar.ring.has-story{
+.avatar.ring,.avatar.ring.fallback{
+  border:0;background:var(--primary-dim);
+}
+.avatar.ring.has-story,.avatar.ring.fallback.has-story{
+  border:2px solid transparent;
   background:
     linear-gradient(var(--surface),var(--surface)) padding-box,
-    var(--gx) border-box;
+    var(--story-ring) border-box;
 }
 .avatar.ring.has-story.seen{
   background:
@@ -941,11 +945,10 @@ button{background:none;border:none;cursor:pointer}
   align-items:center;gap:6px;
 }
 .crew-ring{
-  position:relative;display:inline-grid;padding:2.5px;
-  border-radius:50%;background:var(--gx);
+  position:relative;display:inline-grid;padding:3px;
+  border-radius:50%;background:transparent;
 }
-.crew-ring.me{background:linear-gradient(135deg,var(--surface3),var(--border))}
-.crew-ring.find{background:linear-gradient(135deg,var(--surface3),var(--border))}
+.crew-ring.me,.crew-ring.find{background:transparent}
 .crew-av{
   width:56px;height:56px;border-radius:50%;font-size:1.15rem;
   background:var(--surface2);color:#FF8A5B;overflow:hidden;
@@ -1226,7 +1229,7 @@ button{background:none;border:none;cursor:pointer}
    STORIES (24 h) : anneau, visionneuse, creation
    ================================================================== */
 .crew-cell.live .crew-ring{
-  background:linear-gradient(45deg,#ffb347,#ff4d6d 50%,#8a5cff);
+  background:var(--story-ring);
   padding:3px;
 }
 .crew-cell.seen .crew-ring{background:var(--line)}
@@ -1245,9 +1248,17 @@ button{background:none;border:none;cursor:pointer}
   transition:opacity .2s ease;
 }
 .story-view.show{opacity:1;visibility:visible;pointer-events:auto}
+/* écran large : cadre 9:16 centré, le reste est assombri */
+@media (min-aspect-ratio:3/4){
+  .story-view{
+    left:50%;right:auto;width:min(100vw,calc(100vh * 9 / 16));
+    transform:translateX(-50%);
+    box-shadow:0 0 0 100vmax rgba(0,0,0,.94);
+  }
+}
 .sv-top{
   position:absolute;top:0;left:0;right:0;z-index:3;
-  padding:10px 12px 10px;
+  padding:calc(var(--safe-top) + 10px) 12px 14px;
   background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0));
 }
 .sv-progress{display:flex;gap:4px;margin-bottom:10px}
@@ -1261,6 +1272,16 @@ button{background:none;border:none;cursor:pointer}
 }
 .sv-seg.done>span{transform:scaleX(1)}
 .sv-head{display:flex;align-items:center;gap:10px;color:#fff}
+/* en-tête cliquable : ouvre le profil de l'auteur (hors bouton fermer).
+   NOTE chantier E : ajouter .sv-head / .sv-profile à la liste des éléments
+   ignorés par les gestes (pause / swipe), sinon un appui ici déclenche la
+   pause ou le swipe de la visionneuse. */
+.sv-profile{
+  display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+  background:none;border:0;padding:0;margin:0;color:inherit;
+  font:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
 .sv-av{
   width:36px;height:36px;font-size:.9rem;flex:none;overflow:hidden;
   background:rgba(255,255,255,.18);color:#fff;
@@ -1275,11 +1296,21 @@ button{background:none;border:none;cursor:pointer}
 .sv-close:active{transform:scale(.9);background:rgba(255,255,255,.3)}
 .sv-stage{
   position:absolute;inset:0;display:grid;place-items:center;
-  overflow:hidden;background:#0b0b0d;
+  overflow:hidden;background:#000;
 }
-.sv-img{width:100%;height:100%;object-fit:cover;display:block}
+/* fond flouté de la même image : une photo non 9:16 n'est plus rognée de force */
+.sv-stage::before{
+  content:"";position:absolute;inset:-24px;
+  background:var(--sv-src,none) center/cover no-repeat;
+  filter:blur(28px) brightness(.55) saturate(1.2);
+}
+.sv-stage.plain::before{display:none}
+.sv-img{position:relative;width:100%;height:100%;object-fit:contain;display:block;background:transparent}
+/* photo déjà en 9:16 (cadrée par l'éditeur) : plein cadre */
+.sv-stage.is-916 .sv-img{object-fit:cover}
 .sv-caption{
-  position:absolute;left:0;right:0;bottom:0;padding:64px 18px 72px;
+  position:absolute;left:0;right:0;bottom:0;z-index:1;
+  padding:72px 18px calc(var(--safe-bottom) + 92px);
   color:#fff;font-size:1.02rem;line-height:1.5;text-align:center;
   text-shadow:0 1px 12px rgba(0,0,0,.55);
   background:linear-gradient(transparent,rgba(0,0,0,.62));
@@ -1518,7 +1549,7 @@ button{background:none;border:none;cursor:pointer}
 .note-music{width:74px}
 .note-music .mchip{padding:5px 6px;gap:6px;border-radius:12px}
 .note-music .mchip-art{display:none}
-.sv-music{position:absolute;left:14px;right:14px;top:58px;z-index:4}
+.sv-music{position:absolute;left:14px;right:14px;top:calc(var(--safe-top) + 80px);z-index:4}
 .sv-music .mchip{background:rgba(0,0,0,.5);border-color:rgba(255,255,255,.22);color:#fff;backdrop-filter:blur(8px)}
 .sv-music .mchip-a{color:rgba(255,255,255,.72)}
 
@@ -1600,12 +1631,9 @@ button{background:none;border:none;cursor:pointer}
 
 
 /* ---------- iPhone / Safari viewport fixes ---------- */
+/* hauteur dvh seule : left/width restent pilotés par inset:0 (base) et
+   par le media query 9:16 des écrans larges (§3 visionneuse) */
 .story-view{
-  top:0;
-  right:0;
-  bottom:auto;
-  left:0;
-  width:100%;
   height:100dvh;
   min-height:100dvh;
   max-height:100dvh;
