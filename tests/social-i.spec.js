@@ -30,8 +30,11 @@ function seedHistory(){
   const hist = [];
   const ex = (name, sets) => ({ name, sets });
   for (let i = 0; i < 8; i++){
+    /* la séance la plus récente tombe SUR today : le fixture ne dépend
+       pas du weekday (sinon « this week » peut être vide le lundi). */
     const d = new Date();
-    d.setDate(d.getDate() - (7 - i) * 7 - 3);
+    d.setHours(10, 0, 0, 0);
+    d.setDate(d.getDate() - (7 - i) * 7);
     const iso = d.toISOString().slice(0, 10);
     const w = 60 + i * 2.5;
     hist.push({

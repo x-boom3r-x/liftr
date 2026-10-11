@@ -8,7 +8,7 @@ import {
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
 } from './music.js';
 
-const NOTE_SELECT = 'id,author_id,body,created_at,expires_at,updated_at,' +
+const NOTE_SELECT = 'id,author_id,body,created_at,expires_at,' +
   'author:profiles!notes_author_id_fkey(id,username,display_name,avatar_url)';
 const NOTE_MAX = 60;
 const FOREVER_MS = 100 * 365 * 24 * 3600 * 1000;   /* « forever » = RLS > now() */
@@ -95,7 +95,7 @@ export async function renderNotes(){
       c.from('notes').select(NOTE_SELECT)
         .in('author_id', ids)
         .gt('expires_at', new Date().toISOString())
-        .order('updated_at', { ascending: false }),
+        .order('created_at', { ascending: false }),
       c.from('profiles').select('id,username,display_name,avatar_url').in('id', ids)
     ]);
     if (nRes.error) throw new Error(nRes.error.message || 'Could not load notes.');
@@ -111,8 +111,8 @@ export async function renderNotes(){
       if (n.author_id === me) mine = n;
       else others.push({ note: n, author: author });
     });
-    others.sort((a, b) => String(b.note.updated_at || b.note.created_at)
-      .localeCompare(String(a.note.updated_at || a.note.created_at)));
+    others.sort((a, b) => String(b.note.created_at)
+      .localeCompare(String(a.note.created_at)));
 
     loaded = true;
     paintNotes();
@@ -122,6 +122,7 @@ export async function renderNotes(){
     mine = mine || null;
     others = [];
     paintNotes();
+    toast('Could not load notes.');
     return false;
   }
 }
@@ -187,9 +188,12 @@ export function openNoteComposer(){
   /* on restitue la durée et la musique déjà posées sur la note */
   if (mine && mine.id){
     const until = Date.parse(mine.expires_at || '');
-    setNoteDuration(isNaN(until) ? 1 : Math.max(1, Math.round((until - Date.now()) / 86400000)));
+    const days = Math.round((until - Date.now()) / 86400000);
+    /* > 400 j ≈ « forever » (+100 ans) : le segment 0 doit rester actif */
+    setNoteDuration(isNaN(until) ? 1 : (days > 400 ? 0 : Math.max(1, days)));
     const prev = splitMusic(mine.body || '');
-    setComposerMusic('note', prev.trackId ? { id: prev.trackId } : null);
+    setComposerMusic('note', prev.trackId
+      ? { id: prev.trackId, start: prev.start, end: prev.end } : null);
   } else {
     setNoteDuration(1);
     clearComposerMusic('note');
@@ -227,11 +231,14 @@ export async function submitNote(){
   try {
     const now = Date.now();
     const ttl = durDays > 0 ? durDays * 86400000 : FOREVER_MS;
+    /* La table notes (v3) n'a PAS de colonne updated_at : l'upsert
+       n'envoie que author_id/body/expires_at. created_at est volontairement
+       omis — au premier post il prend now() par défaut, sur un repost il
+       garde la date d'origine (PostgREST ne met à jour que les colonnes
+       présentes dans le corps). */
     const { error } = await c.from('notes').upsert({
       author_id: me,
       body: text,
-      created_at: new Date(now).toISOString(),
-      updated_at: new Date(now).toISOString(),
       expires_at: new Date(now + ttl).toISOString()
     }, { onConflict: 'author_id' });
     if (error) throw new Error(error.message || 'Could not share your note.');

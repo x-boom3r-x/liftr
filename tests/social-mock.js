@@ -377,8 +377,29 @@ function mockApi(page, opts){
 
     /* ---------- notes ---------- */
     if (table === 'notes'){
+      /* La vraie table (migration v3) n'a que ces colonnes — on rejette
+         comme PostgREST (PGRST204) pour attraper toute incohérence. */
+      const NOTE_COLS = ['id', 'author_id', 'body', 'created_at', 'expires_at'];
+      const pgrst204 = (col) => json(route, {
+        code: 'PGRST204',
+        message: "Could not find the '" + col + "' column of 'notes' in the schema cache",
+        details: null, hints: null
+      }, 400);
+      if (method === 'GET' || head){
+        const sm = u.match(/select=([^&]+)/);
+        if (sm){
+          /* on avale les parenthèses (jointures) avant de splitter */
+          const flat = decodeURIComponent(sm[1]).replace(/\([^)]*\)/g, '');
+          if (flat.split(',').some(c => {
+            const t = c.trim();
+            return t && !NOTE_COLS.includes(t) && !t.startsWith('author:');
+          })) return pgrst204('updated_at');
+        }
+      }
       if (method === 'POST'){
         const body = parseBody();
+        const extra = Object.keys(body).filter(k => !NOTE_COLS.includes(k));
+        if (extra.length) return pgrst204(extra[0]);
         const found = st.notes.find(n => n.author_id === body.author_id);
         if (found) Object.assign(found, body, { updated_at: new Date().toISOString() });
         else st.notes.push(Object.assign({
