@@ -227,9 +227,11 @@ async function setUser(name){
   $('headerUser').textContent = name;
   selectedDate = todayISO();
   calCursor = new Date();
+  /* Chantier F : onglet racine initial (Feed si connecté+online, sinon Gym),
+     mémorisé en localStorage ; un éventuel ?tab= explicite prime. */
   const wantTab = new URLSearchParams(location.search).get('tab');
-  const validTabs = ['programme','seance','calendrier','stats','feed'];
-  currentTab = validTabs.includes(wantTab) ? wantTab : (localStorage.getItem('at_tab') || 'programme');
+  const validTabs = window.ALL_TABS || ['programme','seance','calendrier','stats','feed'];
+  currentTab = (wantTab && validTabs.includes(wantTab)) ? wantTab : pickInitialTab();
   if (DB.active) currentTab = 'seance';
   renderAll();
   showTab(currentTab);

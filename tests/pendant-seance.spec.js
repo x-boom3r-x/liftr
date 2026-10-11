@@ -131,6 +131,10 @@ test.describe('Ajouter un exercice pendant la séance', () => {
 
     await page.locator('#addExCustom').fill('Marteau tibial');
     await page.locator('#addExModal .btn.btn-primary').click();
+    /* le rendu de la modale peut re-peindre entre le hit-test et le mouse-up
+       sous charge : on attend l'effet plutôt que de deviner le timing. */
+    await page.waitForFunction(() =>
+      window.DB && DB.active && (DB.active.exercises || []).length >= 2);
 
     const st = await page.evaluate(() => ({
       extra: DB.active.exercises[1].extra,

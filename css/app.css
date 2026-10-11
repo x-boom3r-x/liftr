@@ -923,6 +923,68 @@ button{background:none;border:none;cursor:pointer}
 }
 .sview{animation:fade .2s ease}
 
+/* ---------- Chantier F : barre du haut Feed + sous-navs racine ---------- */
+.feed-top{display:flex;align-items:center;gap:6px;margin:0 0 12px}
+.feed-top .snav{
+  position:static;flex:0 0 auto;margin:0;padding:0;
+  background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;
+  justify-content:flex-end;gap:0;
+}
+.feed-top .snav-item{flex:0 0 auto;min-width:40px;height:40px;justify-content:center;
+  padding:0;border-radius:999px;gap:0}
+.feed-top .snav-lbl{display:none}
+.feed-top-title{flex:1;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.feed-top-title .section-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed-back{flex:0 0 auto}
+.feed-back svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.feed-actions{display:flex;gap:8px;margin:0 0 14px}
+.feed-actions .chip{flex:0 0 auto}
+
+.subnav{
+  position:sticky;top:0;z-index:15;
+  display:flex;gap:4px;margin:0 0 14px;padding:4px;border-radius:14px;
+  background:var(--glass),rgba(15,15,18,.92);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:var(--glass-b);
+}
+.subnav-item{
+  flex:1;padding:8px 4px;border-radius:10px;border:0;background:none;
+  color:var(--text3);font-size:.72rem;font-weight:700;letter-spacing:.02em;
+  transition:color .16s,background .16s,transform .08s;
+  -webkit-tap-highlight-color:transparent;
+}
+.subnav-item:active{transform:scale(.97)}
+.subnav-item.active{color:var(--text);background:var(--primary-dim)}
+@media (hover:hover){.subnav-item:hover{color:var(--text2)}}
+/* le .app n'a pas de padding-top (les .panel le portent) : la barre déplacée
+   se colle pile sous le header grâce à sticky + cette marge. */
+#rootSubnav{margin-top:18px}
+
+/* ---------- Nutrition ---------- */
+.nutri-kcal{text-align:center;padding:18px 14px}
+.nutri-kcal-num{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;color:var(--primary)}
+.nutri-kcal-sub{font-size:.8rem;color:var(--text3);margin-top:2px}
+.nutri-bar{margin-top:12px}
+.nutri-bar-top{display:flex;justify-content:space-between;font-size:.78rem;
+  color:var(--text2);margin-bottom:5px}
+.nutri-bar-num{color:var(--text3)}
+.nutri-bar-track{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.nutri-bar-fill{height:100%;border-radius:999px;background:var(--gx);
+  transition:width .3s ease}
+.nutri-meal{padding:12px 14px}
+.nutri-meal-top{display:flex;align-items:center;gap:8px}
+.nutri-meal-name{flex:1;font-weight:700;min-width:0;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.nutri-meal-kcal{color:var(--text3);font-size:.8rem;flex:0 0 auto}
+.nutri-item{display:flex;justify-content:space-between;gap:8px;font-size:.85rem;
+  color:var(--text2);padding:6px 0 0;margin-top:6px;border-top:1px solid var(--line)}
+.nutri-item-macros{color:var(--text3);font-size:.72rem;flex:0 0 auto}
+.nutri-form .input{margin-bottom:8px}
+.nutri-form-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+.nutri-form-row .input{margin-bottom:0}
+#nutriFoodSearch{margin-bottom:12px}
+
 /* ---------- bouton flottant "nouveau post" ---------- */
 .fab{
   position:fixed;right:16px;bottom:calc(var(--tabbar-h) + 14px);z-index:35;

@@ -3,17 +3,17 @@
    ================================================================== */
 import { SOCIAL_ENABLED, GOOGLE_ENABLED } from './config.js';
 
-/* true = on affiche l'onglet Feed : configuré + connecté + en ligne. */
+/* true = l'onglet Feed est utilisable : configuré + connecté + en ligne. */
 export function socialAvailable(){
   return !!(SOCIAL_ENABLED && window.socialUser && navigator.onLine);
 }
 
+/* Chantier F : le bouton Feed est TOUJOURS visible (1er des 3 racines).
+   Déconnecté/hors-ligne, showRoot('feed') bascule sur Gym avec un toast ;
+   le panneau Feed reste fermé et l'invite de connexion remonte. */
 export function updateSocialGate(){
   const signed = !!(SOCIAL_ENABLED && window.socialUser);
   const on = signed && navigator.onLine;
-
-  const btn = document.getElementById('tabFeedBtn');
-  if (btn) btn.classList.toggle('hidden', !on);
 
   const panel = document.getElementById('tab-feed');
   if (panel && !on) panel.classList.add('hidden');

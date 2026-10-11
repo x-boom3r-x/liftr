@@ -46,7 +46,9 @@ test.describe('Social : socle dormant', () => {
     expect(st.keys.every(k => ALLOWED_KEYS.includes(k))).toBe(true);
     expect(st.keys.some(k => /auth|supabase|sb-/i.test(k))).toBe(false);
 
-    await expect(page.locator('#tabFeedBtn')).toBeHidden();
+    /* Chantier F : le bouton Feed reste toujours visible (1er des 3 racines) ;
+       c'est le panneau qui se ferme quand on n'est pas connecté. */
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();
     await expect(page.locator('#tab-feed')).toBeHidden();
     await expect(page.locator('#signInBtn')).toBeVisible();
     // l'invite de connexion est dégagée (le conteneur peut être masqué selon l'écran)
@@ -130,12 +132,14 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
       updateSocialGate();
     });
 
-    await expect(page.locator('#tabFeedBtn')).toBeHidden();
+    /* Chantier F : hors-ligne le bouton Feed reste visible mais la racine
+       bascule sur Gym (l'app reste 100 % utilisable). */
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();
     expect(await page.evaluate(() => socialAvailable())).toBe(false);
     expect(await page.evaluate(() => currentTab)).toBe('programme');
   });
 
-  test('déconnexion : l’onglet Feed disparaît', async ({ page }) => {
+  test('déconnexion : le panneau Feed se ferme, le bouton reste', async ({ page }) => {
     await page.route('**/*.supabase.co/**', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
     await withSocial(page);
@@ -147,7 +151,7 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
     await page.locator('#tab-feed button:has-text("Sign out")').click();
 
     await page.waitForFunction(() => window.socialUser === null);
-    await expect(page.locator('#tabFeedBtn')).toBeHidden();
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();
     await expect(page.locator('#tab-feed')).toBeHidden();
     expect(await page.evaluate(() => currentTab)).toBe('programme');
   });
@@ -199,7 +203,8 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
 
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
     await expect(page.locator('#signInBtn')).toBeHidden();
-    expect(await page.evaluate(() => currentTab)).toBe('programme');
+    /* F : session restaurée + en ligne → premier lancement sur Feed */
+    expect(await page.evaluate(() => currentTab)).toBe('feed');
   });
 });
 
@@ -371,7 +376,7 @@ test.describe('Social : email / mot de passe', () => {
     await expect(page.locator('#authSubmit')).toHaveText('Sign in');
     await expect(page.locator('#authSubmit')).toBeEnabled();
     expect(await page.evaluate(() => window.socialUser)).toBeNull();
-    await expect(page.locator('#tabFeedBtn')).toBeHidden();
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();  /* F : toujours visible */
   });
 
   test('création de compte : bascule du formulaire puis endpoint signup', async ({ page }) => {

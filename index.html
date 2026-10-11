@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="52">
+<html lang="en" data-build="53">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -245,49 +245,97 @@
     </section>
 
     <!-- ---------- STATS ---------- -->
-    <section id="tab-stats" class="panel hidden">
+    <section id="tab-stats" class="panel hidden" data-root="gym">
       <div class="section-head">
         <div>
-          <div class="section-title">Statistics</div>
+          <div class="section-title">Progression</div>
           <div class="section-hint" id="statsRange"></div>
         </div>
-        <button class="btn btn-sm" onclick="openExport()">⬇ Export</button>
       </div>
       <div id="statsContent"></div>
+      <button class="btn btn-block btn-ghost" style="margin-top:18px" onclick="openExport()">⬇ Export CSV</button>
+    </section>
+
+    <!-- ---------- NUTRITION (sous-nav : Today / Meals / Foods / Goal) ---------- -->
+    <section id="tab-nutri-today" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Today</div>
+          <div class="section-hint">Calories &amp; macros for today</div>
+        </div>
+      </div>
+      <div id="nutriToday"></div>
+    </section>
+
+    <section id="tab-nutri-meals" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Meals</div>
+          <div class="section-hint" id="nutriMealsHint">What you ate today</div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="addMeal()">+ Meal</button>
+      </div>
+      <div id="nutriMeals"></div>
+    </section>
+
+    <section id="tab-nutri-foods" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Foods</div>
+          <div class="section-hint">Your food list</div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="addFood()">+ Food</button>
+      </div>
+      <input class="input" id="nutriFoodSearch" placeholder="Search foods…"
+        aria-label="Search foods" oninput="renderNutrition('nutri-foods')">
+      <div id="nutriFoods"></div>
+    </section>
+
+    <section id="tab-nutri-goal" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Goal</div>
+          <div class="section-hint">Daily targets</div>
+        </div>
+      </div>
+      <div id="nutriGoal"></div>
     </section>
 
     <!-- ---------- FEED / SOCIAL ---------- -->
     <section id="tab-feed" class="panel hidden">
-      <div class="section-head">
-        <div>
+      <div class="feed-top">
+        <button type="button" class="icon-btn feed-back hidden" id="feedBackBtn"
+          onclick="feedBack()" aria-label="Back">
+          <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="feed-top-title" onclick="setSView('home')" role="button" tabindex="0" aria-label="Home">
           <div class="section-title" id="socialTitle">Home</div>
           <div class="section-hint" id="socialHint">What your crew lifted today.</div>
         </div>
-        <div class="section-actions">
-          <button class="btn btn-sm btn-ghost" id="peopleBtn" onclick="openPeople()">People</button>
-          <button class="btn btn-sm" onclick="signOutSocial()">Sign out</button>
-        </div>
+        <nav class="snav top-icons" id="socialNav" aria-label="Social">
+          <button type="button" class="snav-item active" data-view="home" onclick="setSView('home')" aria-label="Home">
+            <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></span>
+            <span class="snav-lbl">Home</span>
+          </button>
+          <button type="button" class="snav-item" data-view="search" onclick="setSView('search')" aria-label="Search">
+            <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></span>
+            <span class="snav-lbl">Search</span>
+          </button>
+          <button type="button" class="snav-item" data-view="inbox" onclick="setSView('inbox')" aria-label="Messages">
+            <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v11H8l-4 3z"/></svg></span>
+            <span class="snav-dot hidden" id="inboxDot" aria-hidden="true"></span>
+            <span class="snav-lbl">Messages</span>
+          </button>
+          <button type="button" class="snav-item" data-view="profile" onclick="showMyProfile()" aria-label="Profile">
+            <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
+            <span class="snav-lbl">Profile</span>
+          </button>
+        </nav>
       </div>
-
-      <nav class="snav" id="socialNav" aria-label="Social">
-        <button type="button" class="snav-item active" data-view="home" onclick="setSView('home')">
-          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></span>
-          <span class="snav-lbl">Home</span>
-        </button>
-        <button type="button" class="snav-item" data-view="search" onclick="setSView('search')">
-          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></span>
-          <span class="snav-lbl">Search</span>
-        </button>
-        <button type="button" class="snav-item" data-view="inbox" onclick="setSView('inbox')">
-          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16v11H8l-4 3z"/></svg></span>
-          <span class="snav-lbl">Messages</span>
-          <span class="snav-dot hidden" id="inboxDot" aria-hidden="true"></span>
-        </button>
-        <button type="button" class="snav-item" data-view="profile" onclick="showMyProfile()">
-          <span class="snav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span>
-          <span class="snav-lbl">Profile</span>
-        </button>
-      </nav>
+      <div class="feed-actions">
+        <button class="chip" id="peopleBtn" onclick="openPeople()">People</button>
+        <button class="chip" onclick="signOutSocial()">Sign out</button>
+      </div>
 
       <!-- ---------- HOME ---------- -->
       <div class="sview" id="view-home">
@@ -407,25 +455,17 @@
 
   <nav class="tabbar">
     <div class="tabbar-inner">
-      <button class="tab" data-tab="programme" onclick="showTab('programme')">
-        <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        Program
-      </button>
-      <button class="tab" data-tab="seance" onclick="showTab('seance')">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>
-        Session
-      </button>
-      <button class="tab" data-tab="calendrier" onclick="showTab('calendrier')">
-        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-        Calendar
-      </button>
-      <button class="tab" data-tab="stats" onclick="showTab('stats')">
-        <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-        Stats
-      </button>
-      <button class="tab hidden" id="tabFeedBtn" data-tab="feed" onclick="showTab('feed')">
+      <button class="tab active" id="tabFeedBtn" data-tab="feed" onclick="showRoot('feed')">
         <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
         Feed
+      </button>
+      <button class="tab" data-tab="gym" onclick="showRoot('gym')">
+        <svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>
+        Gym
+      </button>
+      <button class="tab" data-tab="nutrition" onclick="showRoot('nutrition')">
+        <svg viewBox="0 0 24 24"><path d="M12 3c-3 3.6-4.5 6.3-4.5 9a4.5 4.5 0 0 0 9 0c0-2.7-1.5-5.4-4.5-9z"/><path d="M12 21v-3"/></svg>
+        Nutrition
       </button>
     </div>
   </nav>

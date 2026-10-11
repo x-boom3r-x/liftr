@@ -27,8 +27,8 @@ import {
   followingIds, personRowHtml, initPeople, resetPeople
 } from './people.js';
 import {
-  setSView, currentSView, enterSView, setSocialHead, profileBack,
-  startThreadPoll, stopThreadPoll, initShell, resetShell
+setSView, currentSView, enterSView, setSocialHead, profileBack, feedBack,
+startThreadPoll, stopThreadPoll, initShell, resetShell
 } from './shell.js';
 import {
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
@@ -85,7 +85,7 @@ Object.assign(window, {
   initComments, resetComments,
   openPeople, closePeople, toggleFollow, isFollowed, mergeFollows,
   followingIds, personRowHtml, initPeople, resetPeople,
-  setSView, currentSView, enterSView, setSocialHead, profileBack,
+  setSView, currentSView, enterSView, setSocialHead, profileBack, feedBack,
   startThreadPoll, stopThreadPoll, initShell, resetShell,
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
   openThreadOfTarget, openEditProfile, openAvatarView, pickAvatar, removeAvatar,

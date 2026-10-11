@@ -296,7 +296,9 @@ test.describe('T3 : commentaires, follows, filtre du fil', () => {
 
     await page.context().setOffline(true);
     await page.evaluate(() => window.updateSocialGate());
-    await expect(page.locator('#tabFeedBtn')).toBeHidden();
+    /* F : le bouton reste visible (racine Feed toujours présente) ; c'est
+       socialAvailable() qui suit le réseau. */
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();
     expect(await page.evaluate(() => window.socialAvailable())).toBe(false);
 
     await page.context().setOffline(false);

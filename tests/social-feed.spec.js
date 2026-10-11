@@ -380,7 +380,7 @@ test.describe('Feed : composer', () => {
 
     await page.locator('#tab-feed button:has-text("Sign out")').click();
 
-    await expect(page.locator('#tabFeedBtn')).toBeHidden();
+    await expect(page.locator('#tabFeedBtn')).toBeVisible();   /* F : toujours visible */
     await expect(page.locator('#tab-feed')).toBeHidden();
     expect(await page.evaluate(() => document.getElementById('postBody').value)).toBe('');
     expect(await page.evaluate(() => document.getElementById('feedList').innerHTML)).toBe('');

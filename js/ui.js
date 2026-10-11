@@ -29,6 +29,7 @@ async function boot(){
     }
   });
   wireSheetGestures();
+  wireSubnavs();
   installEdgeBack(document.body, { ignore: 'input,textarea,select,[data-no-swipe],.crew,.notes,.ex-chips' });
   document.body.style.touchAction = '';
 }
@@ -127,24 +128,112 @@ if (_tabbarEl){
   _setTabbarH();
 }
 
+/* ---- Chantier F : 3 onglets racine (Feed | Gym | Nutrition) ----
+   showTab garde son contrat (un onglet concret) ; la couche root le mappe.
+   Les boutons de sous-nav portent data-tab="<onglet concret>" : les
+   selecteurs de tests (button[data-tab=seance]…) restent valides. */
+const TAB_ROOTS = {
+  feed: 'feed',
+  programme: 'gym', seance: 'gym', calendrier: 'gym', stats: 'gym',
+  'nutri-today': 'nutrition', 'nutri-meals': 'nutrition',
+  'nutri-foods': 'nutrition', 'nutri-goal': 'nutrition'
+};
+const ROOT_DEFAULT = {
+  feed: 'feed',
+  gym: 'programme',
+  nutrition: 'nutri-today'
+};
+const ALL_TABS = ['programme','seance','calendrier','stats','feed',
+  'nutri-today','nutri-meals','nutri-foods','nutri-goal'];
+const SUBNAV = {
+  gym: [['programme','Program'],['seance','Session'],['calendrier','Calendar'],['stats','Progression']],
+  nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['nutri-foods','Foods'],['nutri-goal','Goal']]
+};
+const lastSub = { gym: 'programme', nutrition: 'nutri-today' };
+
+function rootOf(tab){ return TAB_ROOTS[tab] || 'gym'; }
+
+/* Feed = 1er bouton, jamais caché. Déconnecté/hors-ligne : on reste sur le
+   bouton mais la racine bascule sur Gym (l'app reste 100 % utilisable). */
+function feedGateOk(){
+  return typeof window.socialAvailable === 'function' ? window.socialAvailable() : true;
+}
+
+/* Premier lancement connecté+en ligne → Feed ; sinon le dernier onglet
+   manuel mémorisé (hors racine Feed) ; sinon Gym. */
+function pickInitialTab(){
+  const on = feedGateOk();
+  const memo = localStorage.getItem('at_tab');
+  if (on) return 'feed';
+  if (memo && ALL_TABS.includes(memo) && rootOf(memo) !== 'feed') return memo;
+  return 'programme';
+}
+
+function showRoot(root, sub){
+  const wantRoot = ROOT_DEFAULT[root] ? root : 'gym';
+  if (wantRoot === 'feed' && !feedGateOk()){
+    toast('Sign in and go online to use the Feed.');
+    showTab('programme');                    /* hors-ligne / déconnecté → Gym */
+    return;
+  }
+  const tab = sub && ALL_TABS.includes(sub) && rootOf(sub) === wantRoot
+    ? sub
+    : lastSub[wantRoot] || ROOT_DEFAULT[wantRoot];
+  showTab(tab);
+}
+
+/* Une SEULE barre de sous-nav, déplacée selon la racine active (F2) :
+   visible pour Gym et Nutrition, cachée pour Feed. Les boutons portent
+   data-tab="<onglet concret>" : les selecteurs de tests restent valables. */
+function wireSubnavs(){
+  const main = document.querySelector('main.app');
+  if (!main || document.getElementById('rootSubnav')) return;
+  const nav = document.createElement('nav');
+  nav.className = 'subnav hidden';
+  nav.id = 'rootSubnav';
+  nav.setAttribute('aria-label', 'Sections');
+  main.insertBefore(nav, main.firstChild);
+}
+
+function renderSubnavs(root){
+  const nav = document.getElementById('rootSubnav');
+  if (!nav) return;
+  const items = SUBNAV[root];
+  if (!items){ nav.classList.add('hidden'); nav.innerHTML = ''; return; }
+  nav.classList.remove('hidden');
+  nav.innerHTML = items.map(([t, l]) =>
+    '<button type="button" class="subnav-item' + (t === currentTab ? ' active' : '') + '"' +
+    ' data-tab="' + t + '" data-sub="' + t + '"' +
+    (t === currentTab ? ' aria-current="page"' : '') +
+    ' onclick="showTab(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')">' + l + '</button>'
+  ).join('');
+}
+
 function showTab(name){
   if (typeof window.stopMusic === 'function') window.stopMusic();
-  if (name === 'feed' && typeof window.socialAvailable === 'function' && !window.socialAvailable()) name = 'programme';
+  if (!ALL_TABS.includes(name)) name = 'programme';
+  if (name === 'feed' && !feedGateOk()) name = 'programme';
   if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
     window.saveFeedScroll();
   }
   currentTab = name;
+  currentRoot = rootOf(name);
+  lastSub[currentRoot] = name;
   localStorage.setItem('at_tab', name);
-  ['programme','seance','calendrier','stats','feed'].forEach(t => {
+  ALL_TABS.forEach(t => {
     const el = $('tab-' + t);
     if (el) el.classList.toggle('hidden', t !== name);
   });
-  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  /* onglets racine : l'actif = la racine de l'onglet courant */
+  document.querySelectorAll('.tabbar .tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === currentRoot));
   if (name === 'programme') renderProgramme();
   if (name === 'seance') renderSeance();
   if (name === 'calendrier') renderCalendar();
   if (name === 'stats') renderStats();
   if (name === 'feed' && typeof window.openFeed === 'function') window.openFeed();
+  if (typeof window.renderNutrition === 'function') window.renderNutrition(name);
+  renderSubnavs(currentRoot);
 }
 function renderAll(){
   const n = (DB.programme || []).length;
@@ -249,7 +338,8 @@ function wireActionSheet(){
 }
 
 Object.assign(window, {
-  boot, renderProfiles, createProfile, checkNet, showTab, renderAll, pinTabbar,
+  boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
-  openActionSheet, closeActionSheet
+  openActionSheet, closeActionSheet,
+  pickInitialTab, ALL_TABS
 });

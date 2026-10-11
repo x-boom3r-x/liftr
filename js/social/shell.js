@@ -36,6 +36,20 @@ function paintNav(){
     b.classList.toggle('active', b.dataset.view === view ||
       (view === 'thread' && b.dataset.view === 'inbox'));
   });
+  /* bouton ‹ visible sur toutes les sous-vues sauf Home */
+  const back = el('feedBackBtn');
+  if (back) back.classList.toggle('hidden', view === 'home');
+}
+
+/* Bouton ‹ de la barre du haut : retour contextuel (profil → d'où il vient,
+   fil → inbox, sinon Home). Ne touche PAS aux couches modales (chantier E). */
+export function feedBack(){
+  if (view === 'profile'){ profileBack(); return; }
+  if (view === 'thread'){
+    if (typeof window.closeThread === 'function') window.closeThread();
+    return;
+  }
+  if (view !== 'home') setSView('home');
 }
 
 function showView(name){
