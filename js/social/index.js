@@ -14,7 +14,9 @@ import {
   submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
-  toggleLike, sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
+  toggleLike, vote, toggleSave, repostPost, openRepostSheet,
+  startRepostQuote, cancelRepostQuote,
+  sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu,
   openPostTypeSheet, pickPostMusic
 } from './feed.js';
@@ -78,7 +80,9 @@ Object.assign(window, {
   submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
-  toggleLike, sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
+  toggleLike, vote, toggleSave, repostPost, openRepostSheet,
+  startRepostQuote, cancelRepostQuote,
+  sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu,
   openPostTypeSheet, pickPostMusic,
   openComments, closeComments, submitComment, updateCommentComposer,

@@ -610,10 +610,10 @@ test.describe('C : éditeur plein écran (crop / gestes / export)', () => {
     expect(patch).toBeTruthy();
     expect(JSON.parse(patch.body).avatar_url).not.toContain('?');
 
-    /* fil deja rendu : rafraichi sans rechargement de page */
-    const feedAv = await page.locator('#feedList .post-avatar-img').first()
-      .getAttribute('src');
-    expect(feedAv).toContain('?v=');
+    /* fil deja rendu : rafraichi sans rechargement de page (renderFeed
+       re-peint avec l'URL de base, puis le bust ajoute ?v=) */
+    await expect(page.locator('#feedList .post-avatar-img').first())
+      .toHaveAttribute('src', /\?v=/);
     expect(errs).toEqual([]);
   });
 });

@@ -21,8 +21,11 @@ const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,created_a
 
 let posts = [];
 let hasMore = false;
-let counts = {};          /* post_id -> { c, l, liked } */
-let scope = 'all';        /* 'all' | 'following' */
+let counts = {};          /* post_id -> { c, l, liked, v, rv, r, reposted, saved } */
+let reposts = [];         /* reposts récents de mon crew + moi, fusionnés au fil */
+let busy = {};            /* verrou par post/action : anti double-tap réseau */
+let repostDraft = null;   /* { id, post } : « Repost with comment » en cours */
+let scope = 'all';        /* 'all' | 'following' | 'top' */
 let noFollows = false;    /* filtre « Following » sans aucun abonnement */
 let loading = false;
 let sending = false;
@@ -34,6 +37,36 @@ function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
 function gateOk(){ return typeof window.socialAvailable === 'function' ? window.socialAvailable() : SOCIAL_ENABLED; }
 function meId(){ return (window.socialUser || {}).id || null; }
+
+function blankCounts(){ return { c: 0, l: 0, liked: false, v: 0, rv: 0, r: 0, reposted: false, saved: false }; }
+
+/* Verrou par post/action : renvoie false si une même action est déjà en vol. */
+function lock(id, act){
+  const key = id + '|' + act;
+  if (busy[key]) return false;
+  busy[key] = true;
+  return true;
+}
+function unlock(id, act){ delete busy[id + '|' + act]; }
+
+/* Score « Top » : (upvotes − downvotes) pondéré par l'âge. */
+function topScore(p){
+  const k = counts[p.id] || blankCounts();
+  const ageH = Math.max(0, (Date.now() - Date.parse(p.created_at || '')) / 3600000);
+  return (k.v || 0) / Math.pow(ageH + 2, 1.5);
+}
+
+/* Cœur qui grossit puis disparaît (double-tap). */
+function likeBurst(zone){
+  try {
+    const b = document.createElement('span');
+    b.className = 'like-burst';
+    b.setAttribute('aria-hidden', 'true');
+    b.textContent = '♥';
+    zone.appendChild(b);
+    setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 700);
+  } catch(e){}
+}
 
 /* ------------------------------ temps ------------------------------ */
 export function timeAgo(iso){
@@ -213,6 +246,17 @@ async function fetchPage(offset){
 
   let q = c.from('posts').select(POST_SELECT).is('deleted_at', null);
 
+  if (scope === 'top'){
+    /* fenêtre 7 jours, premier centaine : le classement se fait après
+       agrégation des votes (fetchCounts). */
+    q = q.gte('created_at', new Date(Date.now() - 7 * 864e5).toISOString());
+    const { data, error } = await q.order('created_at', { ascending: false }).range(0, 99);
+    if (error) return { rows: [], error: error.message || 'Could not load the feed.' };
+    const raw = data || [];
+    const rows = await filterPrivatePosts(raw);
+    return { rows: rows, more: false, error: null };
+  }
+
   if (scope === 'following'){
     const me = (window.socialUser || {}).id;
     const { data: f, error: fe } = await c.from('follows').select('followee_id').eq('follower_id', me);
@@ -242,19 +286,46 @@ async function fetchCounts(){
   if (!c || !posts.length) return;
   const ids = posts.map(p => p.id);
   const me = (window.socialUser || {}).id || null;
-  const jobs = [
-    c.from('feed_counts').select('post_id,comment_count,like_count').in('post_id', ids)
-  ];
+  const jobs = {
+    counts: c.from('feed_counts').select('post_id,comment_count,like_count').in('post_id', ids),
+    votes: c.from('post_votes').select('post_id,value,user_id').in('post_id', ids),
+    reps: c.from('post_reposts').select('post_id,user_id').in('post_id', ids)
+  };
   if (me){
-    jobs.push(c.from('likes').select('post_id').in('post_id', ids).eq('user_id', me));
+    jobs.likes = c.from('likes').select('post_id').in('post_id', ids).eq('user_id', me);
+    jobs.saves = c.from('post_saves').select('post_id').in('post_id', ids).eq('user_id', me);
   }
-  const out = await Promise.all(jobs);
-  const rows = out[0] && out[0].data;
+  /* les nouvelles tables (migration v5) peuvent manquer : jamais bloquant. */
+  const safe = async p => { try { return await p; } catch(e){ return { data: null, error: { message: String(e && e.message || e) } }; } };
+  const [outCounts, outVotes, outReps, outLikes, outSaves] =
+    await Promise.all([safe(jobs.counts), safe(jobs.votes), safe(jobs.reps), safe(jobs.likes || null), safe(jobs.saves || null)]);
+
+  Object.keys(counts).forEach(id => delete counts[id]);
+  const row = id => counts[id] || (counts[id] = blankCounts());
+  const rows = outCounts.data;
   if (rows) rows.forEach(r => {
-    counts[r.post_id] = { c: +r.comment_count || 0, l: +r.like_count || 0, liked: false };
+    const k = row(r.post_id);
+    k.c = +r.comment_count || 0;
+    k.l = +r.like_count || 0;
   });
-  const mine = out[1] && out[1].data;
+  posts.forEach(p => row(p.id));   /* chaque post du fil a une entrée */
+  const mine = outLikes && outLikes.data;
   if (mine) mine.forEach(r => { if (counts[r.post_id]) counts[r.post_id].liked = true; });
+  const votes = outVotes.data;
+  if (votes) votes.forEach(r => {
+    const k = counts[r.post_id]; if (!k) return;
+    const v = +r.value || 0;
+    k.v += v;
+    if (me && String(r.user_id || '') === String(me)) k.rv = v;
+  });
+  const reps = outReps.data;
+  if (reps) reps.forEach(r => {
+    const k = counts[r.post_id]; if (!k) return;
+    k.r += 1;
+    if (me && String(r.user_id || '') === String(me)) k.reposted = true;
+  });
+  const saves = outSaves.data;
+  if (saves) saves.forEach(r => { if (counts[r.post_id]) counts[r.post_id].saved = true; });
 }
 
 export async function refreshCounts(){
@@ -266,11 +337,13 @@ export async function refreshCounts(){
 export async function toggleLike(id){
   const c = sb();
   const me = (window.socialUser || {}).id;
-  const cur = counts[id] || { c: 0, l: 0, liked: false };
+  const cur = counts[id] || (counts[id] = blankCounts());
   if (!c || !me || !id) return false;
+  if (!lock(id, 'like')) return cur.liked;
 
   const prev = { c: cur.c, l: cur.l, liked: cur.liked };
-  counts[id] = { c: cur.c, l: Math.max(0, cur.l + (cur.liked ? -1 : 1)), liked: !cur.liked };
+  cur.l = Math.max(0, cur.l + (cur.liked ? -1 : 1));
+  cur.liked = !cur.liked;
   paintOne(id);
 
   try {
@@ -285,48 +358,249 @@ export async function toggleLike(id){
     if (error) throw new Error(error.message);
     return counts[id].liked;
   } catch(e){
-    counts[id] = prev;
+    cur.c = prev.c; cur.l = prev.l; cur.liked = prev.liked;
     paintOne(id);
     toast((e && e.message) || 'Could not update your like.');
     return prev.liked;
+  } finally {
+    unlock(id, 'like');
   }
 }
 
+/* ------------------------------- votes ----------------------------- */
+/* ▲ / ▼ : signal de classement « Top ». Re-cliquer le même sens
+   retire le vote ; l'autre sens le bascule. */
+export async function vote(id, dir){
+  const c = sb();
+  const me = (window.socialUser || {}).id;
+  const cur = counts[id] || (counts[id] = blankCounts());
+  if (!c || !me || !id) return false;
+  if (dir !== 1 && dir !== -1) return false;
+  if (!lock(id, 'vote')) return false;
+
+  const prev = { v: cur.v, rv: cur.rv };
+  const nv = cur.rv === dir ? 0 : dir;            /* 0 = on retire son vote */
+  cur.v = cur.v - (cur.rv || 0) + nv;
+  cur.rv = nv;
+  paintOne(id);
+
+  try {
+    let error = null;
+    if (nv === 0){
+      const r = await c.from('post_votes').delete().eq('post_id', id).eq('user_id', me);
+      error = r && r.error;
+    } else {
+      const r = await c.from('post_votes')
+        .upsert({ post_id: id, user_id: me, value: nv }, { onConflict: 'user_id,post_id' });
+      error = r && r.error;
+    }
+    if (error) throw new Error(error.message);
+    return true;
+  } catch(e){
+    cur.v = prev.v; cur.rv = prev.rv;
+    paintOne(id);
+    toast((e && e.message) || 'Could not register your vote.');
+    return false;
+  } finally {
+    unlock(id, 'vote');
+  }
+}
+
+/* ------------------------------- save ------------------------------ */
+/* 🔖 : strictement privé, aucune notification. */
+export async function toggleSave(id){
+  const c = sb();
+  const me = (window.socialUser || {}).id;
+  const cur = counts[id] || (counts[id] = blankCounts());
+  if (!c || !me || !id) return false;
+  if (!lock(id, 'save')) return cur.saved;
+
+  const prev = cur.saved;
+  cur.saved = !prev;
+  paintOne(id);
+
+  try {
+    let error = null;
+    if (prev){
+      const r = await c.from('post_saves').delete().eq('post_id', id).eq('user_id', me);
+      error = r && r.error;
+    } else {
+      const r = await c.from('post_saves').insert({ post_id: id, user_id: me });
+      error = r && r.error;
+    }
+    if (error) throw new Error(error.message);
+    toast(cur.saved ? 'Saved — only you can see it.' : 'Removed from Saved.');
+    return cur.saved;
+  } catch(e){
+    cur.saved = prev;
+    paintOne(id);
+    toast((e && e.message) || 'Could not update your saves.');
+    return prev;
+  } finally {
+    unlock(id, 'save');
+  }
+}
+
+/* ------------------------------ reposts ---------------------------- */
+function postOf(id){
+  return posts.find(x => x.id === id) ||
+    ((reposts.find(r => r.post && r.post.id === id) || {}).post) || null;
+}
+
+export async function repostPost(id, quote){
+  const c = sb();
+  const me = (window.socialUser || {}).id;
+  const p = postOf(id);
+  const cur = counts[id] || (counts[id] = blankCounts());
+  if (!c || !me || !id || !p) return false;
+  if (String(p.author_id || '') === String(me)){
+    toast('You cannot repost your own post.');
+    return false;
+  }
+  if (cur.reposted){
+    toast('You already reposted this.');
+    return false;
+  }
+  if (!lock(id, 'repost')) return false;
+
+  const q = (quote || '').trim().slice(0, 400) || null;
+  cur.r += 1;
+  cur.reposted = true;
+  paintOne(id);
+
+  try {
+    const { error } = await c.from('post_reposts')
+      .insert({ post_id: id, user_id: me, quote: q });
+    if (error) throw new Error(error.message || 'Could not repost.');
+    toast(q ? 'Reposted with your comment.' : 'Reposted to your crew.');
+    /* le fil local suit tout de suite */
+    fetchReposts().then(() => { try { paint(); } catch(e){} }).catch(() => {});
+    return true;
+  } catch(e){
+    cur.r = Math.max(0, cur.r - 1);
+    cur.reposted = false;
+    paintOne(id);
+    toast((e && e.message) || 'Could not repost.');
+    return false;
+  } finally {
+    unlock(id, 'repost');
+  }
+}
+
+export function openRepostSheet(id){
+  if (typeof window.openActionSheet !== 'function') return false;
+  const p = postOf(id);
+  if (!p) return false;
+  const me = meId();
+  if (String(p.author_id || '') === String(me || '')){
+    toast('You cannot repost your own post.');
+    return false;
+  }
+  const cur = counts[id] || blankCounts();
+  if (cur.reposted){ toast('You already reposted this.'); return false; }
+  window.openActionSheet('Repost', [
+    { label: 'Repost', fn: () => { repostPost(id); } },
+    { label: 'Repost with comment', fn: () => { startRepostQuote(id); } },
+    { label: 'Cancel' }
+  ]);
+  return true;
+}
+
+/* « Repost with comment » : le composeur se met en mode quote. */
+export function startRepostQuote(id){
+  const p = postOf(id);
+  if (!p) return false;
+  const me = meId();
+  if (String(p.author_id || '') === String(me || '')){
+    toast('You cannot repost your own post.');
+    return false;
+  }
+  const cur = counts[id] || blankCounts();
+  if (cur.reposted){ toast('You already reposted this.'); return false; }
+  repostDraft = { id: id, post: p };
+  paintRepostBanner();
+  if (typeof window.enterSView === 'function') window.enterSView('home');
+  const ta = el('postBody');
+  if (ta){ try { ta.focus({ preventScroll: true }); } catch(e){ ta.focus(); } }
+  return true;
+}
+
+export function cancelRepostQuote(){
+  repostDraft = null;
+  paintRepostBanner();
+  return true;
+}
+
+function paintRepostBanner(){
+  const box = el('repostBanner');
+  if (!box) return;
+  if (!repostDraft){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+  const p = repostDraft.post || {};
+  const a = p.author || {};
+  const name = a.display_name || a.username || 'this post';
+  const preview = String(p.body || (p.image_path ? 'Photo' : 'Post')).slice(0, 80);
+  box.innerHTML = '<span class="repost-banner-ico" aria-hidden="true">⟲</span>' +
+    '<span class="repost-banner-txt">Reposting <b>' + esc(name) + '</b> · ' + esc(preview) + '</span>' +
+    '<button type="button" class="chip" onclick="cancelRepostQuote()" aria-label="Cancel repost">✕</button>';
+  box.classList.remove('hidden');
+}
+
+/* ------------------------------ partage ---------------------------- */
 export function sharePost(id){
-  const p = posts.find(x => x.id === id);
+  const p = postOf(id);
   const url = location.origin + location.pathname;
   const text = (p && p.body ? String(p.body).slice(0, 90) : 'Liftr');
+  const copyLink = () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(() => toast('Link copied.'), () => toast('Link copied.'));
+        return;
+      }
+    } catch(e){}
+    toast('Link copied.');
+  };
   try {
     if (navigator.share){
       navigator.share({ title: 'Liftr', text: text, url: url }).catch(() => {});
       return true;
     }
   } catch(e){}
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(url).then(() => toast('Link copied.'), () => toast('Link copied.'));
-      return true;
-    }
-  } catch(e){}
-  toast('Link copied.');
+  /* pas de navigator.share (desktop) : feuille d'actions */
+  if (typeof window.openActionSheet === 'function'){
+    window.openActionSheet('Share', [
+      { label: 'Copy link', fn: copyLink },
+      { label: 'Send in message', fn: () => {
+          copyLink();
+          if (typeof window.setSView === 'function') window.setSView('inbox');
+        } },
+      { label: 'Cancel' }
+    ]);
+    return true;
+  }
+  copyLink();
   return true;
 }
 
 /* ----------------------------- suppression -------------------------- */
 export function openPostMenu(id, source){
-  const p = source || posts.find(x => x.id === id);
+  const p = source || postOf(id);
   if (!p) return false;
-  if (String(p.author_id || '') !== String(meId() || '')){
-    toast('You can only manage your own posts.');
-    return false;
-  }
   if (typeof window.openActionSheet !== 'function') return false;
-  window.openActionSheet('Your post', [
-    { label: 'Open post', fn: () => {
-        if (typeof window.openComments === 'function') window.openComments(id, p);
-      } },
-    { label: 'Delete post', style: 'destructive', fn: () => { deletePost(id, p); } }
-  ]);
+  const mine = String(p.author_id || '') === String(meId() || '');
+  const k = counts[id] || blankCounts();
+  const items = [{ label: 'Open post', fn: () => {
+      if (typeof window.openComments === 'function') window.openComments(id, p);
+    } }];
+  if (!mine && !k.reposted){
+    items.push({ label: 'Repost', fn: () => { repostPost(id); } });
+    items.push({ label: 'Repost with comment', fn: () => { startRepostQuote(id); } });
+  }
+  items.push({ label: k.saved ? 'Remove from Saved' : 'Save', fn: () => { toggleSave(id); } });
+  items.push({ label: 'Share', fn: () => { sharePost(id); } });
+  if (mine){
+    items.push({ label: 'Delete post', style: 'destructive', fn: () => { deletePost(id, p); } });
+  }
+  window.openActionSheet(mine ? 'Your post' : 'Post', items);
   return true;
 }
 
@@ -378,16 +652,17 @@ export async function deletePost(id, source){
 }
 
 function paintOne(id){
-  const list = el('feedList');
-  if (!list) return;
-  const node = list.querySelector('[data-post="' + id + '"]');
-  const p = posts.find(x => x.id === id);
-  if (!node || !p) return;
-  const tpl = document.createElement('div');
-  tpl.innerHTML = postCardHtml(p);
-  const fresh = tpl.firstElementChild;
-  if (fresh) node.replaceWith(fresh);
-}
+    const list = el('feedList');
+    if (!list) return;
+    const node = list.querySelector('[data-post="' + id + '"]');
+    const p = posts.find(x => x.id === id) ||
+      ((reposts.find(r => r.post && r.post.id === id) || {}).post) || null;
+    if (!node || !p) return;
+    const tpl = document.createElement('div');
+    tpl.innerHTML = postCardHtml(p);
+    const fresh = tpl.firstElementChild;
+    if (fresh) node.replaceWith(fresh);
+  }
 
 export function feedFollowChanged(){
   if (scope !== 'following') return false;
@@ -400,7 +675,7 @@ export function feedFollowChanged(){
 export function getFeedScope(){ return scope; }
 
 export function setFeedScope(next){
-  scope = next === 'following' ? 'following' : 'all';
+  scope = (next === 'following' || next === 'top') ? next : 'all';
   const bar = document.getElementById('feedFilter');
   if (bar){
     bar.querySelectorAll('.seg').forEach(b => b.classList.toggle('active', b.dataset.scope === scope));
@@ -483,32 +758,50 @@ export function postCardHtml(p){
   const music = parts.html ? '<div class="post-music">' + parts.html + '</div>' : '';
   const kind = (p.kind && p.kind !== 'text' && p.kind !== 'photo')
     ? '<span class="chip chip-type post-kind">' + esc(p.kind.toUpperCase()) + '</span>' : '';
-  const k = counts[p.id] || { c: 0, l: 0, liked: false };
-  const mine = !!p.id && String(p.author_id || '') === String(meId() || '');
-  const more = mine
-    ? '<button type="button" class="post-more" data-act="menu" data-post="' + esc(p.id) + '" ' +
-      'aria-label="Post options" title="Post options"><span aria-hidden="true">⋯</span></button>'
-    : '';
+  const k = counts[p.id] || blankCounts();
+  const more =
+    '<button type="button" class="post-more" data-act="menu" data-post="' + esc(p.id || '') + '" ' +
+    'aria-label="Post options" title="Post options"><span aria-hidden="true">⋯</span></button>';
 
+  /* Rangée G1 : [▲ score ▼] ♥ n 💬 n ⟲ n ····· 🔖 ↗ — icônes seules,
+     tenue sans débordement de 320 à 430 px (voir css .post-foot). */
   const foot = '<div class="post-foot">' +
+    '<span class="post-vote">' +
+      '<button type="button" class="post-act post-act-up' + (k.rv === 1 ? ' on' : '') + '" ' +
+        'data-act="up" data-post="' + esc(p.id || '') + '" ' +
+        'aria-label="Upvote" aria-pressed="' + (k.rv === 1 ? 'true' : 'false') + '" title="Upvote">' +
+        '<span class="post-act-ico" aria-hidden="true">▲</span></button>' +
+      '<span class="post-act-n post-vote-n" data-n="votes">' + (k.v || 0) + '</span>' +
+      '<button type="button" class="post-act post-act-down' + (k.rv === -1 ? ' on' : '') + '" ' +
+        'data-act="down" data-post="' + esc(p.id || '') + '" ' +
+        'aria-label="Downvote" aria-pressed="' + (k.rv === -1 ? 'true' : 'false') + '" title="Downvote">' +
+        '<span class="post-act-ico" aria-hidden="true">▼</span></button>' +
+    '</span>' +
+    '<button type="button" class="post-act post-act-like' + (k.liked ? ' on' : '') + '" ' +
+      'data-act="like" data-post="' + esc(p.id || '') + '" ' +
+      'aria-label="Like" aria-pressed="' + (k.liked ? 'true' : 'false') + '" title="Like">' +
+      '<span class="post-act-ico" aria-hidden="true">♥</span>' +
+      '<span class="post-act-n" data-n="likes">' + k.l + '</span>' +
+    '</button>' +
     '<button type="button" class="post-act" data-act="reply" data-post="' + esc(p.id || '') + '" ' +
       'aria-label="Comments">' +
       '<span class="post-act-ico" aria-hidden="true">💬</span>' +
       '<span class="post-act-n" data-n="comments">' + k.c + '</span>' +
-      '<span class="post-act-l">Comment' + (k.c === 1 ? '' : 's') + '</span>' +
     '</button>' +
-    '<button type="button" class="post-act post-act-like' + (k.liked ? ' on' : '') + '" ' +
-      'data-act="like" data-post="' + esc(p.id || '') + '" ' +
-      'aria-label="Upvote" title="Upvote">' +
-      '<span class="post-act-ico" aria-hidden="true">▲</span>' +
-      '<span class="post-act-n post-act-l-like" data-n="likes">' + k.l + '</span>' +
-      '<span class="post-act-l">Upvote</span>' +
+    '<button type="button" class="post-act post-act-repost' + (k.reposted ? ' on' : '') + '" ' +
+      'data-act="repost" data-post="' + esc(p.id || '') + '" ' +
+      'aria-label="Repost" aria-pressed="' + (k.reposted ? 'true' : 'false') + '" title="Repost">' +
+      '<span class="post-act-ico" aria-hidden="true">⟲</span>' +
+      '<span class="post-act-n" data-n="reposts">' + k.r + '</span>' +
     '</button>' +
+    /* ⋯ (menu) reste dans l''en-tête de la carte : une seule occurrence */
+    '<button type="button" class="post-act post-act-save' + (k.saved ? ' on' : '') + '" ' +
+      'data-act="save" data-post="' + esc(p.id || '') + '" ' +
+      'aria-label="Save" aria-pressed="' + (k.saved ? 'true' : 'false') + '" title="Save">' +
+      '<span class="post-act-ico" aria-hidden="true">🔖</span></button>' +
     '<button type="button" class="post-act post-act-share" data-act="share" ' +
-      'data-post="' + esc(p.id || '') + '" aria-label="Share">' +
-      '<span class="post-act-ico" aria-hidden="true">↗</span>' +
-      '<span class="post-act-l">Share</span>' +
-    '</button>' +
+      'data-post="' + esc(p.id || '') + '" aria-label="Share" title="Share">' +
+      '<span class="post-act-ico" aria-hidden="true">↗</span></button>' +
     '</div>';
 
   return '<article class="post" data-post="' + esc(p.id || '') + '">' +
@@ -547,6 +840,13 @@ function emptyHtml(){
       '<button type="button" class="btn btn-sm" onclick="openPeople()">Find people</button>' +
       '</div>';
   }
+  if (scope === 'top'){
+    return '<div class="feed-empty">' +
+      '<div class="feed-empty-ico">▲</div>' +
+      '<div class="feed-empty-t">No top posts this week</div>' +
+      '<div class="feed-empty-s">Upvote posts to shape the ranking — the Top tab refreshes every 7 days.</div>' +
+      '</div>';
+  }
   return '<div class="feed-empty">' +
     '<div class="feed-empty-ico">▤</div>' +
     '<div class="feed-empty-t">Nothing here yet</div>' +
@@ -563,13 +863,82 @@ function errorHtml(msg){
     '</div>';
 }
 
+/* ------------------------------ reposts ----------------------------
+   Reposts récents de mon crew (abonnements) + moi, fusionnés au fil.
+   Best-effort : si la migration v5 n'est pas appliquée, le fil reste
+   identique (aucun repost affiché). */
+async function fetchReposts(){
+  reposts = [];
+  const c = sb();
+  const me = meId();
+  if (!c || !me || scope === 'top') return;
+  let ids = [me];
+  try {
+    const { data: f } = await c.from('follows').select('followee_id').eq('follower_id', me);
+    if (f) ids = ids.concat(f.map(r => r.followee_id));
+  } catch(e){}
+  let rows = [];
+  try {
+    const { data } = await c.from('post_reposts')
+      .select('post_id,user_id,quote,created_at,by:profiles!post_reposts_user_id_fkey(id,username,display_name,avatar_url)')
+      .in('user_id', ids)
+      .order('created_at', { ascending: false })
+      .range(0, 59);
+    rows = data || [];
+  } catch(e){ return; }
+  if (!rows.length) return;
+  const pids = [];
+  rows.forEach(r => { if (pids.indexOf(r.post_id) < 0) pids.push(r.post_id); });
+  let orig = [];
+  try {
+    const { data } = await c.from('posts').select(POST_SELECT).in('id', pids).is('deleted_at', null);
+    orig = data || [];
+  } catch(e){ return; }
+  const priv = await filterPrivatePosts(orig);
+  const byId = {};
+  priv.forEach(p => { byId[p.id] = p; });
+  reposts = rows.filter(r => byId[r.post_id]).map(r => ({
+    id: 'rp-' + (r.user_id || '') + '-' + r.post_id,
+    post_id: r.post_id,
+    quote: r.quote || '',
+    created_at: r.created_at,
+    by: r.by || {},
+    post: byId[r.post_id]
+  }));
+}
+
+function repostCardHtml(r){
+  const by = r.by || {};
+  const name = by.display_name || by.username || 'Someone';
+  const head = '<div class="post-repost-by">' +
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/>' +
+    '<path d="m7 22-4-4-4 4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>' +
+    '<span>' + esc(name) + ' reposted</span></div>';
+  const quote = r.quote
+    ? '<div class="post-repost-quote">' + esc(r.quote) + '</div>' : '';
+  return '<div class="post-repost" data-repost="' + esc(r.id) + '">' + head + quote +
+    postCardHtml(r.post) + '</div>';
+}
+
 function paint(){
   const list = el('feedList');
   if (!list) return;
-  list.innerHTML = posts.length ? posts.map(postCardHtml).join('') : emptyHtml();
+  if (!posts.length && !reposts.length){
+    list.innerHTML = emptyHtml();
+  } else {
+    let entries = posts.map(p => ({ t: Date.parse(p.created_at || '') || 0, html: postCardHtml(p) }));
+    if (scope !== 'top'){
+      reposts.forEach(r => {
+        entries.push({ t: Date.parse(r.created_at || '') || 0, html: repostCardHtml(r) });
+      });
+      /* Recent/All : plus récent d'abord ; Top garde l'ordre du score (renderFeed) */
+      entries.sort((a, b) => b.t - a.t);
+    }
+    list.innerHTML = entries.map(e => e.html).join('');
+  }
   hydrateMusic(list);
   const wrap = el('feedMoreWrap');
-  if (wrap) wrap.classList.toggle('hidden', !hasMore);
+  if (wrap) wrap.classList.toggle('hidden', !hasMore || scope === 'top');
   if (pendingScroll !== null){
     const y = pendingScroll;
     pendingScroll = null;
@@ -606,6 +975,11 @@ export async function renderFeed(opts){
     posts = more ? posts.concat(rows) : rows;
     hasMore = page.more === true;
     try { await fetchCounts(); } catch(e){}
+    if (scope === 'top'){
+      posts.sort((a, b) => topScore(b) - topScore(a));
+    } else if (!more){
+      try { await fetchReposts(); } catch(e){}
+    }
     paint();
     return true;
   } catch(e){
@@ -629,6 +1003,20 @@ export function loadMorePosts(){
 export async function submitPost(){
   const ta = el('postBody');
   let body = ((ta && ta.value) || '').replace(/\r\n/g, '\n').trim().slice(0, 2000);
+  /* mode « Repost with comment » : le texte devient la quote du repost,
+     aucun post n'est créé. */
+  if (repostDraft){
+    if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
+    if (sending) return false;
+    if (!gateOk()){ toast('Sign in and go online to post.'); return false; }
+    const id = repostDraft.id;
+    const quote = body;
+    repostDraft = null;
+    paintRepostBanner();
+    if (ta) ta.value = '';
+    updateComposer();
+    return repostPost(id, quote);
+  }
   const track = getComposerMusic('post');
   if (track && track.id) body = withMusic(body.slice(0, 1990), track.id, track);
   if (!body && !photo) return false;
@@ -686,6 +1074,9 @@ export function resetFeed(){
   posts = [];
   hasMore = false;
   counts = {};
+  reposts = [];
+  repostDraft = null;
+  busy = {};
   noFollows = false;
   if (typeof window.resetStories === 'function') window.resetStories();
   photo = null;
@@ -696,6 +1087,7 @@ export function resetFeed(){
   if (ta) ta.value = '';
   const box = el('postPreview');
   if (box) box.classList.add('hidden');
+  paintRepostBanner();
   const list = el('feedList');
   if (list) list.innerHTML = '';
   const wrap = el('feedMoreWrap');
@@ -728,11 +1120,19 @@ export function initFeed(){
       if (!btn) return;
       const act = btn.getAttribute('data-act');
       const id = btn.getAttribute('data-post') || '';
-      const p = posts.find(x => x.id === id);
+      const p = postOf(id);
       if (act === 'reply'){
         if (typeof window.openComments === 'function') window.openComments(id, p || null);
       } else if (act === 'like'){
         toggleLike(id);
+      } else if (act === 'up'){
+        vote(id, 1);
+      } else if (act === 'down'){
+        vote(id, -1);
+      } else if (act === 'repost'){
+        openRepostSheet(id);
+      } else if (act === 'save'){
+        toggleSave(id);
       } else if (act === 'share'){
         sharePost(id);
       } else if (act === 'menu'){
@@ -742,6 +1142,52 @@ export function initFeed(){
         if (uid && typeof window.openProfile === 'function') window.openProfile(uid);
       }
     });
+    /* Double-tap (TikTok) sur le média / le texte : like + burst.
+       Jamais d'unlike au double-tap ; cooldown par zone anti-doublon
+       entre la détection tactile et l'événement dblclick simulate. */
+    const lastTap = { t: 0, el: null };
+    let burstAt = 0;
+    const onDoubleTap = zone => {
+      const card = zone.closest('.post');
+      if (!card) return;
+      const id = card.getAttribute('data-post');
+      const now = Date.now();
+      if (now - burstAt < 400) return;
+      burstAt = now;
+      /* paintOne remplace la carte : le burst attend la fin du like
+         puis se pose sur la carte fraîche (sinon il est détruit au repaint) */
+      const burstFresh = () => {
+        const list = el('feedList');
+        const fresh = (list && list.querySelector('[data-post="' + id + '"]')) || card;
+        const z = fresh.querySelector('.post-media, .post-body') || fresh;
+        likeBurst(z);
+      };
+      const cur = counts[id];
+      if (!cur || !cur.liked){
+        try {
+          const r = toggleLike(id);
+          if (r && typeof r.then === 'function') r.then(burstFresh, burstFresh);
+          else burstFresh();
+        } catch(e){ burstFresh(); }
+      } else {
+        likeBurst(zone);   /* déjà liké : aucun repaint, la zone est stable */
+      }
+    };
+    list.addEventListener('dblclick', e => {
+      const zone = e.target && e.target.closest && e.target.closest('.post-media, .post-body');
+      if (zone) onDoubleTap(zone);
+    });
+    list.addEventListener('touchend', e => {
+      const zone = e.target && e.target.closest && e.target.closest('.post-media, .post-body');
+      if (!zone) return;
+      const now = Date.now();
+      if (now - lastTap.t < 350 && lastTap.el === zone){
+        lastTap.t = 0; lastTap.el = null;
+        onDoubleTap(zone);
+      } else {
+        lastTap.t = now; lastTap.el = zone;
+      }
+    }, { passive: true });
   }
   if (typeof window.initStories === 'function') window.initStories();
   renderComposer();

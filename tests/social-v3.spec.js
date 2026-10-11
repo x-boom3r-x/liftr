@@ -116,7 +116,7 @@ test.describe('V3 : profil, suppression de post, photo de profil', () => {
     expect(errs).toEqual([]);
   });
 
-  test('feed : le menu ⋯ n’apparaît que sur mes posts et supprime', async ({ page }) => {
+  test('feed : le menu ⋯ ouvre les actions, Delete n’est que sur mes posts', async ({ page }) => {
     const errs = consoleWatch(page);
     await withSocial(page);
     await seed(page, {});
@@ -125,9 +125,10 @@ test.describe('V3 : profil, suppression de post, photo de profil', () => {
 
     await openFeed(page);
     await expect(page.locator('#feedList .post')).toHaveCount(2);
-    await expect(page.locator('#feedList .post-more')).toHaveCount(1);
+    /* G : le ⋯ est sur tous les posts (repost / save / share) */
+    await expect(page.locator('#feedList .post-more')).toHaveCount(2);
 
-    await page.locator('#feedList .post-more').click();
+    await page.locator('#feedList .post-more').first().click();
     await expect(page.locator('#actionSheet')).toBeVisible();
     await page.locator('#asList .as-item', { hasText: 'Delete post' }).click();
     await expect(page.locator('#confirmModal')).toBeVisible();
@@ -135,6 +136,11 @@ test.describe('V3 : profil, suppression de post, photo de profil', () => {
 
     await expect(page.locator('#feedList .post')).toHaveCount(1);
     await expect.poll(() => api.st.posts.length).toBe(1);
+
+    /* sur le post d’une autre : pas de Delete */
+    await page.locator('#feedList .post-more').first().click();
+    await expect(page.locator('#asList .as-item', { hasText: 'Delete post' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
     expect(errs).toEqual([]);
   });
 

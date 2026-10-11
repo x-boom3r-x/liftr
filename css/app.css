@@ -1060,8 +1060,66 @@ button{background:none;border:none;cursor:pointer}
 .post-act-like.on{color:var(--gx2);background:rgba(255,61,139,.14)}
 .post-act-like.on .post-act-n{color:#FF5C97}
 .post-act-like:active{background:rgba(255,61,139,.2)}
-.post-act-share{margin-left:auto}
-.post-act-l{letter-spacing:.01em}
+
+/* ---------- G : rangée [▲ n ▼] ♥ n 💬 n ⟲ n ····· 🔖 ↗ ----------
+   Compactte par construction : elle tient sans d�bordement de 320
+   à 430 px de large (icônes seules, padding serré). */
+.post-foot{gap:5px}
+.post-foot .post-act{padding:7px 8px;gap:5px;min-height:34px}
+.post-vote{display:inline-flex;align-items:center;gap:1px}
+.post-vote .post-act{padding:7px 5px}
+.post-vote-n{min-width:16px;text-align:center;font-size:.75rem}
+.post-act-up.on{color:var(--primary);background:rgba(255,107,53,.14)}
+.post-act-down.on{color:#4DA3FF;background:rgba(77,163,255,.14)}
+.post-act-repost.on{color:var(--green);background:rgba(46,204,113,.14)}
+.post-act-repost.on .post-act-n{color:var(--green)}
+.post-act-save.on{color:var(--yellow);background:rgba(255,214,10,.13)}
+@media (max-width:370px){
+  .post-foot .post-act{padding:7px 6px;gap:4px}
+  .post-vote .post-act{padding:7px 4px}
+}
+
+/* double-tap : cœur qui grossit puis disparaît */
+.post-media,.post-body{position:relative}
+.like-burst{
+  position:absolute;left:50%;top:50%;width:84px;height:84px;
+  margin:-42px 0 0 -42px;pointer-events:none;z-index:3;
+  display:grid;place-items:center;font-size:56px;line-height:1;
+  color:#FF5C97;opacity:0;transform:scale(.4);
+  animation:burst .6s ease-out;
+}
+@keyframes burst{
+  0%{opacity:0;transform:scale(.4)}
+  25%{opacity:1;transform:scale(1.1)}
+  100%{opacity:0;transform:scale(1.25)}
+}
+@media (prefers-reduced-motion:reduce){.like-burst{animation:none;opacity:1;transform:scale(1)}}
+
+/* ---------- G : repost dans le fil ---------- */
+.post-repost{margin-bottom:4px}
+.post-repost-by{
+  display:flex;align-items:center;gap:6px;
+  font-size:.72rem;font-weight:700;color:var(--text3);
+  margin:-2px 0 9px;
+}
+.post-repost-by svg{
+  width:14px;height:14px;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+}
+.post-repost-quote{
+  font-size:.84rem;color:var(--text2);line-height:1.45;
+  margin:0 0 10px;padding-left:20px;
+}
+
+/* ---------- G : bannière « Repost with comment » ---------- */
+.repost-banner{
+  display:flex;align-items:center;gap:9px;
+  margin:0 0 12px;padding:9px 12px;
+  background:rgba(46,204,113,.10);border:1px solid rgba(46,204,113,.30);
+  border-radius:12px;font-size:.8rem;color:var(--text2);
+}
+.repost-banner-ico{color:var(--green);font-weight:800;flex:none}
+.repost-banner-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---------- en-t�te post dans les commentaires ---------- */
 .cpost{

@@ -408,7 +408,8 @@ test.describe('T5 : likes, recherche, profil, messages', () => {
     await expect(page.locator('#profHandle')).toHaveText('@mouataz');
     await expect(page.locator('#profName')).toHaveText('Mouataz');
     await expect(page.locator('#statPosts')).toHaveText('2');
-    await expect(page.locator('#profTabs .ptab')).toHaveCount(2);
+    /* G : Posts + Liked + Saved */
+    await expect(page.locator('#profTabs .ptab')).toHaveCount(3);
     await expect(page.locator('#profGrid .ptile')).toHaveCount(2);
 
     await page.locator('.ptab[data-ptab="liked"]').click();

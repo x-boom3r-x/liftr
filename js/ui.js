@@ -231,7 +231,12 @@ function showTab(name){
   if (name === 'seance') renderSeance();
   if (name === 'calendrier') renderCalendar();
   if (name === 'stats') renderStats();
-  if (name === 'feed' && typeof window.openFeed === 'function') window.openFeed();
+  if (name === 'feed'){
+    /* le panneau Feed peut être ouvert alors que la sous-vue sociale est
+       encore profil / inbox / search : l'onglet racine ramène au fil (F/G) */
+    if (typeof window.setSView === 'function') window.setSView('home');
+    else if (typeof window.openFeed === 'function') window.openFeed();
+  }
   if (typeof window.renderNutrition === 'function') window.renderNutrition(name);
   renderSubnavs(currentRoot);
 }

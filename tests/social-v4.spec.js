@@ -130,9 +130,9 @@ test.describe('V4 : « + » = choix du type de publication', () => {
   });
 });
 
-test.describe('V4 : upvote des publications', () => {
+test.describe('V4 : like des publications', () => {
 
-  test('le bouton like devient un upvote (▲), compteur et état actif', async ({ page }) => {
+  test('le bouton like est un cœur (♥), compteur et état actif', async ({ page }) => {
     const errs = consoleWatch(page);
     await withSocial(page);
     await seed(page, {});
@@ -141,9 +141,10 @@ test.describe('V4 : upvote des publications', () => {
 
     await openFeed(page);
     const up = page.locator('#feedList [data-act="like"]').first();
-    await expect(up).toContainText('Upvote');
-    await expect(up.locator('.post-act-ico')).toHaveText('▲');
-    await expect(up).toHaveAttribute('aria-label', 'Upvote');
+    /* G : icônes seules — le libellé vit dans aria-label */
+    await expect(up).toHaveAttribute('aria-label', 'Like');
+    await expect(up.locator('.post-act-ico')).toHaveText('♥');
+    await expect(up.locator('[data-n="likes"]')).toHaveText('0');
 
     const n = up.locator('[data-n="likes"]');
     await expect(n).toHaveText('0');

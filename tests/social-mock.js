@@ -69,19 +69,22 @@ function story(i, authorId, over){
 }
 
 function mockApi(page, opts){
-  const st = Object.assign({
-    posts: [post(0), post(1)],
-    people: [ANA_P, ME_P],
-    comments: [],
-    follows: [],
-    likes: [],
-    convos: [],
-    msgs: [],
-    stories: [],
-    story_views: [],
-    notes: [],
-    seq: 0
-  }, opts || {});
+    const st = Object.assign({
+      posts: [post(0), post(1)],
+      people: [ANA_P, ME_P],
+      comments: [],
+      follows: [],
+      likes: [],
+      votes: [],
+      reposts: [],
+      saves: [],
+      convos: [],
+      msgs: [],
+      stories: [],
+      story_views: [],
+      notes: [],
+      seq: 0
+    }, opts || {});
 
   const calls = [];
   const json = (route, body, status) => route.fulfill({
@@ -197,6 +200,57 @@ function mockApi(page, opts){
       const ids = isIn('post_id'); if (ids) rows = rows.filter(l => ids.includes(l.post_id));
       const uq = eq('user_id'); if (uq) rows = rows.filter(l => l.user_id === uq);
       return json(route, rows);
+    }
+
+    /* ---------- post_votes / post_reposts / post_saves (G) ---------- */
+    const ownRows = (arr, key) => {
+      /* POST = upsert sur (user_id, post_id) ; DELETE filtre post_id + user_id */
+      if (method === 'POST'){
+        const body = parseBody();
+        const rest = arr.filter(r => !(r.user_id === body.user_id && r.post_id === body.post_id));
+        rest.push(body);
+        return rest;
+      }
+      if (method === 'DELETE'){
+        const pid = eq('post_id'), uid2 = eq('user_id');
+        return arr.filter(r =>
+          !(r.post_id === pid && (uid2 === null || r.user_id === uid2)));
+      }
+      return null;
+    };
+    if (table === 'post_votes'){
+      const next = ownRows(st.votes, 'vote');
+      if (next){ st.votes = next; return method === 'POST' ? json(route, [], 201) : noContent(route); }
+      let rows = st.votes.slice();
+      const ids = isIn('post_id'); if (ids) rows = rows.filter(r => ids.includes(r.post_id));
+      const uq = eq('user_id'); if (uq) rows = rows.filter(r => r.user_id === uq);
+      return json(route, rows);
+    }
+    if (table === 'post_reposts'){
+      const next = ownRows(st.reposts, 'repost');
+      if (next){ st.reposts = next; return method === 'POST' ? json(route, [], 201) : noContent(route); }
+      let rows = st.reposts.slice();
+      const ids = isIn('post_id'); if (ids) rows = rows.filter(r => ids.includes(r.post_id));
+      const uid3 = isIn('user_id'); if (uid3) rows = rows.filter(r => uid3.includes(r.user_id));
+      const uq = eq('user_id'); if (uq) rows = rows.filter(r => r.user_id === uq);
+      if (u.match(/by:profiles!/)){
+        rows = rows.map(r => {
+          const person = st.people.filter(p => p.id === r.user_id)[0] || {};
+          return Object.assign({}, r, {
+            by: { id: r.user_id, username: person.username || null,
+              display_name: person.display_name || null, avatar_url: person.avatar_url || null }
+          });
+        });
+      }
+      return json(route, applyOrder(rows));
+    }
+    if (table === 'post_saves'){
+      const next = ownRows(st.saves, 'save');
+      if (next){ st.saves = next; return method === 'POST' ? json(route, [], 201) : noContent(route); }
+      let rows = st.saves.slice();
+      const ids = isIn('post_id'); if (ids) rows = rows.filter(r => ids.includes(r.post_id));
+      const uq = eq('user_id'); if (uq) rows = rows.filter(r => r.user_id === uq);
+      return json(route, applyOrder(rows));
     }
 
     /* ---------- comments ---------- */

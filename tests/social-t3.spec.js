@@ -151,9 +151,9 @@ test.describe('T3 : commentaires, follows, filtre du fil', () => {
 
     await openFeed(page);
     await expect(page.locator('#feedList .post')).toHaveCount(2);
-    await expect(page.locator('#feedList .post-act-n').first()).toHaveText('0');
+    await expect(page.locator('#feedList [data-n="comments"]').first()).toHaveText('0');
 
-    await page.locator('#feedList .post-act').first().click();
+    await page.locator('#feedList [data-act="reply"]').first().click();
     await expect(page.locator('#commentsModal')).toBeVisible();
     await expect(page.locator('#commentList .comment-empty')).toHaveText('No comments yet — be the first.');
     await expect(page.locator('#commentSubmit')).toBeDisabled();
@@ -166,7 +166,7 @@ test.describe('T3 : commentaires, follows, filtre du fil', () => {
     await expect(page.locator('#commentList .comment-body')).toHaveText('Nice set, keep the tempo.');
     await expect(page.locator('#commentsSub')).toHaveText('1 comment');
     await expect(page.locator('#commentBody')).toHaveValue('');
-    await expect(page.locator('#feedList .post-act-n').first()).toHaveText('1');
+    await expect(page.locator('#feedList [data-n="comments"]').first()).toHaveText('1');
 
     const insert = api.calls.find(c => c.method === 'POST' && c.url.includes('/rest/v1/comments'));
     expect(insert).toBeTruthy();
@@ -195,7 +195,7 @@ test.describe('T3 : commentaires, follows, filtre du fil', () => {
 
     await openFeed(page);
     await expect(page.locator('#feedList [data-n="comments"]').nth(1)).toHaveText('1');
-    await expect(page.locator('#feedList [data-act="reply"] .post-act-l').nth(1)).toHaveText('Comment');
+    await expect(page.locator('#feedList [data-act="reply"]').nth(1)).toHaveAttribute('aria-label', 'Comments');
     expect(api.calls.some(c => c.url.includes('/rest/v1/feed_counts'))).toBe(true);
 
     await page.locator('#feedList [data-act="reply"]').nth(1).click();
