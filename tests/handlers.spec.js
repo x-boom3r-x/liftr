@@ -11,7 +11,7 @@ const JS_FILES = [
   'js/stats.js', 'js/comments.js', 'js/motivation.js', 'js/install.js',
   'js/share.js', 'js/idb.js', 'js/export.js',
   'js/social/config.js', 'js/social/client.js', 'js/social/gate.js',
-  'js/social/auth.js', 'js/social/feed.js', 'js/social/comments.js',
+  'js/social/auth.js', 'js/social/attach.js', 'js/social/feed.js', 'js/social/comments.js',
   'js/social/people.js', 'js/social/shell.js', 'js/social/profile.js',
   'js/social/search.js', 'js/social/inbox.js', 'js/social/index.js'
 ];
@@ -148,7 +148,7 @@ test('service worker : le JS vient du réseau même si le cache est pollué', as
   expect(seen, 'JS servi depuis le réseau, pas depuis le cache pollué').toBe(build);
 });
 
-/* Les modules sociaux ajout�s au fil des iterations ont ete oublies une fois
+/* Les modules sociaux ajout�s au fil des iterations ont ete oublies une fois
    dans la liste de pre-cache : l'app cassait hors-ligne. On verifie que tout
    ce qui existe sur disque est dans ASSETS. */
 test('service worker : ASSETS precache tous les modules sociaux', () => {

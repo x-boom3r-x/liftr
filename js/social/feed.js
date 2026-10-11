@@ -6,6 +6,7 @@ import { sb } from './client.js';
 import { openImageEditor } from './editor.js';
 import { filterPrivatePosts } from './privacy.js';
 import { storyRingClass } from './rings.js';
+import { sanitizeAttachment, shareEmbedHtml } from './attach.js';
 import {
   withMusic, musicChipForBody, hydrateMusic,
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
@@ -17,7 +18,7 @@ const THUMB_EDGE = 320;      /* côté max de la vignette (blur-up) */
 const FULL_Q = 0.85;
 const THUMB_Q = 0.8;
 const MAX_BYTES = 12 * 1024 * 1024;
-const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,created_at,deleted_at,author:profiles!posts_author_id_fkey(id,username,display_name,avatar_url)';
+const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,attachment,created_at,deleted_at,author:profiles!posts_author_id_fkey(id,username,display_name,avatar_url)';
 
 let posts = [];
 let hasMore = false;
@@ -25,6 +26,7 @@ let counts = {};          /* post_id -> { c, l, liked, v, rv, r, reposted, saved
 let reposts = [];         /* reposts récents de mon crew + moi, fusionnés au fil */
 let busy = {};            /* verrou par post/action : anti double-tap réseau */
 let repostDraft = null;   /* { id, post } : « Repost with comment » en cours */
+let shareDraft = null;    /* attachement (H) en attente dans le composeur */
 let scope = 'all';        /* 'all' | 'following' | 'top' */
 let noFollows = false;    /* filtre « Following » sans aucun abonnement */
 let loading = false;
@@ -152,7 +154,7 @@ export function updateComposer(){
   const btn = el('postSubmit');
   const count = el('postCount');
   if (count) count.textContent = value.length > 1600 ? (value.length + ' / 2000') : '';
-  if (btn) btn.disabled = sending || !(value.trim() || photo);
+  if (btn) btn.disabled = sending || !(value.trim() || photo || shareDraft);
 }
 
 function showPostError(msg){
@@ -235,6 +237,8 @@ function clearComposer(){
   if (ta) ta.value = '';
   clearPhoto();
   clearComposerMusic('post');
+  shareDraft = null;
+  paintShareBanner();
   showPostError('');
   updateComposer();
 }
@@ -545,6 +549,41 @@ function paintRepostBanner(){
   box.classList.remove('hidden');
 }
 
+/* Bannière H : aperçu de la carte partagée (PR / séance / programme)
+   dans le composeur, avec annulation. */
+function paintShareBanner(){
+  const box = el('shareBanner');
+  if (!box) return;
+  if (!shareDraft){ box.classList.add('hidden'); box.innerHTML = ''; return; }
+  box.innerHTML = shareEmbedHtml(shareDraft) +
+    '<button type="button" class="chip share-banner-x" onclick="cancelShareDraft()" aria-label="Cancel share">✕</button>';
+  box.classList.remove('hidden');
+}
+
+/* Ouvre le Feed (vue Home) avec le composeur pré-rempli d'un
+   attachement — appelé depuis les écrans PR / séance / programme.
+   showTab('feed') ramène la racine au fil (fix G) et setSView('home')
+   rafraîchit le feed via openFeed(). */
+export function openShareComposer(att){
+  const a = sanitizeAttachment(att);
+  if (!a){ toast('This cannot be shared.'); return false; }
+  if (typeof window.showTab === 'function') window.showTab('feed');
+  else if (typeof window.setSView === 'function') window.setSView('home');
+  shareDraft = a;
+  paintShareBanner();
+  updateComposer();
+  const ta = el('postBody');
+  if (ta){ try { ta.focus({ preventScroll: true }); } catch(e){ try { ta.focus(); } catch(e){} } }
+  return true;
+}
+
+export function cancelShareDraft(){
+  shareDraft = null;
+  paintShareBanner();
+  updateComposer();
+  return true;
+}
+
 /* ------------------------------ partage ---------------------------- */
 export function sharePost(id){
   const p = postOf(id);
@@ -756,6 +795,9 @@ export function postCardHtml(p){
   const parts = musicChipForBody(p.body || '');
   const body = parts.text ? '<div class="post-body">' + esc(parts.text) + '</div>' : '';
   const music = parts.html ? '<div class="post-music">' + parts.html + '</div>' : '';
+  /* carte partagée (H) : rendue uniquement si l'attachement passe la
+     validation de réception, sinon le post s'affiche sans carte */
+  const embed = p.attachment ? shareEmbedHtml(p.attachment) : '';
   const kind = (p.kind && p.kind !== 'text' && p.kind !== 'photo')
     ? '<span class="chip chip-type post-kind">' + esc(p.kind.toUpperCase()) + '</span>' : '';
   const k = counts[p.id] || blankCounts();
@@ -816,7 +858,7 @@ export function postCardHtml(p){
         '</div>' +
       '</div>' + kind + more +
     '</div>' +
-    body + music + statStrip(p) + media + foot +
+    body + music + embed + statStrip(p) + media + foot +
     '</article>';
 }
 
@@ -1019,7 +1061,9 @@ export async function submitPost(){
   }
   const track = getComposerMusic('post');
   if (track && track.id) body = withMusic(body.slice(0, 1990), track.id, track);
-  if (!body && !photo) return false;
+  /* attachement H : revalidé à l'envoi (le draft peut avoir vieilli) */
+  const att = shareDraft ? sanitizeAttachment(shareDraft) : null;
+  if (!body && !photo && !att) return false;
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (sending) return false;
   if (!gateOk()){ toast('Sign in and go online to post.'); return false; }
@@ -1034,16 +1078,28 @@ export async function submitPost(){
   showPostError('');
   if (btn){ btn.disabled = true; btn.textContent = 'Posting…'; }
   try {
-    const kind = photo ? 'photo' : 'text';
+    const kind = att ? att.type : (photo ? 'photo' : 'text');
     const paths = photo ? await uploadPhoto(c, photo) : { image_path: null, thumb_path: null };
 
-    const { data, error } = await c.from('posts').insert({
+    const payload = {
       author_id: user.id,
       kind: kind,
       body: body,
       image_path: paths.image_path,
-      thumb_path: paths.thumb_path
-    }).select(POST_SELECT);
+      thumb_path: paths.thumb_path,
+      attachment: att
+    };
+    let res = await c.from('posts').insert(payload).select(POST_SELECT);
+    let error = res.error, data = res.data;
+    if (error && att && /attachment/i.test(error.message || '')){
+      /* migration v5 absente : publication best-effort sans la carte
+         partagée (même philosophie que les reposts en G) */
+      delete payload.attachment;
+      payload.kind = photo ? 'photo' : 'text';
+      res = await c.from('posts').insert(payload).select(POST_SELECT);
+      error = res.error; data = res.data;
+      if (!error) toast('Posted — the shared card will appear once the update is live.');
+    }
     if (error) throw new Error(error.message || 'Could not publish your post.');
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error('Could not publish your post.');

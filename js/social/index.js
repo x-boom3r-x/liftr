@@ -15,11 +15,15 @@ import {
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
   toggleLike, vote, toggleSave, repostPost, openRepostSheet,
-  startRepostQuote, cancelRepostQuote,
+  startRepostQuote, cancelRepostQuote, openShareComposer, cancelShareDraft,
   sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu,
   openPostTypeSheet, pickPostMusic
 } from './feed.js';
+import {
+  sanitizeAttachment, shareEmbedHtml, importSharedProgram,
+  prAttachment, sessionAttachment, programAttachment
+} from './attach.js';
 import {
   openComments, closeComments, submitComment, updateCommentComposer,
   initComments, resetComments
@@ -81,10 +85,12 @@ Object.assign(window, {
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
   toggleLike, vote, toggleSave, repostPost, openRepostSheet,
-  startRepostQuote, cancelRepostQuote,
+  startRepostQuote, cancelRepostQuote, openShareComposer, cancelShareDraft,
   sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu,
   openPostTypeSheet, pickPostMusic,
+  sanitizeAttachment, shareEmbedHtml, importSharedProgram,
+  prAttachment, sessionAttachment, programAttachment,
   openComments, closeComments, submitComment, updateCommentComposer,
   initComments, resetComments,
   openPeople, closePeople, toggleFollow, isFollowed, mergeFollows,

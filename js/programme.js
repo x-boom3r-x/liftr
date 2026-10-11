@@ -51,6 +51,8 @@ function renderProgramme(){
           '</div>' +
         '</div>' +
         '<div class="card-actions">' + typeChip(d.type) +
+          '<span class="icon-btn" onclick="event.stopPropagation();shareProgramme()" ' +
+          'title="Share program" aria-label="Share program">↗</span>' +
           '<span class="icon-btn" onclick="event.stopPropagation();renamePrompt(\'' + d.id + '\')" title="Rename">✎</span>' +
           '<span class="icon-btn danger" onclick="event.stopPropagation();deleteDay(\'' + d.id + '\')" title="Delete">×</span>' +
         '</div>' +
@@ -65,6 +67,14 @@ function openNewDay(){
   renderTypePicker('dayTypePicker', newDayType, t => { newDayType = t; });
   openModal('newDayModal');
   setTimeout(() => $('dayNameInput').focus(), 120);
+}
+
+/* H : partager le programme — ouvre le composer du Feed pré-rempli
+   (attachement program, CTA « Import this program » côté réception) */
+function shareProgramme(){
+  const att = (typeof window.programAttachment === 'function') ? window.programAttachment() : null;
+  if (!att){ toast('Add a program day first.'); return false; }
+  return (typeof window.openShareComposer === 'function') && window.openShareComposer(att);
 }
 
 function renderTypePicker(elId, current, onPick){
@@ -395,5 +405,5 @@ Object.assign(window, {
   openNewDay, renderTypePicker, saveNewDay, renamePrompt, applyDayName, deleteDay,
   openDayDetail, renameDay, renderDayExercises, exerciseHistoryLine, libEntries,
   renderLibrary, onLibSearch, toggleLibExercise, addExercise, renameExercise,
-  deleteExercise, deleteCurrentDay, toggleCardio
+  deleteExercise, deleteCurrentDay, toggleCardio, shareProgramme
 });

@@ -113,9 +113,9 @@ function downloadShare(){
   toast('File downloaded ✓');
 }
 
-function openImport(code){
+function openImport(code, forceMerge){
   if (code != null) $('importCode').value = code;
-  previewImport();
+  previewImport(forceMerge);
   openModal('importModal');
 }
 function onImportFile(input){
@@ -125,7 +125,8 @@ function onImportFile(input){
   r.onload = () => { $('importCode').value = String(r.result || ''); previewImport(); };
   r.readAsText(f);
 }
-function previewImport(){
+function previewImport(forceMerge){
+  forceMerge = forceMerge === true;
   const hint = $('importHint'), prev = $('importPreview'), btn = $('importBtn');
   pendingImport = null;
   btn.disabled = true;
@@ -145,7 +146,10 @@ function previewImport(){
   const exos = new Set();
   p.programme.forEach(d => d.exercises.forEach(e => exos.add(e.name.toLowerCase())));
   const localN = (DB.programme || []).length;
-  importMode = localN ? 'merge' : 'replace';
+  /* un import depuis un post partagé (H) n'écrase jamais en silence :
+     le mode par défaut est l'ajout ; le remplacement reste possible
+     mais doit être choisi explicitement dans le picker. */
+  importMode = (forceMerge || localN) ? 'merge' : 'replace';
 
   prev.innerHTML =
     '<div class="preview-card">' +

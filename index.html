@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="54">
+<html lang="en" data-build="55">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -348,6 +348,7 @@
         <div class="crew hidden" id="crewRow" aria-label="Your crew"></div>
 
         <div class="repost-banner hidden" id="repostBanner" aria-live="polite"></div>
+        <div class="repost-banner share-banner hidden" id="shareBanner" aria-live="polite"></div>
 
         <div class="composer" id="composer">
           <div class="composer-top">
@@ -911,6 +912,7 @@
   <div class="liftr-notif-head">
     <span class="liftr-mark">LIFTR</span>
     <span class="liftr-notif-actions">
+      <button class="liftr-refresh hidden" id="liftrShare" onclick="shareSession()" title="Share this session" aria-label="Share this session">↗</button>
       <button class="liftr-refresh" id="liftrChange" onclick="changeLiftrComment()" title="Another comment" aria-label="Another comment">↻</button>
       <button class="liftr-refresh" id="liftrClose" onclick="hideSessionComment()" title="Close" aria-label="Close">✕</button>
     </span>

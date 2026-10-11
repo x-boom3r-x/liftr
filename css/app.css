@@ -1121,6 +1121,39 @@ button{background:none;border:none;cursor:pointer}
 .repost-banner-ico{color:var(--green);font-weight:800;flex:none}
 .repost-banner-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* ---------- H : carte de partage (exploit / séance / programme) ---------- */
+.share-embed{
+  margin-top:11px;padding:12px;border-radius:14px;
+  background:var(--surface2);border:1px solid var(--border);
+}
+.share-embed.pr{
+  border-color:rgba(255,214,10,.35);
+  background:linear-gradient(135deg,rgba(255,214,10,.10),rgba(255,214,10,.02)),var(--surface2);
+}
+.share-embed.program{border-color:rgba(191,90,242,.35)}
+.se-head{
+  display:flex;align-items:center;gap:8px;
+  font-size:.66rem;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text3);
+}
+.se-title{font-size:1rem;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.se-big{
+  font-size:1.9rem;font-weight:850;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--primary);margin-top:4px;
+}
+.se-big small{font-size:.9rem;color:var(--text2);font-weight:700;margin-left:4px}
+.se-meta{font-size:.76rem;color:var(--text2);margin-top:4px}
+.se-rows{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.se-row{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--text2)}
+.se-row b{color:var(--text);font-weight:700}
+.se-cta{margin-top:12px;width:100%}
+/* aperçu dans le composeur : la carte tient la largeur, ✕ en coin */
+.share-banner{position:relative;display:block;background:transparent;border:none;padding:0;margin:0 0 12px}
+.share-banner .share-embed{margin-top:0}
+.share-banner-x{position:absolute;right:10px;top:10px}
+/* partage depuis une carte record (Stats) */
+.pr-share{flex:none;font-size:.85rem;opacity:.75}
+
 /* ---------- en-t�te post dans les commentaires ---------- */
 .cpost{
   background:var(--surface2);border:1px solid var(--border);

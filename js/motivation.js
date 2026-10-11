@@ -173,6 +173,7 @@ const NOTIF_MS = 15000;
 let _sessionNote = null;
 let _notifTimer = null;
 let _notifSummary = '';
+let _notifSessionId = null;   /* H : partage de la séance depuis la notif */
 
 function lastLiftr(){ return _sessionNote; }
 
@@ -180,6 +181,17 @@ function hideSessionComment(){
   const el = $('liftrNotif');
   if (el) el.classList.remove('show');
   if (_notifTimer){ clearTimeout(_notifTimer); _notifTimer = null; }
+  _notifSessionId = null;
+}
+
+/* H : partager la séance terminée — ouvre le composer du Feed pré-rempli */
+function shareSession(){
+  if (!_notifSessionId) return false;
+  const att = (typeof window.sessionAttachment === 'function')
+    ? window.sessionAttachment(_notifSessionId) : null;
+  if (!att){ toast('This session cannot be shared yet.'); return false; }
+  hideSessionComment();
+  return (typeof window.openShareComposer === 'function') && window.openShareComposer(att);
 }
 
 function changeLiftrComment(){
@@ -208,7 +220,10 @@ function showSessionComment(session, prsHit, summary){
   const c = pickComment(filter);
   _sessionNote = c ? { id: c.id, filter: filter, comment: c.comment } : null;
   _notifSummary = summary || '';
+  _notifSessionId = (session && session.id) ? session.id : null;
   renderNotif();
+  const shareBtn = $('liftrShare');
+  if (shareBtn) shareBtn.classList.toggle('hidden', !_notifSessionId);
 
   const el = $('liftrNotif');
   if (el){
@@ -222,5 +237,5 @@ function showSessionComment(session, prsHit, summary){
 
 Object.assign(window, {
   pickComment, detectAfterSession, showSessionComment,
-  changeLiftrComment, hideSessionComment, lastLiftr, isoDiff
+  changeLiftrComment, hideSessionComment, lastLiftr, isoDiff, shareSession
 });

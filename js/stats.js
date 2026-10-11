@@ -334,7 +334,10 @@ function prRowsHtml(){
       '</div><div class="pr-meta">' + fmtShort(pr.date) + '</div></div>' +
       '<div class="pr-right">' + badge +
       '<div class="pr-value">' + fmtNum(pr.weight) + '<span class="pr-unit">kg × ' + pr.reps +
-      (pr.assisted ? '+' + pr.assisted + 'A' : '') + '</span></div></div></div>';
+      (pr.assisted ? '+' + pr.assisted + 'A' : '') + '</span></div>' +
+      '<button type="button" class="icon-btn pr-share" data-key="' + esc(encodeURIComponent(pr.key)) + '" ' +
+      'onclick="event.stopPropagation();sharePrFromCard(this)" ' +
+      'title="Share this record" aria-label="Share this record">↗</button></div></div>';
   }).join('');
 }
 
@@ -343,6 +346,16 @@ function prSectionHtml(showHint){
   if (rows) return '<div class="section-title" style="font-size:.95rem;margin:16px 0 10px">Personal records</div>' + rows;
   if (showHint) return dashHint('No personal records yet — lift a new best to set one.');
   return '';
+}
+
+/* H : partager un record depuis sa carte — ouvre le composer du Feed
+   pré-rempli (attachement pr, validation + rendu dans social/attach.js) */
+function sharePrFromCard(btn){
+  const key = decodeURIComponent((btn && btn.getAttribute && btn.getAttribute('data-key')) || '');
+  if (!key) return false;
+  const att = (typeof window.prAttachment === 'function') ? window.prAttachment(key) : null;
+  if (!att){ toast('This record cannot be shared yet.'); return false; }
+  return (typeof window.openShareComposer === 'function') && window.openShareComposer(att);
 }
 
 /* --- 3. Progression par exercice --- */
@@ -797,5 +810,6 @@ Object.assign(window, {
   openSessionDetail, histDelBtn, gotoDay, deleteHistoryEntry, renderStats,
   agoOf, setWeightRange, logWeight,
   stepWeightInput, weightStreak, weightTodayKg,
-  setStatsEx, setStatsPeriod, setStatsVol, setStatsMetric
+  setStatsEx, setStatsPeriod, setStatsVol, setStatsMetric,
+  sharePrFromCard
 });
