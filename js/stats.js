@@ -161,7 +161,8 @@ function exSeriesWin(key, from, to){
       if (+s.reps > r) r = +s.reps;
       vol += volumeOf(s);
     });
-    out.push({ date: h.date, e1rm: e1, weight: w, reps: r, vol: vol, best: best });
+    /* raw = les sets valides du meilleur set : requis par pNextTarget (I3 cible) */
+    out.push({ date: h.date, e1rm: e1, weight: w, reps: r, vol: vol, best: best, raw: sets });
   });
   out.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
   if (!out.length){
@@ -172,7 +173,7 @@ function exSeriesWin(key, from, to){
       if (a >= from && a < to) out.push({
         date: pr.date, e1rm: e1rmOf(pr), weight: w,
         reps: r, vol: w * (r + s),
-        best: { weight: w, reps: r, assisted: s }
+        best: { weight: w, reps: r, assisted: s }, raw: [{ weight: w, reps: r, assisted: s }]
       });
     }
   }
@@ -272,11 +273,56 @@ function exChipsHtml(list){
   ).join('') + '</div>';
 }
 
-/* --- 1. Performance principale --- */
+/* --- 3. Force : courbe 1RM estimé + record + prochaine cible + plateau --- */
+function forceCardHtml(list, sessions, today){
+  const ex = pickEx(list);
+  if (!ex) return '';
+  const series = exSeriesWin(ex.key, 0, statPeriod);
+  const periods = '<div class="range-picker">' + PERF_PERIODS.map(p =>
+    '<button class="range-opt' + (statPeriod === p[0] ? ' on' : '') + '" data-per="' + p[0] + '">' + p[1] + '</button>'
+  ).join('') + '</div>';
+
+  let body;
+  if (!series.length){
+    body = dashHint('No data over ' + periodLabel(statPeriod).toLowerCase() + ' for this exercise.');
+  } else {
+    const last = series[series.length - 1];
+    const best = series.reduce((a, b) => b.e1rm > a.e1rm ? b : a);
+    const hist = pExerciseHistory(sessions, ex.name);
+    const plateau = pDetectPlateau(hist);
+    const tgt = pNextTarget(hist.length ? hist[hist.length - 1].raw : (last.best ? [last.best] : []), {});
+    const cells = [
+      '<div class="stat-box"><div class="stat-value" style="color:var(--primary)">' + fmtKg(last.e1rm) +
+        '</div><div class="stat-label">1RM estimated</div></div>',
+      '<div class="stat-box"><div class="stat-value">' + fmtKg(best.e1rm) +
+        '</div><div class="stat-label">best</div></div>',
+      tgt ? '<div class="stat-box"><div class="stat-value" style="color:var(--blue)">' + fmtKg(tgt.kg) +
+        '<span class="stat-unit">×' + tgt.reps + '</span></div><div class="stat-label">next target</div></div>'
+        : '<div class="stat-box"><div class="stat-value">—</div><div class="stat-label">next target</div></div>'
+    ].join('');
+    body = '<div class="stats-grid force-cells" style="margin:0">' + cells + '</div>' +
+      lineChart(series.map(p => ({ date: p.date, v: p.e1rm }))) +
+      chartAxis(series[0].date, last.date) +
+      '<div class="force-meta">' +
+      (plateau.plateau
+        ? '<span class="force-pill warn">plateau ' + plateau.gainPct + ' %</span>'
+        : '<span class="force-pill good">progressing</span>') +
+      (tgt ? '<span class="force-pill blue">target ' + fmtKg(tgt.kg) + ' kg × ' + tgt.reps +
+        ' (' + (tgt.why === 'top_of_range' ? 'add load' : 'add reps') + ')</span>' : '') +
+      '</div>';
+  }
+
+  return '<div class="card force-card"><div class="card-header">' +
+    '<div class="card-title">Force</div>' + periods + '</div>' +
+    exChipsHtml(list) +
+    '<div class="perf-label">' + esc(ex.name) + '</div>' + body + '</div>';
+}
+
+/* --- 3b. Performance : e1RM + variation % (carte d'origine, régression) --- */
 function perfCardHtml(list){
   const ex = pickEx(list);
   if (!ex) return '';
-  const series = exSeries(ex.key, statPeriod);
+  const series = exSeriesWin(ex.key, 0, statPeriod);
   const periods = '<div class="range-picker">' + PERF_PERIODS.map(p =>
     '<button class="range-opt' + (statPeriod === p[0] ? ' on' : '') + '" data-per="' + p[0] + '">' + p[1] + '</button>'
   ).join('') + '</div>';
@@ -539,6 +585,138 @@ function muscleCardHtml(){
 }
 
 /* ==================================================================
+   CHANTIER I — Progression intelligente
+   Ordre : Insights · Cette semaine · Force · Volume · Séries/muscle ·
+           ACWR · Corps (EMA) · Records · Cardio · By session · Récent
+   Moteur de calculs purs dans js/progress.js (mémoïsé pDataset()).
+   ================================================================== */
+
+/* --- 1. Insights : 3 à 5 cartes triées par sévérité + action --- */
+function insightsCardHtml(sessions, weights, today){
+  const list = pInsights(sessions, weights, today).slice(0, 5);
+  if (!list.length){
+    return '<div class="card"><div class="card-title">Insights</div>' +
+      dashHint('Not enough data for advice yet — log 2–3 more sessions.') + '</div>';
+  }
+  const rows = list.map(it => {
+    const act = it.action
+      ? '<div class="ins-act">' + esc(it.action) + '</div>' : '';
+    return '<div class="ins-card ' + esc(it.severity) + '" data-kind="' + esc(it.kind) + '">' +
+      '<div class="ins-head"><span class="ins-dot" aria-hidden="true"></span>' +
+      '<span class="ins-title">' + esc(it.title) + '</span></div>' +
+      '<div class="ins-detail">' + esc(it.detail) + '</div>' + act +
+    '</div>';
+  }).join('');
+  return '<div class="card ins-list-card"><div class="card-header">' +
+    '<div class="card-title">Insights</div>' +
+    '<div class="card-sub" style="margin:0">coaching heuristics</div></div>' +
+    '<div class="ins-list">' + rows + '</div></div>';
+}
+
+/* --- 2. This week : sessions done/planned, volume, delta vs 4w avg, streak --- */
+function weekCardHtml(sessions, today){
+  const wk = pWeekStart(today);
+  const week = sessions.filter(s => pWeekStart(s.date) === wk);
+  const vol = week.reduce((n, s) => n + pSessionLoad(s), 0);
+
+  /* moyenne hebdo des 4 semaines précédentes */
+  let sum4 = 0;
+  for (let i = 1; i <= 4; i++){
+    const a = pAddDays(pAddDays(wk, -7 * i), 0), b = pAddDays(pAddDays(wk, -7 * i), 7);
+    sum4 += sessions.filter(s => s.date >= a && s.date < b).reduce((n, s) => n + pSessionLoad(s), 0);
+  }
+  const avg4 = sum4 / 4;
+  const delta = avg4 > 0 ? Math.round(((vol - avg4) / avg4) * 100) : null;
+  const c = pConsistency(sessions, today, 3, 4);
+  const cells = [
+    '<div class="stat-box"><div class="stat-value">' + week.length +
+      '<span class="stat-unit">/3</span></div><div class="stat-label">sessions</div></div>',
+    '<div class="stat-box"><div class="stat-value" style="color:var(--violet)">' + fmtVolume(vol) +
+      '<span class="stat-unit">kg</span></div><div class="stat-label">volume</div></div>',
+    '<div class="stat-box"><div class="stat-value" style="color:' +
+      (delta == null ? 'var(--muted)' : delta >= 0 ? 'var(--green)' : 'var(--red)') + '">' +
+      (delta == null ? '—' : (delta > 0 ? '+' : '') + delta + '%') +
+      '</div><div class="stat-label">vs 4w avg</div></div>',
+    '<div class="stat-box"><div class="stat-value" style="color:var(--primary)">🔥' + c.streakWeeks +
+      '</div><div class="stat-label">week streak</div></div>'
+  ].join('');
+  return '<div class="card week-card"><div class="card-title">This week</div>' +
+    '<div class="stats-grid" style="margin:0">' + cells + '</div>' +
+    '<div class="card-sub" style="margin-top:8px">' + c.done + '/' + c.planned +
+      ' sessions over 4 weeks (' + c.adherencePct + ' %)</div></div>';
+}
+
+
+/* I4 — séries dures / semaine / muscle avec bande cible 10–20 (THRESHOLDS) */
+function muscleSetsCardHtml(sessions, today){
+  const sets = pWeeklySetsByMuscle(sessions, today);
+  const rows = MUSCLE_BUCKETS
+    .map(b => ({ name: b[0], n: b[1].reduce((t, g) => t + (sets[g] || 0), 0) }))
+    .filter(r => r.n > 0)
+    .sort((a, b) => b.n - a.n);
+  if (!rows.length) return '';
+  const maxScale = Math.max(20, rows[0].n);
+  const body = rows.map(r => {
+    const cls = pClassifySets(r.n);
+    const pct = Math.min(100, Math.round((r.n / maxScale) * 100));
+    return '<div class="muscs-row ' + cls + '">' +
+      '<span class="muscs-label">' + r.name + '</span>' +
+      '<span class="muscs-track"><i style="width:' + pct + '%"></i></span>' +
+      '<span class="muscs-n">' + r.n + '<span class="muscs-of">/10–20</span></span>' +
+    '</div>';
+  }).join('');
+  return '<div class="card muscs-card"><div class="card-title">Hard sets by muscle</div>' +
+    '<div class="card-sub">hard sets this week · target band 10–20</div>' +
+    '<div class="muscs-list">' + body + '</div></div>';
+}
+
+/* --- 5. Load & recovery : ACWR gauge (indicative, not a diagnosis) --- */
+function acwrCardHtml(sessions, today){
+  const a = pAcwr(sessions, today);
+  const zoneTxt = { optimal: 'optimal zone', high: 'high', danger: 'very high',
+    low: 'low', unknown: 'not enough data' };
+  const color = { optimal: 'var(--green)', high: 'var(--orange)', danger: 'var(--red)',
+    low: 'var(--blue)', unknown: 'var(--muted)' }[a.zone];
+  const ratio = a.ratio == null ? '—' : a.ratio.toFixed(2);
+  return '<div class="card acwr-card"><div class="card-title">Load &amp; recovery</div>' +
+    '<div class="acwr-main"><span class="acwr-val" style="color:' + color + '">' + ratio + '</span>' +
+    '<span class="acwr-zone" style="color:' + color + '">' + zoneTxt[a.zone] + '</span></div>' +
+    '<div class="acwr-bar" role="img" aria-label="ACWR ' + ratio + '">' +
+      '<span class="acwr-fill" style="width:' +
+      (a.ratio == null ? 0 : Math.min(100, Math.round((a.ratio / 1.6) * 100))) + '%;background:' + color + '"></span>' +
+    '</div>' +
+    '<div class="card-sub">acute 7 d: ' + a.acute + ' · chronic: ' + a.chronic +
+      ' · indicative, not medical advice</div></div>';
+}
+
+/* --- 6. Body : smoothed weight (EMA) + kg/week slope + nutrition goal --- */
+function bodyCardHtml(weights, sessions, today){
+  const goal = pNutriGoal();
+  const gtxt = goal.kcal > 0
+    ? '<div class="card-sub">Nutrition goal: ' + Math.round(goal.kcal) + ' kcal/day' +
+      (goal.type ? ' · ' + esc(goal.type) : '') + '</div>'
+    : '<div class="card-sub">no Nutrition goal set</div>';
+  if (weights.length < 2){
+    return '<div class="card body-card"><div class="card-title">Body</div>' +
+      dashHint('Add at least 2 weigh-ins to see the smoothed trend.') + gtxt + '</div>';
+  }
+  const w = pWeightTrend(weights);
+  const pts = w.points.map(p => ({ date: p.date, v: p.v }));
+  const cls = w.kgPerWeek > 0.02 ? 'up' : w.kgPerWeek < -0.02 ? 'down' : 'flat';
+  return '<div class="card body-card"><div class="card-title">Body</div>' +
+    '<div class="stats-grid body-cells" style="margin:0">' +
+      '<div class="stat-box"><div class="stat-value">' + fmtNum(w.current) +
+        '<span class="stat-unit">kg</span></div><div class="stat-label">smoothed weight</div></div>' +
+      '<div class="stat-box"><div class="stat-value ' + cls + '">' +
+        (w.kgPerWeek > 0 ? '+' : '') + w.kgPerWeek +
+        '</div><div class="stat-label">kg / week</div></div>' +
+    '</div>' +
+    lineChart(pts, 'var(--blue)') + chartAxis(pts[0].date, pts[pts.length - 1].date) +
+    '<div class="card-sub">exponential moving average (EMA) over ' + pts.length +
+      ' weigh-ins — water/salt noise is filtered out</div>' + gtxt + '</div>';
+}
+
+/* ==================================================================
    POIDS CORPOREL
    ================================================================== */
 function weightPoints(days){
@@ -718,7 +896,6 @@ function bindStats(){
 
 function renderStats(){
   const history = DB.history || [];
-  const hasStrength = history.some(h => (h.exercises || []).some(e => (e.sets || []).some(s => !s.cardio)));
   const list = statsExList();
   const prs = Object.keys(DB.prs || {}).length;
 
@@ -730,13 +907,19 @@ function renderStats(){
   if (!history.length && !prs){
     html += dashEmpty();
   } else {
+    const ds = pDataset();
+    const today = todayISO();
+    html += insightsCardHtml(ds.sessions, ds.weights, today);
+    html += weekCardHtml(ds.sessions, today);
+    html += forceCardHtml(list, ds.sessions, today);
     html += perfCardHtml(list);
-    html += prSectionHtml(list.length > 0);
     html += progCardHtml(list);
-    if (hasStrength || history.some(h => h.volume)){
-      html += volCardHtml();
-      html += muscleCardHtml();
-    }
+    html += volCardHtml();
+    html += muscleSetsCardHtml(ds.sessions, today);
+    html += muscleCardHtml();
+    html += acwrCardHtml(ds.sessions, today);
+    html += bodyCardHtml(ds.weights, ds.sessions, today);
+    html += prSectionHtml(list.length > 0);
   }
 
   /* cardio cumulé (compact, seulement s'il existe) */
@@ -811,5 +994,5 @@ Object.assign(window, {
   agoOf, setWeightRange, logWeight,
   stepWeightInput, weightStreak, weightTodayKg,
   setStatsEx, setStatsPeriod, setStatsVol, setStatsMetric,
-  sharePrFromCard
+  sharePrFromCard, muscleMap
 });
