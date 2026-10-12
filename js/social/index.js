@@ -17,7 +17,7 @@ import {
   toggleLike, vote, toggleSave, repostPost, openRepostSheet,
   startRepostQuote, cancelRepostQuote, openShareComposer, cancelShareDraft,
   sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
-  refreshIdentity, deletePost, openPostMenu,
+  refreshIdentity, deletePost, openPostMenu, openSharedPost,
   openPostTypeSheet, pickPostMusic
 } from './feed.js';
 import {
@@ -47,7 +47,7 @@ import {
 } from './search.js';
 import {
   renderInbox, refreshInboxBadge, loadThread, openThread, closeThread,
-  sendMessage, initInbox, resetInbox
+  sendMessage, sharePostInMessage, initInbox, resetInbox
 } from './inbox.js';
 import {
   renderStories, initStories, initStoryViewer, openStoryViewer,
@@ -77,6 +77,7 @@ import {
 import {
   privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts
 } from './privacy.js';
+import { postLinkIn } from './deeplink.js';
 
 Object.assign(window, {
   SOCIAL_CONFIG, SOCIAL_ENABLED, GOOGLE_ENABLED,
@@ -93,7 +94,7 @@ Object.assign(window, {
   startRepostQuote, cancelRepostQuote, openShareComposer, cancelShareDraft,
   sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu,
-  openPostTypeSheet, pickPostMusic,
+  openPostTypeSheet, pickPostMusic, openSharedPost,
   sanitizeAttachment, shareEmbedHtml, importSharedProgram,
   prAttachment, sessionAttachment, programAttachment,
   openComments, closeComments, submitComment, updateCommentComposer,
@@ -108,7 +109,7 @@ Object.assign(window, {
   popProfileLayer,
   openSearch, runSearch, clearSearch, renderSearch, resetSearch,
   renderInbox, refreshInboxBadge, loadThread, openThread, closeThread,
-  sendMessage, initInbox, resetInbox,
+  sendMessage, sharePostInMessage, initInbox, resetInbox,
   renderStories, initStories, initStoryViewer, openStoryViewer,
   closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
   deleteStory, deleteCurrentStory, resetStories, pickStoryMusic, refreshStoryRings,
@@ -136,6 +137,19 @@ function onFollowChanged(uid, isF){
   if (currentSView() === 'profile') safe(renderProfile());
 }
 
+/* Un partage reçu en message (L4) porte « #p=<id> » : le lien doit
+   rester navigable — rejoué à chaque activation de la page (un lien
+   ouvert depuis la messagerie recharge l'onglet). On n'intercepte pas
+   le hash des autres vues : on ne traite que le préfixe #p=. */
+function routeSharedLink(){
+  const key = postLinkIn(location.hash || '');
+  if (!key) return false;
+  if (routeSharedLink.seen === key) return false;   /* déjà traité à ce chargement */
+  routeSharedLink.seen = key;
+  safe(openSharedPost(key));
+  return true;
+}
+
 function initSocial(){
   updateSocialGate();
   initShell();
@@ -151,6 +165,11 @@ function initSocial(){
   initAutoplay();
   initEditor();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
+  window.routeSharedLink = routeSharedLink;
+  window.addEventListener('hashchange', routeSharedLink);
+  /* attente d'une microtask : la session restaure l'état du fil avant
+     la révélation du post (sinon openComments perd la course). */
+  setTimeout(routeSharedLink, 0);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSocial);

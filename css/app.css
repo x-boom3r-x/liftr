@@ -1227,15 +1227,25 @@ button{background:none;border:none;cursor:pointer}
 .bub-row.mine{align-self:flex-end;align-items:flex-end}
 .bub-row.cont{margin-top:-3px}
 .bub{
+  --bub-fg:var(--text1);
   padding:9px 13px;font-size:.87rem;line-height:1.45;white-space:pre-wrap;
   word-break:break-word;border-radius:18px;
   background:var(--surface2);border:1px solid var(--border);
 }
 .bub-row.mine .bub{
+  --bub-fg:#160802;
   background:linear-gradient(135deg,var(--primary),#FF8A5B);
-  border-color:transparent;color:#160802;font-weight:600;
+  border-color:transparent;color:var(--bub-fg);font-weight:600;
 }
 .bub-t{font-size:.63rem;color:var(--text3);margin-top:4px;padding:0 4px}
+/* Lien de post partagé : un vrai bouton, mais lisible comme un lien.
+   On force display:inline pour qu'il reste dans le flux du texte et
+   garde une taille cliquable (sinon flex/bouton = 0 largeur). */
+.bub-link{
+  display:inline;appearance:none;border:0;background:none;padding:0;
+  font:inherit;color:var(--bub-fg,var(--primary));font-weight:600;
+  text-decoration:underline;cursor:pointer;
+}
 .thread-compose{
   display:flex;gap:9px;align-items:flex-end;
   margin-top:10px;padding-top:12px;border-top:1px solid var(--border);

@@ -451,6 +451,37 @@ function postOf(id){
     ((reposts.find(r => r.post && r.post.id === id) || {}).post) || null;
 }
 
+/* Un post partagé en message peut être hors du fil local (L4). */
+async function fetchPost(id){
+  const c = sb();
+  if (!c || !id) return null;
+  const { data, error } = await c.from('posts')
+    .select(POST_SELECT)
+    .eq('id', id)
+    .eq('deleted_at', 'null')
+    .limit(1);
+  if (error || !data || !data.length) return null;
+  const row = data[0];
+  return filterPrivatePosts([row]).length ? row : null;
+}
+
+/* Le destinataire d'un partage (L4) révèle le post : le fil devient la
+   vue courante (le lien doit rester navigable), puis la carte s'ouvre
+   au-dessus des commentaires. Rejoué à chaque envoi via #p=<id>. */
+export async function openSharedPost(id){
+  const key = String(id || '').trim();
+  if (!key) return false;
+  try {
+    if (typeof window.showRoot === 'function') window.showRoot('feed');
+    else if (typeof window.showTab === 'function') window.showTab('feed');
+    if (typeof window.setSView === 'function') window.setSView('home');
+    if (typeof window.openFeed === 'function') await window.openFeed();
+  } catch(e){}
+  const local = postOf(key) || (await fetchPost(key));
+  if (!local){ toast('This post is no longer available.'); return false; }
+  return typeof window.openComments === 'function' ? window.openComments(key, local) : false;
+}
+
 export async function repostPost(id, quote){
   const c = sb();
   const me = (window.socialUser || {}).id;
@@ -611,6 +642,7 @@ export function sharePost(id){
       { label: 'Send in message', fn: () => {
           copyLink();
           if (typeof window.setSView === 'function') window.setSView('inbox');
+          else if (typeof window.renderInbox === 'function') window.renderInbox();
         } },
       { label: 'Cancel' }
     ]);

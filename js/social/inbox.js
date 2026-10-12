@@ -5,6 +5,7 @@ import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
 import { timeAgo } from './feed.js';
 import { pushLayer, popLayer } from '../gestures.js';
+import { postLinkText } from './deeplink.js';
 
 const CONV_SELECT = 'id,user_a,user_b,last_message_at,last_preview,last_sender_id';
 const PROFILE_SELECT = 'id,username,display_name,avatar_url';
@@ -18,6 +19,7 @@ let active = null;     /* conversation courante */
 let activePeer = null;
 let msgs = [];
 let sending = false;
+let pendingShare = null;    /* id de post en attente d'envoi (L4) */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -135,6 +137,20 @@ export async function refreshInboxBadge(){
 }
 
 /* ------------------------------ le fil ----------------------------- */
+/* Une bulle : texte échappé, sauf le lien de post partagé (L4) qui
+   devient un bouton « Open post ». On ne touche qu'à la forme exacte
+   « #p=<id> » — tout autre texte garde ses dièses. */
+function bubbleHtml(text){
+  const raw = String(text ?? '');
+  const parts = raw.split(/(#p=[A-Za-z0-9_-]{1,64})/g);
+  return parts.map(part => {
+    const m = part.match(/^#p=([A-Za-z0-9_-]{1,64})$/);
+    if (!m) return esc(part);
+    return '<button type="button" class="bub-link" data-deeplink-post="' + esc(m[1]) +
+      '" aria-label="Open the shared post">Open post ↗</button>';
+  }).join('');
+}
+
 function paintThread(){
   const box = el('threadList');
   if (!box) return;
@@ -147,7 +163,7 @@ function paintThread(){
     const mine = uuidKey(m.sender_id) === uuidKey(me);
     const sameAsPrev = i > 0 && uuidKey(msgs[i - 1].sender_id) === uuidKey(m.sender_id);
     return '<div class="bub-row' + (mine ? ' mine' : '') + (sameAsPrev ? ' cont' : '') + '">' +
-      '<div class="bub">' + esc(m.body) + '</div>' +
+      '<div class="bub">' + bubbleHtml(m.body) + '</div>' +
       (sameAsPrev ? '' : '<div class="bub-t">' + esc(timeAgo(m.created_at)) + '</div>') +
       '</div>';
   }).join('');
@@ -234,8 +250,18 @@ export async function openThread(peerId){
   if (mt) mt.textContent = activePeer.username ? '@' + activePeer.username : '';
   const body = el('threadBody');
   if (body){ body.value = ''; body.style.height = 'auto'; }
+  /* Un partage de post (L4) ouvre la discussion pré-remplie avec le
+     TEXT « #p=<id> » — c'est le format stocké, jamais du HTML (la
+     textarea n'interprète rien). Le lien s'ajoute au texte déjà saisi
+     (jamais un remplacement). */
+  if (pendingShare && body){
+    body.value = (body.value ? body.value.replace(/\s+$/, '') + '\n' : '') +
+      postLinkText(pendingShare);
+    body.style.height = 'auto';
+  }
+  pendingShare = null;
   const send = el('threadSend');
-  if (send) send.disabled = true;
+  if (send) send.disabled = !body.value.trim();
 
   if (typeof window.setSocialHead === 'function')
     window.setSocialHead('Messages', activePeer.username ? '@' + activePeer.username : '');
@@ -247,6 +273,37 @@ export async function openThread(peerId){
 
   await loadThread();
   if (typeof window.startThreadPoll === 'function') window.startThreadPoll();
+  return true;
+}
+
+/* Partage de post en message (L4) : on choisit l'ami dans le crew,
+   on ouvre la discussion pré-remplie — l'ami n'a qu'à appuyer Send. */
+export async function sharePostInMessage(postId){
+  const key = String(postId || '').trim();
+  if (!key) return false;
+  if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
+  if (!gateOk()){ toast('Sign in and go online to send a message.'); return false; }
+
+  const c = sb();
+  if (!c) return false;
+  /* le crew = les profils que je suis ; ils remplissent le sélecteur */
+  const { data, error } = await c.from('profiles').select(PROFILE_SELECT);
+  if (error || !data || !data.length){
+    toast('No one to send this to yet - follow a lifter first.');
+    return false;
+  }
+
+  const me = meId();
+  const pool = data.filter(p => uuidKey(p.id) !== uuidKey(me));
+  if (!pool.length){ toast('No one to send this to yet - follow a lifter first.'); return false; }
+
+  if (typeof window.openActionSheet !== 'function') return false;
+  const items = pool.slice(0, 12).map(p => ({
+    label: nameOf(p) + (p.username ? '  @' + p.username : ''),
+    fn: () => { pendingShare = key; openThread(p.id); }
+  }));
+  items.push({ label: 'Cancel' });
+  window.openActionSheet('Send in message', items);
   return true;
 }
 
@@ -300,6 +357,15 @@ export function initInbox(){
     list.addEventListener('click', e => {
       const t = e.target && e.target.closest && e.target.closest('[data-peer]');
       if (t) openThread(t.getAttribute('data-peer'));
+    });
+  }
+  const thread = el('threadList');
+  if (thread && !thread.dataset.wired){
+    thread.dataset.wired = '1';
+    thread.addEventListener('click', e => {
+      const t = e.target && e.target.closest && e.target.closest('[data-deeplink-post]');
+      if (t && typeof window.openSharedPost === 'function')
+        window.openSharedPost(t.getAttribute('data-deeplink-post'));
     });
   }
   if (typeof window.initNotes === 'function') window.initNotes();
