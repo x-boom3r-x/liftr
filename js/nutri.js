@@ -1,11 +1,15 @@
 /* ==================================================================
-   NUTRITION (chantier F + J2) — Today / Meals / Foods / Goal
-   Données locales dans DB.nutri : { profile, goal, foods, meals }
-   Rien de réseau : 100 % offline-first, comme le reste du Gym.
-   J2 : profil -> buildPlan (nutrition.js) -> objectif auto,
-   garde-fous floor/rate, recalcul à chaque lecture du poids.
+   NUTRITION (chantier F + J2 + J3) — Today / Meals / Foods / Goal / Week
+   Données locales dans DB.nutri : { profile, goal, foods, meals,
+   favs, recents } — Rien de réseau : 100 % offline-first.
+   J2 : profil -> buildPlan -> objectif auto, garde-fous, poids unique.
+   J3 : ecrans (kcal-card/pbar, builder repas foodId+qty, aliments
+   per-100 g, semaine) — totaux TOUJOURS recalculés à l'affichage.
    ================================================================== */
-import { buildPlan, macroTargets, projectWeight, adaptiveAdjustment } from './nutrition.js';
+import { buildPlan, macroTargets, projectWeight, adaptiveAdjustment,
+  UNITS, nutrientsFor, sumNutrients, recipeToFood, atwaterCheck,
+  progress, weekSummary } from './nutrition.js';
+import { loadFoods, searchFoods, getFood as getDbFood, allFoods, norm } from './foods.js';
 
 function nutriDB(){
   if (!window.DB) return null;
@@ -14,7 +18,15 @@ function nutriDB(){
   if (!n.goal || typeof n.goal !== 'object') n.goal = { kcal: 0, p: 0, c: 0, f: 0 };
   if (!Array.isArray(n.foods)) n.foods = [];
   if (!Array.isArray(n.meals)) n.meals = [];
+  if (!Array.isArray(n.favs)) n.favs = [];
+  if (!Array.isArray(n.recents)) n.recents = [];
   n.meals.forEach(m => { if (!Array.isArray(m.items)) m.items = []; });
+  /* aliments persos legacy (p/c/f) -> noms nutrition.js (per 100 g) */
+  n.foods.forEach(f => {
+    if (f && f.protein === undefined && f.p !== undefined) f.protein = +f.p || 0;
+    if (f && f.carbs === undefined && f.c !== undefined) f.carbs = +f.c || 0;
+    if (f && f.fat === undefined && f.f !== undefined) f.fat = +f.f || 0;
+  });
   return n;
 }
 
@@ -113,68 +125,363 @@ function renderNutrition(tab){
   if (tab === 'nutri-meals') renderNutriMeals();
   if (tab === 'nutri-foods') renderNutriFoods();
   if (tab === 'nutri-goal') renderNutriGoal();
+  if (tab === 'nutri-week') renderNutriWeek();
 }
 
-/* ---- Today : totaux du jour vs objectif ---- */
+/* ---- J3 : resolution foodId -> aliment, totaux recalcules ----
+   Un repas stocke {foodId, qty, unit} (jamais les totaux) : tout est
+   recalcule a l'affichage via nutrition.js, donc corrigible si la
+   base change. Legacy (anciens items sans foodId) : totaux stockes. */
+function nutriDateMinus(n){
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const p = x => String(x).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function findNutriFood(id){
+  const n = nutriDB();
+  if (!n || !id) return null;
+  const c = n.foods.find(f => f.id === id);
+  if (c) return c;
+  return (window.LiftrFoods && LiftrFoods.get(id)) || null;
+}
+function foodsDbReady(){ return !!(window.LiftrFoods && LiftrFoods.all().length); }
+function ensureFoodsDb(tab){
+  if (foodsDbReady() || !window.LiftrFoods) return;
+  LiftrFoods.load().then(() => {
+    if (currentTab === tab && typeof window.renderNutrition === 'function') window.renderNutrition(tab);
+  }).catch(() => {});
+}
+function mealsNeedFoods(meals){
+  return meals.some(m => (m.items || []).some(it =>
+    it.foodId && !findNutriFood(it.foodId) && !foodsDbReady()));
+}
+function nutriItemN(it){
+  if (it.foodId){
+    const f = findNutriFood(it.foodId);
+    if (!f) return null;
+    try { return nutrientsFor(f, +it.qty || 0, it.unit || 'g'); }
+    catch (e){ return null; }
+  }
+  /* legacy : totaux stockes a l'ecriture (ancien modele) */
+  return { kcal: +it.kcal || 0, protein: +it.p || 0, carbs: +it.c || 0,
+    fat: +it.f || 0, fiber: 0, sugar: 0, sodium_mg: 0 };
+}
+function nutriMealTotal(m){
+  const items = m.items || [];
+  let missing = 0;
+  const list = [];
+  items.forEach(it => { const x = nutriItemN(it); if (x) list.push(x); else missing++; });
+  return { n: sumNutrients(list), missing: missing };
+}
+function nutriItemName(it){
+  if (it.foodId){
+    const f = findNutriFood(it.foodId);
+    if (f) return f.name;
+  }
+  return it.name || 'Item';
+}
+function nutriItemKcal(it){ const x = nutriItemN(it); return x ? x.kcal : 0; }
+function nutriQtyLabel(it){
+  if (it.foodId == null) return '';
+  const q = Math.round((+it.qty || 0) * 10) / 10;
+  return q + ' ' + (it.unit || 'g');
+}
+
+/* ---- Today : totaux du jour vs objectif (kcal-card + pbar) ---- */
 function nutriTotalsOf(dateISO){
   const n = nutriDB();
   const t = { kcal: 0, p: 0, c: 0, f: 0 };
   if (!n) return t;
-  n.meals.filter(m => m.date === dateISO).forEach(m => (m.items || []).forEach(it => {
-    t.kcal += +it.kcal || 0; t.p += +it.p || 0; t.c += +it.c || 0; t.f += +it.f || 0;
-  }));
+  n.meals.filter(m => m.date === dateISO).forEach(m => {
+    const x = nutriMealTotal(m).n;
+    t.kcal += x.kcal; t.p += x.protein; t.c += x.carbs; t.f += x.fat;
+  });
   return t;
 }
 
-function nutriBar(label, val, goal, unit){
-  const pct = goal > 0 ? Math.min(100, Math.round(val / goal * 100)) : 0;
-  return '<div class="nutri-bar">' +
-    '<div class="nutri-bar-top"><span>' + esc(label) + '</span>' +
-    '<span class="nutri-bar-num">' + Math.round(val) + ' / ' + Math.round(goal) + ' ' + unit + '</span></div>' +
-    '<div class="nutri-bar-track"><div class="nutri-bar-fill" style="width:' + pct + '%"></div></div>' +
-    '</div>';
+function nutriMacroBar(cls, label, val, goal){
+  const pr = progress(val, goal);
+  const g = Math.round(goal), v = Math.round(val);
+  return '<div class="macro ' + cls + '">' +
+    '<div class="macro-name"><span>' + label + '</span></div>' +
+    '<div class="macro-val">' + v + ' / ' + g + ' g</div>' +
+    '<div class="pbar ' + pr.status + '" role="progressbar" aria-label="' + label + '"' +
+    ' aria-valuemin="0" aria-valuemax="' + g + '" aria-valuenow="' + v + '">' +
+    '<i style="width:' + pr.pct + '%"></i></div></div>';
+}
+
+/* .meal-card : repas + ingredients, reutilise Today (lecture) et Meals (edition) */
+function nutriMealCard(m, editable){
+  const mt = nutriMealTotal(m);
+  const t = mt.n;
+  const rows = (m.items || []).map((it, ii) => {
+    const acts = editable
+      ? '<span class="ing-actions">' +
+        '<button class="icon-btn" onclick="editMealItem(' + esc(JSON.stringify(m.id)) + ',' + ii + ')" aria-label="Edit ingredient">✎</button>' +
+        '<button class="icon-btn" onclick="removeMealItem(' + esc(JSON.stringify(m.id)) + ',' + ii + ')" aria-label="Remove ingredient">✕</button>' +
+        '</span>'
+      : '';
+    const qty = nutriQtyLabel(it);
+    return '<div class="ing-row"><span class="ing-n">' + esc(nutriItemName(it)) + '</span>' +
+      '<span class="ing-g">' + esc(qty) + '</span>' +
+      '<span class="ing-k">' + Math.round(nutriItemKcal(it)) + ' kcal</span>' + acts + '</div>';
+  }).join('');
+  const miss = mt.missing
+    ? '<div class="ing-row"><span class="ing-n">…</span><span class="ing-g"></span><span class="ing-k">…</span></div>'
+    : '';
+  const acts = editable
+    ? '<span class="meal-head-actions">' +
+      '<button class="icon-btn" onclick="editMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Edit meal">✎</button>' +
+      '<button class="icon-btn" onclick="saveMealAsRecipe(' + esc(JSON.stringify(m.id)) + ')" aria-label="Save as recipe">★</button>' +
+      '<button class="icon-btn" onclick="removeMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Delete meal">🗑</button></span>'
+    : '';
+  return '<div class="card meal-card">' +
+    '<div class="meal-head">' +
+    '<div class="meal-title"><div class="meal-name">' + esc(m.name) + '</div>' +
+    '<div class="meal-sub">' + Math.round(t.protein) + 'P · ' + Math.round(t.carbs) + 'C · ' + Math.round(t.fat) + 'F</div></div>' +
+    '<div class="meal-head-right"><span class="meal-kcal">' + Math.round(t.kcal) + ' kcal</span>' + acts + '</div>' +
+    '</div>' + rows + miss + '</div>';
 }
 
 function renderNutriToday(){
   const box = $('nutriToday');
   if (!box) return;
   const n = nutriDB();
-  const t = nutriTotalsOf(todayISO());
+  const date = todayISO();
+  const meals = n.meals.filter(m => m.date === date);
+  if (mealsNeedFoods(meals)) ensureFoodsDb('nutri-today');
   const g = nutriActiveGoal(true);   /* plan du profil recalcule depuis le poids */
   const hasGoal = (+g.kcal || +g.p || +g.c || +g.f) > 0;
+  const t = nutriTotalsOf(date);
+  const plan = nutriPlan();
 
-  let html = '<div class="card nutri-kcal">' +
-    '<div class="nutri-kcal-num">' + Math.round(t.kcal) + '</div>' +
-    '<div class="nutri-kcal-sub">kcal today · goal ' + Math.round(g.kcal || 0) + '</div>' +
-    '</div>';
-
-  if (hasGoal){
-    html += nutriBar('Protein', t.p, g.p, 'g');
-    html += nutriBar('Carbs', t.c, g.c, 'g');
-    html += nutriBar('Fat', t.f, g.f, 'g');
+  let card;
+  if (!hasGoal){
+    card = '<div class="empty">No goal set yet — open the <b>Goal</b> tab to set daily targets.</div>';
   } else {
-    html += '<div class="empty">No goal set yet — open the <b>Goal</b> tab to set daily targets.</div>';
+    const pr = progress(t.kcal, g.kcal);
+    const eaten = Math.round(t.kcal);
+    const goalK = Math.round(g.kcal);
+    const left = pr.status === 'over'
+      ? '<div class="kcal-left"><b>' + pr.overBy + '</b> over</div>'
+      : '<div class="kcal-left"><b>' + pr.remaining + '</b> left</div>';
+    const meta = plan
+      ? '<div class="kcal-meta"><span>BMR ' + Math.round(plan.bmr) + '</span>' +
+        '<span>TDEE ' + Math.round(plan.tdee) + '</span>' +
+        '<span>Goal ' + (plan.kcal - plan.tdee >= 0 ? '+' : '−') +
+        Math.abs(Math.round(plan.kcal - plan.tdee)) + '</span></div>'
+      : '';
+    card = '<div class="card kcal-card">' +
+      '<div class="kcal-top"><div class="kcal-eaten">' + eaten +
+      '<small>/ ' + goalK + ' kcal</small></div>' + left + '</div>' +
+      '<div class="pbar ' + pr.status + '" role="progressbar" aria-label="Calories today"' +
+      ' aria-valuemin="0" aria-valuemax="' + goalK + '" aria-valuenow="' + eaten + '">' +
+      '<span class="sr-only">' + eaten + ' of ' + goalK + ' kcal</span>' +
+      '<i style="width:' + pr.pct + '%"></i></div>' + meta +
+      '<div class="macros">' +
+      nutriMacroBar('p', 'Protein', t.p, g.p) +
+      nutriMacroBar('c', 'Carbs', t.c, g.c) +
+      nutriMacroBar('f', 'Fat', t.f, g.f) +
+      '</div></div>';
   }
 
-  const meals = n.meals.filter(m => m.date === todayISO());
-  html += '<div class="section-hint" style="margin-top:14px">' +
-    meals.length + ' meal' + (meals.length !== 1 ? 's' : '') + ' logged today</div>';
-  box.innerHTML = html;
+  const stack = meals.length
+    ? '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, false)).join('') + '</div>'
+    : '<div class="empty" style="margin-top:12px">Nothing logged yet — tap <b>+ Add meal</b> to record what you ate.</div>';
+  const bar = '<div class="nutri-add-bar"><button class="btn btn-primary" onclick="addMeal()">+ Add meal</button></div>';
+  box.innerHTML = card + stack + bar;
 }
 
-/* ---- Meals ---- */
-function mealFormHtml(){
+/* ---- Meals : liste du jour + builder (foodId + qty, totaux live) ---- */
+let nutriDraft = null;   /* {id, type, name, items, pick, q, focus} */
+
+const MEAL_TYPES = [['breakfast','Breakfast'],['lunch','Lunch'],['dinner','Dinner'],['snack','Snack']];
+function mealTypeLabel(t){
+  const f = MEAL_TYPES.find(x => x[0] === t);
+  return f ? f[1] : 'Meal';
+}
+function newDraft(){
+  const h = new Date().getHours();
+  const type = h < 11 ? 'breakfast' : h < 16 ? 'lunch' : 'dinner';
+  return { id: null, type: type, name: mealTypeLabel(type), items: [], pick: null, q: '' };
+}
+function draftFromMeal(m){
+  return { id: m.id, type: m.type || 'lunch', name: m.name || 'Meal',
+    items: (m.items || []).map(it => Object.assign({}, it)), pick: null, q: '' };
+}
+function allowedUnits(food){
+  const hasPiece = !!(food && food.gramsPerUnit && food.gramsPerUnit.piece != null);
+  return UNITS.filter(u => u !== 'piece' || hasPiece);
+}
+function defaultUnit(food){
+  if (food && food.unitLabel && allowedUnits(food).indexOf(food.unitLabel) >= 0) return food.unitLabel;
+  if (food && food.gramsPerUnit && food.gramsPerUnit.piece != null) return 'piece';
+  return 'g';
+}
+function defaultQty(unit){ return (unit === 'g' || unit === 'ml') ? 100 : 1; }
+
+function mealNameInput(v){ if (nutriDraft) nutriDraft.name = v; }
+function mealTypeChange(v){ if (nutriDraft) nutriDraft.type = v; }
+function mealSearchInput(v){
+  if (!nutriDraft) return;
+  nutriDraft.q = v;
+  nutriDraft.focus = 'search';
+  renderNutriMeals();
+}
+function pickMealFood(id){
+  const d = nutriDraft;
+  if (!d) return;
+  const f = findNutriFood(id);
+  if (!f) return;
+  const unit = defaultUnit(f);
+  d.pick = { foodId: f.id, name: f.name, qty: String(defaultQty(unit)), unit: unit, from: -1 };
+  d.focus = null;
+  renderNutriMeals();
+}
+function itemQtyInput(v){
+  if (nutriDraft && nutriDraft.pick){ nutriDraft.pick.qty = v; updateItemPreview(); }
+}
+function itemUnitChange(v){
+  const d = nutriDraft;
+  if (!d || !d.pick) return;
+  d.pick.unit = v;
+  d.pick.qty = String(defaultQty(v));
+  const el = $('itemQty');
+  if (el) el.value = d.pick.qty;
+  updateItemPreview();
+}
+function updateItemPreview(){
+  const d = nutriDraft;
+  const box = $('itemPreview');
+  if (!d || !d.pick || !box) return;
+  const f = findNutriFood(d.pick.foodId);
+  if (!f) return;
+  const q = +d.pick.qty;
+  if (!(q > 0)){ box.textContent = 'Enter a quantity'; return; }
+  let n;
+  try { n = nutrientsFor(f, q, d.pick.unit); }
+  catch (e){ box.textContent = 'Unit not supported for this food'; return; }
+  box.textContent = Math.round(n.kcal) + ' kcal · ' + Math.round(n.protein) + 'P / ' +
+    Math.round(n.carbs) + 'C / ' + Math.round(n.fat) + 'F';
+}
+function addDraftItem(){
+  const d = nutriDraft;
+  if (!d || !d.pick) return;
+  const qty = +d.pick.qty;
+  if (!(qty > 0)){ toast('Enter a quantity'); return; }
+  const item = { foodId: d.pick.foodId, qty: qty, unit: d.pick.unit || 'g', name: d.pick.name };
+  if (d.pick.from >= 0) d.items[d.pick.from] = item;
+  else d.items.push(item);
+  d.pick = null;
+  renderNutriMeals();
+}
+function editDraftItem(i){
+  const d = nutriDraft;
+  if (!d || !d.items[i]) return;
+  const it = d.items[i];
+  if (!it.foodId){ toast('Legacy line: remove it and re-add the food'); return; }
+  if (!findNutriFood(it.foodId)) return;
+  d.pick = { foodId: it.foodId, name: nutriItemName(it), qty: String(+it.qty || 100),
+    unit: it.unit || 'g', from: i };
+  renderNutriMeals();
+}
+function removeDraftItem(i){
+  if (!nutriDraft) return;
+  nutriDraft.items.splice(i, 1);
+  renderNutriMeals();
+}
+
+function itemEditorHtml(){
+  const p = nutriDraft.pick;
+  const f = findNutriFood(p.foodId);
+  const units = allowedUnits(f).map(u =>
+    '<option value="' + u + '"' + (p.unit === u ? ' selected' : '') + '>' + u + '</option>').join('');
+  return '<div class="item-editor">' +
+    '<span class="ie-name">' + esc(p.name) + '</span>' +
+    '<input class="input" id="itemQty" type="number" inputmode="decimal" min="0" step="any"' +
+    ' value="' + esc(p.qty) + '" aria-label="Quantity" oninput="itemQtyInput(this.value)">' +
+    '<select class="input" id="itemUnit" aria-label="Unit" onchange="itemUnitChange(this.value)">' + units + '</select>' +
+    '<span class="item-preview" id="itemPreview"></span>' +
+    '<button class="btn btn-primary btn-sm" onclick="addDraftItem()">' +
+    (p.from >= 0 ? 'Update' : 'Add to meal') + '</button>' +
+    '</div>';
+}
+
+function mealPickResultsHtml(d){
+  const q = (d.q || '').trim();
+  if (!q || d.pick) return '';
+  const n = nutriDB();
+  const cq = norm(q);
+  const custom = n.foods.filter(f => norm(f.name).indexOf(cq) >= 0).slice(0, 8);
+  if (!foodsDbReady()) ensureFoodsDb('nutri-meals');
+  const db = foodsDbReady() ? searchFoods(q, 12) : [];
+  const rows = [];
+  custom.forEach(f => rows.push({ f: f, custom: true }));
+  db.forEach(f => { if (!rows.some(r => r.f.id === f.id)) rows.push({ f: f, custom: false }); });
+  if (!rows.length){
+    return '<div class="empty">' + (foodsDbReady()
+      ? 'No food matches “' + esc(q) + '”.'
+      : 'Searching the database…') + '</div>';
+  }
+  return '<div class="food-list">' + rows.map(r =>
+    '<button type="button" class="food-item food-pick" onclick="pickMealFood(' + esc(JSON.stringify(r.f.id)) + ')">' +
+    '<span class="fi-main"><span class="fn">' + esc(r.f.name) + '</span>' +
+    '<span class="fm">' + Math.round(+r.f.kcal || 0) + ' kcal / 100 g' +
+    (r.custom ? ' · yours' : (r.f.state ? ' · ' + esc(r.f.state) : '')) + '</span></span></button>'
+  ).join('') + '</div>';
+}
+
+function draftTotals(){
+  const d = nutriDraft;
+  const list = ((d && d.items) || []).map(nutriItemN).filter(Boolean);
+  return sumNutrients(list);
+}
+
+function mealBuilderHtml(){
+  const d = nutriDraft;
+  if (!d) return '';
+  const n = nutriDB();
+  const t = draftTotals();
+  const yMeals = n.meals.filter(m => m.date === nutriDateMinus(1));
+  const copyRow = (yMeals.length && !d.items.length)
+    ? '<div class="nutri-copy-row"><span class="section-hint" style="margin:0">Copy from yesterday:</span>' +
+      yMeals.map(m => '<button type="button" class="chip" onclick="copyYestMeal(' +
+        esc(JSON.stringify(m.id)) + ')">' + esc(m.name) + '</button>').join('') + '</div>'
+    : '';
+  const typeOpts = MEAL_TYPES.map(([v, l]) =>
+    '<option value="' + v + '"' + (d.type === v ? ' selected' : '') + '>' + l + '</option>').join('');
+  const itemsCard = d.items.length
+    ? '<div class="card meal-card">' +
+      d.items.map((it, i) =>
+        '<div class="ing-row"><span class="ing-n">' + esc(nutriItemName(it)) + '</span>' +
+        '<span class="ing-g">' + esc(nutriQtyLabel(it)) + '</span>' +
+        '<span class="ing-k">' + Math.round(nutriItemKcal(it)) + ' kcal</span>' +
+        '<span class="ing-actions">' +
+        '<button class="icon-btn" onclick="editDraftItem(' + i + ')" aria-label="Edit ingredient">✎</button>' +
+        '<button class="icon-btn" onclick="removeDraftItem(' + i + ')" aria-label="Remove ingredient">✕</button>' +
+        '</span></div>').join('') +
+      '</div>'
+    : '';
   return '<div class="card nutri-form">' +
-    '<input class="input" id="mealName" placeholder="Meal name (e.g. Lunch)" maxlength="60">' +
+    '<input class="input" id="mealName" placeholder="Meal name" maxlength="60" value="' + esc(d.name) + '"' +
+    ' oninput="mealNameInput(this.value)">' +
     '<div class="nutri-form-row">' +
-    '<input class="input" id="mealKcal" type="number" inputmode="numeric" min="0" placeholder="kcal">' +
-    '<input class="input" id="mealP" type="number" inputmode="numeric" min="0" placeholder="Protein g">' +
-    '<input class="input" id="mealC" type="number" inputmode="numeric" min="0" placeholder="Carbs g">' +
-    '<input class="input" id="mealF" type="number" inputmode="numeric" min="0" placeholder="Fat g">' +
+    '<select class="input" id="mealType" aria-label="Meal type" onchange="mealTypeChange(this.value)">' + typeOpts + '</select>' +
+    '<input class="input" id="mealFoodSearch" placeholder="Search foods…" aria-label="Search foods to add"' +
+    ' value="' + esc(d.q || '') + '" oninput="mealSearchInput(this.value)">' +
+    '</div>' +
+    (d.pick ? itemEditorHtml() : mealPickResultsHtml(d)) +
+    copyRow + itemsCard +
+    '<div class="section-hint" id="mealDraftTotals">' +
+    (d.items.length
+      ? 'Totals: ' + Math.round(t.kcal) + ' kcal · ' + Math.round(t.protein) + 'P / ' +
+        Math.round(t.carbs) + 'C / ' + Math.round(t.fat) + 'F'
+      : 'Search a food, set the quantity, add it.') +
     '</div>' +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="cancelNutriForm()">Cancel</button>' +
-    '<button class="btn btn-primary btn-sm" onclick="submitMeal()">Add</button>' +
+    '<button class="btn btn-primary btn-sm" onclick="saveMealDraft()">Save meal</button>' +
     '</div></div>';
 }
 
@@ -183,64 +490,137 @@ function renderNutriMeals(){
   if (!box) return;
   const n = nutriDB();
   const meals = n.meals.filter(m => m.date === todayISO());
+  if (mealsNeedFoods(meals)) ensureFoodsDb('nutri-meals');
   const hint = $('nutriMealsHint');
   if (hint) hint.textContent = meals.length
     ? meals.length + ' meal' + (meals.length !== 1 ? 's' : '') + ' today'
     : 'What you ate today';
 
-  let html = nutriForm === 'meal' ? mealFormHtml() : '';
-  if (!meals.length && nutriForm !== 'meal'){
+  const open = nutriForm === 'meal' && !!nutriDraft;
+  let html = open ? mealBuilderHtml() : '';
+  if (!meals.length && !open){
     html += '<div class="empty">Nothing logged yet — tap <b>+ Meal</b> to add what you ate.</div>';
   }
-  meals.forEach(m => {
-    const kc = (m.items || []).reduce((s, it) => s + (+it.kcal || 0), 0);
-    html += '<div class="card nutri-meal">' +
-      '<div class="nutri-meal-top">' +
-      '<div class="nutri-meal-name">' + esc(m.name) + '</div>' +
-      '<div class="nutri-meal-kcal">' + Math.round(kc) + ' kcal</div>' +
-      '<button class="icon-btn" onclick="removeMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Delete meal">🗑</button>' +
-      '</div>' +
-      (m.items || []).map(it =>
-        '<div class="nutri-item"><span>' + esc(it.name) + '</span>' +
-        '<span class="nutri-item-macros">' + Math.round(+it.kcal || 0) + ' kcal · ' +
-        Math.round(+it.p || 0) + 'P / ' + Math.round(+it.c || 0) + 'C / ' + Math.round(+it.f || 0) + 'F</span></div>'
-      ).join('') +
-      '</div>';
-  });
+  if (meals.length){
+    html += '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, true)).join('') + '</div>';
+  }
   box.innerHTML = html;
+  if (open){
+    if (nutriDraft.focus === 'search'){
+      const el = $('mealFoodSearch');
+      if (el){
+        el.focus();
+        try { el.setSelectionRange(el.value.length, el.value.length); } catch (e){}
+      }
+      nutriDraft.focus = null;
+    }
+    if (nutriDraft.pick) updateItemPreview();
+  }
 }
 
 function addMeal(){
   nutriForm = 'meal';
+  nutriDraft = newDraft();
   showTab('nutri-meals');
 }
-
-function submitMeal(){
-  const name = ($('mealName') && $('mealName').value.trim()) || 'Meal';
-  const n = nutriDB();
-  n.meals.push({
-    id: uid(), date: todayISO(), name: name,
-    items: [{ name: name, kcal: +($('mealKcal') && $('mealKcal').value) || 0,
-      p: +($('mealP') && $('mealP').value) || 0,
-      c: +($('mealC') && $('mealC').value) || 0,
-      f: +($('mealF') && $('mealF').value) || 0 }]
-  });
-  nutriForm = null;
-  save();
-  renderNutriMeals();
-  toast('Meal added');
+function editMeal(id){
+  const m = nutriDB().meals.find(x => x.id === id);
+  if (!m) return;
+  nutriForm = 'meal';
+  nutriDraft = draftFromMeal(m);
+  showTab('nutri-meals');
 }
-
+function editMealItem(id, idx){
+  const m = nutriDB().meals.find(x => x.id === id);
+  if (!m) return;
+  nutriForm = 'meal';
+  nutriDraft = draftFromMeal(m);
+  const it = nutriDraft.items[idx];
+  if (it && it.foodId && findNutriFood(it.foodId)){
+    nutriDraft.pick = { foodId: it.foodId, name: nutriItemName(it),
+      qty: String(+it.qty || 100), unit: it.unit || 'g', from: idx };
+  }
+  showTab('nutri-meals');
+}
 function removeMeal(id){
   const n = nutriDB();
   n.meals = n.meals.filter(m => m.id !== id);
+  if (nutriDraft && nutriDraft.id === id){ nutriForm = null; nutriDraft = null; }
+  save();
+  renderNutriMeals();
+  toast('Meal deleted');
+}
+function removeMealItem(id, idx){
+  const n = nutriDB();
+  const m = n.meals.find(x => x.id === id);
+  if (!m) return;
+  m.items.splice(idx, 1);
+  if (!m.items.length){
+    n.meals = n.meals.filter(x => x.id !== id);
+    toast('Meal removed');
+  } else {
+    toast('Ingredient removed');
+  }
   save();
   renderNutriMeals();
 }
+function saveMealDraft(){
+  const d = nutriDraft;
+  const n = nutriDB();
+  if (!d || !n) return;
+  if (d.pick) addDraftItem();   /* ligne en cours de saisie : ajoutee aussi */
+  if (!nutriDraft || !nutriDraft.items.length){ toast('Add at least one food'); return; }
+  const dd = nutriDraft;
+  const name = (dd.name || '').trim() || mealTypeLabel(dd.type);
+  const items = dd.items.map(it => it.foodId
+    ? { foodId: it.foodId, qty: +it.qty || 0, unit: it.unit || 'g', name: it.name }
+    : Object.assign({}, it));
+  let m = dd.id ? n.meals.find(x => x.id === dd.id) : null;
+  if (m){ m.name = name; m.type = dd.type; m.items = items; }
+  else {
+    m = { id: uid(), date: todayISO(), type: dd.type, name: name, items: items };
+    n.meals.push(m);
+  }
+  touchNutriRecent(items.filter(i => i.foodId).map(i => i.foodId));
+  nutriForm = null;
+  nutriDraft = null;
+  save();
+  renderNutriMeals();
+  toast('Meal saved');
+}
+function copyYestMeal(id){
+  const n = nutriDB();
+  const m = n.meals.find(x => x.id === id);
+  if (!m || !nutriDraft) return;
+  nutriDraft.name = m.name;
+  nutriDraft.type = m.type || nutriDraft.type;
+  nutriDraft.items = (m.items || []).map(it => Object.assign({}, it));
+  renderNutriMeals();
+  toast('Copied "' + m.name + '"');
+}
+function saveMealAsRecipe(id){
+  const n = nutriDB();
+  const m = n.meals.find(x => x.id === id);
+  if (!m) return;
+  const items = (m.items || []).map(it => {
+    const f = it.foodId ? findNutriFood(it.foodId) : null;
+    return f ? { food: f, qty: +it.qty || 0, unit: it.unit || 'g' } : null;
+  }).filter(Boolean);
+  if (!items.length){ toast('Add foods first — recipes need food items'); return; }
+  let food = null;
+  try { food = recipeToFood({ id: uid(), name: m.name, items: items, cookedWeightG: 0 }); }
+  catch (e){ food = null; }
+  if (!food || !(food.kcal >= 0) || !isFinite(food.kcal)){ toast('Could not save this recipe'); return; }
+  n.foods.push(food);
+  save();
+  renderNutriMeals();
+  toast('"' + m.name + '" saved to Foods');
+}
 
-/* ---- Foods ---- */
+/* ---- Foods : recherche (perso + base 690), favoris, recents, per 100 g ---- */
 function foodFormHtml(){
   return '<div class="card nutri-form">' +
+    '<div class="section-hint" style="margin-bottom:8px">Per 100 g — stored as typed.</div>' +
     '<input class="input" id="foodName" placeholder="Food name" maxlength="60">' +
     '<div class="nutri-form-row">' +
     '<input class="input" id="foodKcal" type="number" inputmode="numeric" min="0" placeholder="kcal">' +
@@ -254,31 +634,73 @@ function foodFormHtml(){
     '</div></div>';
 }
 
+function foodRowHtml(f, custom){
+  const n = nutriDB();
+  const fav = (n.favs || []).indexOf(f.id) >= 0;
+  const meta = Math.round(+f.kcal || 0) + ' kcal / 100 g · ' +
+    Math.round(+f.protein || +f.p || 0) + 'P / ' +
+    Math.round(+f.carbs || +f.c || 0) + 'C / ' +
+    Math.round(+f.fat || +f.f || 0) + 'F';
+  return '<div class="food-item">' +
+    '<span class="fi-main"><span class="fn">' + esc(f.name) + '</span>' +
+    '<span class="fm">' + meta + '</span></span>' +
+    '<span class="fi-acts">' +
+    '<button class="chip" onclick="toggleNutriFav(' + esc(JSON.stringify(f.id)) + ')"' +
+    ' aria-label="Favorite" aria-pressed="' + (fav ? 'true' : 'false') + '">' + (fav ? '★' : '☆') + '</button>' +
+    '<button class="chip" onclick="logFood(' + esc(JSON.stringify(f.id)) + ')">Log</button>' +
+    (custom
+      ? '<button class="icon-btn" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ')" aria-label="Delete food">🗑</button>'
+      : '') +
+    '</span></div>';
+}
+
 function renderNutriFoods(){
   const box = $('nutriFoods');
   if (!box) return;
   const n = nutriDB();
-  const q = ($('nutriFoodSearch') && $('nutriFoodSearch').value.trim().toLowerCase()) || '';
-  const list = n.foods.filter(f => !q || f.name.toLowerCase().indexOf(q) >= 0);
-
+  const q = (($('nutriFoodSearch') && $('nutriFoodSearch').value) || '').trim();
   let html = nutriForm === 'food' ? foodFormHtml() : '';
-  if (!n.foods.length && nutriForm !== 'food'){
-    html += '<div class="empty">Your food list is empty — tap <b>+ Food</b> to add staples (per serving).</div>';
-  } else if (!list.length){
-    html += '<div class="empty">No food matches “' + esc(q) + '”.</div>';
+
+  if (q){
+    /* base lazy : on affiche le perso tout de suite, la base apres fetch */
+    if (!foodsDbReady()) ensureFoodsDb('nutri-foods');
+    const cq = norm(q);
+    const custom = n.foods.filter(f => norm(f.name).indexOf(cq) >= 0).slice(0, 10);
+    const db = foodsDbReady() ? searchFoods(q, 20) : [];
+    const rows = [];
+    custom.forEach(f => rows.push({ f: f, custom: true }));
+    db.forEach(f => { if (!rows.some(r => r.f.id === f.id)) rows.push({ f: f, custom: false }); });
+    if (rows.length){
+      html += '<div class="section-hint">Your foods first, then the database.</div>' +
+        '<div class="food-list">' + rows.map(r => foodRowHtml(r.f, r.custom)).join('') + '</div>';
+    } else {
+      html += '<div class="empty">' + (foodsDbReady()
+        ? 'No food matches “' + esc(q) + '”.'
+        : 'Searching the database…') + '</div>';
+    }
+  } else {
+    const asRow = id => { const f = findNutriFood(id); return f ? { f: f, custom: n.foods.some(x => x.id === id) } : null; };
+    const favs = (n.favs || []).map(asRow).filter(Boolean);
+    const recents = (n.recents || []).slice(0, 10).map(asRow)
+      .filter(x => x && !favs.some(v => v.f.id === x.f.id));
+    if (favs.length){
+      html += '<div class="section-hint">Favorites</div><div class="food-list">' +
+        favs.map(x => foodRowHtml(x.f, x.custom)).join('') + '</div>';
+    }
+    if (recents.length){
+      html += '<div class="section-hint">Recent</div><div class="food-list">' +
+        recents.map(x => foodRowHtml(x.f, x.custom)).join('') + '</div>';
+    }
+    const mine = n.foods.slice(-30).reverse();
+    if (mine.length){
+      html += '<div class="section-hint">Your foods</div><div class="food-list">' +
+        mine.map(f => foodRowHtml(f, true)).join('') + '</div>';
+    } else if (!favs.length && !recents.length){
+      html += '<div class="empty">Your food list is empty — tap <b>+ Food</b> to add staples (per 100 g), or type to search the full database.</div>';
+    }
+    html += '<div class="section-hint" style="margin-top:10px">' +
+      'Type above to search 690+ foods (accents optional).</div>';
   }
-  list.forEach(f => {
-    html += '<div class="card nutri-food">' +
-      '<div class="nutri-meal-top">' +
-      '<div class="nutri-meal-name">' + esc(f.name) + '</div>' +
-      '<div class="nutri-meal-kcal">' + Math.round(+f.kcal || 0) + ' kcal</div>' +
-      '<button class="chip" onclick="logFood(' + esc(JSON.stringify(f.id)) + ')" aria-label="Log this food">＋ Log</button>' +
-      '<button class="icon-btn" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ')" aria-label="Delete food">🗑</button>' +
-      '</div>' +
-      '<div class="nutri-item-macros">' + Math.round(+f.p || 0) + 'P / ' + Math.round(+f.c || 0) + 'C / ' +
-      Math.round(+f.f || 0) + 'F</div>' +
-      '</div>';
-  });
   box.innerHTML = html;
 }
 
@@ -291,37 +713,129 @@ function submitFood(){
   const name = ($('foodName') && $('foodName').value.trim()) || '';
   if (!name){ toast('Give the food a name.'); return; }
   const n = nutriDB();
-  n.foods.push({
+  const f = {
     id: uid(), name: name,
     kcal: +($('foodKcal') && $('foodKcal').value) || 0,
-    p: +($('foodP') && $('foodP').value) || 0,
-    c: +($('foodC') && $('foodC').value) || 0,
-    f: +($('foodF') && $('foodF').value) || 0
-  });
+    protein: +($('foodP') && $('foodP').value) || 0,
+    carbs: +($('foodC') && $('foodC').value) || 0,
+    fat: +($('foodF') && $('foodF').value) || 0
+  };
+  const chk = atwaterCheck(f);
+  n.foods.push(f);
   nutriForm = null;
   save();
   renderNutriFoods();
-  toast('Food added');
+  /* Atwater : on AVERTIT, on ne bloque jamais */
+  if (!chk.ok) toast('Food added — check Atwater: ' + chk.calc + ' vs ' + f.kcal + ' kcal');
+  else toast('Food added');
 }
 
 function removeFood(id){
   const n = nutriDB();
   n.foods = n.foods.filter(f => f.id !== id);
+  n.favs = (n.favs || []).filter(x => x !== id);
+  n.recents = (n.recents || []).filter(x => x !== id);
   save();
   renderNutriFoods();
 }
 
-/* ＋ Log : pousse l'aliment dans le repas du jour « Snacks » (créé si besoin) */
+function toggleNutriFav(id){
+  const n = nutriDB();
+  const favs = n.favs || [];
+  n.favs = favs.indexOf(id) >= 0 ? favs.filter(x => x !== id) : favs.concat([id]);
+  save();
+  renderNutriFoods();
+}
+
+function touchNutriRecent(ids){
+  const n = nutriDB();
+  let r = Array.isArray(n.recents) ? n.recents : [];
+  ids.forEach(id => { r = r.filter(x => x !== id); r.unshift(id); });
+  n.recents = r.slice(0, 20);
+}
+
+/* Log rapide : repas « Snacks » du jour (cree si besoin), qty par defaut. */
 function logFood(id){
   const n = nutriDB();
-  const f = n.foods.find(x => x.id === id);
+  const f = findNutriFood(id);
   if (!f) return;
-  let snack = n.meals.find(m => m.date === todayISO() && m.name === 'Snacks');
-  if (!snack){ snack = { id: uid(), date: todayISO(), name: 'Snacks', items: [] }; n.meals.push(snack); }
-  snack.items.push({ name: f.name, kcal: +f.kcal || 0, p: +f.p || 0, c: +f.c || 0, f: +f.f || 0 });
+  const unit = defaultUnit(f);
+  const qty = defaultQty(unit);
+  let snack = n.meals.find(m => m.date === todayISO() && (m.type === 'snack' || m.name === 'Snacks'));
+  if (!snack){
+    snack = { id: uid(), date: todayISO(), type: 'snack', name: 'Snacks', items: [] };
+    n.meals.push(snack);
+  }
+  snack.items.push({ foodId: f.id, qty: qty, unit: unit, name: f.name });
+  touchNutriRecent([f.id]);
   save();
   renderNutriFoods();
   toast(f.name + ' logged');
+}
+
+/* ---- Week : 7 derniers jours vs objectif + tendance poids ---- */
+function renderNutriWeek(){
+  const box = $('nutriWeek');
+  if (!box) return;
+  const n = nutriDB();
+  const goal = nutriActiveGoal(true);
+  const goalK = goal && goal.kcal > 0 ? goal.kcal : 0;
+  const days = [];
+  for (let i = 6; i >= 0; i--){
+    const date = nutriDateMinus(i);
+    const meals = n.meals.filter(m => m.date === date);
+    let kcal = 0;
+    meals.forEach(m => { kcal += nutriMealTotal(m).n.kcal; });
+    days.push({ date: date, kcal: Math.round(kcal) });
+  }
+  const wk = weekSummary(days, goalK);
+
+  if (!wk.loggedDays){
+    box.innerHTML = '<div class="empty">Nothing logged this week yet — your week appears here after your first meal.</div>';
+    return;
+  }
+
+  let html = '<div class="card"><div class="section-hint">Last 7 days</div>';
+  days.forEach(d => {
+    const p = goalK ? progress(d.kcal, goalK) : { pct: 0 };
+    const cls = p.status === 'ok' ? 'ok' : p.status === 'over' ? 'over' : '';
+    const dt = new Date(d.date + 'T12:00:00');
+    const wd = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+    html += '<div class="week-row">' +
+      '<span class="week-day">' + wd + ' ' + d.date.slice(8) + '/' + d.date.slice(5, 7) + '</span>' +
+      '<span class="pbar ' + cls + '" role="progressbar" aria-valuemin="0"' +
+      ' aria-valuemax="' + (goalK || 100) + '" aria-valuenow="' + d.kcal + '"' +
+      ' aria-label="kcal ' + d.date + '"><i style="width:' + Math.min(100, +p.pct || 0) + '%"></i></span>' +
+      '<span class="week-kcal">' + (d.kcal ? d.kcal + ' kcal' : '—') + '</span>' +
+      '</div>';
+  });
+  html += '</div>';
+
+  html += '<div class="card"><div class="week-stats">' +
+    '<div class="week-stat"><b>' + wk.loggedDays + '</b><span>days logged</span></div>' +
+    '<div class="week-stat"><b>' + wk.avgKcal + '</b><span>avg kcal</span></div>' +
+    (goalK
+      ? '<div class="week-stat"><b>' + wk.daysOnTarget + '/7</b><span>days on target (±10%)</span></div>'
+      : '<div class="week-stat"><b>—</b><span>set a goal in Goal</span></div>') +
+    '</div>';
+  if (goalK && wk.loggedDays){
+    html += '<div class="section-hint" style="margin-top:8px">Avg vs goal: ' +
+      (wk.avgDeltaKcal >= 0 ? '+' : '') + wk.avgDeltaKcal + ' kcal</div>';
+  }
+  /* tendance poids sur la fenêtre affichée */
+  const wlog = ((window.DB && Array.isArray(DB.weightLog)) ? DB.weightLog : [])
+    .filter(e => e && +e.kg > 0 && String(e.date) >= days[0].date && String(e.date) <= days[6].date)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  if (wlog.length >= 2){
+    const dlt = Math.round((+wlog[wlog.length - 1].kg - +wlog[0].kg) * 10) / 10;
+    html += '<div class="section-hint" style="margin-top:8px">Weight: ' +
+      (+wlog[0].kg).toFixed(1) + ' → ' + (+wlog[wlog.length - 1].kg).toFixed(1) +
+      ' kg (' + (dlt >= 0 ? '+' : '') + dlt + ' kg)</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="nutri-add-bar"><button class="btn" onclick="showTab(\'stats\')">Full stats →</button></div>';
+  box.innerHTML = html;
 }
 
 /* ---- Goal : profil J2 + plan expliqué + objectif manuel (avancé) ---- */
@@ -473,15 +987,20 @@ function saveNutriGoal(){
 
 function cancelNutriForm(){
   nutriForm = null;
+  nutriDraft = null;
   renderNutrition(currentTab);
 }
 
 Object.assign(window, {
   renderNutrition, nutriDB, nutriTotalsOf,
-  addMeal, submitMeal, removeMeal,
-  addFood, submitFood, removeFood, logFood,
-  saveNutriGoal, cancelNutriForm,
+  /* meals : liste + builder foodId/qty */
+  addMeal, editMeal, editMealItem, removeMeal, removeMealItem,
+  saveMealDraft, cancelNutriForm, copyYestMeal, saveMealAsRecipe,
+  mealNameInput, mealTypeChange, mealSearchInput, pickMealFood,
+  itemQtyInput, itemUnitChange, addDraftItem, editDraftItem, removeDraftItem,
+  /* foods : per 100 g + recherche + log */
+  addFood, submitFood, removeFood, logFood, toggleNutriFav,
   /* J2 : profil / plan */
   nutriProfile, nutriWeight, nutriPlan, nutriActiveGoal, nutriAdaptive,
-  saveNutriProfile, applyAdaptive
+  saveNutriProfile, applyAdaptive, saveNutriGoal
 });

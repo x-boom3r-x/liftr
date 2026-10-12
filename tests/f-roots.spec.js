@@ -92,7 +92,7 @@ test.describe('Chantier F : 3 onglets racine', () => {
     await expect(page.locator('#tab-calendrier')).toBeVisible();
   });
 
-  test('Nutrition : sous-nav Today/Meals/Foods/Goal + flux complet', async ({ page }) => {
+  test('Nutrition : sous-nav Today/Meals/Foods/Goal/Week + flux complet', async ({ page }) => {
     await seed(page, {}, 'Mouataz');
     await page.locator('.tabbar .tab[data-tab="nutrition"]').click();
     const nav = page.locator('#rootSubnav');
@@ -100,6 +100,7 @@ test.describe('Chantier F : 3 onglets racine', () => {
     await expect(nav).toContainText('Meals');
     await expect(nav).toContainText('Foods');
     await expect(nav).toContainText('Goal');
+    await expect(nav).toContainText('Week');
     await expect(page.locator('#tab-nutri-today')).toBeVisible();
     await expect(page.locator('#nutriToday')).toContainText('No goal set yet');
 
@@ -112,39 +113,64 @@ test.describe('Chantier F : 3 onglets racine', () => {
     await page.locator('#tab-nutri-goal button:has-text("Save goal")').click();
     await expect(page.locator('#toast')).toContainText('Goal saved');
 
-    /* repas */
+    /* aliments perso per 100 g */
+    await nav.locator('[data-tab="nutri-foods"]').click();
+    await page.locator('#tab-nutri-foods button:has-text("+ Food")').click();
+    await page.fill('#foodName', 'Meal base');
+    await page.fill('#foodKcal', '70');
+    await page.fill('#foodP', '4');
+    await page.fill('#foodC', '8');
+    await page.fill('#foodF', '2');
+    await page.locator('#nutriFoods button:has-text("Add")').click();
+    await expect(page.locator('#toast')).toContainText('Food added');
+    await expect(page.locator('#nutriFoods')).toContainText('Meal base');
+
+    /* repas via le builder : recherche -> foodId -> qty 1000 g (aucun total stocké) */
     await nav.locator('[data-tab="nutri-meals"]').click();
     await page.locator('#tab-nutri-meals button:has-text("+ Meal")').click();
     await page.fill('#mealName', 'Lunch');
-    await page.fill('#mealKcal', '700');
-    await page.fill('#mealP', '40');
-    await page.locator('#nutriMeals button:has-text("Add")').click();
-    await expect(page.locator('#nutriMeals')).toContainText('Lunch');
-    await expect(page.locator('#nutriMeals')).toContainText('700 kcal');
+    await page.fill('#mealFoodSearch', 'Meal base');
+    await page.locator('#nutriMeals .food-pick').first().click();
+    await expect(page.locator('#itemQty')).toBeVisible();
+    await page.fill('#itemQty', '1000');
+    await page.locator('#nutriMeals button:has-text("Add to meal")').click();
+    await expect(page.locator('#mealDraftTotals')).toContainText('Totals: 700 kcal');
+    await page.locator('#nutriMeals button:has-text("Save meal")').click();
+    await expect(page.locator('#toast')).toContainText('Meal saved');
+    await expect(page.locator('#nutriMeals .meal-card')).toContainText('Lunch');
+    await expect(page.locator('#nutriMeals .meal-card')).toContainText('700 kcal');
 
-    /* today : les totaux et les barres suivent */
+    /* today : totaux recalculés + macros */
     await nav.locator('[data-tab="nutri-today"]').click();
-    await expect(page.locator('.nutri-kcal-num')).toHaveText('700');
+    await expect(page.locator('.kcal-eaten')).toContainText('700');
     await expect(page.locator('#nutriToday')).toContainText('Protein');
 
-    /* aliments : ajout + log vers Snacks */
+    /* aliments : ajout + log vers Snacks (100 g) */
     await nav.locator('[data-tab="nutri-foods"]').click();
     await page.locator('#tab-nutri-foods button:has-text("+ Food")').click();
     await page.fill('#foodName', 'Rice 100g');
     await page.fill('#foodKcal', '130');
+    await page.fill('#foodP', '3');
+    await page.fill('#foodC', '28');
     await page.locator('#nutriFoods button:has-text("Add")').click();
-    await expect(page.locator('#nutriFoods')).toContainText('Rice 100g');
-    await page.locator('#nutriFoods button:has-text("Log")').click();
+    await expect(page.locator('#toast')).toContainText('Food added');
+    await expect(page.locator('#toast')).not.toContainText('check Atwater');
+    await page.locator('#nutriFoods .food-item:has-text("Rice 100g") button:has-text("Log")').click();
     await expect(page.locator('#toast')).toContainText('Rice 100g logged');
 
     await nav.locator('[data-tab="nutri-today"]').click();
-    await expect(page.locator('.nutri-kcal-num')).toHaveText('830');
+    await expect(page.locator('.kcal-eaten')).toContainText('830');
 
     /* les données nutrition sont persistées dans DB.nutri */
     const n = await page.evaluate(() => DB.nutri);
     expect(n.goal.kcal).toBe(2500);
-    expect(n.foods.length).toBe(1);
+    expect(n.foods.length).toBe(2);
     expect(n.meals.length).toBe(2);          /* Lunch + Snacks */
+    /* J3 : le repas ne stocke que foodId + qty + unit, jamais les totaux */
+    const lunch = n.meals.find(m => m.name === 'Lunch');
+    expect(lunch.items[0].foodId).toBeTruthy();
+    expect(lunch.items[0].qty).toBe(1000);
+    expect(lunch.items[0].kcal).toBeUndefined();
   });
 
   test('sous-vues Feed : bouton ‹ visible, retour contextuel', async ({ page }) => {

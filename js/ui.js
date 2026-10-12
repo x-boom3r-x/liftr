@@ -136,7 +136,8 @@ const TAB_ROOTS = {
   feed: 'feed',
   programme: 'gym', seance: 'gym', calendrier: 'gym', stats: 'gym',
   'nutri-today': 'nutrition', 'nutri-meals': 'nutrition',
-  'nutri-foods': 'nutrition', 'nutri-goal': 'nutrition'
+  'nutri-foods': 'nutrition', 'nutri-goal': 'nutrition',
+  'nutri-week': 'nutrition'
 };
 const ROOT_DEFAULT = {
   feed: 'feed',
@@ -144,10 +145,10 @@ const ROOT_DEFAULT = {
   nutrition: 'nutri-today'
 };
 const ALL_TABS = ['programme','seance','calendrier','stats','feed',
-  'nutri-today','nutri-meals','nutri-foods','nutri-goal'];
+  'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week'];
 const SUBNAV = {
   gym: [['programme','Program'],['seance','Session'],['calendrier','Calendar'],['stats','Progression']],
-  nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['nutri-foods','Foods'],['nutri-goal','Goal']]
+  nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['nutri-foods','Foods'],['nutri-goal','Goal'],['nutri-week','Week']]
 };
 const lastSub = { gym: 'programme', nutrition: 'nutri-today' };
 

@@ -65,7 +65,8 @@ test.describe('J2 : profil et calcul', () => {
     expect(st.plan.notes).toEqual([]);
 
     await page.locator('#rootSubnav [data-tab="nutri-today"]').click();
-    await expect(page.locator('.nutri-kcal-sub')).toContainText('goal ' + st.goal.kcal);
+    /* J3 : la carte kcal affiche « eaten / goal » (aucun repas ici -> 0) */
+    await expect(page.locator('.kcal-eaten')).toContainText('/ ' + st.goal.kcal + ' kcal');
   });
 
   test('weight asked once, written to weightLog (single source)', async ({ page }) => {
