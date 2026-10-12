@@ -10,6 +10,9 @@ import {
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
 } from './music.js';
 import {
+  musicStoryAutoplay, musicStoryResume, musicStoryForget
+} from './autoplay.js';
+import {
   setStoryRings, markStorySeen, clearStoryRings, applyStoryRings,
   ringsFresh, ringAuthorsKey, RING_TTL
 } from './rings.js';
@@ -534,6 +537,9 @@ function paintSlide(){
   }
   hydrateMusic(stage);
   initStoryViewer();
+  /* pattern Instagram : la musique de la story démarre à l'affichage
+     du slide (mute global ou pion !m → rien ne démarre) */
+  musicStoryAutoplay(parts);
 
   const t = el('svTime');
   if (t) t.textContent = typeof window.timeAgo === 'function' ? window.timeAgo(s.created_at) : '';
@@ -644,6 +650,7 @@ export async function openStoryViewer(uid, queuePos){
 export function closeStoryViewer(){
   stopTimer();
   stopMusic();
+  musicStoryForget();
   popLayer('storyView');
   const box = el('storyView');
   if (box) box.classList.remove('show');
@@ -832,8 +839,13 @@ export function initStoryViewer(){
       close: closeStoryViewer,
       nextUser: () => stepAuthor(1),
       prevUser: () => stepAuthor(-1),
-      pause: () => stopTimer(),
-      resume: () => { if (slides.length && !timer) timer = setTimeout(nextSlide, SLIDE_MS); },
+      /* appui long = pause : timer ET musique s'arrêtent ;
+         relâcher = reprise des deux */
+      pause: () => { stopTimer(); stopMusic(); },
+      resume: () => {
+        if (slides.length && !timer) timer = setTimeout(nextSlide, SLIDE_MS);
+        musicStoryResume();
+      },
     });
   }
 }

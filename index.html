@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="58">
+<html lang="en" data-build="59">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -475,6 +475,9 @@
       </button>
     </div>
   </nav>
+  <!-- Musique : mute global (feed + stories), style Instagram -->
+  <button type="button" id="musicMute" class="music-mute hidden"
+    aria-label="Mute music" aria-pressed="false">🔊</button>
 </div>
 
 <!-- ================= MODALS ================= -->
@@ -1100,6 +1103,20 @@
     <div class="modal-actions music-footer">
       <button type="button" class="btn btn-primary" id="musicUseBtn" disabled>Use this track</button>
       <button type="button" class="btn btn-ghost" onclick="closeMusicPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Musique : page d'une piste (utilisations + sauvegarde) -->
+<div class="overlay" id="trackModal" onclick="if(event.target===this)closeTrackPage()">
+  <div class="modal" style="max-width:480px">
+    <div class="grabber"></div>
+    <div class="track-head" id="trackHead"></div>
+    <button type="button" class="chip chip-type track-save" id="trackSaveBtn"
+      data-track="" aria-label="Save this track">Save</button>
+    <div class="track-uses" id="trackUses" aria-live="polite"></div>
+    <div class="modal-actions track-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeTrackPage()">Close</button>
     </div>
   </div>
 </div>

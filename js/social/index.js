@@ -68,8 +68,12 @@ import {
 } from './editor.js';
 import {
   openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
-  stopMusic, hydrateMusic, splitMusic, withMusic, musicPlayingId
+  stopMusic, hydrateMusic, splitMusic, withMusic, musicPlayingId,
+  openTrackPage, closeTrackPage, toggleTrackSave, isTrackSaved, savedTracks
 } from './music.js';
+import {
+  initAutoplay, setGlobalMuted, isGlobalMuted, autoplayScan, musicStoryAutoplay
+} from './autoplay.js';
 import {
   privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts
 } from './privacy.js';
@@ -116,6 +120,8 @@ Object.assign(window, {
   openImageEditor, closeEditor, useEditedImage, initEditor,
   openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
   stopMusic, hydrateMusic, splitMusic, withMusic, musicPlayingId,
+  openTrackPage, closeTrackPage, toggleTrackSave, isTrackSaved, savedTracks,
+  initAutoplay, setGlobalMuted, isGlobalMuted, autoplayScan, musicStoryAutoplay,
   privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts,
   onFollowChanged
 });
@@ -142,6 +148,7 @@ function initSocial(){
   initAccount();
   initInbox();
   initMusic();
+  initAutoplay();
   initEditor();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
 }

@@ -1868,6 +1868,8 @@ button{background:none;border:none;cursor:pointer}
 .music-footer{display:flex;gap:10px;align-items:center}
 .music-footer .btn-primary{flex:1}
 .music-footer .btn-ghost{flex:none}
+.track-footer{display:flex;gap:10px;align-items:center}
+.track-footer .btn-ghost{flex:1}
 
 /* ---------- edition d'image : plein écran (crop / zoom) ---------- */
 .overlay.editor-overlay{align-items:stretch;background:#000}
@@ -1982,3 +1984,49 @@ button{background:none;border:none;cursor:pointer}
 @media (hover:none) and (pointer:coarse){
   .input,.textarea,select.input,.composer-input,.search-input{font-size:16px}
 }
+
+
+/* ===================== L3 - MUSIQUE : autoplay + page piste ======= */
+.music-mute{
+  position:fixed;right:14px;bottom:calc(var(--tabbar-h) + 14px);z-index:55;
+  width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
+  background:rgba(20,20,24,.62);color:#fff;font-size:19px;line-height:1;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer;
+}
+.music-mute:active{transform:scale(.92)}
+.music-mute.is-on{border-color:rgba(255,255,255,.42)}
+
+.mchip-auto{
+  flex:0 0 auto;height:30px;padding:0 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface2);color:var(--text2);
+  font-size:.68rem;font-weight:700;cursor:pointer;
+}
+.mchip-auto.off{color:var(--text3);border-style:dashed}
+.mchip.is-muted .mchip-art{opacity:.45}
+
+.track-head{display:flex;align-items:center;gap:12px;padding:4px 0 2px}
+.track-head .music-art{width:48px;height:48px;border-radius:10px;flex:0 0 auto}
+.track-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.track-txt b{font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-txt i{font-style:normal;font-size:.74rem;color:var(--text3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-save{align-self:flex-start;margin:6px 0 2px}
+.track-uses{margin-top:8px;max-height:46vh;overflow:auto}
+.track-sec-title{font-size:.68rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--text3);padding:10px 2px 4px}
+.track-row{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:8px 6px;border:0;border-radius:12px;background:transparent;cursor:pointer;
+}
+.track-row:active{background:var(--surface2)}
+.track-av{
+  flex:0 0 auto;width:32px;height:32px;border-radius:999px;background:var(--surface3);
+  color:var(--text2);font-size:.78rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.track-row-txt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.track-row-txt b{font-size:.82rem;font-weight:600;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-row-txt i{font-style:normal;font-size:.7rem;color:var(--text3)}

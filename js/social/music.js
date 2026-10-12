@@ -1,19 +1,26 @@
 /* ==================================================================
-   SOCIAL - musique : recherche iTunes, pion « ♪trackId[@start-end] »
-   dans le corps des contenus, lecteur de prévisualisation, sélecteur.
+   SOCIAL - musique : recherche iTunes, pion « ♪trackId[@start-end][!m] »
+   dans le corps des contenus, lecteur de prévisualisation, sélecteur,
+   page d'une piste (uses + save) et autoplay (via autoplay.js).
 
    Le morceau est stocké dans le corps sous forme de pion compact
    (♪1234567890 ou ♪1234567890@5-20 pour un extrait) : aucun changement
    de schéma est nécessaire pour l'attacher à une publication, une
    story ou une note (60 car. max). Le pion ancien format (sans @)
    continue d'être lu — extrait plein preview (30 s).
-   La fiche (titre / pochette / prévisualisation 30 s) est résolue
-   côté client puis mise en cache (sessionStorage, jamais localStorage
-   : la liste des clés autorisées est verrouillée par les tests).
+   Le suffixe optionnel « !m » marque un pion MUET : la lecture
+   automatique (feed / story) l'ignore ; le bouton ▶ manuel reste
+   actif. La fiche (titre / pochette / prévisualisation 30 s) est
+   résolue côté client puis mise en cache (sessionStorage, jamais
+   localStorage : la liste des clés autorisées est verrouillée par
+   les tests).
    ================================================================== */
+
+import { sb } from './client.js';
 
 const API = 'https://itunes.apple.com';
 const MARK = '♪';
+const MUTED_SUF = '!m';
 const CLIP_LEN = 15;   /* durée de l'extrait choisi dans le sélecteur */
 const CLIP_MAX = 30;   /* durée max d'un extrait encodé dans le pion */
 
@@ -22,12 +29,12 @@ function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); 
 function openModal(id){ if (typeof window.openModal === 'function') window.openModal(id); }
 function closeModal(id){ if (typeof window.closeModal === 'function') window.closeModal(id); }
 
-/* --------------------------- corpus ♪id[@s-e] -------------------- */
+/* --------------------------- corpus ♪id[@s-e][!m] ---------------- */
 /* Le suffixe est avalé « tel quel » puis validé en JS : un suffixe
-   malformé (@abc, @20-5, @0-99) n'empêche pas de lire le trackId —
+   malformé (@abc, @20-5, @0-99, !x) n'empêche pas de lire le trackId —
    seul l'extrait est ignoré (ancien format plein preview). */
 function tokenRe(){
-  return new RegExp('(?:^|\\s)' + MARK + '(\\d{5,15})(?:@([^\\s]+))?(?=\\s|$)');
+  return new RegExp('(?:^|\\s)' + MARK + '(\\d{5,15})([^\\s]*)?(?=\\s|$)');
 }
 
 function validClip(start, end){
@@ -39,15 +46,18 @@ export function splitMusic(text){
   const s = String(text == null ? '' : text);
   const re = tokenRe();
   const m = s.match(re);
-  if (!m) return { text: s.replace(/\s+/g, ' ').trim(), trackId: null, start: 0, end: 0 };
+  if (!m) return { text: s.replace(/\s+/g, ' ').trim(), trackId: null, start: 0, end: 0, muted: false };
   const rest = s.replace(re, ' ').replace(/\s+/g, ' ').trim();
+  let suffix = m[2] != null ? m[2] : '';
+  let muted = false;
+  if (suffix.endsWith(MUTED_SUF)){ muted = true; suffix = suffix.slice(0, -MUTED_SUF.length); }
   let start = 0, end = 0;
-  if (m[2] != null){
-    const mm = m[2].match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/);
+  if (suffix.startsWith('@')){
+    const mm = suffix.slice(1).match(/^(\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)$/);
     if (mm){ start = parseFloat(mm[1]); end = parseFloat(mm[2]); }
   }
-  if (!validClip(start, end)) return { text: rest, trackId: m[1], start: 0, end: 0 };
-  return { text: rest, trackId: m[1], start: start, end: end };
+  if (!validClip(start, end)) return { text: rest, trackId: m[1], start: 0, end: 0, muted: muted };
+  return { text: rest, trackId: m[1], start: start, end: end, muted: muted };
 }
 
 export function withMusic(text, trackId, clip){
@@ -58,6 +68,7 @@ export function withMusic(text, trackId, clip){
   const start = clip && +clip.start > 0 ? +clip.start : 0;
   const end = clip && +clip.end > start ? +clip.end : 0;
   if (validClip(start, end)) token += '@' + start + '-' + end;
+  if (clip && clip.muted) token += MUTED_SUF;
   if (splitMusic(base).trackId === id) return base;
   return (base ? base + ' ' : '') + token;
 }
@@ -311,14 +322,17 @@ export function musicChipHtml(trackId, cls, clip){
   const t = cacheGet(id);
   const start = clip && +clip.start > 0 ? ' data-start="' + esc(+clip.start) + '"' : '';
   const end = clip && +clip.end > +clip.start ? ' data-end="' + esc(+clip.end) + '"' : '';
+  const muted = clip && clip.muted ? ' data-muted="1"' : '';
   const art = t && t.art
     ? ' style="background-image:url(' + esc(t.art) + ')"' : '';
-  return '<div class="mchip ' + (cls || '') + '" data-track="' + esc(id) + '"' + start + end + '>' +
+  return '<div class="mchip ' + (cls || '') + (clip && clip.muted ? ' is-muted' : '') +
+    '" data-track="' + esc(id) + '"' + start + end + muted + '>' +
     '<button type="button" class="mchip-play" data-mplay="' + esc(id) + '" ' +
       'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">▶</span></button>' +
     '<span class="mchip-art" aria-hidden="true"' + art + '></span>' +
     '<span class="mchip-txt"><b class="mchip-t">' + esc(t ? t.title : 'Music') + '</b>' +
-    '<i class="mchip-a">' + esc(t ? t.artist : 'Tap to load') + '</i></span>' +
+    '<i class="mchip-a">' + esc(t ? t.artist : 'Tap to load') +
+    (clip && clip.muted ? ' · muted' : '') + '</i></span>' +
     '</div>';
 }
 
@@ -327,21 +341,35 @@ export function musicChipForBody(body, cls){
   return { text: parts.text, html: parts.trackId ? musicChipHtml(parts.trackId, cls, parts) : '' };
 }
 
-/* Remplit les pions déjà posés dans le DOM (titre, pochette, play). */
+/* Remplit les pions déjà posés dans le DOM (titre, pochette, play).
+   Le clic sur le corps de la chip (hors ▶) ouvre la page de la piste. */
 export function hydrateMusic(root){
   const scope = root && root.querySelectorAll ? root : document;
   const chips = scope.querySelectorAll('.mchip[data-track]:not([data-music-on])');
   chips.forEach(chip => {
     chip.setAttribute('data-music-on', '1');
     const id = chip.getAttribute('data-track');
+    const clipOf = () => {
+      const cs = parseFloat(chip.getAttribute('data-start')) || 0;
+      const ce = parseFloat(chip.getAttribute('data-end')) || 0;
+      const cm = chip.getAttribute('data-muted') === '1';
+      return { start: cs, end: ce > cs ? ce : 0, muted: cm };
+    };
     const play = chip.querySelector('[data-mplay]');
     if (play){
       play.addEventListener('click', e => {
         e.preventDefault();
         e.stopPropagation();
-        const cs = parseFloat(chip.getAttribute('data-start')) || 0;
-        const ce = parseFloat(chip.getAttribute('data-end')) || 0;
-        playTrack(id, ce > cs ? { start: cs, end: ce } : null);
+        const clip = clipOf();
+        playTrack(id, clip.end > clip.start ? clip : null);
+      });
+    }
+    if (!chip.classList.contains('is-editable')){
+      chip.addEventListener('click', e => {
+        if (e.target.closest && e.target.closest('[data-mplay]')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openTrackPage(id, clipOf());
       });
     }
     if (cacheGet(id)) return;
@@ -351,11 +379,156 @@ export function hydrateMusic(root){
       const artist = chip.querySelector('.mchip-a');
       const art = chip.querySelector('.mchip-art');
       if (title) title.textContent = t.title;
-      if (artist) artist.textContent = t.artist;
+      if (artist) artist.textContent = t.artist + (chip.getAttribute('data-muted') === '1' ? ' · muted' : '');
       if (art && t.art) art.style.backgroundImage = 'url(' + t.art + ')';
     });
   });
   paintPlayStates();
+  if (typeof window.autoplayScan === 'function') window.autoplayScan(scope);
+}
+
+/* ------------------- page d'une piste (uses + save) -------------- */
+/* Accessible depuis n'importe quelle chip (feed, story, composeur) :
+   liste les posts / stories qui portent le pion ♪id + permet de
+   sauvegarder la piste (localStorage + table music_saves, best-effort). */
+const SAVES_KEY = 'liftr_music_saves';
+
+function savedLocal(){
+  try {
+    const a = JSON.parse(localStorage.getItem(SAVES_KEY) || '[]');
+    return Array.isArray(a) ? a.map(String) : [];
+  } catch(e){ return []; }
+}
+
+function savedWrite(arr){
+  try { localStorage.setItem(SAVES_KEY, JSON.stringify(arr.slice(0, 200))); } catch(e){}
+}
+
+export function savedTracks(){ return savedLocal(); }
+export function isTrackSaved(id){ return savedLocal().indexOf(String(id || '')) >= 0; }
+
+export function toggleTrackSave(id){
+  const key = String(id || '');
+  if (!key) return false;
+  const arr = savedLocal();
+  const at = arr.indexOf(key);
+  if (at >= 0) arr.splice(at, 1); else arr.unshift(key);
+  savedWrite(arr);
+  paintTrackSave();
+  /* cloud best-effort : offline / non connecté → le local fait foi */
+  try {
+    const c = sb();
+    const me = (window.socialUser || {}).id || null;
+    if (c && me){
+      if (at >= 0){
+        c.from('music_saves').delete().eq('track_id', key).eq('user_id', me)
+          .then(() => {}, () => {});
+      } else {
+        c.from('music_saves').upsert({ track_id: key, user_id: me },
+          { onConflict: 'user_id,track_id' }).then(() => {}, () => {});
+      }
+    }
+  } catch(e){}
+  return true;
+}
+
+function trackAvatar(row){
+  const p = row.author || {};
+  const name = p.display_name || p.username || 'Someone';
+  const initial = String(name).charAt(0).toUpperCase();
+  return '<span class="track-av" aria-hidden="true">' + esc(initial) + '</span>';
+}
+
+function trackRowHtml(kind, row){
+  const parts = splitMusic(row.body || '');
+  return '<button type="button" class="track-row" data-kind="' + esc(kind) + '" ' +
+    'data-row-id="' + esc(row.id) + '" data-author="' + esc(row.author_id || '') + '">' +
+    trackAvatar(row) +
+    '<span class="track-row-txt"><b>' + esc(parts.text || '♪') + '</b>' +
+    '<i>' + esc((row.author && (row.author.display_name || row.author.username)) || 'Someone') +
+    '</i></span></button>';
+}
+
+let trackUses = { posts: [], stories: [] };
+
+async function loadTrackUses(id){
+  const key = String(id || '');
+  const uses = { posts: [], stories: [] };
+  try {
+    const c = sb();
+    if (c){
+      /* joker « * » natif de PostgREST : évite un « % » brut dans l'URL */
+      const like = '*' + MARK + key + '*';
+      const [po, st2] = await Promise.all([
+        c.from('posts').select('id,body,kind,created_at,author_id,author:profiles(username,display_name)')
+          .ilike('body', like).order('created_at', { ascending: false }).limit(20),
+        c.from('stories').select('id,body,author_id,created_at,author:profiles(username,display_name)')
+          .ilike('body', like).order('created_at', { ascending: false }).limit(20)
+      ]);
+      if (po && !po.error && Array.isArray(po.data)) uses.posts = po.data;
+      if (st2 && !st2.error && Array.isArray(st2.data)) uses.stories = st2.data;
+    }
+  } catch(e){}
+  /* jointure author absente (mock / best-effort) : on garde les lignes */
+  return uses;
+}
+
+function paintTrackUses(){
+  const box = el('trackUses');
+  if (!box) return;
+  const posts = trackUses.posts || [];
+  const stories = trackUses.stories || [];
+  const one = (kind, rows) => rows.length
+    ? '<div class="track-sec-title">' + kind + '</div>' + rows.map(r => trackRowHtml(kind === 'Posts' ? 'post' : 'story', r)).join('')
+    : '';
+  const html = one('Stories', stories) + one('Posts', posts);
+  box.innerHTML = html || '<div class="music-hint">Not used in any post or story yet.</div>';
+}
+
+function paintTrackSave(){
+  const btn = el('trackSaveBtn');
+  if (!btn) return;
+  const id = btn.getAttribute('data-track') || '';
+  const on = isTrackSaved(id);
+  btn.textContent = on ? 'Saved ✓' : 'Save';
+  btn.classList.toggle('sel', on);
+}
+
+export function openTrackPage(trackId, clip){
+  const id = String(trackId || '');
+  if (!id) return false;
+  const t = cacheGet(id);
+  const box = el('trackModal');
+  if (!box) return false;
+  const head = el('trackHead');
+  if (head) head.innerHTML =
+    '<span class="music-art" aria-hidden="true"' +
+    (t && t.art ? ' style="background-image:url(' + esc(t.art) + ')"' : '') + '></span>' +
+    '<span class="track-txt"><b>' + esc(t ? t.title : 'Music') + '</b>' +
+    '<i>' + esc(t ? t.artist : 'Tap to load') + '</i></span>' +
+    '<button type="button" class="music-play" data-mplay="' + esc(id) + '" ' +
+    'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">▶</span></button>';
+  const save = el('trackSaveBtn');
+  if (save){
+    save.setAttribute('data-track', id);
+    paintTrackSave();
+  }
+  hydrateMusic(head);
+  trackUses = { posts: [], stories: [] };
+  paintTrackUses();
+  openModal('trackModal');
+  loadTrackUses(id).then(uses => {
+    if (!box.isConnected) return;
+    trackUses = uses;
+    paintTrackUses();
+  });
+  return true;
+}
+
+export function closeTrackPage(){
+  stopAudio();
+  closeModal('trackModal');
+  return true;
 }
 
 /* ----------------------- sélecteur (modale) ----------------------- */
@@ -448,7 +621,30 @@ export function openMusicPicker(cb){
   if (input) input.value = '';
   showMusicError('');
   const list = el('musicList');
-  if (list) list.innerHTML = '<div class="music-hint">Search a song, then tap a row.</div>';
+  const saved = savedLocal();
+  if (list){
+    if (saved.length){
+      /* titres froids (sessionStorage vidé) : on résout à la volée */
+      const rowsHtml = saved.map(id => {
+        const t = cacheGet(id) || { id: id, title: 'Music', artist: '', art: '' };
+        return rowHtml(t);
+      }).join('');
+      list.innerHTML = '<div class="music-hint">Saved</div>' + rowsHtml +
+        '<div class="music-hint">Search a song, then tap a row.</div>';
+      list.querySelectorAll('.music-row').forEach(r => {
+        const rid = r.getAttribute('data-track');
+        if (cacheGet(rid)) return;
+        resolveTrack(rid).then(t => {
+          if (!t || !r.isConnected) return;
+          const b = r.querySelector('b'), i = r.querySelector('i');
+          if (b) b.textContent = t.title;
+          if (i) i.textContent = t.artist;
+        });
+      });
+    } else {
+      list.innerHTML = '<div class="music-hint">Search a song, then tap a row.</div>';
+    }
+  }
   const use = el('musicUseBtn');
   if (use) use.disabled = true;
   paintClip();
@@ -514,6 +710,9 @@ function paintSlot(target){
   box.classList.toggle('hidden', !t);
   box.innerHTML = t
     ? musicChipHtml(t.id, 'is-editable', t) +
+      '<button type="button" class="mchip-auto' + (t.muted ? ' off' : '') +
+      '" data-mauto="1" aria-pressed="' + (t.muted ? 'false' : 'true') + '" ' +
+      'aria-label="Toggle autoplay">' + (t.muted ? 'Autoplay off' : 'Autoplay on') + '</button>' +
       '<button type="button" class="mchip-rm" data-mrm="' + esc(t.id) + '" ' +
       'aria-label="Remove music">&times;</button>'
     : '';
@@ -577,6 +776,12 @@ export function initMusic(){
       if (!t) return;
       const rm = t.closest('[data-mrm]');
       if (rm){ setComposerMusic(target, null); return; }
+      const auto = t.closest('[data-mauto]');
+      if (auto){
+        const cur = slots[target];
+        if (cur){ cur.muted = !cur.muted; paintSlot(target); }
+        return;
+      }
       const play = t.closest('[data-mplay]');
       if (play){
         const chip = play.closest('.mchip');
@@ -586,6 +791,34 @@ export function initMusic(){
       }
     });
   });
+
+  /* page d'une piste : save + navigation vers le post / la story */
+  const tModal = el('trackModal');
+  if (tModal && !tModal.dataset.wired){
+    tModal.dataset.wired = '1';
+    const save = el('trackSaveBtn');
+    if (save) save.addEventListener('click', () => {
+      toggleTrackSave(save.getAttribute('data-track'));
+    });
+    const uses = el('trackUses');
+    if (uses) uses.addEventListener('click', e => {
+      const row = e.target && e.target.closest ? e.target.closest('[data-row-id]') : null;
+      if (!row) return;
+      const kind = row.getAttribute('data-kind');
+      const rid = row.getAttribute('data-row-id');
+      const author = row.getAttribute('data-author');
+      closeTrackPage();
+      if (kind === 'story'){
+        if (typeof window.openStoryViewer === 'function') window.openStoryViewer(author);
+      } else {
+        if (typeof window.openFeed === 'function') window.openFeed();
+        setTimeout(() => {
+          const post = document.querySelector('#feedList [data-post="' + rid + '"]');
+          if (post && post.scrollIntoView) post.scrollIntoView({ block: 'center' });
+        }, 120);
+      }
+    });
+  }
 
   if (!lifecycleWired){
     lifecycleWired = true;

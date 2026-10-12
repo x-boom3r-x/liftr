@@ -79,6 +79,7 @@ function mockApi(page, opts){
       votes: [],
       reposts: [],
       saves: [],
+      musicSaves: [],
       convos: [],
       msgs: [],
       stories: [],
@@ -105,7 +106,10 @@ function mockApi(page, opts){
       return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
     }
 
-    const u = decodeURIComponent(call.url);
+    /* décodage tolérant : un « % » nu dans une valeur (ilike) fermerait
+       decodeURIComponent → on le protège avant de décoder */
+    const u = decodeURIComponent(
+      String(call.url || '').replace(/%(?![0-9A-Fa-f]{2})/g, '%25'));
     const tm = u.match(/\/rest\/v1\/([a-z_]+)(\?|$|\/)/);
     const table = tm ? tm[1] : null;
     const method = call.method;
@@ -116,9 +120,13 @@ function mockApi(page, opts){
       body: ''
     });
 
-    /* helper : eq / neq / in / gt / is.null sur une colonne */
+    /* helper : eq / neq / in / gt / is.null / ilike sur une colonne */
     const eq = (col) => { const m = u.match(new RegExp(col + '=eq\\.([^&]+)')); return m ? m[1] : null; };
     const gt = (col) => { const m = u.match(new RegExp(col + '=gt\\.([^&]+)')); return m ? m[1] : null; };
+    const ilike = (col) => {
+      const m = u.match(new RegExp(col + '=ilike\\.([^&]+)'));
+      return m ? m[1].replace(/[%*]/g, '') : null;
+    };
     const isIn = (col) => {
       const m = u.match(new RegExp(col + '=in\\.\\(([^)]*)\\)'));
       return m ? m[1].split(',').filter(Boolean) : null;
@@ -140,6 +148,8 @@ function mockApi(page, opts){
       if (a) rows = rows.filter(p => p.author_id === a);
       const pids = isIn('id');
       if (pids) rows = rows.filter(p => pids.includes(p.id));
+      const lk = ilike('body');
+      if (lk) rows = rows.filter(p => String(p.body || '').includes(lk));
       rows = applyOrder(rows);
       if (head) return range(rows.length);
       if (method === 'DELETE'){
@@ -251,6 +261,28 @@ function mockApi(page, opts){
       let rows = st.saves.slice();
       const ids = isIn('post_id'); if (ids) rows = rows.filter(r => ids.includes(r.post_id));
       const uq = eq('user_id'); if (uq) rows = rows.filter(r => r.user_id === uq);
+      return json(route, applyOrder(rows));
+    }
+
+    /* ---------- music_saves (L3e) : upsert (user_id, track_id) ---------- */
+    if (table === 'music_saves'){
+      if (method === 'POST'){
+        const body = parseBody();
+        const rest = st.musicSaves.filter(r =>
+          !(r.user_id === body.user_id && r.track_id === body.track_id));
+        rest.push(Object.assign({ created_at: new Date().toISOString() }, body));
+        st.musicSaves = rest;
+        return json(route, [], 201);
+      }
+      if (method === 'DELETE'){
+        const tid = eq('track_id'), uid = eq('user_id');
+        st.musicSaves = st.musicSaves.filter(r =>
+          !(r.track_id === tid && (uid === null || r.user_id === uid)));
+        return noContent(route);
+      }
+      let rows = st.musicSaves.slice();
+      const tid2 = eq('track_id'); if (tid2) rows = rows.filter(r => r.track_id === tid2);
+      const uid2 = eq('user_id'); if (uid2) rows = rows.filter(r => r.user_id === uid2);
       return json(route, applyOrder(rows));
     }
 
@@ -378,6 +410,7 @@ function mockApi(page, opts){
       const a = eq('author_id'); if (a) rows = rows.filter(s => s.author_id === a);
       const ids = isIn('author_id'); if (ids) rows = rows.filter(s => ids.includes(s.author_id));
       const ex = gt('expires_at'); if (ex) rows = rows.filter(s => s.expires_at > ex);
+      const lk = ilike('body'); if (lk) rows = rows.filter(s => String(s.body || '').includes(lk));
       rows = applyOrder(rows);
       if (head) return range(rows.length);
       return json(route, rows);
