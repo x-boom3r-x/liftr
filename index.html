@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="61">
+<html lang="en" data-build="62">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -602,12 +602,21 @@
 <!-- Comments -->
 <div class="overlay" id="commentsModal" onclick="if(event.target===this)closeModal('commentsModal')">
   <div class="modal">
-    <div class="grabber"></div>
-    <div class="modal-title">Comments</div>
+    <div class="modal-top">
+      <div class="modal-title">Comments</div>
+      <button type="button" class="modal-x" id="commentsCloseBtn" aria-label="Close comments">✕</button>
+    </div>
     <div class="modal-sub" id="commentsSub">Join the conversation.</div>
     <div id="commentsPost" class="cpost hidden"></div>
+    <div id="commentsOff" class="comment-empty hidden">Comments are turned off.</div>
+    <button type="button" class="comments-toggle hidden" id="commentsToggle"
+      aria-expanded="false" aria-controls="commentList"></button>
     <div id="commentList" class="comment-list" aria-live="polite"></div>
-    <div class="comment-compose">
+    <div id="replyChip" class="reply-chip hidden">
+      <span class="reply-chip-txt" id="replyChipText">Replying</span>
+      <button type="button" class="reply-chip-x" id="replyChipX" aria-label="Cancel reply">✕</button>
+    </div>
+    <div class="comment-compose" id="commentCompose">
       <textarea id="commentBody" class="composer-input comment-input" rows="1" maxlength="1000"
         placeholder="Add a comment…" aria-label="Add a comment"></textarea>
       <button type="button" class="btn btn-primary btn-sm" id="commentSubmit" disabled

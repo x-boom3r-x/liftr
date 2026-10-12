@@ -2,7 +2,7 @@
    SOCIAL - profil façon Instagram : photo, @pseudo, stats, grille
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
-import { sb } from './client.js';
+import { sb, withMissingColumn, acceptedFollows, missingColumnField } from './client.js';
 import { mediaUrl } from './feed.js';
 import { openImageEditor } from './editor.js';
 import { storyRingClass } from './rings.js';
@@ -16,13 +16,14 @@ import { profileBack } from './shell.js';
 const USER_RE = /^[a-z0-9_]{3,24}$/;
 const GRID_LIMIT = 90;
 
-const POST_GRID = 'id,author_id,body,image_path,thumb_path,kind,created_at';
+const POST_GRID = 'id,author_id,body,image_path,thumb_path,kind,created_at,comments_enabled';
 
 let targetId = null;      /* null = moi */
 let layerId = null;       /* id de la couche retour (profil d'un autre) */
 let current = null;       /* dernier profil rendu */
 let counts = { posts: 0, followers: 0, following: 0 };
 let following = false;
+let requested = false;    /* ma demande en attente sur ce profil */
 let grid = [];
 let gridCounts = {};      /* post_id -> { c, l } */
 let liked = [];
@@ -34,6 +35,7 @@ let avatarFile = null;    /* nouveau Blob en attente */
 let avatarDrop = false;   /* supprimer la photo actuelle */
 let previewUrl = null;
 let pendingPrivate = false;  /* état du bascule « Private » dans la modale */
+let renderSeq = 0;        /* gare aux réponses périmées (re-rendus rapides) */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -93,9 +95,11 @@ function paintProfile(){
       ? '<button type="button" class="btn btn-primary" id="editProfileBtn" ' +
           'onclick="openEditProfile()">Edit profile</button>' +
         '<button type="button" class="btn btn-ghost" onclick="shareProfile()">Share</button>'
-      : '<button type="button" class="btn ' + (following ? '' : 'btn-primary') + '" id="profFollowBtn" ' +
-          'onclick="toggleFollowFromProfile()" aria-pressed="' + (following ? 'true' : 'false') + '">' +
-          (following ? 'Following' : 'Follow') + '</button>' +
+      : '<button type="button" class="btn ' + (following || requested ? '' : 'btn-primary') + '" ' +
+          'id="profFollowBtn" ' +
+          'onclick="toggleFollowFromProfile()" aria-pressed="' + (following ? 'true' : 'false') + '" ' +
+          'data-state="' + (following ? 'accepted' : (requested ? 'pending' : 'none')) + '">' +
+          (following ? 'Following' : (requested ? 'Requested' : 'Follow')) + '</button>' +
         '<button type="button" class="btn btn-ghost" id="profMessageBtn" onclick="openThreadOfTarget()">' +
           'Message</button>';
   }
@@ -233,11 +237,13 @@ async function loadLiked(c){
       .limit(GRID_LIMIT);
     const ids = (lk || []).map(x => x.post_id).filter(Boolean);
     if (!ids.length){ liked = []; paintLiked(); return; }
-    const { data } = await c.from('posts')
-      .select(POST_GRID)
-      .in('id', ids)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
+    const { data } = await withMissingColumn(
+      cc => c.from('posts').select(cc)
+        .in('id', ids)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
+      POST_GRID
+    );
     liked = data || [];
   } catch(e){ liked = []; }
   paintLiked();
@@ -256,11 +262,13 @@ async function loadSaved(c){
       .limit(GRID_LIMIT);
     const ids = (sv || []).map(x => x.post_id).filter(Boolean);
     if (!ids.length){ saved = []; paintSaved(); return; }
-    const { data } = await c.from('posts')
-      .select(POST_GRID)
-      .in('id', ids)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false });
+    const { data } = await withMissingColumn(
+      cc => c.from('posts').select(cc)
+        .in('id', ids)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
+      POST_GRID
+    );
     saved = data || [];
   } catch(e){ saved = []; }
   paintSaved();
@@ -276,21 +284,39 @@ export async function renderProfile(){
 
   const isMe = id === me;
   skeleton();
+  const seq = ++renderSeq;
 
   try {
     await privacyMode();
     const reqs = [
       c.from('profiles').select('*').eq('id', id).limit(1),
-      c.from('posts').select(POST_GRID, { count: 'exact' })
-        .eq('author_id', id).is('deleted_at', null)
-        .order('created_at', { ascending: false }).limit(GRID_LIMIT),
-      c.from('follows').select('follower_id', { count: 'exact', head: true }).eq('followee_id', id),
-      c.from('follows').select('followee_id', { count: 'exact', head: true }).eq('follower_id', id)
+      /* la grille expose comments_enabled (menu post) : colonnes v8
+         absentes → withMissingColumn retire les champs manquants. */
+      withMissingColumn(
+        cc => c.from('posts').select(cc, { count: 'exact' })
+          .eq('author_id', id).is('deleted_at', null)
+          .order('created_at', { ascending: false }).limit(GRID_LIMIT),
+        POST_GRID
+      ),
+      /* compteurs : data (plus head) → on ne compte que les liens
+         acceptés (les demandes en attente ne sont pas des followers). */
+      withMissingColumn(
+        cc => c.from('follows').select(cc).eq('followee_id', id).limit(1000),
+        'follower_id,state'
+      ),
+      withMissingColumn(
+        cc => c.from('follows').select(cc).eq('follower_id', id).limit(1000),
+        'followee_id,state'
+      )
     ];
-    if (!isMe) reqs.push(c.from('follows').select('followee_id')
-      .eq('follower_id', me).eq('followee_id', id).limit(1));
+    if (!isMe) reqs.push(withMissingColumn(
+      cc => c.from('follows').select(cc)
+        .eq('follower_id', me).eq('followee_id', id).limit(1),
+      'followee_id,state'
+    ));
 
     const res = await Promise.all(reqs);
+    if (seq !== renderSeq) return false;   /* un render plus récent a gagné */
     if (res[1].error) throw new Error(res[1].error.message || 'Could not load this profile.');
 
     const row0 = Array.isArray(res[0] && res[0].data) ? res[0].data[0] : (res[0] && res[0].data);
@@ -304,11 +330,14 @@ export async function renderProfile(){
     saved = [];
     counts = {
       posts: res[1].count || grid.length,
-      followers: res[2].count || 0,
-      following: res[3].count || 0
+      followers: acceptedFollows(res[2].data || []).length,
+      following: acceptedFollows(res[3].data || []).length
     };
     const rel = res[4] && (Array.isArray(res[4].data) ? res[4].data[0] : res[4].data);
-    following = isMe ? false : !!rel;
+    /* state absent (v8) = accepté d'office ; pending = « Requested » */
+    const relState = rel && rel.state;
+    following = isMe ? false : (!!rel && relState !== 'pending');
+    requested = isMe ? false : (!!rel && relState === 'pending');
     /* compte privé non suivi : la grille reste verrouillée */
     if (!isMe && isPrivateProfile(current) && !following) grid = [];
     paintProfile();
@@ -316,6 +345,7 @@ export async function renderProfile(){
     if (ptab === 'liked') loadLiked(c);
     return true;
   } catch(e){
+    if (seq !== renderSeq) return false;   /* périmé : on n'affiche pas l'erreur */
     toast((e && e.message) || 'Could not load this profile.');
     const g = el('profGrid');
     if (g){
@@ -365,15 +395,32 @@ export function toggleFollowFromProfile(){
   if (!id) return false;
   if (typeof window.toggleFollow !== 'function') return false;
 
-  const before = following;
-  following = !before;
-  counts.followers = Math.max(0, counts.followers + (following ? 1 : -1));
+  const wasF = following;
+  const wasQ = requested;
+  /* intent explicite : le profil connaît déjà son état (évite le probe
+     privacy de toggleFollow) ; cible privée non suivie → demande. */
+  const intent = wasF ? 'unfollow'
+    : wasQ ? 'cancel'
+    : (isPrivateProfile(current) ? 'request' : 'follow');
+
+  const prevCount = counts.followers;
+  if (intent === 'unfollow' || intent === 'cancel'){ following = false; requested = false; }
+  else if (intent === 'request'){ following = false; requested = true; }
+  else { following = true; requested = false; }
+  if (intent === 'follow') counts.followers = Math.max(0, counts.followers + 1);
+  else if (intent === 'unfollow') counts.followers = Math.max(0, counts.followers - 1);
   paintProfile();
 
-  window.toggleFollow(id).then(ok => {
-    if (ok) return;
-    following = before;
-    counts.followers = Math.max(0, counts.followers + (following ? 1 : -1));
+  window.toggleFollow(id, intent).then(ok => {
+    if (ok) return;   /* échec déjà reverti + re-peint par toggleFollow */
+    following = wasF;
+    requested = wasQ;
+    counts.followers = prevCount;
+    paintProfile();
+  }, () => {
+    following = wasF;
+    requested = wasQ;
+    counts.followers = prevCount;
     paintProfile();
   });
   return true;
@@ -727,6 +774,7 @@ export function resetProfile(){
   current = null;
   counts = { posts: 0, followers: 0, following: 0 };
   following = false;
+  requested = false;
   pendingPrivate = false;
   grid = [];
   gridCounts = {};

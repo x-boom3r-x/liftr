@@ -2,7 +2,7 @@
    SOCIAL - stories (24 h) : rangée du fil, visualiseur, création
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
-import { sb } from './client.js';
+import { sb, withMissingColumn, acceptedFollows } from './client.js';
 import { compressImage, mediaUrl } from './feed.js';
 import { openImageEditor } from './editor.js';
 import {
@@ -138,8 +138,10 @@ export async function renderStories(){
     '<span class="crew-ring none"><span class="avatar crew-av sk"></span></span>' +
     '<span class="crew-label">&nbsp;</span></div>'.repeat(4);
   try {
-    const { data: f } = await c.from('follows').select('followee_id').eq('follower_id', me).limit(12);
-    const ids = (f || []).map(r => r.followee_id);
+    const fr = await withMissingColumn(
+      cc => c.from('follows').select(cc).eq('follower_id', me).limit(12),
+      'followee_id,state');
+    const ids = acceptedFollows(fr.data).map(r => r.followee_id);
     const all = [me].concat(ids);
 
     const [profs, st] = await Promise.all([
@@ -189,9 +191,10 @@ export async function refreshStoryRings(force){
   if (!force && ringsFresh()) return true;
   const before = ringAuthorsKey();
   try {
-    const { data: f } = await c.from('follows').select('followee_id')
-      .eq('follower_id', me).limit(200);
-    const ids = [me].concat((f || []).map(r => r.followee_id));
+    const fr = await withMissingColumn(
+      cc => c.from('follows').select(cc).eq('follower_id', me).limit(200),
+      'followee_id,state');
+    const ids = [me].concat(acceptedFollows(fr.data).map(r => r.followee_id));
     const st = await storyState(c, ids);
     setStoryRings(st);
     applyStoryRings();

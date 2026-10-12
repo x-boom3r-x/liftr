@@ -2,8 +2,8 @@
    SOCIAL - recherche d'utilisateurs (type Instagram)
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
-import { sb } from './client.js';
-import { personRowHtml, mergeFollows } from './people.js';
+import { sb, withMissingColumn } from './client.js';
+import { personRowHtml, mergeLinkRows } from './people.js';
 
 const LIMIT = 30;
 const SELECT = 'id,username,display_name,avatar_url,bio';
@@ -52,8 +52,11 @@ async function hydrate(){
   const c = sb();
   const me = meId();
   if (!c || !me) return;
-  const { data } = await c.from('follows').select('followee_id').eq('follower_id', me);
-  mergeFollows((data || []).map(r => r.followee_id));
+  const fr = await withMissingColumn(
+    cc => c.from('follows').select(cc).eq('follower_id', me),
+    'followee_id,state');
+  /* suivis + demandes : le bouton de la ligne reflète les deux */
+  mergeLinkRows(fr.data || []);
 }
 
 export async function openSearch(){

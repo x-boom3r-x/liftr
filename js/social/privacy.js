@@ -1,4 +1,4 @@
-import { sb } from './client.js';
+import { sb, withMissingColumn, acceptedFollows } from './client.js';
 
 /* ==================================================================
    SOCIAL - compte privé / public
@@ -104,9 +104,11 @@ export async function filterPrivatePosts(rows){
     await privacyMode();
     const [flags, links] = await Promise.all([
       c.from('profiles').select('id,bio' + privacySelect()).in('id', others),
-      c.from('follows').select('followee_id').eq('follower_id', me)
+      withMissingColumn(
+        cc => c.from('follows').select(cc).eq('follower_id', me),
+        'followee_id,state')
     ]);
-    const followed = new Set((links.data || []).map(r => r.followee_id));
+    const followed = new Set(acceptedFollows(links.data).map(r => r.followee_id));
     const hidden = new Set((flags.data || [])
       .filter(isPrivateProfile)
       .filter(p => !followed.has(p.id))

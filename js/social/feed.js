@@ -2,7 +2,7 @@
    SOCIAL - Feed : composition, compression photo, liste des posts
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
-import { sb } from './client.js';
+import { sb, withMissingColumn, missingColumnField, withMissingFields, acceptedFollows } from './client.js';
 import { openImageEditor } from './editor.js';
 import { filterPrivatePosts } from './privacy.js';
 import { storyRingClass } from './rings.js';
@@ -18,7 +18,7 @@ const THUMB_EDGE = 320;      /* côté max de la vignette (blur-up) */
 const FULL_Q = 0.85;
 const THUMB_Q = 0.8;
 const MAX_BYTES = 12 * 1024 * 1024;
-const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,attachment,created_at,deleted_at,author:profiles!posts_author_id_fkey(id,username,display_name,avatar_url)';
+const POST_SELECT = 'id,author_id,kind,body,image_path,thumb_path,meta,attachment,comments_enabled,created_at,deleted_at,author:profiles!posts_author_id_fkey(id,username,display_name,avatar_url)';
 
 let posts = [];
 let hasMore = false;
@@ -248,38 +248,38 @@ async function fetchPage(offset){
   const c = sb();
   if (!c) return { rows: [], error: 'Social is not configured yet.' };
 
-  let q = c.from('posts').select(POST_SELECT).is('deleted_at', null);
-
-  if (scope === 'top'){
-    /* fenêtre 7 jours, premier centaine : le classement se fait après
-       agrégation des votes (fetchCounts). */
-    q = q.gte('created_at', new Date(Date.now() - 7 * 864e5).toISOString());
-    const { data, error } = await q.order('created_at', { ascending: false }).range(0, 99);
-    if (error) return { rows: [], error: error.message || 'Could not load the feed.' };
-    const raw = data || [];
-    const rows = await filterPrivatePosts(raw);
-    return { rows: rows, more: false, error: null };
-  }
-
-  if (scope === 'following'){
-    const me = (window.socialUser || {}).id;
-    const { data: f, error: fe } = await c.from('follows').select('followee_id').eq('follower_id', me);
-    if (fe) return { rows: [], error: fe.message || 'Could not load your crew.' };
-    const ids = (f || []).map(r => r.followee_id);
-    if (!ids.length){ noFollows = true; return { rows: [], error: null }; }
-    noFollows = false;
-    q = q.in('author_id', ids);
-  } else {
-    noFollows = false;
-  }
-
-  const { data, error } = await q
-    .order('created_at', { ascending: false })
-    .range(offset, offset + PAGE_SIZE - 1);
+  /* SELECT direct de la page (les colonnes v8 peuvent manquer : la
+     selection est retentee sans elles par withMissingColumn). */
+  const queryPage = async cols => {
+    let q = c.from('posts').select(cols).is('deleted_at', null);
+    if (scope === 'top'){
+      /* fenêtre 7 jours, premier centaine : le classement se fait après
+         agrégation des votes (fetchCounts). */
+      q = q.gte('created_at', new Date(Date.now() - 7 * 864e5).toISOString());
+      return await q.order('created_at', { ascending: false }).range(0, 99);
+    }
+    if (scope === 'following'){
+      const me = (window.socialUser || {}).id;
+      const fr = await withMissingColumn(
+        cc => c.from('follows').select(cc).eq('follower_id', me),
+        'followee_id,state');
+      if (fr.error) return { data: null, error: fr.error };
+      const ids = acceptedFollows(fr.data).map(r => r.followee_id);
+      if (!ids.length){ noFollows = true; return { data: [], error: null }; }
+      noFollows = false;
+      q = q.in('author_id', ids);
+    } else {
+      noFollows = false;
+    }
+    return await q.order('created_at', { ascending: false }).range(offset, offset + PAGE_SIZE - 1);
+  };
+  const { data, error } = await withMissingColumn(queryPage, POST_SELECT);
   if (error) return { rows: [], error: error.message || 'Could not load the feed.' };
   const raw = data || [];
   /* les comptes privés que l'on ne suit pas sont masqués côté client */
   const rows = await filterPrivatePosts(raw);
+  if (scope === 'top') return { rows: rows, more: false, error: null };
+  if (scope === 'following' && noFollows) return { rows: [], error: null };
   return { rows: rows, more: raw.length === PAGE_SIZE, error: null };
 }
 
@@ -455,11 +455,9 @@ function postOf(id){
 async function fetchPost(id){
   const c = sb();
   if (!c || !id) return null;
-  const { data, error } = await c.from('posts')
-    .select(POST_SELECT)
-    .eq('id', id)
-    .eq('deleted_at', 'null')
-    .limit(1);
+  const { data, error } = await withMissingColumn(
+    cols => c.from('posts').select(cols).eq('id', id).eq('deleted_at', 'null').limit(1),
+    POST_SELECT);
   if (error || !data || !data.length) return null;
   const row = data[0];
   return filterPrivatePosts([row]).length ? row : null;
@@ -669,9 +667,41 @@ export function openPostMenu(id, source){
   items.push({ label: k.saved ? 'Remove from Saved' : 'Save', fn: () => { toggleSave(id); } });
   items.push({ label: 'Share', fn: () => { sharePost(id); } });
   if (mine){
+    items.push({
+      label: p.comments_enabled === false ? 'Turn on comments' : 'Turn off comments',
+      fn: () => { toggleCommentsEnabled(id, p); }
+    });
     items.push({ label: 'Delete post', style: 'destructive', fn: () => { deletePost(id, p); } });
   }
   window.openActionSheet(mine ? 'Your post' : 'Post', items);
+  return true;
+}
+
+/* Le proprietaire ouvre/ferme les commentaires de son post (L5). */
+export async function toggleCommentsEnabled(id, source){
+  const c = sb();
+  const p = source || postOf(id);
+  if (!c || !p) return false;
+  if (String(p.author_id || '') !== String(meId() || '')){
+    toast('You can only moderate your own post.');
+    return false;
+  }
+  const next = !(p.comments_enabled !== false);
+  const { error } = await c.from('posts')
+    .update({ comments_enabled: next })
+    .eq('id', id);
+  if (error){
+    if (missingColumnField(error)){
+      toast('Comments setting goes live once the update is applied.');
+    } else {
+      toast(error.message || 'Could not update comments setting.');
+    }
+    return false;
+  }
+  p.comments_enabled = next;
+  paintOne(id);
+  toast(next ? 'Comments are on.' : 'Comments are turned off.');
+  if (typeof window.refreshCounts === 'function') window.refreshCounts();
   return true;
 }
 
@@ -948,8 +978,10 @@ async function fetchReposts(){
   if (!c || !me || scope === 'top') return;
   let ids = [me];
   try {
-    const { data: f } = await c.from('follows').select('followee_id').eq('follower_id', me);
-    if (f) ids = ids.concat(f.map(r => r.followee_id));
+    const fr = await withMissingColumn(
+      cc => c.from('follows').select(cc).eq('follower_id', me),
+      'followee_id,state');
+    if (fr.data) ids = ids.concat(acceptedFollows(fr.data).map(r => r.followee_id));
   } catch(e){}
   let rows = [];
   try {
@@ -965,8 +997,10 @@ async function fetchReposts(){
   rows.forEach(r => { if (pids.indexOf(r.post_id) < 0) pids.push(r.post_id); });
   let orig = [];
   try {
-    const { data } = await c.from('posts').select(POST_SELECT).in('id', pids).is('deleted_at', null);
-    orig = data || [];
+    const pr = await withMissingColumn(
+      cols => c.from('posts').select(cols).in('id', pids).is('deleted_at', null),
+      POST_SELECT);
+    orig = pr.data || [];
   } catch(e){ return; }
   const priv = await filterPrivatePosts(orig);
   const byId = {};
@@ -1121,16 +1155,16 @@ export async function submitPost(){
       thumb_path: paths.thumb_path,
       attachment: att
     };
-    let res = await c.from('posts').insert(payload).select(POST_SELECT);
-    let error = res.error, data = res.data;
-    if (error && att && /attachment/i.test(error.message || '')){
-      /* migration v5 absente : publication best-effort sans la carte
-         partagée (même philosophie que les reposts en G) */
-      delete payload.attachment;
-      payload.kind = photo ? 'photo' : 'text';
-      res = await c.from('posts').insert(payload).select(POST_SELECT);
-      error = res.error; data = res.data;
-      if (!error) toast('Posted — the shared card will appear once the update is live.');
+    /* Colonnes v5/v8 absentes : retirees automatiquement du payload et
+       du RETURNING (withMissingFields), publication best-effort. */
+    const res = await withMissingFields(
+      (p, cols) => c.from('posts').insert(p).select(cols),
+      payload, POST_SELECT,
+      (bad, p) => { if (bad === 'attachment') p.kind = photo ? 'photo' : 'text'; });
+    const error = res.error, data = res.data;
+    const dropped = res.dropped || [];
+    if (!error && att && dropped.indexOf('attachment') >= 0){
+      toast('Posted — the shared card will appear once the update is live.');
     }
     if (error) throw new Error(error.message || 'Could not publish your post.');
     const row = Array.isArray(data) ? data[0] : data;

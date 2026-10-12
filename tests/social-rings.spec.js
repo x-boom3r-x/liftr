@@ -242,6 +242,7 @@ test.describe('Chantier B : profil accessible depuis commentaires et story', () 
     await page.waitForTimeout(300);
     await page.locator('.post[data-post="post-0"] [data-act="reply"]').click();
     await expect(page.locator('#commentsModal')).toBeVisible();
+    await page.locator('#commentsToggle').click();   /* repli par défaut (L5) */
     await page.locator('.comment-avatar[data-uid="' + ANA + '"]').click();
     await expect(page.locator('#commentsModal')).toBeHidden();
     await expect(page.locator('#profAvatarBtn')).toBeVisible();
@@ -252,6 +253,7 @@ test.describe('Chantier B : profil accessible depuis commentaires et story', () 
     await page.waitForTimeout(200);
     await page.locator('.post[data-post="post-0"] [data-act="reply"]').click();
     await expect(page.locator('#commentsModal')).toBeVisible();
+    await page.locator('#commentsToggle').click();   /* repli par défaut (L5) */
     await page.locator('.comment-name[data-uid="' + ANA + '"]').click();
     await expect(page.locator('#commentsModal')).toBeHidden();
     await expect(page.locator('#profAvatarBtn')).toBeVisible();

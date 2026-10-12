@@ -47,6 +47,7 @@ function post(i, authorId, over){
     meta: {},
     created_at: new Date(Date.now() - i * 3600000).toISOString(),
     deleted_at: null,
+    comments_enabled: true,
     author_id: authorId || ME.id,
     author: authorId === ANA
       ? { id: ANA, username: 'ana', display_name: 'Ana', avatar_url: null }
@@ -157,6 +158,13 @@ function mockApi(page, opts){
         st.posts = st.posts.filter(p => p.id !== id);
         return noContent(route);
       }
+      /* L5 : turn on/off comments (menu post du propriétaire) */
+      if (method === 'PATCH'){
+        const id = eq('id');
+        const body = parseBody();
+        st.posts.forEach(p => { if (p.id === id) Object.assign(p, body); });
+        return json(route, [], 204);
+      }
       if (method === 'POST'){
         const body = parseBody();
         const rec = Object.assign({ id: 'post-new' + (++st.seq), created_at: new Date().toISOString(),
@@ -179,6 +187,8 @@ function mockApi(page, opts){
       }
       let rows = st.people.slice();
       const a = eq('id'); if (a) rows = rows.filter(p => p.id === a);
+      /* PostgREST : profiles?select=...&id=neq.<me> (annuaire / recherche) */
+      const ne = u.match(/id=neq\.([^&]+)/); if (ne) rows = rows.filter(p => p.id !== ne[1]);
       const ids = isIn('id'); if (ids) rows = rows.filter(p => ids.includes(p.id));
       const orm = u.match(/or=\(([^)]*)\)/);
       if (orm){
@@ -312,9 +322,25 @@ function mockApi(page, opts){
     /* ---------- follows ---------- */
     if (table === 'follows'){
       if (method === 'POST'){ st.follows.push(parseBody()); return json(route, [], 201); }
+      /* L5 : accept d'une demande — PATCH { state } sur le bon couple */
+      if (method === 'PATCH'){
+        const body = parseBody();
+        const fi = eq('follower_id');
+        const fe = eq('followee_id');
+        st.follows.forEach(x => {
+          if ((fi === null || x.follower_id === fi) &&
+              (fe === null || x.followee_id === fe)) Object.assign(x, body);
+        });
+        return json(route, [], 204);
+      }
       if (method === 'DELETE'){
-        const id = eq('followee_id');
-        st.follows = st.follows.filter(x => x.followee_id !== id);
+        /* couple (follower, followee) si présent — ne jamais supprimer
+           les liens des autres vers la même cible */
+        const fi = eq('follower_id');
+        const fe = eq('followee_id');
+        st.follows = st.follows.filter(x =>
+          !((fi === null || x.follower_id === fi) &&
+            (fe === null || x.followee_id === fe)));
         return noContent(route);
       }
       let rows = st.follows.slice();

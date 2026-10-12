@@ -18,7 +18,7 @@ import {
   startRepostQuote, cancelRepostQuote, openShareComposer, cancelShareDraft,
   sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu, openSharedPost,
-  openPostTypeSheet, pickPostMusic
+  openPostTypeSheet, pickPostMusic, toggleCommentsEnabled
 } from './feed.js';
 import {
   sanitizeAttachment, shareEmbedHtml, importSharedProgram,
@@ -94,7 +94,7 @@ Object.assign(window, {
   startRepostQuote, cancelRepostQuote, openShareComposer, cancelShareDraft,
   sharePost, renderCrew, initCrew, focusComposer, mediaUrl,
   refreshIdentity, deletePost, openPostMenu,
-  openPostTypeSheet, pickPostMusic, openSharedPost,
+  openPostTypeSheet, pickPostMusic, openSharedPost, toggleCommentsEnabled,
   sanitizeAttachment, shareEmbedHtml, importSharedProgram,
   prAttachment, sessionAttachment, programAttachment,
   openComments, closeComments, submitComment, updateCommentComposer,
