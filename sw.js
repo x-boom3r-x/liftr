@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v62';
+const CACHE_NAME = 'liftr-v63';
 
 const ASSETS = [
   './',
@@ -18,6 +18,8 @@ const ASSETS = [
   './js/stats.js',
   './js/progress.js',
   './js/nutri.js',
+  './js/foods.js',
+  './data/foods.json',
   './js/comments.js',
   './js/motivation.js',
   './js/comments/new-pr.js',

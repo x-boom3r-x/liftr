@@ -4,7 +4,7 @@
 
 /* Build partage avec index.html (data-build) et sw.js (liftr-vXX) :
    on le bump a chaque deploiement (test handlers.spec.js l'impose). */
-window.__LIFTR_BUILD__ = '62';
+window.__LIFTR_BUILD__ = '63';
 
 import './gestures.js';
 import './state.js';
@@ -19,6 +19,7 @@ import './calendrier.js';
 import './stats.js';
 import './progress.js';   /* après stats.js : réutilise muscleMap() (I) */
 import './nutri.js';
+import './foods.js';   /* base d'aliments lazy (J1) */
 import './comments.js';
 import './motivation.js';
 import './install.js';

@@ -1,0 +1,7555 @@
+{
+ "meta": {
+  "source": "suivi_calories_macros.xlsx (feuille Aliments)",
+  "unit": "valeurs pour 100 g (liquides : 1 ml ≈ 1 g)",
+  "count": 690,
+  "absent_fields": [
+   "fiber",
+   "sugar",
+   "sodium_mg"
+  ],
+  "atwater_anomalies": 23
+ },
+ "foods": [
+  {
+   "id": "agneau-cotelette--cru-sec",
+   "name": "Agneau - côtelette",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 282,
+   "protein": 16.3,
+   "carbs": 0,
+   "fat": 23.4
+  },
+  {
+   "id": "agneau-cotelette--cuit",
+   "name": "Agneau - côtelette",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 294,
+   "protein": 25.6,
+   "carbs": 0,
+   "fat": 20.9
+  },
+  {
+   "id": "agneau-epaule--cru-sec",
+   "name": "Agneau - épaule",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 215,
+   "protein": 17,
+   "carbs": 0,
+   "fat": 16
+  },
+  {
+   "id": "agneau-epaule--cuit",
+   "name": "Agneau - épaule",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 285,
+   "protein": 24.5,
+   "carbs": 0,
+   "fat": 20.5
+  },
+  {
+   "id": "agneau-gigot--cru-sec",
+   "name": "Agneau - gigot",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 162,
+   "protein": 20.3,
+   "carbs": 0,
+   "fat": 8.4
+  },
+  {
+   "id": "agneau-gigot--cuit",
+   "name": "Agneau - gigot",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 225,
+   "protein": 27.5,
+   "carbs": 0,
+   "fat": 12.5
+  },
+  {
+   "id": "agneau-hache--cru-sec",
+   "name": "Agneau - haché",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 282,
+   "protein": 16.6,
+   "carbs": 0,
+   "fat": 23.4
+  },
+  {
+   "id": "agneau-hache--cuit",
+   "name": "Agneau - haché",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 283,
+   "protein": 25.6,
+   "carbs": 0,
+   "fat": 19.7
+  },
+  {
+   "id": "bacon-lardons--cru-sec",
+   "name": "Bacon / lardons",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 417,
+   "protein": 12.6,
+   "carbs": 1.4,
+   "fat": 40
+  },
+  {
+   "id": "bacon-lardons--cuit",
+   "name": "Bacon / lardons",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 541,
+   "protein": 37,
+   "carbs": 1.4,
+   "fat": 42
+  },
+  {
+   "id": "blanc-de-poulet-en-tranches-charcuterie--tel-que-vendu",
+   "name": "Blanc de poulet en tranches (charcuterie)",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 105,
+   "protein": 20,
+   "carbs": 1,
+   "fat": 2,
+   "synonyms": "jambon de poulet"
+  },
+  {
+   "id": "boeuf-bavette-flanchet--cru-sec",
+   "name": "Boeuf - bavette / flanchet",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 155,
+   "protein": 21,
+   "carbs": 0,
+   "fat": 7.6
+  },
+  {
+   "id": "boeuf-bavette-flanchet--cuit",
+   "name": "Boeuf - bavette / flanchet",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 192,
+   "protein": 27.8,
+   "carbs": 0,
+   "fat": 8
+  },
+  {
+   "id": "boeuf-entrecote--cru-sec",
+   "name": "Boeuf - entrecôte",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 250,
+   "protein": 19.5,
+   "carbs": 0,
+   "fat": 19,
+   "synonyms": "steak côte de boeuf"
+  },
+  {
+   "id": "boeuf-entrecote--cuit",
+   "name": "Boeuf - entrecôte",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 291,
+   "protein": 24,
+   "carbs": 0,
+   "fat": 21,
+   "synonyms": "steak côte de boeuf"
+  },
+  {
+   "id": "boeuf-filet--cru-sec",
+   "name": "Boeuf - filet",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 143,
+   "protein": 20.8,
+   "carbs": 0,
+   "fat": 6
+  },
+  {
+   "id": "boeuf-filet--cuit",
+   "name": "Boeuf - filet",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 190,
+   "protein": 28,
+   "carbs": 0,
+   "fat": 8
+  },
+  {
+   "id": "boeuf-hache-10-mg--cru-sec",
+   "name": "Boeuf - haché 10% MG",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 176,
+   "protein": 20,
+   "carbs": 0,
+   "fat": 10,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-hache-10-mg--cuit",
+   "name": "Boeuf - haché 10% MG",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 217,
+   "protein": 26.1,
+   "carbs": 0,
+   "fat": 11.8,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-hache-15-mg--cru-sec",
+   "name": "Boeuf - haché 15% MG",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 215,
+   "protein": 18.6,
+   "carbs": 0,
+   "fat": 15,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-hache-15-mg--cuit",
+   "name": "Boeuf - haché 15% MG",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 250,
+   "protein": 25.9,
+   "carbs": 0,
+   "fat": 15.9,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-hache-20-mg--cru-sec",
+   "name": "Boeuf - haché 20% MG",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 254,
+   "protein": 17.2,
+   "carbs": 0,
+   "fat": 20,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-hache-20-mg--cuit",
+   "name": "Boeuf - haché 20% MG",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 272,
+   "protein": 25.6,
+   "carbs": 0,
+   "fat": 17.9,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-hache-5-mg--cru-sec",
+   "name": "Boeuf - haché 5% MG",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 137,
+   "protein": 21.4,
+   "carbs": 0,
+   "fat": 5,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-hache-5-mg--cuit",
+   "name": "Boeuf - haché 5% MG",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 171,
+   "protein": 26.1,
+   "carbs": 0,
+   "fat": 6.5,
+   "synonyms": "steak haché viande hachée boeuf"
+  },
+  {
+   "id": "boeuf-paleron-bourguignon--cru-sec",
+   "name": "Boeuf - paleron / bourguignon",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 170,
+   "protein": 20.5,
+   "carbs": 0,
+   "fat": 9.5,
+   "synonyms": "boeuf à braiser pot-au-feu"
+  },
+  {
+   "id": "boeuf-paleron-bourguignon--cuit",
+   "name": "Boeuf - paleron / bourguignon",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 230,
+   "protein": 31,
+   "carbs": 0,
+   "fat": 11.5,
+   "synonyms": "boeuf à braiser pot-au-feu"
+  },
+  {
+   "id": "boeuf-rumsteck-faux-filet-maigre--cru-sec",
+   "name": "Boeuf - rumsteck / faux-filet maigre",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 150,
+   "protein": 21.5,
+   "carbs": 0,
+   "fat": 6.2,
+   "synonyms": "steak"
+  },
+  {
+   "id": "boeuf-rumsteck-faux-filet-maigre--cuit",
+   "name": "Boeuf - rumsteck / faux-filet maigre",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 190,
+   "protein": 29,
+   "carbs": 0,
+   "fat": 7.5,
+   "synonyms": "steak"
+  },
+  {
+   "id": "boeuf-viande-sechee-jerky--tel-que-vendu",
+   "name": "Boeuf - viande séchée (jerky)",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 410,
+   "protein": 33.2,
+   "carbs": 11,
+   "fat": 25.6
+  },
+  {
+   "id": "boudin-noir--tel-que-vendu",
+   "name": "Boudin noir",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 379,
+   "protein": 14.6,
+   "carbs": 0.1,
+   "fat": 34.1
+  },
+  {
+   "id": "bresaola--tel-que-vendu",
+   "name": "Bresaola",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 151,
+   "protein": 32,
+   "carbs": 0.3,
+   "fat": 2
+  },
+  {
+   "id": "caille--cru-sec",
+   "name": "Caille",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 134,
+   "protein": 21.8,
+   "carbs": 0,
+   "fat": 4.5
+  },
+  {
+   "id": "caille--cuit",
+   "name": "Caille",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 192,
+   "protein": 25.1,
+   "carbs": 0,
+   "fat": 9.3
+  },
+  {
+   "id": "canard-avec-peau--cru-sec",
+   "name": "Canard - avec peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 337,
+   "protein": 11.5,
+   "carbs": 0,
+   "fat": 32.4
+  },
+  {
+   "id": "canard-avec-peau--cuit",
+   "name": "Canard - avec peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 337,
+   "protein": 19,
+   "carbs": 0,
+   "fat": 28.4
+  },
+  {
+   "id": "canard-sans-peau--cru-sec",
+   "name": "Canard - sans peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 135,
+   "protein": 18.3,
+   "carbs": 0,
+   "fat": 5.9
+  },
+  {
+   "id": "canard-sans-peau--cuit",
+   "name": "Canard - sans peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 201,
+   "protein": 23.5,
+   "carbs": 0,
+   "fat": 11.2
+  },
+  {
+   "id": "cerf-venaison--cru-sec",
+   "name": "Cerf (venaison)",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 120,
+   "protein": 23,
+   "carbs": 0,
+   "fat": 2.4
+  },
+  {
+   "id": "cerf-venaison--cuit",
+   "name": "Cerf (venaison)",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 158,
+   "protein": 30.2,
+   "carbs": 0,
+   "fat": 3.2
+  },
+  {
+   "id": "chorizo--tel-que-vendu",
+   "name": "Chorizo",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 455,
+   "protein": 24.1,
+   "carbs": 1.9,
+   "fat": 38.3
+  },
+  {
+   "id": "coeur-de-boeuf--cru-sec",
+   "name": "Coeur de boeuf",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 112,
+   "protein": 17.7,
+   "carbs": 0.1,
+   "fat": 3.9
+  },
+  {
+   "id": "coeur-de-boeuf--cuit",
+   "name": "Coeur de boeuf",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 165,
+   "protein": 28.5,
+   "carbs": 0.1,
+   "fat": 4.8
+  },
+  {
+   "id": "dinde-blanc-sans-peau--cru-sec",
+   "name": "Dinde - blanc sans peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 114,
+   "protein": 23.7,
+   "carbs": 0,
+   "fat": 1.5,
+   "synonyms": "escalope filet blanc de dinde"
+  },
+  {
+   "id": "dinde-blanc-sans-peau--cuit",
+   "name": "Dinde - blanc sans peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 135,
+   "protein": 30,
+   "carbs": 0,
+   "fat": 0.7,
+   "synonyms": "escalope filet blanc de dinde"
+  },
+  {
+   "id": "dinde-hachee-93-maigre--cru-sec",
+   "name": "Dinde - hachée 93% maigre",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 150,
+   "protein": 18.7,
+   "carbs": 0,
+   "fat": 8.3
+  },
+  {
+   "id": "dinde-hachee-93-maigre--cuit",
+   "name": "Dinde - hachée 93% maigre",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 213,
+   "protein": 27.1,
+   "carbs": 0,
+   "fat": 11.1
+  },
+  {
+   "id": "dinde-tranches-charcuterie--tel-que-vendu",
+   "name": "Dinde - tranches (charcuterie)",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 105,
+   "protein": 18,
+   "carbs": 1.5,
+   "fat": 2.5,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 tranche"
+  },
+  {
+   "id": "faisan--cru-sec",
+   "name": "Faisan",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 133,
+   "protein": 23.6,
+   "carbs": 0,
+   "fat": 3.6
+  },
+  {
+   "id": "foie-de-boeuf--cru-sec",
+   "name": "Foie de boeuf",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 135,
+   "protein": 20.4,
+   "carbs": 3.9,
+   "fat": 3.6
+  },
+  {
+   "id": "foie-de-boeuf--cuit",
+   "name": "Foie de boeuf",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 175,
+   "protein": 27,
+   "carbs": 5.2,
+   "fat": 4.7
+  },
+  {
+   "id": "foie-de-volaille--cru-sec",
+   "name": "Foie de volaille",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 119,
+   "protein": 16.9,
+   "carbs": 0.7,
+   "fat": 4.8
+  },
+  {
+   "id": "foie-de-volaille--cuit",
+   "name": "Foie de volaille",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 167,
+   "protein": 24.5,
+   "carbs": 0.9,
+   "fat": 6.5
+  },
+  {
+   "id": "jambon-blanc-cuit--tel-que-vendu",
+   "name": "Jambon blanc cuit",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 107,
+   "protein": 17.5,
+   "carbs": 0.8,
+   "fat": 3.5,
+   "gramsPerUnit": {
+    "piece": 45
+   },
+   "unitLabel": "1 tranche",
+   "synonyms": "jambon"
+  },
+  {
+   "id": "jambon-cru-seche-type-serrano--tel-que-vendu",
+   "name": "Jambon cru séché (type Serrano)",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 241,
+   "protein": 31,
+   "carbs": 0.3,
+   "fat": 12.6,
+   "gramsPerUnit": {
+    "piece": 15
+   },
+   "unitLabel": "1 tranche",
+   "synonyms": "jambon"
+  },
+  {
+   "id": "langue-de-boeuf--cru-sec",
+   "name": "Langue de boeuf",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 224,
+   "protein": 16.3,
+   "carbs": 3.7,
+   "fat": 16.1
+  },
+  {
+   "id": "langue-de-boeuf--cuit",
+   "name": "Langue de boeuf",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 284,
+   "protein": 19.1,
+   "carbs": 3.6,
+   "fat": 21
+  },
+  {
+   "id": "lapin--cru-sec",
+   "name": "Lapin",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 136,
+   "protein": 20.1,
+   "carbs": 0,
+   "fat": 5.5
+  },
+  {
+   "id": "lapin--cuit",
+   "name": "Lapin",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 197,
+   "protein": 29.1,
+   "carbs": 0,
+   "fat": 8.1
+  },
+  {
+   "id": "merguez--cru-sec",
+   "name": "Merguez",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 280,
+   "protein": 14,
+   "carbs": 2,
+   "fat": 24,
+   "gramsPerUnit": {
+    "piece": 60
+   },
+   "unitLabel": "1 merguez"
+  },
+  {
+   "id": "nuggets-de-poulet--cuit",
+   "name": "Nuggets de poulet",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 255,
+   "protein": 15,
+   "carbs": 17,
+   "fat": 14,
+   "synonyms": "poulet pané"
+  },
+  {
+   "id": "oie-sans-peau--cru-sec",
+   "name": "Oie - sans peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 161,
+   "protein": 22.7,
+   "carbs": 0,
+   "fat": 7.1
+  },
+  {
+   "id": "oie-sans-peau--cuit",
+   "name": "Oie - sans peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 238,
+   "protein": 29.3,
+   "carbs": 0,
+   "fat": 12.7
+  },
+  {
+   "id": "pate-de-campagne--tel-que-vendu",
+   "name": "Pâté de campagne",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 290,
+   "protein": 14,
+   "carbs": 2,
+   "fat": 25,
+   "synonyms": "charcuterie"
+  },
+  {
+   "id": "pintade--cru-sec",
+   "name": "Pintade",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 110,
+   "protein": 23.4,
+   "carbs": 0,
+   "fat": 1.6
+  },
+  {
+   "id": "porc-cote-maigre--cru-sec",
+   "name": "Porc - côte maigre",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 142,
+   "protein": 21.4,
+   "carbs": 0,
+   "fat": 5.5
+  },
+  {
+   "id": "porc-cote-maigre--cuit",
+   "name": "Porc - côte maigre",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 172,
+   "protein": 28,
+   "carbs": 0,
+   "fat": 6.5
+  },
+  {
+   "id": "porc-echine--cru-sec",
+   "name": "Porc - échine",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 215,
+   "protein": 17.5,
+   "carbs": 0,
+   "fat": 16,
+   "synonyms": "porc palette"
+  },
+  {
+   "id": "porc-echine--cuit",
+   "name": "Porc - échine",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 270,
+   "protein": 25,
+   "carbs": 0,
+   "fat": 18.5,
+   "synonyms": "porc palette"
+  },
+  {
+   "id": "porc-filet-mignon--cru-sec",
+   "name": "Porc - filet mignon",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 120,
+   "protein": 20.9,
+   "carbs": 0,
+   "fat": 3.5
+  },
+  {
+   "id": "porc-filet-mignon--cuit",
+   "name": "Porc - filet mignon",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 143,
+   "protein": 26.2,
+   "carbs": 0,
+   "fat": 3.5
+  },
+  {
+   "id": "porc-hache-20-mg--cru-sec",
+   "name": "Porc - haché 20% MG",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 263,
+   "protein": 16.9,
+   "carbs": 0,
+   "fat": 21.2
+  },
+  {
+   "id": "porc-hache-20-mg--cuit",
+   "name": "Porc - haché 20% MG",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 297,
+   "protein": 25.7,
+   "carbs": 0,
+   "fat": 20.8
+  },
+  {
+   "id": "porc-poitrine--cru-sec",
+   "name": "Porc - poitrine",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 518,
+   "protein": 9.3,
+   "carbs": 0,
+   "fat": 53
+  },
+  {
+   "id": "poulet-aile-avec-peau--cru-sec",
+   "name": "Poulet - aile avec peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 222,
+   "protein": 18.3,
+   "carbs": 0,
+   "fat": 15.9,
+   "synonyms": "ailes de poulet"
+  },
+  {
+   "id": "poulet-aile-avec-peau--cuit",
+   "name": "Poulet - aile avec peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 254,
+   "protein": 30.5,
+   "carbs": 0,
+   "fat": 14.5,
+   "synonyms": "ailes de poulet"
+  },
+  {
+   "id": "poulet-blanc-avec-peau--cru-sec",
+   "name": "Poulet - blanc avec peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 172,
+   "protein": 20.8,
+   "carbs": 0,
+   "fat": 9.3,
+   "synonyms": "blanc de poulet filet"
+  },
+  {
+   "id": "poulet-blanc-avec-peau--cuit",
+   "name": "Poulet - blanc avec peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 197,
+   "protein": 29.8,
+   "carbs": 0,
+   "fat": 7.8,
+   "synonyms": "blanc de poulet filet"
+  },
+  {
+   "id": "poulet-blanc-sans-peau--cru-sec",
+   "name": "Poulet - blanc sans peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 120,
+   "protein": 22.5,
+   "carbs": 0,
+   "fat": 2.6,
+   "synonyms": "blanc de poulet filet escalope aiguillette émincé"
+  },
+  {
+   "id": "poulet-blanc-sans-peau--cuit",
+   "name": "Poulet - blanc sans peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 165,
+   "protein": 31,
+   "carbs": 0,
+   "fat": 3.6,
+   "synonyms": "blanc de poulet filet escalope aiguillette émincé"
+  },
+  {
+   "id": "poulet-cuisse-avec-peau--cru-sec",
+   "name": "Poulet - cuisse avec peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 211,
+   "protein": 17.3,
+   "carbs": 0,
+   "fat": 15.3
+  },
+  {
+   "id": "poulet-cuisse-avec-peau--cuit",
+   "name": "Poulet - cuisse avec peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 247,
+   "protein": 23.3,
+   "carbs": 0,
+   "fat": 16.7
+  },
+  {
+   "id": "poulet-cuisse-sans-peau--cru-sec",
+   "name": "Poulet - cuisse sans peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 121,
+   "protein": 19.7,
+   "carbs": 0,
+   "fat": 4.1
+  },
+  {
+   "id": "poulet-cuisse-sans-peau--cuit",
+   "name": "Poulet - cuisse sans peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 179,
+   "protein": 24.8,
+   "carbs": 0,
+   "fat": 8.2
+  },
+  {
+   "id": "poulet-entier-avec-peau--cru-sec",
+   "name": "Poulet - entier avec peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 215,
+   "protein": 18.6,
+   "carbs": 0,
+   "fat": 15.1,
+   "synonyms": "poulet rôti"
+  },
+  {
+   "id": "poulet-entier-avec-peau--cuit",
+   "name": "Poulet - entier avec peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 239,
+   "protein": 27.3,
+   "carbs": 0,
+   "fat": 13.6,
+   "synonyms": "poulet rôti"
+  },
+  {
+   "id": "poulet-pilon-sans-peau--cru-sec",
+   "name": "Poulet - pilon sans peau",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 116,
+   "protein": 19.5,
+   "carbs": 0,
+   "fat": 3.8
+  },
+  {
+   "id": "poulet-pilon-sans-peau--cuit",
+   "name": "Poulet - pilon sans peau",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 155,
+   "protein": 24.2,
+   "carbs": 0,
+   "fat": 5.7
+  },
+  {
+   "id": "rillettes-de-porc--tel-que-vendu",
+   "name": "Rillettes de porc",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 430,
+   "protein": 15,
+   "carbs": 0.5,
+   "fat": 40,
+   "synonyms": "charcuterie"
+  },
+  {
+   "id": "rognons-de-boeuf--cru-sec",
+   "name": "Rognons de boeuf",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 99,
+   "protein": 17.4,
+   "carbs": 0.3,
+   "fat": 3.1
+  },
+  {
+   "id": "rognons-de-boeuf--cuit",
+   "name": "Rognons de boeuf",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 158,
+   "protein": 27.3,
+   "carbs": 0,
+   "fat": 5
+  },
+  {
+   "id": "salami-sec--tel-que-vendu",
+   "name": "Salami sec",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 407,
+   "protein": 22.6,
+   "carbs": 1.6,
+   "fat": 33.7
+  },
+  {
+   "id": "saucisse-de-porc--cru-sec",
+   "name": "Saucisse de porc",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 304,
+   "protein": 13.5,
+   "carbs": 0.9,
+   "fat": 27,
+   "gramsPerUnit": {
+    "piece": 70
+   },
+   "unitLabel": "1 saucisse"
+  },
+  {
+   "id": "saucisse-de-porc--cuit",
+   "name": "Saucisse de porc",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 339,
+   "protein": 19.4,
+   "carbs": 0.8,
+   "fat": 28,
+   "gramsPerUnit": {
+    "piece": 70
+   },
+   "unitLabel": "1 saucisse"
+  },
+  {
+   "id": "saucisse-de-strasbourg-knack--tel-que-vendu",
+   "name": "Saucisse de Strasbourg / knack",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 290,
+   "protein": 11,
+   "carbs": 3,
+   "fat": 26
+  },
+  {
+   "id": "saucisson-sec--tel-que-vendu",
+   "name": "Saucisson sec",
+   "state": "Tel que vendu",
+   "category": "Viandes & volailles",
+   "kcal": 410,
+   "protein": 26,
+   "carbs": 1.5,
+   "fat": 33,
+   "synonyms": "charcuterie"
+  },
+  {
+   "id": "veau-cotelette--cru-sec",
+   "name": "Veau - côtelette",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 140,
+   "protein": 20,
+   "carbs": 0,
+   "fat": 6,
+   "synonyms": "côte de veau"
+  },
+  {
+   "id": "veau-cotelette--cuit",
+   "name": "Veau - côtelette",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 185,
+   "protein": 28,
+   "carbs": 0,
+   "fat": 7.5,
+   "synonyms": "côte de veau"
+  },
+  {
+   "id": "veau-escalope-noix--cru-sec",
+   "name": "Veau - escalope / noix",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 109,
+   "protein": 21,
+   "carbs": 0,
+   "fat": 2.5
+  },
+  {
+   "id": "veau-escalope-noix--cuit",
+   "name": "Veau - escalope / noix",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 153,
+   "protein": 30.5,
+   "carbs": 0,
+   "fat": 3.2
+  },
+  {
+   "id": "veau-hache--cru-sec",
+   "name": "Veau - haché",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 150,
+   "protein": 19,
+   "carbs": 0,
+   "fat": 8.5,
+   "synonyms": "viande hachée veau"
+  },
+  {
+   "id": "veau-hache--cuit",
+   "name": "Veau - haché",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 190,
+   "protein": 26,
+   "carbs": 0,
+   "fat": 9.5,
+   "synonyms": "viande hachée veau"
+  },
+  {
+   "id": "veau-roti-noix-epaule--cru-sec",
+   "name": "Veau - rôti (noix / épaule)",
+   "state": "Cru / sec",
+   "category": "Viandes & volailles",
+   "kcal": 120,
+   "protein": 20.5,
+   "carbs": 0,
+   "fat": 3.8,
+   "synonyms": "rôti de veau"
+  },
+  {
+   "id": "veau-roti-noix-epaule--cuit",
+   "name": "Veau - rôti (noix / épaule)",
+   "state": "Cuit",
+   "category": "Viandes & volailles",
+   "kcal": 170,
+   "protein": 28,
+   "carbs": 0,
+   "fat": 5.5,
+   "synonyms": "rôti de veau"
+  },
+  {
+   "id": "anchois-en-boite-a-l-huile-egouttes--tel-que-vendu",
+   "name": "Anchois en boîte à l'huile (égouttés)",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 210,
+   "protein": 28.9,
+   "carbs": 0,
+   "fat": 9.7
+  },
+  {
+   "id": "anchois-frais--cru-sec",
+   "name": "Anchois frais",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 131,
+   "protein": 20.4,
+   "carbs": 0,
+   "fat": 4.8
+  },
+  {
+   "id": "anguille--cru-sec",
+   "name": "Anguille",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 184,
+   "protein": 18.4,
+   "carbs": 0,
+   "fat": 11.7
+  },
+  {
+   "id": "anguille--cuit",
+   "name": "Anguille",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 236,
+   "protein": 23.6,
+   "carbs": 0,
+   "fat": 15
+  },
+  {
+   "id": "bar-loup--cru-sec",
+   "name": "Bar / loup",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 97,
+   "protein": 18.4,
+   "carbs": 0,
+   "fat": 2
+  },
+  {
+   "id": "bar-loup--cuit",
+   "name": "Bar / loup",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 124,
+   "protein": 23.6,
+   "carbs": 0,
+   "fat": 2.6
+  },
+  {
+   "id": "cabillaud-morue-fraiche--cru-sec",
+   "name": "Cabillaud (morue fraîche)",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 82,
+   "protein": 17.8,
+   "carbs": 0,
+   "fat": 0.7
+  },
+  {
+   "id": "cabillaud-morue-fraiche--cuit",
+   "name": "Cabillaud (morue fraîche)",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 105,
+   "protein": 22.8,
+   "carbs": 0,
+   "fat": 0.9
+  },
+  {
+   "id": "calamar--cru-sec",
+   "name": "Calamar",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 92,
+   "protein": 15.6,
+   "carbs": 3.1,
+   "fat": 1.4,
+   "synonyms": "calamars calmar encornet"
+  },
+  {
+   "id": "calamar--cuit",
+   "name": "Calamar",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 175,
+   "protein": 17.9,
+   "carbs": 7.8,
+   "fat": 7.5,
+   "synonyms": "calamars calmar encornet"
+  },
+  {
+   "id": "carpe--cru-sec",
+   "name": "Carpe",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 127,
+   "protein": 17.8,
+   "carbs": 0,
+   "fat": 5.6
+  },
+  {
+   "id": "carpe--cuit",
+   "name": "Carpe",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 162,
+   "protein": 22.8,
+   "carbs": 0,
+   "fat": 7.2
+  },
+  {
+   "id": "caviar-oeufs-de-poisson--tel-que-vendu",
+   "name": "Caviar / oeufs de poisson",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 264,
+   "protein": 24.6,
+   "carbs": 4,
+   "fat": 17.9
+  },
+  {
+   "id": "colin-d-alaska--cru-sec",
+   "name": "Colin d'Alaska",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 81,
+   "protein": 17.2,
+   "carbs": 0,
+   "fat": 0.8,
+   "synonyms": "colin lieu"
+  },
+  {
+   "id": "colin-d-alaska--cuit",
+   "name": "Colin d'Alaska",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 111,
+   "protein": 23.7,
+   "carbs": 0,
+   "fat": 1,
+   "synonyms": "colin lieu"
+  },
+  {
+   "id": "coquilles-saint-jacques--cru-sec",
+   "name": "Coquilles Saint-Jacques",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 69,
+   "protein": 12.1,
+   "carbs": 3.2,
+   "fat": 0.5
+  },
+  {
+   "id": "coquilles-saint-jacques--cuit",
+   "name": "Coquilles Saint-Jacques",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 111,
+   "protein": 20.5,
+   "carbs": 5.4,
+   "fat": 0.8
+  },
+  {
+   "id": "crabe--cru-sec",
+   "name": "Crabe",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 87,
+   "protein": 18.1,
+   "carbs": 0,
+   "fat": 1.1
+  },
+  {
+   "id": "crabe--cuit",
+   "name": "Crabe",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 97,
+   "protein": 19.4,
+   "carbs": 0,
+   "fat": 1.5
+  },
+  {
+   "id": "crevettes--cru-sec",
+   "name": "Crevettes",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 85,
+   "protein": 20.1,
+   "carbs": 0.2,
+   "fat": 0.5,
+   "synonyms": "crevette gambas"
+  },
+  {
+   "id": "crevettes--cuit",
+   "name": "Crevettes",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 99,
+   "protein": 24,
+   "carbs": 0.2,
+   "fat": 0.3,
+   "synonyms": "crevette gambas"
+  },
+  {
+   "id": "dorade--cru-sec",
+   "name": "Dorade",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 96,
+   "protein": 19,
+   "carbs": 0,
+   "fat": 2
+  },
+  {
+   "id": "dorade--cuit",
+   "name": "Dorade",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 128,
+   "protein": 24,
+   "carbs": 0,
+   "fat": 3
+  },
+  {
+   "id": "ecrevisse--cru-sec",
+   "name": "Écrevisse",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 72,
+   "protein": 14.9,
+   "carbs": 0,
+   "fat": 1.2
+  },
+  {
+   "id": "ecrevisse--cuit",
+   "name": "Écrevisse",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 87,
+   "protein": 17.8,
+   "carbs": 0,
+   "fat": 1.2
+  },
+  {
+   "id": "eglefin-haddock--cru-sec",
+   "name": "Églefin (haddock)",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 74,
+   "protein": 17.2,
+   "carbs": 0,
+   "fat": 0.6
+  },
+  {
+   "id": "eglefin-haddock--cuit",
+   "name": "Églefin (haddock)",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 90,
+   "protein": 20.9,
+   "carbs": 0,
+   "fat": 0.6
+  },
+  {
+   "id": "escargots--cru-sec",
+   "name": "Escargots",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 90,
+   "protein": 16.1,
+   "carbs": 2,
+   "fat": 1.4
+  },
+  {
+   "id": "espadon--cru-sec",
+   "name": "Espadon",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 144,
+   "protein": 19.7,
+   "carbs": 0,
+   "fat": 6.7
+  },
+  {
+   "id": "espadon--cuit",
+   "name": "Espadon",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 172,
+   "protein": 26.9,
+   "carbs": 0,
+   "fat": 6.7
+  },
+  {
+   "id": "fletan--cru-sec",
+   "name": "Flétan",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 91,
+   "protein": 18.6,
+   "carbs": 0,
+   "fat": 1.3
+  },
+  {
+   "id": "fletan--cuit",
+   "name": "Flétan",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 111,
+   "protein": 22.5,
+   "carbs": 0,
+   "fat": 1.6
+  },
+  {
+   "id": "hareng--cru-sec",
+   "name": "Hareng",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 158,
+   "protein": 18,
+   "carbs": 0,
+   "fat": 9
+  },
+  {
+   "id": "hareng--cuit",
+   "name": "Hareng",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 203,
+   "protein": 23,
+   "carbs": 0,
+   "fat": 11.6
+  },
+  {
+   "id": "homard--cru-sec",
+   "name": "Homard",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 77,
+   "protein": 16.5,
+   "carbs": 0,
+   "fat": 0.9
+  },
+  {
+   "id": "homard--cuit",
+   "name": "Homard",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 98,
+   "protein": 20.5,
+   "carbs": 0,
+   "fat": 0.6
+  },
+  {
+   "id": "huitres-creuses--cru-sec",
+   "name": "Huîtres (creuses)",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 81,
+   "protein": 9.5,
+   "carbs": 4.7,
+   "fat": 2.3
+  },
+  {
+   "id": "lieu-noir-colin--cru-sec",
+   "name": "Lieu noir / colin",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 92,
+   "protein": 19.4,
+   "carbs": 0,
+   "fat": 0.8
+  },
+  {
+   "id": "lieu-noir-colin--cuit",
+   "name": "Lieu noir / colin",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 118,
+   "protein": 24.9,
+   "carbs": 0,
+   "fat": 1
+  },
+  {
+   "id": "lotte--cru-sec",
+   "name": "Lotte",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 76,
+   "protein": 14.5,
+   "carbs": 0,
+   "fat": 1.5
+  },
+  {
+   "id": "maquereau--cru-sec",
+   "name": "Maquereau",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 205,
+   "protein": 18.6,
+   "carbs": 0,
+   "fat": 13.9
+  },
+  {
+   "id": "maquereau--cuit",
+   "name": "Maquereau",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 262,
+   "protein": 23.8,
+   "carbs": 0,
+   "fat": 17.8
+  },
+  {
+   "id": "maquereau-en-boite-egoutte--tel-que-vendu",
+   "name": "Maquereau en boîte (égoutté)",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 156,
+   "protein": 23.2,
+   "carbs": 0,
+   "fat": 6.3
+  },
+  {
+   "id": "merlu--cru-sec",
+   "name": "Merlu",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 82,
+   "protein": 17.2,
+   "carbs": 0,
+   "fat": 1
+  },
+  {
+   "id": "merlu--cuit",
+   "name": "Merlu",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 105,
+   "protein": 22,
+   "carbs": 0,
+   "fat": 1.3
+  },
+  {
+   "id": "merou--cru-sec",
+   "name": "Mérou",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 92,
+   "protein": 19.4,
+   "carbs": 0,
+   "fat": 1
+  },
+  {
+   "id": "merou--cuit",
+   "name": "Mérou",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 118,
+   "protein": 24.8,
+   "carbs": 0,
+   "fat": 1.3
+  },
+  {
+   "id": "morue-salee-sechee--cru-sec",
+   "name": "Morue salée séchée",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 290,
+   "protein": 62.8,
+   "carbs": 0,
+   "fat": 2.4
+  },
+  {
+   "id": "moules--cru-sec",
+   "name": "Moules",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 86,
+   "protein": 11.9,
+   "carbs": 3.7,
+   "fat": 2.2
+  },
+  {
+   "id": "moules--cuit",
+   "name": "Moules",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 172,
+   "protein": 23.8,
+   "carbs": 7.4,
+   "fat": 4.5
+  },
+  {
+   "id": "palourdes--cru-sec",
+   "name": "Palourdes",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 74,
+   "protein": 12.8,
+   "carbs": 2.6,
+   "fat": 1
+  },
+  {
+   "id": "palourdes--cuit",
+   "name": "Palourdes",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 148,
+   "protein": 25.6,
+   "carbs": 5.1,
+   "fat": 2
+  },
+  {
+   "id": "pangasius--cru-sec",
+   "name": "Pangasius",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 90,
+   "protein": 15.7,
+   "carbs": 0,
+   "fat": 2.9
+  },
+  {
+   "id": "perche--cru-sec",
+   "name": "Perche",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 91,
+   "protein": 19.4,
+   "carbs": 0,
+   "fat": 0.9
+  },
+  {
+   "id": "perche--cuit",
+   "name": "Perche",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 117,
+   "protein": 24,
+   "carbs": 0,
+   "fat": 1.2
+  },
+  {
+   "id": "poisson-pane-batonnets-filet--cuit",
+   "name": "Poisson pané (bâtonnets / filet)",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 195,
+   "protein": 12,
+   "carbs": 17,
+   "fat": 8.5,
+   "synonyms": "fish sticks"
+  },
+  {
+   "id": "poulpe--cru-sec",
+   "name": "Poulpe",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 82,
+   "protein": 14.9,
+   "carbs": 2.2,
+   "fat": 1
+  },
+  {
+   "id": "poulpe--cuit",
+   "name": "Poulpe",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 164,
+   "protein": 29.8,
+   "carbs": 4.4,
+   "fat": 2.1
+  },
+  {
+   "id": "sardine-fraiche--cru-sec",
+   "name": "Sardine fraîche",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 135,
+   "protein": 19.1,
+   "carbs": 0,
+   "fat": 6
+  },
+  {
+   "id": "sardine-fraiche--cuit",
+   "name": "Sardine fraîche",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 185,
+   "protein": 25,
+   "carbs": 0,
+   "fat": 8.5
+  },
+  {
+   "id": "sardines-en-boite-a-l-huile-egouttees--tel-que-vendu",
+   "name": "Sardines en boîte à l'huile (égouttées)",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 208,
+   "protein": 24.6,
+   "carbs": 0,
+   "fat": 11.5,
+   "gramsPerUnit": {
+    "piece": 95
+   },
+   "unitLabel": "1 boîte (poids égoutté)"
+  },
+  {
+   "id": "saumon-atlantique-elevage--cru-sec",
+   "name": "Saumon atlantique (élevage)",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 208,
+   "protein": 20.4,
+   "carbs": 0,
+   "fat": 13.4
+  },
+  {
+   "id": "saumon-atlantique-elevage--cuit",
+   "name": "Saumon atlantique (élevage)",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 206,
+   "protein": 22.1,
+   "carbs": 0,
+   "fat": 12.4
+  },
+  {
+   "id": "saumon-fume--tel-que-vendu",
+   "name": "Saumon fumé",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 117,
+   "protein": 18.3,
+   "carbs": 0,
+   "fat": 4.3,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 tranche"
+  },
+  {
+   "id": "saumon-rose-en-boite-egoutte--tel-que-vendu",
+   "name": "Saumon rose en boîte (égoutté)",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 136,
+   "protein": 19.8,
+   "carbs": 0,
+   "fat": 5.9
+  },
+  {
+   "id": "saumon-sauvage--cru-sec",
+   "name": "Saumon sauvage",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 142,
+   "protein": 19.8,
+   "carbs": 0,
+   "fat": 6.3
+  },
+  {
+   "id": "saumon-sauvage--cuit",
+   "name": "Saumon sauvage",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 182,
+   "protein": 25.4,
+   "carbs": 0,
+   "fat": 8.1
+  },
+  {
+   "id": "seiche--cru-sec",
+   "name": "Seiche",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 79,
+   "protein": 16.2,
+   "carbs": 0.8,
+   "fat": 0.7
+  },
+  {
+   "id": "seiche--cuit",
+   "name": "Seiche",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 158,
+   "protein": 32.5,
+   "carbs": 1.6,
+   "fat": 1.4
+  },
+  {
+   "id": "silure-catfish--cru-sec",
+   "name": "Silure (catfish)",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 95,
+   "protein": 16.4,
+   "carbs": 0,
+   "fat": 2.8
+  },
+  {
+   "id": "sole-carrelet-poisson-plat--cru-sec",
+   "name": "Sole / carrelet (poisson plat)",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 70,
+   "protein": 12.4,
+   "carbs": 0,
+   "fat": 1.2
+  },
+  {
+   "id": "sole-carrelet-poisson-plat--cuit",
+   "name": "Sole / carrelet (poisson plat)",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 86,
+   "protein": 17.5,
+   "carbs": 0,
+   "fat": 1.3
+  },
+  {
+   "id": "surimi--tel-que-vendu",
+   "name": "Surimi",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 99,
+   "protein": 15.2,
+   "carbs": 6.9,
+   "fat": 0.9
+  },
+  {
+   "id": "thon-albacore--cru-sec",
+   "name": "Thon albacore",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 109,
+   "protein": 24.4,
+   "carbs": 0,
+   "fat": 0.5
+  },
+  {
+   "id": "thon-albacore--cuit",
+   "name": "Thon albacore",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 139,
+   "protein": 29.1,
+   "carbs": 0,
+   "fat": 1
+  },
+  {
+   "id": "thon-en-boite-a-l-huile-egoutte--tel-que-vendu",
+   "name": "Thon en boîte à l'huile (égoutté)",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 198,
+   "protein": 29.1,
+   "carbs": 0,
+   "fat": 8.2,
+   "gramsPerUnit": {
+    "piece": 112
+   },
+   "unitLabel": "1 boîte (poids égoutté)"
+  },
+  {
+   "id": "thon-en-boite-au-naturel-egoutte--tel-que-vendu",
+   "name": "Thon en boîte au naturel (égoutté)",
+   "state": "Tel que vendu",
+   "category": "Poissons & fruits de mer",
+   "kcal": 116,
+   "protein": 25.5,
+   "carbs": 0,
+   "fat": 0.8,
+   "gramsPerUnit": {
+    "piece": 112
+   },
+   "unitLabel": "1 boîte (poids égoutté)"
+  },
+  {
+   "id": "thon-rouge--cru-sec",
+   "name": "Thon rouge",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 144,
+   "protein": 23.3,
+   "carbs": 0,
+   "fat": 4.9
+  },
+  {
+   "id": "thon-rouge--cuit",
+   "name": "Thon rouge",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 184,
+   "protein": 29.9,
+   "carbs": 0,
+   "fat": 6.3
+  },
+  {
+   "id": "tilapia--cru-sec",
+   "name": "Tilapia",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 96,
+   "protein": 20.1,
+   "carbs": 0,
+   "fat": 1.7
+  },
+  {
+   "id": "tilapia--cuit",
+   "name": "Tilapia",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 128,
+   "protein": 26.2,
+   "carbs": 0,
+   "fat": 2.7
+  },
+  {
+   "id": "truite-arc-en-ciel-elevage--cru-sec",
+   "name": "Truite arc-en-ciel (élevage)",
+   "state": "Cru / sec",
+   "category": "Poissons & fruits de mer",
+   "kcal": 141,
+   "protein": 19.9,
+   "carbs": 0,
+   "fat": 6.2
+  },
+  {
+   "id": "truite-arc-en-ciel-elevage--cuit",
+   "name": "Truite arc-en-ciel (élevage)",
+   "state": "Cuit",
+   "category": "Poissons & fruits de mer",
+   "kcal": 168,
+   "protein": 23.8,
+   "carbs": 0,
+   "fat": 7.2
+  },
+  {
+   "id": "blanc-d-oeuf--cru-sec",
+   "name": "Blanc d'oeuf",
+   "state": "Cru / sec",
+   "category": "Oeufs",
+   "kcal": 52,
+   "protein": 10.9,
+   "carbs": 0.7,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 33
+   },
+   "unitLabel": "1 blanc d'oeuf",
+   "synonyms": "blanc oeuf blancs"
+  },
+  {
+   "id": "blanc-d-oeuf--cuit",
+   "name": "Blanc d'oeuf",
+   "state": "Cuit",
+   "category": "Oeufs",
+   "kcal": 55,
+   "protein": 11,
+   "carbs": 0.7,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 33
+   },
+   "unitLabel": "1 blanc d'oeuf",
+   "synonyms": "blanc oeuf blancs"
+  },
+  {
+   "id": "jaune-d-oeuf--cru-sec",
+   "name": "Jaune d'oeuf",
+   "state": "Cru / sec",
+   "category": "Oeufs",
+   "kcal": 322,
+   "protein": 15.9,
+   "carbs": 3.6,
+   "fat": 26.5,
+   "gramsPerUnit": {
+    "piece": 17
+   },
+   "unitLabel": "1 jaune d'oeuf",
+   "synonyms": "jaune oeuf jaunes"
+  },
+  {
+   "id": "jaune-d-oeuf--cuit",
+   "name": "Jaune d'oeuf",
+   "state": "Cuit",
+   "category": "Oeufs",
+   "kcal": 355,
+   "protein": 15.9,
+   "carbs": 3.6,
+   "fat": 30.9,
+   "gramsPerUnit": {
+    "piece": 17
+   },
+   "unitLabel": "1 jaune d'oeuf",
+   "synonyms": "jaune oeuf jaunes"
+  },
+  {
+   "id": "oeuf-de-caille--cru-sec",
+   "name": "Oeuf de caille",
+   "state": "Cru / sec",
+   "category": "Oeufs",
+   "kcal": 158,
+   "protein": 13.1,
+   "carbs": 0.4,
+   "fat": 11.1,
+   "gramsPerUnit": {
+    "piece": 9
+   },
+   "unitLabel": "1 oeuf de caille"
+  },
+  {
+   "id": "oeuf-entier--cru-sec",
+   "name": "Oeuf entier",
+   "state": "Cru / sec",
+   "category": "Oeufs",
+   "kcal": 143,
+   "protein": 12.6,
+   "carbs": 0.7,
+   "fat": 9.5,
+   "gramsPerUnit": {
+    "piece": 50
+   },
+   "unitLabel": "1 oeuf moyen (sans coquille)",
+   "synonyms": "oeufs"
+  },
+  {
+   "id": "oeuf-entier--cuit",
+   "name": "Oeuf entier",
+   "state": "Cuit",
+   "category": "Oeufs",
+   "kcal": 155,
+   "protein": 13,
+   "carbs": 1.1,
+   "fat": 10.6,
+   "gramsPerUnit": {
+    "piece": 50
+   },
+   "unitLabel": "1 oeuf dur (sans coquille)",
+   "synonyms": "oeufs"
+  },
+  {
+   "id": "oeuf-entier-au-plat--cru-sec",
+   "name": "Oeuf entier - au plat",
+   "state": "Cru / sec",
+   "category": "Oeufs",
+   "kcal": 143,
+   "protein": 12.6,
+   "carbs": 0.7,
+   "fat": 9.5,
+   "gramsPerUnit": {
+    "piece": 50
+   },
+   "unitLabel": "1 oeuf moyen (sans coquille)"
+  },
+  {
+   "id": "oeuf-entier-au-plat--cuit",
+   "name": "Oeuf entier - au plat",
+   "state": "Cuit",
+   "category": "Oeufs",
+   "kcal": 196,
+   "protein": 13.6,
+   "carbs": 0.8,
+   "fat": 14.8,
+   "gramsPerUnit": {
+    "piece": 46
+   },
+   "unitLabel": "1 oeuf au plat"
+  },
+  {
+   "id": "oeuf-entier-brouille--cru-sec",
+   "name": "Oeuf entier - brouillé",
+   "state": "Cru / sec",
+   "category": "Oeufs",
+   "kcal": 143,
+   "protein": 12.6,
+   "carbs": 0.7,
+   "fat": 9.5
+  },
+  {
+   "id": "oeuf-entier-brouille--cuit",
+   "name": "Oeuf entier - brouillé",
+   "state": "Cuit",
+   "category": "Oeufs",
+   "kcal": 149,
+   "protein": 10,
+   "carbs": 1.6,
+   "fat": 11
+  },
+  {
+   "id": "oeuf-entier-poche--cuit",
+   "name": "Oeuf entier - poché",
+   "state": "Cuit",
+   "category": "Oeufs",
+   "kcal": 143,
+   "protein": 12.5,
+   "carbs": 0.7,
+   "fat": 9.5,
+   "gramsPerUnit": {
+    "piece": 50
+   },
+   "unitLabel": "1 oeuf poché",
+   "synonyms": "oeufs"
+  },
+  {
+   "id": "omelette--cru-sec",
+   "name": "Omelette",
+   "state": "Cru / sec",
+   "category": "Oeufs",
+   "kcal": 143,
+   "protein": 12.6,
+   "carbs": 0.7,
+   "fat": 9.5
+  },
+  {
+   "id": "omelette--cuit",
+   "name": "Omelette",
+   "state": "Cuit",
+   "category": "Oeufs",
+   "kcal": 154,
+   "protein": 10.6,
+   "carbs": 0.6,
+   "fat": 11.7
+  },
+  {
+   "id": "babeurre--tel-que-vendu",
+   "name": "Babeurre",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 40,
+   "protein": 3.3,
+   "carbs": 4.8,
+   "fat": 0.9,
+   "density": 1.03
+  },
+  {
+   "id": "beurre--tel-que-vendu",
+   "name": "Beurre",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 717,
+   "protein": 0.9,
+   "carbs": 0.1,
+   "fat": 81,
+   "gramsPerUnit": {
+    "piece": 10
+   },
+   "unitLabel": "1 noix / portion"
+  },
+  {
+   "id": "brie--tel-que-vendu",
+   "name": "Brie",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 334,
+   "protein": 20.8,
+   "carbs": 0.5,
+   "fat": 27.7,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "camembert--tel-que-vendu",
+   "name": "Camembert",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 300,
+   "protein": 19.8,
+   "carbs": 0.5,
+   "fat": 24.3,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "cheddar--tel-que-vendu",
+   "name": "Cheddar",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 403,
+   "protein": 24.9,
+   "carbs": 1.3,
+   "fat": 33.1,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "chevre-frais--tel-que-vendu",
+   "name": "Chèvre frais",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 268,
+   "protein": 18.5,
+   "carbs": 0.1,
+   "fat": 21.1,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "comte--tel-que-vendu",
+   "name": "Comté",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 409,
+   "protein": 27,
+   "carbs": 0,
+   "fat": 34,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "cottage-cheese-1--tel-que-vendu",
+   "name": "Cottage cheese 1%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 72,
+   "protein": 12.4,
+   "carbs": 2.7,
+   "fat": 1,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "cottage-cheese-4--tel-que-vendu",
+   "name": "Cottage cheese 4%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 98,
+   "protein": 11.1,
+   "carbs": 3.4,
+   "fat": 4.3,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "creme-fraiche-epaisse-30--tel-que-vendu",
+   "name": "Crème fraîche épaisse 30%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 292,
+   "protein": 2.1,
+   "carbs": 2.8,
+   "fat": 30
+  },
+  {
+   "id": "creme-fraiche-legere-15--tel-que-vendu",
+   "name": "Crème fraîche légère 15%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 160,
+   "protein": 2.9,
+   "carbs": 4.2,
+   "fat": 15,
+   "synonyms": "crème allégée"
+  },
+  {
+   "id": "creme-glacee-vanille--tel-que-vendu",
+   "name": "Crème glacée vanille",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 207,
+   "protein": 3.5,
+   "carbs": 23.6,
+   "fat": 11
+  },
+  {
+   "id": "creme-liquide-entiere-35--tel-que-vendu",
+   "name": "Crème liquide entière 35%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 340,
+   "protein": 2.8,
+   "carbs": 2.8,
+   "fat": 36.1,
+   "density": 1.01
+  },
+  {
+   "id": "edam--tel-que-vendu",
+   "name": "Edam",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 357,
+   "protein": 25,
+   "carbs": 1.4,
+   "fat": 27.8,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "emmental--tel-que-vendu",
+   "name": "Emmental",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 380,
+   "protein": 26.9,
+   "carbs": 5.4,
+   "fat": 27.8,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "feta--tel-que-vendu",
+   "name": "Feta",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 264,
+   "protein": 14.2,
+   "carbs": 4.1,
+   "fat": 21.3,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "fontina--tel-que-vendu",
+   "name": "Fontina",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 389,
+   "protein": 25.6,
+   "carbs": 1.6,
+   "fat": 31.1,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "fromage-a-tartiner-cream-cheese--tel-que-vendu",
+   "name": "Fromage à tartiner (cream cheese)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 342,
+   "protein": 6.2,
+   "carbs": 4.1,
+   "fat": 34.2
+  },
+  {
+   "id": "fromage-blanc-0--tel-que-vendu",
+   "name": "Fromage blanc 0%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 46,
+   "protein": 8,
+   "carbs": 4,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 100
+   },
+   "unitLabel": "1 pot"
+  },
+  {
+   "id": "fromage-blanc-20--tel-que-vendu",
+   "name": "Fromage blanc 20%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 80,
+   "protein": 7.5,
+   "carbs": 4,
+   "fat": 3.5,
+   "gramsPerUnit": {
+    "piece": 100
+   },
+   "unitLabel": "1 pot"
+  },
+  {
+   "id": "fromage-fondu-en-portions-type-vache-qui-rit--tel-que-vendu",
+   "name": "Fromage fondu en portions (type Vache qui rit)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 245,
+   "protein": 10,
+   "carbs": 6,
+   "fat": 20,
+   "gramsPerUnit": {
+    "piece": 16
+   },
+   "unitLabel": "1 portion",
+   "synonyms": "fromage"
+  },
+  {
+   "id": "gorgonzola--tel-que-vendu",
+   "name": "Gorgonzola",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 353,
+   "protein": 21.4,
+   "carbs": 2.3,
+   "fat": 28.7,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "gouda--tel-que-vendu",
+   "name": "Gouda",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 356,
+   "protein": 25,
+   "carbs": 2.2,
+   "fat": 27.4,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "gruyere--tel-que-vendu",
+   "name": "Gruyère",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 413,
+   "protein": 29.8,
+   "carbs": 0.4,
+   "fat": 30.8,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "halloumi--tel-que-vendu",
+   "name": "Halloumi",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 321,
+   "protein": 21,
+   "carbs": 2.2,
+   "fat": 25,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "kefir--tel-que-vendu",
+   "name": "Kéfir",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 41,
+   "protein": 3.8,
+   "carbs": 4.5,
+   "fat": 1,
+   "density": 1.03
+  },
+  {
+   "id": "lait-concentre-sucre--tel-que-vendu",
+   "name": "Lait concentré sucré",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 321,
+   "protein": 7.9,
+   "carbs": 54.4,
+   "fat": 8.7
+  },
+  {
+   "id": "lait-de-brebis--tel-que-vendu",
+   "name": "Lait de brebis",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 108,
+   "protein": 6,
+   "carbs": 5.4,
+   "fat": 7,
+   "density": 1.035
+  },
+  {
+   "id": "lait-de-chevre--tel-que-vendu",
+   "name": "Lait de chèvre",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 69,
+   "protein": 3.6,
+   "carbs": 4.5,
+   "fat": 4.1,
+   "density": 1.03
+  },
+  {
+   "id": "lait-demi-ecreme--tel-que-vendu",
+   "name": "Lait demi-écrémé",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 46,
+   "protein": 3.4,
+   "carbs": 4.8,
+   "fat": 1.6,
+   "density": 1.03
+  },
+  {
+   "id": "lait-ecreme--tel-que-vendu",
+   "name": "Lait écrémé",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 34,
+   "protein": 3.4,
+   "carbs": 5,
+   "fat": 0.1,
+   "density": 1.035
+  },
+  {
+   "id": "lait-ecreme-en-poudre--tel-que-vendu",
+   "name": "Lait écrémé en poudre",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 362,
+   "protein": 36.2,
+   "carbs": 52,
+   "fat": 0.8,
+   "synonyms": "lait poudre"
+  },
+  {
+   "id": "lait-entier--tel-que-vendu",
+   "name": "Lait entier",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 61,
+   "protein": 3.2,
+   "carbs": 4.8,
+   "fat": 3.3,
+   "density": 1.03
+  },
+  {
+   "id": "lait-entier-en-poudre--tel-que-vendu",
+   "name": "Lait entier en poudre",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 496,
+   "protein": 26.3,
+   "carbs": 38.4,
+   "fat": 26.7,
+   "synonyms": "lait poudre"
+  },
+  {
+   "id": "lait-sans-lactose-demi-ecreme--tel-que-vendu",
+   "name": "Lait sans lactose - demi-écrémé",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 46,
+   "protein": 3.3,
+   "carbs": 4.8,
+   "fat": 1.6,
+   "density": 1.03,
+   "synonyms": "lait"
+  },
+  {
+   "id": "lait-sans-lactose-entier--tel-que-vendu",
+   "name": "Lait sans lactose - entier",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 63,
+   "protein": 3.2,
+   "carbs": 4.8,
+   "fat": 3.6,
+   "density": 1.03,
+   "synonyms": "lait"
+  },
+  {
+   "id": "lben-lait-fermente--tel-que-vendu",
+   "name": "Lben (lait fermenté)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 40,
+   "protein": 3,
+   "carbs": 4.5,
+   "fat": 1,
+   "density": 1.03
+  },
+  {
+   "id": "mascarpone--tel-que-vendu",
+   "name": "Mascarpone",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 429,
+   "protein": 4.8,
+   "carbs": 4.6,
+   "fat": 44,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "monterey-jack--tel-que-vendu",
+   "name": "Monterey Jack",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 373,
+   "protein": 24.5,
+   "carbs": 0.7,
+   "fat": 30.3,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "mozzarella-demi-ecremee--tel-que-vendu",
+   "name": "Mozzarella (demi-écrémée)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 254,
+   "protein": 24.3,
+   "carbs": 2.8,
+   "fat": 16,
+   "gramsPerUnit": {
+    "piece": 125
+   },
+   "unitLabel": "1 boule",
+   "synonyms": "fromage"
+  },
+  {
+   "id": "mozzarella-lait-entier--tel-que-vendu",
+   "name": "Mozzarella (lait entier)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 300,
+   "protein": 22.2,
+   "carbs": 2.2,
+   "fat": 22.4,
+   "gramsPerUnit": {
+    "piece": 125
+   },
+   "unitLabel": "1 boule",
+   "synonyms": "fromage"
+  },
+  {
+   "id": "parmesan--tel-que-vendu",
+   "name": "Parmesan",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 431,
+   "protein": 38.5,
+   "carbs": 4.1,
+   "fat": 28.6,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "pecorino-romano--tel-que-vendu",
+   "name": "Pecorino / Romano",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 387,
+   "protein": 31.8,
+   "carbs": 3.6,
+   "fat": 26.9,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "port-salut--tel-que-vendu",
+   "name": "Port-Salut",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 352,
+   "protein": 23.8,
+   "carbs": 0.5,
+   "fat": 28.2,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "provolone--tel-que-vendu",
+   "name": "Provolone",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 351,
+   "protein": 25.6,
+   "carbs": 2.1,
+   "fat": 26.6,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "ricotta-demi-ecremee--tel-que-vendu",
+   "name": "Ricotta (demi-écrémée)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 138,
+   "protein": 11.4,
+   "carbs": 5.1,
+   "fat": 7.9,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "ricotta-lait-entier--tel-que-vendu",
+   "name": "Ricotta (lait entier)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 174,
+   "protein": 11.3,
+   "carbs": 3,
+   "fat": 13,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "roquefort-bleu--tel-que-vendu",
+   "name": "Roquefort / bleu",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 369,
+   "protein": 21.5,
+   "carbs": 2,
+   "fat": 30.6,
+   "synonyms": "fromage"
+  },
+  {
+   "id": "skyr-nature--tel-que-vendu",
+   "name": "Skyr nature",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 63,
+   "protein": 11,
+   "carbs": 4,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 150
+   },
+   "unitLabel": "1 pot"
+  },
+  {
+   "id": "yaourt-aux-fruits-sucre--tel-que-vendu",
+   "name": "Yaourt aux fruits sucré",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 90,
+   "protein": 3.5,
+   "carbs": 14.5,
+   "fat": 1.8,
+   "gramsPerUnit": {
+    "piece": 125
+   },
+   "unitLabel": "1 pot",
+   "synonyms": "yogourt yoghourt"
+  },
+  {
+   "id": "yaourt-grec-0--tel-que-vendu",
+   "name": "Yaourt grec 0%",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 59,
+   "protein": 10.2,
+   "carbs": 3.6,
+   "fat": 0.4,
+   "gramsPerUnit": {
+    "piece": 150
+   },
+   "unitLabel": "1 pot",
+   "synonyms": "yogourt yoghourt"
+  },
+  {
+   "id": "yaourt-grec-nature-entier--tel-que-vendu",
+   "name": "Yaourt grec nature entier",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 97,
+   "protein": 9,
+   "carbs": 4,
+   "fat": 5,
+   "gramsPerUnit": {
+    "piece": 150
+   },
+   "unitLabel": "1 pot",
+   "synonyms": "yogourt yoghourt"
+  },
+  {
+   "id": "yaourt-nature-moyenne-fr-lait-demi-ecreme--tel-que-vendu",
+   "name": "Yaourt nature (moyenne FR, lait demi-écrémé)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 55,
+   "protein": 4,
+   "carbs": 5.5,
+   "fat": 2,
+   "gramsPerUnit": {
+    "piece": 125
+   },
+   "unitLabel": "1 pot",
+   "synonyms": "yogourt yoghourt"
+  },
+  {
+   "id": "yaourt-nature-0-type-usda--tel-que-vendu",
+   "name": "Yaourt nature 0% (type USDA)",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 56,
+   "protein": 5.7,
+   "carbs": 7.7,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 125
+   },
+   "unitLabel": "1 pot",
+   "synonyms": "yogourt yoghourt"
+  },
+  {
+   "id": "yaourt-nature-entier--tel-que-vendu",
+   "name": "Yaourt nature entier",
+   "state": "Tel que vendu",
+   "category": "Produits laitiers & fromages",
+   "kcal": 61,
+   "protein": 3.5,
+   "carbs": 4.7,
+   "fat": 3.3,
+   "gramsPerUnit": {
+    "piece": 125
+   },
+   "unitLabel": "1 pot",
+   "synonyms": "yogourt yoghourt"
+  },
+  {
+   "id": "ail--tel-que-vendu",
+   "name": "Ail",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 149,
+   "protein": 6.4,
+   "carbs": 33,
+   "fat": 0.5,
+   "gramsPerUnit": {
+    "piece": 3
+   },
+   "unitLabel": "1 gousse"
+  },
+  {
+   "id": "algue-nori--tel-que-vendu",
+   "name": "Algue nori",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 35,
+   "protein": 5.8,
+   "carbs": 5.1,
+   "fat": 0.3
+  },
+  {
+   "id": "algue-wakame--tel-que-vendu",
+   "name": "Algue wakame",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 45,
+   "protein": 3,
+   "carbs": 9.1,
+   "fat": 0.6
+  },
+  {
+   "id": "artichaut--cru-sec",
+   "name": "Artichaut",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 47,
+   "protein": 3.3,
+   "carbs": 10.5,
+   "fat": 0.2
+  },
+  {
+   "id": "artichaut--cuit",
+   "name": "Artichaut",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 53,
+   "protein": 2.9,
+   "carbs": 11.9,
+   "fat": 0.4
+  },
+  {
+   "id": "asperge--cru-sec",
+   "name": "Asperge",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 20,
+   "protein": 2.2,
+   "carbs": 3.9,
+   "fat": 0.1
+  },
+  {
+   "id": "asperge--cuit",
+   "name": "Asperge",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 22,
+   "protein": 2.4,
+   "carbs": 4.1,
+   "fat": 0.2
+  },
+  {
+   "id": "aubergine--cru-sec",
+   "name": "Aubergine",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 25,
+   "protein": 1,
+   "carbs": 5.9,
+   "fat": 0.2
+  },
+  {
+   "id": "aubergine--cuit",
+   "name": "Aubergine",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 35,
+   "protein": 0.8,
+   "carbs": 8.7,
+   "fat": 0.2
+  },
+  {
+   "id": "basilic-frais--tel-que-vendu",
+   "name": "Basilic frais",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 3.2,
+   "carbs": 2.7,
+   "fat": 0.6
+  },
+  {
+   "id": "betterave--cru-sec",
+   "name": "Betterave",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 43,
+   "protein": 1.6,
+   "carbs": 9.6,
+   "fat": 0.2
+  },
+  {
+   "id": "betterave--cuit",
+   "name": "Betterave",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 44,
+   "protein": 1.7,
+   "carbs": 10,
+   "fat": 0.2
+  },
+  {
+   "id": "blettes--cru-sec",
+   "name": "Blettes",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 19,
+   "protein": 1.8,
+   "carbs": 3.7,
+   "fat": 0.2
+  },
+  {
+   "id": "blettes--cuit",
+   "name": "Blettes",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 20,
+   "protein": 1.9,
+   "carbs": 4.1,
+   "fat": 0.1
+  },
+  {
+   "id": "brocoli--cru-sec",
+   "name": "Brocoli",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 34,
+   "protein": 2.8,
+   "carbs": 6.6,
+   "fat": 0.4
+  },
+  {
+   "id": "brocoli--cuit",
+   "name": "Brocoli",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 35,
+   "protein": 2.4,
+   "carbs": 7.2,
+   "fat": 0.4
+  },
+  {
+   "id": "capres--tel-que-vendu",
+   "name": "Câpres",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 2.4,
+   "carbs": 4.9,
+   "fat": 0.9
+  },
+  {
+   "id": "carotte--cru-sec",
+   "name": "Carotte",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 41,
+   "protein": 0.9,
+   "carbs": 9.6,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 70
+   },
+   "unitLabel": "1 carotte moyenne"
+  },
+  {
+   "id": "carotte--cuit",
+   "name": "Carotte",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 35,
+   "protein": 0.8,
+   "carbs": 8.2,
+   "fat": 0.2
+  },
+  {
+   "id": "celeri-branche--cru-sec",
+   "name": "Céleri-branche",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 16,
+   "protein": 0.7,
+   "carbs": 3,
+   "fat": 0.2
+  },
+  {
+   "id": "celeri-branche--cuit",
+   "name": "Céleri-branche",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 18,
+   "protein": 0.8,
+   "carbs": 4,
+   "fat": 0.2
+  },
+  {
+   "id": "celeri-rave--tel-que-vendu",
+   "name": "Céleri-rave",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 42,
+   "protein": 1.5,
+   "carbs": 9.2,
+   "fat": 0.3
+  },
+  {
+   "id": "champignons-de-paris--cru-sec",
+   "name": "Champignons de Paris",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 22,
+   "protein": 3.1,
+   "carbs": 3.3,
+   "fat": 0.3
+  },
+  {
+   "id": "champignons-de-paris--cuit",
+   "name": "Champignons de Paris",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 28,
+   "protein": 2.2,
+   "carbs": 5.3,
+   "fat": 0.5
+  },
+  {
+   "id": "chataignes--cru-sec",
+   "name": "Châtaignes",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 213,
+   "protein": 2.4,
+   "carbs": 45.5,
+   "fat": 2.3
+  },
+  {
+   "id": "chataignes--cuit",
+   "name": "Châtaignes",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 245,
+   "protein": 3.2,
+   "carbs": 53,
+   "fat": 2.2
+  },
+  {
+   "id": "chicoree--tel-que-vendu",
+   "name": "Chicorée",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 1.7,
+   "carbs": 4.7,
+   "fat": 0.3
+  },
+  {
+   "id": "chou-blanc--cru-sec",
+   "name": "Chou blanc",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 25,
+   "protein": 1.3,
+   "carbs": 5.8,
+   "fat": 0.1
+  },
+  {
+   "id": "chou-blanc--cuit",
+   "name": "Chou blanc",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 1.3,
+   "carbs": 5.5,
+   "fat": 0.1
+  },
+  {
+   "id": "chou-chinois--tel-que-vendu",
+   "name": "Chou chinois",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 13,
+   "protein": 1.5,
+   "carbs": 2.2,
+   "fat": 0.2
+  },
+  {
+   "id": "chou-de-bruxelles--cru-sec",
+   "name": "Chou de Bruxelles",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 43,
+   "protein": 3.4,
+   "carbs": 9,
+   "fat": 0.3
+  },
+  {
+   "id": "chou-de-bruxelles--cuit",
+   "name": "Chou de Bruxelles",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 36,
+   "protein": 2.6,
+   "carbs": 7.1,
+   "fat": 0.5
+  },
+  {
+   "id": "chou-frise-kale--tel-que-vendu",
+   "name": "Chou frisé (kale)",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 49,
+   "protein": 4.3,
+   "carbs": 8.8,
+   "fat": 0.9
+  },
+  {
+   "id": "chou-rouge--tel-que-vendu",
+   "name": "Chou rouge",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 31,
+   "protein": 1.4,
+   "carbs": 7.4,
+   "fat": 0.2
+  },
+  {
+   "id": "chou-fleur--cru-sec",
+   "name": "Chou-fleur",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 25,
+   "protein": 1.9,
+   "carbs": 5,
+   "fat": 0.3
+  },
+  {
+   "id": "chou-fleur--cuit",
+   "name": "Chou-fleur",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 1.8,
+   "carbs": 4.1,
+   "fat": 0.5
+  },
+  {
+   "id": "chou-rave--tel-que-vendu",
+   "name": "Chou-rave",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 27,
+   "protein": 1.7,
+   "carbs": 6.2,
+   "fat": 0.1
+  },
+  {
+   "id": "choucroute--tel-que-vendu",
+   "name": "Choucroute",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 19,
+   "protein": 0.9,
+   "carbs": 4.3,
+   "fat": 0.1
+  },
+  {
+   "id": "ciboulette--tel-que-vendu",
+   "name": "Ciboulette",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 30,
+   "protein": 3.3,
+   "carbs": 4.4,
+   "fat": 0.7
+  },
+  {
+   "id": "concentre-de-tomate--tel-que-vendu",
+   "name": "Concentré de tomate",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 82,
+   "protein": 4.3,
+   "carbs": 18.9,
+   "fat": 0.5
+  },
+  {
+   "id": "concombre--tel-que-vendu",
+   "name": "Concombre",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 15,
+   "protein": 0.7,
+   "carbs": 3.6,
+   "fat": 0.1
+  },
+  {
+   "id": "coriandre-fraiche--tel-que-vendu",
+   "name": "Coriandre fraîche",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 2.1,
+   "carbs": 3.7,
+   "fat": 0.5
+  },
+  {
+   "id": "cornichons--tel-que-vendu",
+   "name": "Cornichons",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 11,
+   "protein": 0.3,
+   "carbs": 2.3,
+   "fat": 0.2
+  },
+  {
+   "id": "courge-butternut--cru-sec",
+   "name": "Courge butternut",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 45,
+   "protein": 1,
+   "carbs": 11.7,
+   "fat": 0.1
+  },
+  {
+   "id": "courge-butternut--cuit",
+   "name": "Courge butternut",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 40,
+   "protein": 0.9,
+   "carbs": 10.5,
+   "fat": 0.1
+  },
+  {
+   "id": "courge-spaghetti--cru-sec",
+   "name": "Courge spaghetti",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 31,
+   "protein": 0.6,
+   "carbs": 6.9,
+   "fat": 0.6
+  },
+  {
+   "id": "courge-spaghetti--cuit",
+   "name": "Courge spaghetti",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 31,
+   "protein": 0.6,
+   "carbs": 7,
+   "fat": 0.6
+  },
+  {
+   "id": "courgette--cru-sec",
+   "name": "Courgette",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 17,
+   "protein": 1.2,
+   "carbs": 3.1,
+   "fat": 0.3
+  },
+  {
+   "id": "courgette--cuit",
+   "name": "Courgette",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 15,
+   "protein": 1.1,
+   "carbs": 2.7,
+   "fat": 0.4
+  },
+  {
+   "id": "cresson--tel-que-vendu",
+   "name": "Cresson",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 11,
+   "protein": 2.3,
+   "carbs": 1.3,
+   "fat": 0.1
+  },
+  {
+   "id": "echalote--tel-que-vendu",
+   "name": "Échalote",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 72,
+   "protein": 2.5,
+   "carbs": 16.8,
+   "fat": 0.1
+  },
+  {
+   "id": "endive--tel-que-vendu",
+   "name": "Endive",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 17,
+   "protein": 1.3,
+   "carbs": 3.4,
+   "fat": 0.2
+  },
+  {
+   "id": "epinards--cru-sec",
+   "name": "Épinards",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 2.9,
+   "carbs": 3.6,
+   "fat": 0.4
+  },
+  {
+   "id": "epinards--cuit",
+   "name": "Épinards",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 3,
+   "carbs": 3.8,
+   "fat": 0.3
+  },
+  {
+   "id": "fenouil--tel-que-vendu",
+   "name": "Fenouil",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 31,
+   "protein": 1.2,
+   "carbs": 7.3,
+   "fat": 0.2
+  },
+  {
+   "id": "frites-friture-industrielle--cru-sec",
+   "name": "Frites (friture industrielle)",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 77,
+   "protein": 2,
+   "carbs": 17.5,
+   "fat": 0.1,
+   "synonyms": "frite friture pommes de terre patate"
+  },
+  {
+   "id": "frites-friture-industrielle--cuit",
+   "name": "Frites (friture industrielle)",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 312,
+   "protein": 3.4,
+   "carbs": 41.4,
+   "fat": 14.7,
+   "synonyms": "frite friture pommes de terre patate"
+  },
+  {
+   "id": "gingembre-frais--tel-que-vendu",
+   "name": "Gingembre frais",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 80,
+   "protein": 1.8,
+   "carbs": 17.8,
+   "fat": 0.8
+  },
+  {
+   "id": "gombo--cru-sec",
+   "name": "Gombo",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 33,
+   "protein": 1.9,
+   "carbs": 7.5,
+   "fat": 0.2
+  },
+  {
+   "id": "gombo--cuit",
+   "name": "Gombo",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 22,
+   "protein": 1.9,
+   "carbs": 4.5,
+   "fat": 0.2
+  },
+  {
+   "id": "haricots-verts--cru-sec",
+   "name": "Haricots verts",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 31,
+   "protein": 1.8,
+   "carbs": 7,
+   "fat": 0.2
+  },
+  {
+   "id": "haricots-verts--cuit",
+   "name": "Haricots verts",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 35,
+   "protein": 1.9,
+   "carbs": 7.9,
+   "fat": 0.3
+  },
+  {
+   "id": "igname--cru-sec",
+   "name": "Igname",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 118,
+   "protein": 1.5,
+   "carbs": 27.9,
+   "fat": 0.2
+  },
+  {
+   "id": "igname--cuit",
+   "name": "Igname",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 116,
+   "protein": 1.5,
+   "carbs": 27.5,
+   "fat": 0.1
+  },
+  {
+   "id": "laitue--tel-que-vendu",
+   "name": "Laitue",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 15,
+   "protein": 1.4,
+   "carbs": 2.9,
+   "fat": 0.2,
+   "synonyms": "salade verte"
+  },
+  {
+   "id": "laitue-iceberg--tel-que-vendu",
+   "name": "Laitue iceberg",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 14,
+   "protein": 0.9,
+   "carbs": 3,
+   "fat": 0.1,
+   "synonyms": "salade"
+  },
+  {
+   "id": "laitue-romaine--tel-que-vendu",
+   "name": "Laitue romaine",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 17,
+   "protein": 1.2,
+   "carbs": 3.3,
+   "fat": 0.3,
+   "synonyms": "salade"
+  },
+  {
+   "id": "mache--tel-que-vendu",
+   "name": "Mâche",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 21,
+   "protein": 2,
+   "carbs": 3.6,
+   "fat": 0.4,
+   "synonyms": "salade"
+  },
+  {
+   "id": "mais-doux--cru-sec",
+   "name": "Maïs doux",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 86,
+   "protein": 3.3,
+   "carbs": 18.7,
+   "fat": 1.4,
+   "synonyms": "maïs"
+  },
+  {
+   "id": "mais-doux--cuit",
+   "name": "Maïs doux",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 96,
+   "protein": 3.4,
+   "carbs": 21,
+   "fat": 1.5,
+   "synonyms": "maïs"
+  },
+  {
+   "id": "mais-doux-en-conserve-egoutte--tel-que-vendu",
+   "name": "Maïs doux en conserve (égoutté)",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 85,
+   "protein": 2.8,
+   "carbs": 16,
+   "fat": 1.2,
+   "synonyms": "maïs"
+  },
+  {
+   "id": "manioc--tel-que-vendu",
+   "name": "Manioc",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 160,
+   "protein": 1.4,
+   "carbs": 38.1,
+   "fat": 0.3
+  },
+  {
+   "id": "menthe-fraiche--tel-que-vendu",
+   "name": "Menthe fraîche",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 70,
+   "protein": 3.8,
+   "carbs": 14.9,
+   "fat": 0.9
+  },
+  {
+   "id": "navet--cru-sec",
+   "name": "Navet",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 28,
+   "protein": 0.9,
+   "carbs": 6.4,
+   "fat": 0.1
+  },
+  {
+   "id": "navet--cuit",
+   "name": "Navet",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 22,
+   "protein": 0.7,
+   "carbs": 4.9,
+   "fat": 0.1
+  },
+  {
+   "id": "oignon--cru-sec",
+   "name": "Oignon",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 40,
+   "protein": 1.1,
+   "carbs": 9.3,
+   "fat": 0.1,
+   "gramsPerUnit": {
+    "piece": 100
+   },
+   "unitLabel": "1 oignon moyen"
+  },
+  {
+   "id": "oignon--cuit",
+   "name": "Oignon",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 44,
+   "protein": 1.4,
+   "carbs": 10.2,
+   "fat": 0.2
+  },
+  {
+   "id": "oignon-vert-cebette--tel-que-vendu",
+   "name": "Oignon vert / cébette",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 32,
+   "protein": 1.8,
+   "carbs": 7.3,
+   "fat": 0.2
+  },
+  {
+   "id": "olives-noires-conserve--tel-que-vendu",
+   "name": "Olives noires (conserve)",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 115,
+   "protein": 0.8,
+   "carbs": 6,
+   "fat": 10.7
+  },
+  {
+   "id": "olives-vertes-conserve--tel-que-vendu",
+   "name": "Olives vertes (conserve)",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 145,
+   "protein": 1,
+   "carbs": 3.8,
+   "fat": 15.3
+  },
+  {
+   "id": "pak-choi--tel-que-vendu",
+   "name": "Pak choï",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 13,
+   "protein": 1.5,
+   "carbs": 2.2,
+   "fat": 0.2
+  },
+  {
+   "id": "panais--cru-sec",
+   "name": "Panais",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 75,
+   "protein": 1.2,
+   "carbs": 18,
+   "fat": 0.3
+  },
+  {
+   "id": "panais--cuit",
+   "name": "Panais",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 71,
+   "protein": 1.3,
+   "carbs": 17,
+   "fat": 0.3
+  },
+  {
+   "id": "patate-douce--cru-sec",
+   "name": "Patate douce",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 86,
+   "protein": 1.6,
+   "carbs": 20.1,
+   "fat": 0.1,
+   "gramsPerUnit": {
+    "piece": 130
+   },
+   "unitLabel": "1 patate douce moyenne",
+   "synonyms": "patate"
+  },
+  {
+   "id": "patate-douce--cuit",
+   "name": "Patate douce",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 76,
+   "protein": 1.4,
+   "carbs": 17.7,
+   "fat": 0.1,
+   "synonyms": "patate"
+  },
+  {
+   "id": "patate-douce-au-four--cru-sec",
+   "name": "Patate douce - au four",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 86,
+   "protein": 1.6,
+   "carbs": 20.1,
+   "fat": 0.1
+  },
+  {
+   "id": "patate-douce-au-four--cuit",
+   "name": "Patate douce - au four",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 90,
+   "protein": 2,
+   "carbs": 20.7,
+   "fat": 0.2
+  },
+  {
+   "id": "persil-frais--tel-que-vendu",
+   "name": "Persil frais",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 36,
+   "protein": 3,
+   "carbs": 6.3,
+   "fat": 0.8
+  },
+  {
+   "id": "petits-pois--cru-sec",
+   "name": "Petits pois",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 81,
+   "protein": 5.4,
+   "carbs": 14.5,
+   "fat": 0.4
+  },
+  {
+   "id": "petits-pois--cuit",
+   "name": "Petits pois",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 84,
+   "protein": 5.4,
+   "carbs": 15.6,
+   "fat": 0.2
+  },
+  {
+   "id": "piment-fort--tel-que-vendu",
+   "name": "Piment fort",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 40,
+   "protein": 1.9,
+   "carbs": 8.8,
+   "fat": 0.4
+  },
+  {
+   "id": "pissenlit-feuilles--tel-que-vendu",
+   "name": "Pissenlit (feuilles)",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 45,
+   "protein": 2.7,
+   "carbs": 9.2,
+   "fat": 0.7
+  },
+  {
+   "id": "pleurotes--tel-que-vendu",
+   "name": "Pleurotes",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 33,
+   "protein": 3.3,
+   "carbs": 6.1,
+   "fat": 0.4
+  },
+  {
+   "id": "poireau--cru-sec",
+   "name": "Poireau",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 61,
+   "protein": 1.5,
+   "carbs": 14.2,
+   "fat": 0.3
+  },
+  {
+   "id": "poireau--cuit",
+   "name": "Poireau",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 31,
+   "protein": 0.8,
+   "carbs": 7.6,
+   "fat": 0.2
+  },
+  {
+   "id": "pois-mange-tout--cru-sec",
+   "name": "Pois mange-tout",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 42,
+   "protein": 2.8,
+   "carbs": 7.6,
+   "fat": 0.2
+  },
+  {
+   "id": "pois-mange-tout--cuit",
+   "name": "Pois mange-tout",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 42,
+   "protein": 3.3,
+   "carbs": 7.5,
+   "fat": 0.2
+  },
+  {
+   "id": "poivron-jaune--tel-que-vendu",
+   "name": "Poivron jaune",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 27,
+   "protein": 1,
+   "carbs": 6.3,
+   "fat": 0.2
+  },
+  {
+   "id": "poivron-rouge--cru-sec",
+   "name": "Poivron rouge",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 31,
+   "protein": 1,
+   "carbs": 6,
+   "fat": 0.3,
+   "gramsPerUnit": {
+    "piece": 150
+   },
+   "unitLabel": "1 poivron moyen"
+  },
+  {
+   "id": "poivron-rouge--cuit",
+   "name": "Poivron rouge",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 28,
+   "protein": 0.9,
+   "carbs": 5.5,
+   "fat": 0.2
+  },
+  {
+   "id": "poivron-vert--cru-sec",
+   "name": "Poivron vert",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 20,
+   "protein": 0.9,
+   "carbs": 4.6,
+   "fat": 0.2
+  },
+  {
+   "id": "poivron-vert--cuit",
+   "name": "Poivron vert",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 24,
+   "protein": 0.9,
+   "carbs": 5.5,
+   "fat": 0.5
+  },
+  {
+   "id": "pomme-de-terre--cru-sec",
+   "name": "Pomme de terre",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 77,
+   "protein": 2,
+   "carbs": 17.5,
+   "fat": 0.1,
+   "gramsPerUnit": {
+    "piece": 150
+   },
+   "unitLabel": "1 pomme de terre moyenne",
+   "synonyms": "pommes de terre patate"
+  },
+  {
+   "id": "pomme-de-terre--cuit",
+   "name": "Pomme de terre",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 87,
+   "protein": 1.9,
+   "carbs": 20.1,
+   "fat": 0.1,
+   "synonyms": "pommes de terre patate"
+  },
+  {
+   "id": "pomme-de-terre-au-four--cru-sec",
+   "name": "Pomme de terre - au four",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 77,
+   "protein": 2,
+   "carbs": 17.5,
+   "fat": 0.1,
+   "synonyms": "pommes de terre patate"
+  },
+  {
+   "id": "pomme-de-terre-au-four--cuit",
+   "name": "Pomme de terre - au four",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 93,
+   "protein": 2.5,
+   "carbs": 21.2,
+   "fat": 0.1,
+   "synonyms": "pommes de terre patate"
+  },
+  {
+   "id": "pomme-de-terre-puree-lait-beurre--cuit",
+   "name": "Pomme de terre - purée (lait + beurre)",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 113,
+   "protein": 2,
+   "carbs": 16.8,
+   "fat": 4.2,
+   "synonyms": "patate"
+  },
+  {
+   "id": "pomme-de-terre-vapeur--cuit",
+   "name": "Pomme de terre - vapeur",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 85,
+   "protein": 1.9,
+   "carbs": 19.5,
+   "fat": 0.1,
+   "synonyms": "patate"
+  },
+  {
+   "id": "potiron-citrouille--cru-sec",
+   "name": "Potiron / citrouille",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 26,
+   "protein": 1,
+   "carbs": 6.5,
+   "fat": 0.1
+  },
+  {
+   "id": "potiron-citrouille--cuit",
+   "name": "Potiron / citrouille",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 20,
+   "protein": 0.7,
+   "carbs": 4.9,
+   "fat": 0.1
+  },
+  {
+   "id": "pousses-de-soja--tel-que-vendu",
+   "name": "Pousses de soja",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 30,
+   "protein": 3,
+   "carbs": 5.9,
+   "fat": 0.2
+  },
+  {
+   "id": "radicchio--tel-que-vendu",
+   "name": "Radicchio",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 23,
+   "protein": 1.4,
+   "carbs": 4.5,
+   "fat": 0.3
+  },
+  {
+   "id": "radis--tel-que-vendu",
+   "name": "Radis",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 16,
+   "protein": 0.7,
+   "carbs": 3.4,
+   "fat": 0.1
+  },
+  {
+   "id": "roquette--tel-que-vendu",
+   "name": "Roquette",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 25,
+   "protein": 2.6,
+   "carbs": 3.7,
+   "fat": 0.7,
+   "synonyms": "salade"
+  },
+  {
+   "id": "rutabaga--tel-que-vendu",
+   "name": "Rutabaga",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 38,
+   "protein": 1.1,
+   "carbs": 8.6,
+   "fat": 0.2
+  },
+  {
+   "id": "salsifis--tel-que-vendu",
+   "name": "Salsifis",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 82,
+   "protein": 3.3,
+   "carbs": 18.6,
+   "fat": 0.2
+  },
+  {
+   "id": "sauce-tomate-en-conserve--tel-que-vendu",
+   "name": "Sauce tomate en conserve",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 24,
+   "protein": 1.2,
+   "carbs": 5.3,
+   "fat": 0.3,
+   "synonyms": "sauce tomate coulis passata"
+  },
+  {
+   "id": "shiitake--cru-sec",
+   "name": "Shiitake",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 34,
+   "protein": 2.2,
+   "carbs": 6.8,
+   "fat": 0.5
+  },
+  {
+   "id": "shiitake--cuit",
+   "name": "Shiitake",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 56,
+   "protein": 1.6,
+   "carbs": 14.4,
+   "fat": 0.2
+  },
+  {
+   "id": "spiruline-sechee--tel-que-vendu",
+   "name": "Spiruline (séchée)",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 290,
+   "protein": 57.5,
+   "carbs": 23.9,
+   "fat": 7.7
+  },
+  {
+   "id": "taro--cru-sec",
+   "name": "Taro",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 112,
+   "protein": 1.5,
+   "carbs": 26.5,
+   "fat": 0.2
+  },
+  {
+   "id": "taro--cuit",
+   "name": "Taro",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 142,
+   "protein": 0.5,
+   "carbs": 34.6,
+   "fat": 0.1
+  },
+  {
+   "id": "tomate--cru-sec",
+   "name": "Tomate",
+   "state": "Cru / sec",
+   "category": "Légumes",
+   "kcal": 18,
+   "protein": 0.9,
+   "carbs": 3.9,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 120
+   },
+   "unitLabel": "1 tomate moyenne"
+  },
+  {
+   "id": "tomate--cuit",
+   "name": "Tomate",
+   "state": "Cuit",
+   "category": "Légumes",
+   "kcal": 18,
+   "protein": 0.9,
+   "carbs": 3.5,
+   "fat": 0.1
+  },
+  {
+   "id": "tomates-cerises--tel-que-vendu",
+   "name": "Tomates cerises",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 18,
+   "protein": 0.9,
+   "carbs": 3.9,
+   "fat": 0.2
+  },
+  {
+   "id": "tomates-pelees-en-conserve--tel-que-vendu",
+   "name": "Tomates pelées en conserve",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 32,
+   "protein": 1.6,
+   "carbs": 7.3,
+   "fat": 0.3,
+   "synonyms": "tomate concassée"
+  },
+  {
+   "id": "tomates-sechees--tel-que-vendu",
+   "name": "Tomates séchées",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 258,
+   "protein": 14.1,
+   "carbs": 55.8,
+   "fat": 3
+  },
+  {
+   "id": "topinambour--tel-que-vendu",
+   "name": "Topinambour",
+   "state": "Tel que vendu",
+   "category": "Légumes",
+   "kcal": 73,
+   "protein": 2,
+   "carbs": 17.4,
+   "fat": 0
+  },
+  {
+   "id": "edamame--cuit",
+   "name": "Edamame",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 121,
+   "protein": 11.9,
+   "carbs": 8.9,
+   "fat": 5.2
+  },
+  {
+   "id": "falafel--tel-que-vendu",
+   "name": "Falafel",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 333,
+   "protein": 13.3,
+   "carbs": 31.8,
+   "fat": 17.8
+  },
+  {
+   "id": "farine-de-pois-chiche--tel-que-vendu",
+   "name": "Farine de pois chiche",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 387,
+   "protein": 22.4,
+   "carbs": 57.8,
+   "fat": 6.7
+  },
+  {
+   "id": "feves-seches--cru-sec",
+   "name": "Fèves sèches",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 341,
+   "protein": 26.1,
+   "carbs": 58.3,
+   "fat": 1.5
+  },
+  {
+   "id": "feves-seches--cuit",
+   "name": "Fèves sèches",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 110,
+   "protein": 7.6,
+   "carbs": 19.7,
+   "fat": 0.4
+  },
+  {
+   "id": "gluten-de-ble-vital-wheat-gluten--tel-que-vendu",
+   "name": "Gluten de blé (vital wheat gluten)",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 370,
+   "protein": 75.2,
+   "carbs": 13.8,
+   "fat": 1.9
+  },
+  {
+   "id": "haricots-adzuki--cru-sec",
+   "name": "Haricots adzuki",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 329,
+   "protein": 19.9,
+   "carbs": 62.9,
+   "fat": 0.5
+  },
+  {
+   "id": "haricots-adzuki--cuit",
+   "name": "Haricots adzuki",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 128,
+   "protein": 7.5,
+   "carbs": 24.8,
+   "fat": 0.1
+  },
+  {
+   "id": "haricots-blancs--cru-sec",
+   "name": "Haricots blancs",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 333,
+   "protein": 23.4,
+   "carbs": 60.3,
+   "fat": 0.9
+  },
+  {
+   "id": "haricots-blancs--cuit",
+   "name": "Haricots blancs",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 139,
+   "protein": 9.7,
+   "carbs": 25.1,
+   "fat": 0.3
+  },
+  {
+   "id": "haricots-blancs-en-conserve-egouttes--tel-que-vendu",
+   "name": "Haricots blancs en conserve (égouttés)",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 98,
+   "protein": 6.8,
+   "carbs": 15.5,
+   "fat": 0.5,
+   "synonyms": "haricot"
+  },
+  {
+   "id": "haricots-mungo--cru-sec",
+   "name": "Haricots mungo",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 347,
+   "protein": 23.9,
+   "carbs": 62.6,
+   "fat": 1.2
+  },
+  {
+   "id": "haricots-mungo--cuit",
+   "name": "Haricots mungo",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 105,
+   "protein": 7,
+   "carbs": 19.2,
+   "fat": 0.4
+  },
+  {
+   "id": "haricots-noirs--cru-sec",
+   "name": "Haricots noirs",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 341,
+   "protein": 21.6,
+   "carbs": 62.4,
+   "fat": 1.4
+  },
+  {
+   "id": "haricots-noirs--cuit",
+   "name": "Haricots noirs",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 132,
+   "protein": 8.9,
+   "carbs": 23.7,
+   "fat": 0.5
+  },
+  {
+   "id": "haricots-pinto--cru-sec",
+   "name": "Haricots pinto",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 347,
+   "protein": 21.4,
+   "carbs": 62.6,
+   "fat": 1.2
+  },
+  {
+   "id": "haricots-pinto--cuit",
+   "name": "Haricots pinto",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 143,
+   "protein": 9,
+   "carbs": 26.2,
+   "fat": 0.7
+  },
+  {
+   "id": "haricots-rouges--cru-sec",
+   "name": "Haricots rouges",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 337,
+   "protein": 22.5,
+   "carbs": 61.3,
+   "fat": 1.1
+  },
+  {
+   "id": "haricots-rouges--cuit",
+   "name": "Haricots rouges",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 127,
+   "protein": 8.7,
+   "carbs": 22.8,
+   "fat": 0.5
+  },
+  {
+   "id": "haricots-rouges-en-conserve-egouttes--tel-que-vendu",
+   "name": "Haricots rouges en conserve (égouttés)",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 100,
+   "protein": 7,
+   "carbs": 15.5,
+   "fat": 0.5,
+   "synonyms": "haricot"
+  },
+  {
+   "id": "houmous--tel-que-vendu",
+   "name": "Houmous",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 166,
+   "protein": 7.9,
+   "carbs": 14.3,
+   "fat": 9.6,
+   "gramsPerUnit": {
+    "tbsp": 15
+   },
+   "unitLabel": "1 c. à soupe"
+  },
+  {
+   "id": "lentilles--cru-sec",
+   "name": "Lentilles",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 352,
+   "protein": 24.6,
+   "carbs": 63.4,
+   "fat": 1.1
+  },
+  {
+   "id": "lentilles--cuit",
+   "name": "Lentilles",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 116,
+   "protein": 9,
+   "carbs": 20.1,
+   "fat": 0.4
+  },
+  {
+   "id": "lentilles-corail-decortiquees--cru-sec",
+   "name": "Lentilles corail (décortiquées)",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 352,
+   "protein": 24.5,
+   "carbs": 60,
+   "fat": 1.5,
+   "synonyms": "lentille"
+  },
+  {
+   "id": "lentilles-corail-decortiquees--cuit",
+   "name": "Lentilles corail (décortiquées)",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 112,
+   "protein": 8.8,
+   "carbs": 19,
+   "fat": 0.5,
+   "synonyms": "lentille"
+  },
+  {
+   "id": "lentilles-en-conserve-egouttees--tel-que-vendu",
+   "name": "Lentilles en conserve (égouttées)",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 105,
+   "protein": 8,
+   "carbs": 16.5,
+   "fat": 0.5,
+   "synonyms": "lentille"
+  },
+  {
+   "id": "lupin--cuit",
+   "name": "Lupin",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 119,
+   "protein": 15.6,
+   "carbs": 9.9,
+   "fat": 2.9
+  },
+  {
+   "id": "miso--tel-que-vendu",
+   "name": "Miso",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 199,
+   "protein": 11.7,
+   "carbs": 26.5,
+   "fat": 6
+  },
+  {
+   "id": "natto--tel-que-vendu",
+   "name": "Natto",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 212,
+   "protein": 17.7,
+   "carbs": 14.4,
+   "fat": 11
+  },
+  {
+   "id": "pois-casses--cru-sec",
+   "name": "Pois cassés",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 341,
+   "protein": 24.6,
+   "carbs": 60.4,
+   "fat": 1.2
+  },
+  {
+   "id": "pois-casses--cuit",
+   "name": "Pois cassés",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 118,
+   "protein": 8.3,
+   "carbs": 21.1,
+   "fat": 0.4
+  },
+  {
+   "id": "pois-chiches--cru-sec",
+   "name": "Pois chiches",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 364,
+   "protein": 19.3,
+   "carbs": 60.7,
+   "fat": 6
+  },
+  {
+   "id": "pois-chiches--cuit",
+   "name": "Pois chiches",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 164,
+   "protein": 8.9,
+   "carbs": 27.4,
+   "fat": 2.6
+  },
+  {
+   "id": "pois-chiches-en-conserve-egouttes--tel-que-vendu",
+   "name": "Pois chiches en conserve (égouttés)",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 139,
+   "protein": 7,
+   "carbs": 22.5,
+   "fat": 2.8
+  },
+  {
+   "id": "proteines-de-soja-texturees-seches--cru-sec",
+   "name": "Protéines de soja texturées (sèches)",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 330,
+   "protein": 51,
+   "carbs": 30,
+   "fat": 1.2,
+   "synonyms": "soja texturé TVP"
+  },
+  {
+   "id": "seitan--tel-que-vendu",
+   "name": "Seitan",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 130,
+   "protein": 22,
+   "carbs": 5,
+   "fat": 2,
+   "synonyms": "gluten de blé végétal"
+  },
+  {
+   "id": "soja-graines--cru-sec",
+   "name": "Soja (graines)",
+   "state": "Cru / sec",
+   "category": "Légumineuses",
+   "kcal": 446,
+   "protein": 36.5,
+   "carbs": 30.2,
+   "fat": 19.9
+  },
+  {
+   "id": "soja-graines--cuit",
+   "name": "Soja (graines)",
+   "state": "Cuit",
+   "category": "Légumineuses",
+   "kcal": 173,
+   "protein": 16.6,
+   "carbs": 9.9,
+   "fat": 9
+  },
+  {
+   "id": "tempeh--tel-que-vendu",
+   "name": "Tempeh",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 192,
+   "protein": 20.3,
+   "carbs": 7.6,
+   "fat": 10.8
+  },
+  {
+   "id": "tofu-ferme--tel-que-vendu",
+   "name": "Tofu ferme",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 144,
+   "protein": 17.3,
+   "carbs": 2.8,
+   "fat": 8.7
+  },
+  {
+   "id": "tofu-soyeux--tel-que-vendu",
+   "name": "Tofu soyeux",
+   "state": "Tel que vendu",
+   "category": "Légumineuses",
+   "kcal": 55,
+   "protein": 4.8,
+   "carbs": 1.9,
+   "fat": 2.7
+  },
+  {
+   "id": "amarante--cru-sec",
+   "name": "Amarante",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 371,
+   "protein": 13.6,
+   "carbs": 65.2,
+   "fat": 7
+  },
+  {
+   "id": "amarante--cuit",
+   "name": "Amarante",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 102,
+   "protein": 3.8,
+   "carbs": 18.7,
+   "fat": 1.6
+  },
+  {
+   "id": "avoine-grains-entiers-gruau--tel-que-vendu",
+   "name": "Avoine (grains entiers / gruau)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 389,
+   "protein": 16.9,
+   "carbs": 66.3,
+   "fat": 6.9,
+   "synonyms": "avoine oat gruau"
+  },
+  {
+   "id": "bagel--tel-que-vendu",
+   "name": "Bagel",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 257,
+   "protein": 10,
+   "carbs": 50,
+   "fat": 1.6,
+   "gramsPerUnit": {
+    "piece": 95
+   },
+   "unitLabel": "1 bagel"
+  },
+  {
+   "id": "baguette--tel-que-vendu",
+   "name": "Baguette",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 270,
+   "protein": 9,
+   "carbs": 55,
+   "fat": 1.3,
+   "gramsPerUnit": {
+    "piece": 60
+   },
+   "unitLabel": "1/4 de baguette",
+   "synonyms": "pain blanc pain baguette"
+  },
+  {
+   "id": "biscottes--tel-que-vendu",
+   "name": "Biscottes",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 400,
+   "protein": 11,
+   "carbs": 74,
+   "fat": 5,
+   "gramsPerUnit": {
+    "piece": 9
+   },
+   "unitLabel": "1 biscotte"
+  },
+  {
+   "id": "ble-entier-grain--tel-que-vendu",
+   "name": "Blé entier (grain)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 339,
+   "protein": 13.7,
+   "carbs": 71.2,
+   "fat": 2.5
+  },
+  {
+   "id": "boulgour--cru-sec",
+   "name": "Boulgour",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 342,
+   "protein": 12.3,
+   "carbs": 75.9,
+   "fat": 1.3
+  },
+  {
+   "id": "boulgour--cuit",
+   "name": "Boulgour",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 83,
+   "protein": 3.1,
+   "carbs": 18.6,
+   "fat": 0.2
+  },
+  {
+   "id": "brioche--tel-que-vendu",
+   "name": "Brioche",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 375,
+   "protein": 8.5,
+   "carbs": 51,
+   "fat": 15
+  },
+  {
+   "id": "cereales-completes-en-biscuits-type-weetabix--tel-que-vendu",
+   "name": "Céréales complètes en biscuits (type Weetabix)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 360,
+   "protein": 11.5,
+   "carbs": 68,
+   "fat": 2.1,
+   "synonyms": "weetabix céréales petit déjeuner"
+  },
+  {
+   "id": "cereales-petit-dej-chocolatees-type-chocapic--tel-que-vendu",
+   "name": "Céréales petit-déj. chocolatées (type Chocapic)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 385,
+   "protein": 8,
+   "carbs": 76,
+   "fat": 5,
+   "synonyms": "chocapic céréales"
+  },
+  {
+   "id": "corn-flakes--tel-que-vendu",
+   "name": "Corn flakes",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 357,
+   "protein": 7.5,
+   "carbs": 84,
+   "fat": 0.4,
+   "synonyms": "céréales petit déjeuner flocons de maïs"
+  },
+  {
+   "id": "couscous-semoule-precuite--cru-sec",
+   "name": "Couscous (semoule précuite)",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 376,
+   "protein": 12.8,
+   "carbs": 77.4,
+   "fat": 0.6,
+   "synonyms": "couscous semoule"
+  },
+  {
+   "id": "couscous-semoule-precuite--cuit",
+   "name": "Couscous (semoule précuite)",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 112,
+   "protein": 3.8,
+   "carbs": 23.2,
+   "fat": 0.2,
+   "synonyms": "couscous semoule"
+  },
+  {
+   "id": "croissant--tel-que-vendu",
+   "name": "Croissant",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 406,
+   "protein": 8.2,
+   "carbs": 45.8,
+   "fat": 21,
+   "gramsPerUnit": {
+    "piece": 60
+   },
+   "unitLabel": "1 croissant"
+  },
+  {
+   "id": "epeautre--cru-sec",
+   "name": "Épeautre",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 338,
+   "protein": 14.6,
+   "carbs": 70.2,
+   "fat": 2.4
+  },
+  {
+   "id": "epeautre--cuit",
+   "name": "Épeautre",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 127,
+   "protein": 5.5,
+   "carbs": 26.4,
+   "fat": 0.8
+  },
+  {
+   "id": "farine-d-amande--tel-que-vendu",
+   "name": "Farine d'amande",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 571,
+   "protein": 21.4,
+   "carbs": 21.4,
+   "fat": 50
+  },
+  {
+   "id": "farine-de-ble-blanche--tel-que-vendu",
+   "name": "Farine de blé blanche",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 364,
+   "protein": 10.3,
+   "carbs": 76.3,
+   "fat": 1
+  },
+  {
+   "id": "farine-de-ble-complete--tel-que-vendu",
+   "name": "Farine de blé complète",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 340,
+   "protein": 13.2,
+   "carbs": 72,
+   "fat": 2.5
+  },
+  {
+   "id": "farine-de-riz--tel-que-vendu",
+   "name": "Farine de riz",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 366,
+   "protein": 6,
+   "carbs": 80,
+   "fat": 1.4
+  },
+  {
+   "id": "farine-de-seigle--tel-que-vendu",
+   "name": "Farine de seigle",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 338,
+   "protein": 10.3,
+   "carbs": 75.9,
+   "fat": 1.6
+  },
+  {
+   "id": "fecule-de-mais-maizena--tel-que-vendu",
+   "name": "Fécule de maïs (Maïzena)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 381,
+   "protein": 0.3,
+   "carbs": 91.3,
+   "fat": 0.1
+  },
+  {
+   "id": "flocons-d-avoine--cru-sec",
+   "name": "Flocons d'avoine",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 379,
+   "protein": 13.2,
+   "carbs": 67.7,
+   "fat": 6.5,
+   "synonyms": "avoine oat porridge gruau"
+  },
+  {
+   "id": "flocons-d-avoine--cuit",
+   "name": "Flocons d'avoine",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 71,
+   "protein": 2.5,
+   "carbs": 12,
+   "fat": 1.5,
+   "synonyms": "avoine oat porridge gruau"
+  },
+  {
+   "id": "galettes-de-riz-souffle--tel-que-vendu",
+   "name": "Galettes de riz soufflé",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 387,
+   "protein": 8.2,
+   "carbs": 81.5,
+   "fat": 2.8,
+   "gramsPerUnit": {
+    "piece": 8
+   },
+   "unitLabel": "1 galette"
+  },
+  {
+   "id": "granola--tel-que-vendu",
+   "name": "Granola",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 471,
+   "protein": 10,
+   "carbs": 64,
+   "fat": 20,
+   "synonyms": "céréales petit déjeuner muesli"
+  },
+  {
+   "id": "khobz-pain-marocain--tel-que-vendu",
+   "name": "Khobz (pain marocain)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 265,
+   "protein": 8.5,
+   "carbs": 52,
+   "fat": 2,
+   "gramsPerUnit": {
+    "piece": 70
+   },
+   "unitLabel": "1/4 de khobz",
+   "synonyms": "pain marocain"
+  },
+  {
+   "id": "macaroni-coquillettes-pates-blanches--cru-sec",
+   "name": "Macaroni / coquillettes (pâtes blanches)",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 371,
+   "protein": 13,
+   "carbs": 74.7,
+   "fat": 1.5,
+   "synonyms": "pâtes macaronis"
+  },
+  {
+   "id": "macaroni-coquillettes-pates-blanches--cuit",
+   "name": "Macaroni / coquillettes (pâtes blanches)",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 158,
+   "protein": 5.8,
+   "carbs": 30.9,
+   "fat": 0.9,
+   "synonyms": "pâtes macaronis"
+  },
+  {
+   "id": "millet--cru-sec",
+   "name": "Millet",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 378,
+   "protein": 11,
+   "carbs": 72.8,
+   "fat": 4.2
+  },
+  {
+   "id": "millet--cuit",
+   "name": "Millet",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 119,
+   "protein": 3.5,
+   "carbs": 23.7,
+   "fat": 1
+  },
+  {
+   "id": "muesli-fruits-secs-et-noix--tel-que-vendu",
+   "name": "Muesli (fruits secs et noix)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 365,
+   "protein": 10,
+   "carbs": 66,
+   "fat": 6,
+   "synonyms": "céréales petit déjeuner"
+  },
+  {
+   "id": "nouilles-de-riz--cru-sec",
+   "name": "Nouilles de riz",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 364,
+   "protein": 3.4,
+   "carbs": 83.2,
+   "fat": 0.6
+  },
+  {
+   "id": "nouilles-de-riz--cuit",
+   "name": "Nouilles de riz",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 108,
+   "protein": 0.9,
+   "carbs": 24.9,
+   "fat": 0.2
+  },
+  {
+   "id": "nouilles-soba--cru-sec",
+   "name": "Nouilles soba",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 336,
+   "protein": 14.4,
+   "carbs": 70,
+   "fat": 1.5
+  },
+  {
+   "id": "nouilles-soba--cuit",
+   "name": "Nouilles soba",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 99,
+   "protein": 5.1,
+   "carbs": 21.4,
+   "fat": 0.1
+  },
+  {
+   "id": "orge-perle--cru-sec",
+   "name": "Orge perlé",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 352,
+   "protein": 9.9,
+   "carbs": 77.7,
+   "fat": 1.2
+  },
+  {
+   "id": "orge-perle--cuit",
+   "name": "Orge perlé",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 123,
+   "protein": 2.3,
+   "carbs": 28.2,
+   "fat": 0.4
+  },
+  {
+   "id": "pain-a-hamburger-bun--tel-que-vendu",
+   "name": "Pain à hamburger (bun)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 270,
+   "protein": 9,
+   "carbs": 49,
+   "fat": 4.5,
+   "gramsPerUnit": {
+    "piece": 55
+   },
+   "unitLabel": "1 pain",
+   "synonyms": "burger bun"
+  },
+  {
+   "id": "pain-au-chocolat--tel-que-vendu",
+   "name": "Pain au chocolat",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 410,
+   "protein": 7.5,
+   "carbs": 47,
+   "fat": 21,
+   "gramsPerUnit": {
+    "piece": 65
+   },
+   "unitLabel": "1 pain au chocolat",
+   "synonyms": "viennoiserie"
+  },
+  {
+   "id": "pain-aux-cereales-multigrains--tel-que-vendu",
+   "name": "Pain aux céréales / multigrains",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 265,
+   "protein": 13,
+   "carbs": 43,
+   "fat": 4.2,
+   "gramsPerUnit": {
+    "piece": 35
+   },
+   "unitLabel": "1 tranche",
+   "synonyms": "pain multicéréales"
+  },
+  {
+   "id": "pain-blanc-de-mie--tel-que-vendu",
+   "name": "Pain blanc de mie",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 265,
+   "protein": 9,
+   "carbs": 49,
+   "fat": 3.2,
+   "gramsPerUnit": {
+    "piece": 25
+   },
+   "unitLabel": "1 tranche",
+   "synonyms": "pain de mie sandwich toast"
+  },
+  {
+   "id": "pain-complet--tel-que-vendu",
+   "name": "Pain complet",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 247,
+   "protein": 13,
+   "carbs": 41,
+   "fat": 3.4,
+   "gramsPerUnit": {
+    "piece": 35
+   },
+   "unitLabel": "1 tranche",
+   "synonyms": "pain complet"
+  },
+  {
+   "id": "pain-de-mie-complet--tel-que-vendu",
+   "name": "Pain de mie complet",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 250,
+   "protein": 11,
+   "carbs": 43,
+   "fat": 4,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 tranche",
+   "synonyms": "pain complet sandwich"
+  },
+  {
+   "id": "pain-de-seigle--tel-que-vendu",
+   "name": "Pain de seigle",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 259,
+   "protein": 8.5,
+   "carbs": 48,
+   "fat": 3.3,
+   "gramsPerUnit": {
+    "piece": 35
+   },
+   "unitLabel": "1 tranche"
+  },
+  {
+   "id": "pain-pita--tel-que-vendu",
+   "name": "Pain pita",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 275,
+   "protein": 9.1,
+   "carbs": 55.7,
+   "fat": 1.2,
+   "gramsPerUnit": {
+    "piece": 60
+   },
+   "unitLabel": "1 pita",
+   "synonyms": "pain libanais"
+  },
+  {
+   "id": "pates-aux-oeufs--cru-sec",
+   "name": "Pâtes aux oeufs",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 384,
+   "protein": 14.2,
+   "carbs": 71.3,
+   "fat": 4.4,
+   "synonyms": "pâtes tagliatelles nouilles"
+  },
+  {
+   "id": "pates-aux-oeufs--cuit",
+   "name": "Pâtes aux oeufs",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 138,
+   "protein": 4.5,
+   "carbs": 25.2,
+   "fat": 2.1,
+   "synonyms": "pâtes tagliatelles nouilles"
+  },
+  {
+   "id": "pates-blanches--cru-sec",
+   "name": "Pâtes blanches",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 371,
+   "protein": 13,
+   "carbs": 74.7,
+   "fat": 1.5,
+   "synonyms": "pâtes spaghetti macaroni penne fusilli tagliatelle coquillettes farfalle torsades"
+  },
+  {
+   "id": "pates-blanches--cuit",
+   "name": "Pâtes blanches",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 158,
+   "protein": 5.8,
+   "carbs": 30.9,
+   "fat": 0.9,
+   "synonyms": "pâtes spaghetti macaroni penne fusilli tagliatelle coquillettes farfalle torsades"
+  },
+  {
+   "id": "pates-completes--cru-sec",
+   "name": "Pâtes complètes",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 352,
+   "protein": 14.6,
+   "carbs": 73.4,
+   "fat": 2.8,
+   "synonyms": "pâtes spaghetti complets macaroni penne fusilli"
+  },
+  {
+   "id": "pates-completes--cuit",
+   "name": "Pâtes complètes",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 124,
+   "protein": 5.3,
+   "carbs": 26.5,
+   "fat": 0.5,
+   "synonyms": "pâtes spaghetti complets macaroni penne fusilli"
+  },
+  {
+   "id": "pizza-margherita--tel-que-vendu",
+   "name": "Pizza margherita",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 266,
+   "protein": 11,
+   "carbs": 33,
+   "fat": 10
+  },
+  {
+   "id": "polenta-semoule-de-mais--cru-sec",
+   "name": "Polenta / semoule de maïs",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 362,
+   "protein": 8,
+   "carbs": 77,
+   "fat": 1.5
+  },
+  {
+   "id": "polenta-semoule-de-mais--cuit",
+   "name": "Polenta / semoule de maïs",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 70,
+   "protein": 1.6,
+   "carbs": 15,
+   "fat": 0.4
+  },
+  {
+   "id": "pop-corn-air-popped--tel-que-vendu",
+   "name": "Pop-corn (air popped)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 387,
+   "protein": 12.9,
+   "carbs": 77.8,
+   "fat": 4.5,
+   "synonyms": "popcorn maïs"
+  },
+  {
+   "id": "quinoa--cru-sec",
+   "name": "Quinoa",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 368,
+   "protein": 14.1,
+   "carbs": 64.2,
+   "fat": 6.1
+  },
+  {
+   "id": "quinoa--cuit",
+   "name": "Quinoa",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 120,
+   "protein": 4.4,
+   "carbs": 21.3,
+   "fat": 1.9
+  },
+  {
+   "id": "riz-basmati--cru-sec",
+   "name": "Riz basmati",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 349,
+   "protein": 7.9,
+   "carbs": 77,
+   "fat": 0.6
+  },
+  {
+   "id": "riz-basmati--cuit",
+   "name": "Riz basmati",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 121,
+   "protein": 3.5,
+   "carbs": 25.2,
+   "fat": 0.4
+  },
+  {
+   "id": "riz-blanc-long-grain--cru-sec",
+   "name": "Riz blanc long grain",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 365,
+   "protein": 7.1,
+   "carbs": 80,
+   "fat": 0.7,
+   "synonyms": "riz blanc"
+  },
+  {
+   "id": "riz-blanc-long-grain--cuit",
+   "name": "Riz blanc long grain",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 130,
+   "protein": 2.7,
+   "carbs": 28.2,
+   "fat": 0.3,
+   "synonyms": "riz blanc"
+  },
+  {
+   "id": "riz-complet--cru-sec",
+   "name": "Riz complet",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 370,
+   "protein": 7.9,
+   "carbs": 77.2,
+   "fat": 2.9
+  },
+  {
+   "id": "riz-complet--cuit",
+   "name": "Riz complet",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 123,
+   "protein": 2.7,
+   "carbs": 25.6,
+   "fat": 1
+  },
+  {
+   "id": "riz-etuve-parboiled--cru-sec",
+   "name": "Riz étuvé (parboiled)",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 370,
+   "protein": 7,
+   "carbs": 81,
+   "fat": 0.5,
+   "synonyms": "riz long grain étuvé"
+  },
+  {
+   "id": "riz-etuve-parboiled--cuit",
+   "name": "Riz étuvé (parboiled)",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 123,
+   "protein": 2.9,
+   "carbs": 26,
+   "fat": 0.4,
+   "synonyms": "riz long grain étuvé"
+  },
+  {
+   "id": "riz-jasmin--cru-sec",
+   "name": "Riz jasmin",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 360,
+   "protein": 7,
+   "carbs": 79.5,
+   "fat": 0.6,
+   "synonyms": "riz parfumé thaï"
+  },
+  {
+   "id": "riz-jasmin--cuit",
+   "name": "Riz jasmin",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 129,
+   "protein": 2.6,
+   "carbs": 28,
+   "fat": 0.3,
+   "synonyms": "riz parfumé thaï"
+  },
+  {
+   "id": "riz-rond-type-risotto-arborio--cru-sec",
+   "name": "Riz rond (type risotto / arborio)",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 360,
+   "protein": 6.6,
+   "carbs": 79.3,
+   "fat": 0.6,
+   "synonyms": "riz risotto arborio"
+  },
+  {
+   "id": "riz-rond-type-risotto-arborio--cuit",
+   "name": "Riz rond (type risotto / arborio)",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 130,
+   "protein": 2.4,
+   "carbs": 28.7,
+   "fat": 0.3,
+   "synonyms": "riz risotto arborio"
+  },
+  {
+   "id": "riz-sauvage--cru-sec",
+   "name": "Riz sauvage",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 357,
+   "protein": 14.7,
+   "carbs": 74.9,
+   "fat": 1.1
+  },
+  {
+   "id": "riz-sauvage--cuit",
+   "name": "Riz sauvage",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 101,
+   "protein": 4,
+   "carbs": 21.3,
+   "fat": 0.3
+  },
+  {
+   "id": "riz-thai-parfume--cru-sec",
+   "name": "Riz thaï (parfumé)",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 360,
+   "protein": 7,
+   "carbs": 79.5,
+   "fat": 0.6,
+   "synonyms": "riz jasmin parfumé"
+  },
+  {
+   "id": "riz-thai-parfume--cuit",
+   "name": "Riz thaï (parfumé)",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 129,
+   "protein": 2.6,
+   "carbs": 28,
+   "fat": 0.3,
+   "synonyms": "riz jasmin parfumé"
+  },
+  {
+   "id": "sarrasin--cru-sec",
+   "name": "Sarrasin",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 343,
+   "protein": 13.3,
+   "carbs": 71.5,
+   "fat": 3.4
+  },
+  {
+   "id": "sarrasin--cuit",
+   "name": "Sarrasin",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 92,
+   "protein": 3.4,
+   "carbs": 19.9,
+   "fat": 0.6
+  },
+  {
+   "id": "semoule-de-ble-dur--cru-sec",
+   "name": "Semoule de blé dur",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 360,
+   "protein": 12.7,
+   "carbs": 72.8,
+   "fat": 1.1,
+   "synonyms": "couscous semoule"
+  },
+  {
+   "id": "semoule-de-ble-dur--cuit",
+   "name": "Semoule de blé dur",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 120,
+   "protein": 4.2,
+   "carbs": 24,
+   "fat": 0.4,
+   "synonyms": "couscous"
+  },
+  {
+   "id": "son-d-avoine--tel-que-vendu",
+   "name": "Son d'avoine",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 246,
+   "protein": 17.3,
+   "carbs": 66.2,
+   "fat": 7
+  },
+  {
+   "id": "spaghetti-pates-blanches--cru-sec",
+   "name": "Spaghetti (pâtes blanches)",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 371,
+   "protein": 13,
+   "carbs": 74.7,
+   "fat": 1.5,
+   "synonyms": "pâtes spaghettis"
+  },
+  {
+   "id": "spaghetti-pates-blanches--cuit",
+   "name": "Spaghetti (pâtes blanches)",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 158,
+   "protein": 5.8,
+   "carbs": 30.9,
+   "fat": 0.9,
+   "synonyms": "pâtes spaghettis"
+  },
+  {
+   "id": "tapioca-perles-seches--tel-que-vendu",
+   "name": "Tapioca (perles sèches)",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 358,
+   "protein": 0.2,
+   "carbs": 88.7,
+   "fat": 0
+  },
+  {
+   "id": "teff--cru-sec",
+   "name": "Teff",
+   "state": "Cru / sec",
+   "category": "Céréales, féculents & pains",
+   "kcal": 367,
+   "protein": 13.3,
+   "carbs": 73.1,
+   "fat": 2.4
+  },
+  {
+   "id": "teff--cuit",
+   "name": "Teff",
+   "state": "Cuit",
+   "category": "Céréales, féculents & pains",
+   "kcal": 101,
+   "protein": 3.9,
+   "carbs": 19.9,
+   "fat": 0.7
+  },
+  {
+   "id": "tortilla-de-ble--tel-que-vendu",
+   "name": "Tortilla de blé",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 312,
+   "protein": 8.3,
+   "carbs": 51.6,
+   "fat": 8.1,
+   "gramsPerUnit": {
+    "piece": 60
+   },
+   "unitLabel": "1 tortilla / wrap",
+   "synonyms": "wrap tortilla galette fajita"
+  },
+  {
+   "id": "tortilla-de-mais--tel-que-vendu",
+   "name": "Tortilla de maïs",
+   "state": "Tel que vendu",
+   "category": "Céréales, féculents & pains",
+   "kcal": 218,
+   "protein": 5.7,
+   "carbs": 44.6,
+   "fat": 2.9,
+   "gramsPerUnit": {
+    "piece": 25
+   },
+   "unitLabel": "1 tortilla",
+   "synonyms": "tortilla maïs taco"
+  },
+  {
+   "id": "abricot--tel-que-vendu",
+   "name": "Abricot",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 48,
+   "protein": 1.4,
+   "carbs": 11.1,
+   "fat": 0.4,
+   "gramsPerUnit": {
+    "piece": 40
+   },
+   "unitLabel": "1 abricot"
+  },
+  {
+   "id": "abricots-secs--tel-que-vendu",
+   "name": "Abricots secs",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 241,
+   "protein": 3.4,
+   "carbs": 62.6,
+   "fat": 0.5
+  },
+  {
+   "id": "ananas--tel-que-vendu",
+   "name": "Ananas",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 50,
+   "protein": 0.5,
+   "carbs": 13.1,
+   "fat": 0.1
+  },
+  {
+   "id": "avocat--tel-que-vendu",
+   "name": "Avocat",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 160,
+   "protein": 2,
+   "carbs": 8.5,
+   "fat": 14.7,
+   "gramsPerUnit": {
+    "piece": 140
+   },
+   "unitLabel": "1 avocat (chair)"
+  },
+  {
+   "id": "banane--tel-que-vendu",
+   "name": "Banane",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 89,
+   "protein": 1.1,
+   "carbs": 22.8,
+   "fat": 0.3,
+   "gramsPerUnit": {
+    "piece": 120
+   },
+   "unitLabel": "1 banane (sans peau)"
+  },
+  {
+   "id": "canneberge-fraiche--tel-que-vendu",
+   "name": "Canneberge fraîche",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 46,
+   "protein": 0.4,
+   "carbs": 12.2,
+   "fat": 0.1
+  },
+  {
+   "id": "carambole--tel-que-vendu",
+   "name": "Carambole",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 31,
+   "protein": 1,
+   "carbs": 6.7,
+   "fat": 0.3
+  },
+  {
+   "id": "cassis--tel-que-vendu",
+   "name": "Cassis",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 63,
+   "protein": 1.4,
+   "carbs": 15.4,
+   "fat": 0.4
+  },
+  {
+   "id": "cerise--tel-que-vendu",
+   "name": "Cerise",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 63,
+   "protein": 1.1,
+   "carbs": 16,
+   "fat": 0.2
+  },
+  {
+   "id": "chips-de-banane--tel-que-vendu",
+   "name": "Chips de banane",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 519,
+   "protein": 2.3,
+   "carbs": 58.4,
+   "fat": 33.6
+  },
+  {
+   "id": "citron--tel-que-vendu",
+   "name": "Citron",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 29,
+   "protein": 1.1,
+   "carbs": 9.3,
+   "fat": 0.3
+  },
+  {
+   "id": "citron-vert--tel-que-vendu",
+   "name": "Citron vert",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 30,
+   "protein": 0.7,
+   "carbs": 10.5,
+   "fat": 0.2
+  },
+  {
+   "id": "coing--tel-que-vendu",
+   "name": "Coing",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 57,
+   "protein": 0.4,
+   "carbs": 15.3,
+   "fat": 0.1
+  },
+  {
+   "id": "compote-de-pomme-sans-sucre-ajoute--tel-que-vendu",
+   "name": "Compote de pomme sans sucre ajouté",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 42,
+   "protein": 0.2,
+   "carbs": 11,
+   "fat": 0.1
+  },
+  {
+   "id": "cranberries-sechees-sucrees--tel-que-vendu",
+   "name": "Cranberries séchées sucrées",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 308,
+   "protein": 0.1,
+   "carbs": 82.4,
+   "fat": 1.4
+  },
+  {
+   "id": "datte-deglet-noor--tel-que-vendu",
+   "name": "Datte Deglet Noor",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 282,
+   "protein": 2.5,
+   "carbs": 75,
+   "fat": 0.4,
+   "gramsPerUnit": {
+    "piece": 8
+   },
+   "unitLabel": "1 datte",
+   "synonyms": "dattes"
+  },
+  {
+   "id": "datte-medjool--tel-que-vendu",
+   "name": "Datte Medjool",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 277,
+   "protein": 1.8,
+   "carbs": 75,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 24
+   },
+   "unitLabel": "1 datte",
+   "synonyms": "dattes"
+  },
+  {
+   "id": "durian--tel-que-vendu",
+   "name": "Durian",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 147,
+   "protein": 1.5,
+   "carbs": 27.1,
+   "fat": 5.3
+  },
+  {
+   "id": "figue-de-barbarie--tel-que-vendu",
+   "name": "Figue de barbarie",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 41,
+   "protein": 0.7,
+   "carbs": 9.6,
+   "fat": 0.5
+  },
+  {
+   "id": "figue-fraiche--tel-que-vendu",
+   "name": "Figue fraîche",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 74,
+   "protein": 0.8,
+   "carbs": 19.2,
+   "fat": 0.3,
+   "gramsPerUnit": {
+    "piece": 50
+   },
+   "unitLabel": "1 figue",
+   "synonyms": "figues"
+  },
+  {
+   "id": "figues-seches--tel-que-vendu",
+   "name": "Figues sèches",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 249,
+   "protein": 3.3,
+   "carbs": 63.9,
+   "fat": 0.9,
+   "synonyms": "figues"
+  },
+  {
+   "id": "fraise--tel-que-vendu",
+   "name": "Fraise",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 32,
+   "protein": 0.7,
+   "carbs": 7.7,
+   "fat": 0.3
+  },
+  {
+   "id": "framboise--tel-que-vendu",
+   "name": "Framboise",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 52,
+   "protein": 1.2,
+   "carbs": 11.9,
+   "fat": 0.7
+  },
+  {
+   "id": "fruit-de-la-passion--tel-que-vendu",
+   "name": "Fruit de la passion",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 97,
+   "protein": 2.2,
+   "carbs": 23.4,
+   "fat": 0.7
+  },
+  {
+   "id": "fruit-du-dragon--tel-que-vendu",
+   "name": "Fruit du dragon",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 60,
+   "protein": 1.2,
+   "carbs": 13,
+   "fat": 0.4
+  },
+  {
+   "id": "goyave--tel-que-vendu",
+   "name": "Goyave",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 68,
+   "protein": 2.6,
+   "carbs": 14.3,
+   "fat": 1
+  },
+  {
+   "id": "grenade--tel-que-vendu",
+   "name": "Grenade",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 83,
+   "protein": 1.7,
+   "carbs": 18.7,
+   "fat": 1.2
+  },
+  {
+   "id": "groseille--tel-que-vendu",
+   "name": "Groseille",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 56,
+   "protein": 1.4,
+   "carbs": 13.8,
+   "fat": 0.2
+  },
+  {
+   "id": "jacquier-jaque--tel-que-vendu",
+   "name": "Jacquier (jaque)",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 95,
+   "protein": 1.7,
+   "carbs": 23.2,
+   "fat": 0.6
+  },
+  {
+   "id": "jus-d-ananas--tel-que-vendu",
+   "name": "Jus d'ananas",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 50,
+   "protein": 0.4,
+   "carbs": 12.4,
+   "fat": 0.1,
+   "density": 1.05
+  },
+  {
+   "id": "jus-de-carotte--tel-que-vendu",
+   "name": "Jus de carotte",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 40,
+   "protein": 0.9,
+   "carbs": 9.3,
+   "fat": 0.2,
+   "density": 1.04
+  },
+  {
+   "id": "jus-de-grenade--tel-que-vendu",
+   "name": "Jus de grenade",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 54,
+   "protein": 0.2,
+   "carbs": 13.1,
+   "fat": 0.3,
+   "density": 1.06
+  },
+  {
+   "id": "jus-de-pamplemousse--tel-que-vendu",
+   "name": "Jus de pamplemousse",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 39,
+   "protein": 0.5,
+   "carbs": 9.2,
+   "fat": 0.1,
+   "density": 1.04
+  },
+  {
+   "id": "kaki--tel-que-vendu",
+   "name": "Kaki",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 70,
+   "protein": 0.6,
+   "carbs": 18.6,
+   "fat": 0.2
+  },
+  {
+   "id": "kiwi--tel-que-vendu",
+   "name": "Kiwi",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 61,
+   "protein": 1.1,
+   "carbs": 14.7,
+   "fat": 0.5,
+   "gramsPerUnit": {
+    "piece": 75
+   },
+   "unitLabel": "1 kiwi (sans peau)"
+  },
+  {
+   "id": "kumquat--tel-que-vendu",
+   "name": "Kumquat",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 71,
+   "protein": 1.9,
+   "carbs": 15.9,
+   "fat": 0.9
+  },
+  {
+   "id": "litchi--tel-que-vendu",
+   "name": "Litchi",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 66,
+   "protein": 0.8,
+   "carbs": 16.5,
+   "fat": 0.4
+  },
+  {
+   "id": "mandarine-clementine--tel-que-vendu",
+   "name": "Mandarine / clémentine",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 47,
+   "protein": 0.8,
+   "carbs": 12,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 75
+   },
+   "unitLabel": "1 pièce (sans peau)"
+  },
+  {
+   "id": "mangue--tel-que-vendu",
+   "name": "Mangue",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 60,
+   "protein": 0.8,
+   "carbs": 15,
+   "fat": 0.4
+  },
+  {
+   "id": "melon-cantaloup--tel-que-vendu",
+   "name": "Melon cantaloup",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 34,
+   "protein": 0.8,
+   "carbs": 8.2,
+   "fat": 0.2,
+   "synonyms": "melon charentais"
+  },
+  {
+   "id": "mure--tel-que-vendu",
+   "name": "Mûre",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 43,
+   "protein": 1.4,
+   "carbs": 9.6,
+   "fat": 0.5
+  },
+  {
+   "id": "myrtille--tel-que-vendu",
+   "name": "Myrtille",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 57,
+   "protein": 0.7,
+   "carbs": 14.5,
+   "fat": 0.3
+  },
+  {
+   "id": "nectarine--tel-que-vendu",
+   "name": "Nectarine",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 44,
+   "protein": 1.1,
+   "carbs": 10.6,
+   "fat": 0.3,
+   "gramsPerUnit": {
+    "piece": 140
+   },
+   "unitLabel": "1 nectarine moyenne"
+  },
+  {
+   "id": "noix-de-coco-chair-fraiche--tel-que-vendu",
+   "name": "Noix de coco (chair fraîche)",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 354,
+   "protein": 3.3,
+   "carbs": 15.2,
+   "fat": 33.5
+  },
+  {
+   "id": "orange--tel-que-vendu",
+   "name": "Orange",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 47,
+   "protein": 0.9,
+   "carbs": 11.8,
+   "fat": 0.1,
+   "gramsPerUnit": {
+    "piece": 130
+   },
+   "unitLabel": "1 orange (sans peau)"
+  },
+  {
+   "id": "pamplemousse--tel-que-vendu",
+   "name": "Pamplemousse",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 42,
+   "protein": 0.8,
+   "carbs": 10.7,
+   "fat": 0.1
+  },
+  {
+   "id": "papaye--tel-que-vendu",
+   "name": "Papaye",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 43,
+   "protein": 0.5,
+   "carbs": 10.8,
+   "fat": 0.3
+  },
+  {
+   "id": "pasteque--tel-que-vendu",
+   "name": "Pastèque",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 30,
+   "protein": 0.6,
+   "carbs": 7.6,
+   "fat": 0.2
+  },
+  {
+   "id": "peche--tel-que-vendu",
+   "name": "Pêche",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 39,
+   "protein": 0.9,
+   "carbs": 9.5,
+   "fat": 0.3,
+   "gramsPerUnit": {
+    "piece": 150
+   },
+   "unitLabel": "1 pêche moyenne"
+  },
+  {
+   "id": "plantain--tel-que-vendu",
+   "name": "Plantain",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 122,
+   "protein": 1.3,
+   "carbs": 31.9,
+   "fat": 0.4
+  },
+  {
+   "id": "poire--tel-que-vendu",
+   "name": "Poire",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 57,
+   "protein": 0.4,
+   "carbs": 15.2,
+   "fat": 0.1,
+   "gramsPerUnit": {
+    "piece": 170
+   },
+   "unitLabel": "1 poire moyenne"
+  },
+  {
+   "id": "pomelo--tel-que-vendu",
+   "name": "Pomelo",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 38,
+   "protein": 0.8,
+   "carbs": 9.6,
+   "fat": 0
+  },
+  {
+   "id": "pomme--tel-que-vendu",
+   "name": "Pomme",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 52,
+   "protein": 0.3,
+   "carbs": 13.8,
+   "fat": 0.2,
+   "gramsPerUnit": {
+    "piece": 150
+   },
+   "unitLabel": "1 pomme moyenne"
+  },
+  {
+   "id": "prune--tel-que-vendu",
+   "name": "Prune",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 46,
+   "protein": 0.7,
+   "carbs": 11.4,
+   "fat": 0.3,
+   "gramsPerUnit": {
+    "piece": 35
+   },
+   "unitLabel": "1 prune"
+  },
+  {
+   "id": "pruneaux--tel-que-vendu",
+   "name": "Pruneaux",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 240,
+   "protein": 2.2,
+   "carbs": 63.9,
+   "fat": 0.4
+  },
+  {
+   "id": "raisin--tel-que-vendu",
+   "name": "Raisin",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 69,
+   "protein": 0.7,
+   "carbs": 18.1,
+   "fat": 0.2
+  },
+  {
+   "id": "raisins-secs--tel-que-vendu",
+   "name": "Raisins secs",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 299,
+   "protein": 3.1,
+   "carbs": 79.2,
+   "fat": 0.5
+  },
+  {
+   "id": "rhubarbe--tel-que-vendu",
+   "name": "Rhubarbe",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 21,
+   "protein": 0.9,
+   "carbs": 4.5,
+   "fat": 0.2
+  },
+  {
+   "id": "tamarin--tel-que-vendu",
+   "name": "Tamarin",
+   "state": "Tel que vendu",
+   "category": "Fruits",
+   "kcal": 239,
+   "protein": 2.8,
+   "carbs": 62.5,
+   "fat": 0.6
+  },
+  {
+   "id": "amandes--tel-que-vendu",
+   "name": "Amandes",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 579,
+   "protein": 21.2,
+   "carbs": 21.6,
+   "fat": 49.9
+  },
+  {
+   "id": "beurre-d-amande--tel-que-vendu",
+   "name": "Beurre d'amande",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 614,
+   "protein": 21,
+   "carbs": 19,
+   "fat": 56,
+   "gramsPerUnit": {
+    "tbsp": 16
+   },
+   "unitLabel": "1 c. à soupe"
+  },
+  {
+   "id": "beurre-de-cacahuete--tel-que-vendu",
+   "name": "Beurre de cacahuète",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 588,
+   "protein": 25.1,
+   "carbs": 20,
+   "fat": 50.4,
+   "gramsPerUnit": {
+    "tbsp": 16
+   },
+   "unitLabel": "1 c. à soupe",
+   "synonyms": "peanut butter"
+  },
+  {
+   "id": "beurre-de-noix-de-cajou--tel-que-vendu",
+   "name": "Beurre de noix de cajou",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 587,
+   "protein": 17.6,
+   "carbs": 27.6,
+   "fat": 49.4
+  },
+  {
+   "id": "cacahuetes--tel-que-vendu",
+   "name": "Cacahuètes",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 567,
+   "protein": 25.8,
+   "carbs": 16.1,
+   "fat": 49.2
+  },
+  {
+   "id": "graines-de-chanvre--tel-que-vendu",
+   "name": "Graines de chanvre",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 553,
+   "protein": 31.6,
+   "carbs": 8.7,
+   "fat": 48.8
+  },
+  {
+   "id": "graines-de-chia--tel-que-vendu",
+   "name": "Graines de chia",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 486,
+   "protein": 16.5,
+   "carbs": 42.1,
+   "fat": 30.7
+  },
+  {
+   "id": "graines-de-courge--tel-que-vendu",
+   "name": "Graines de courge",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 559,
+   "protein": 30.2,
+   "carbs": 10.7,
+   "fat": 49.1
+  },
+  {
+   "id": "graines-de-lin--tel-que-vendu",
+   "name": "Graines de lin",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 534,
+   "protein": 18.3,
+   "carbs": 28.9,
+   "fat": 42.2
+  },
+  {
+   "id": "graines-de-sesame--tel-que-vendu",
+   "name": "Graines de sésame",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 573,
+   "protein": 17.7,
+   "carbs": 23.4,
+   "fat": 49.7
+  },
+  {
+   "id": "graines-de-tournesol--tel-que-vendu",
+   "name": "Graines de tournesol",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 584,
+   "protein": 20.8,
+   "carbs": 20,
+   "fat": 51.5
+  },
+  {
+   "id": "noisettes--tel-que-vendu",
+   "name": "Noisettes",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 628,
+   "protein": 15,
+   "carbs": 16.7,
+   "fat": 60.8
+  },
+  {
+   "id": "noix--tel-que-vendu",
+   "name": "Noix",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 654,
+   "protein": 15.2,
+   "carbs": 13.7,
+   "fat": 65.2
+  },
+  {
+   "id": "noix-de-cajou--tel-que-vendu",
+   "name": "Noix de cajou",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 553,
+   "protein": 18.2,
+   "carbs": 30.2,
+   "fat": 43.9
+  },
+  {
+   "id": "noix-de-coco-sechee-non-sucree--tel-que-vendu",
+   "name": "Noix de coco séchée non sucrée",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 660,
+   "protein": 6.9,
+   "carbs": 24,
+   "fat": 64.5
+  },
+  {
+   "id": "noix-de-macadamia--tel-que-vendu",
+   "name": "Noix de macadamia",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 718,
+   "protein": 7.9,
+   "carbs": 13.8,
+   "fat": 75.8
+  },
+  {
+   "id": "noix-de-pecan--tel-que-vendu",
+   "name": "Noix de pécan",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 691,
+   "protein": 9.2,
+   "carbs": 13.9,
+   "fat": 72
+  },
+  {
+   "id": "noix-du-bresil--tel-que-vendu",
+   "name": "Noix du Brésil",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 659,
+   "protein": 14.3,
+   "carbs": 12.3,
+   "fat": 67.1
+  },
+  {
+   "id": "pate-a-tartiner-chocolat-noisette--tel-que-vendu",
+   "name": "Pâte à tartiner chocolat-noisette",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 539,
+   "protein": 6.3,
+   "carbs": 57.5,
+   "fat": 30.9,
+   "gramsPerUnit": {
+    "tbsp": 15
+   },
+   "unitLabel": "1 c. à soupe",
+   "synonyms": "nutella"
+  },
+  {
+   "id": "pignons-de-pin--tel-que-vendu",
+   "name": "Pignons de pin",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 673,
+   "protein": 13.7,
+   "carbs": 13.1,
+   "fat": 68.4
+  },
+  {
+   "id": "pistaches--tel-que-vendu",
+   "name": "Pistaches",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 560,
+   "protein": 20.2,
+   "carbs": 27.2,
+   "fat": 45.3
+  },
+  {
+   "id": "tahini-puree-de-sesame--tel-que-vendu",
+   "name": "Tahini (purée de sésame)",
+   "state": "Tel que vendu",
+   "category": "Fruits à coque & graines",
+   "kcal": 595,
+   "protein": 17,
+   "carbs": 21.2,
+   "fat": 53.8
+  },
+  {
+   "id": "beurre-de-cacao--tel-que-vendu",
+   "name": "Beurre de cacao",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100
+  },
+  {
+   "id": "ghee-beurre-clarifie--tel-que-vendu",
+   "name": "Ghee (beurre clarifié)",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 876,
+   "protein": 0.3,
+   "carbs": 0,
+   "fat": 99.5
+  },
+  {
+   "id": "huile-d-arachide--tel-que-vendu",
+   "name": "Huile d'arachide",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-d-argan--tel-que-vendu",
+   "name": "Huile d'argan",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-d-olive--tel-que-vendu",
+   "name": "Huile d'olive",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "gramsPerUnit": {
+    "tbsp": 14
+   },
+   "unitLabel": "1 c. à soupe (15 ml)",
+   "density": 0.92,
+   "synonyms": "huile olive vierge extra"
+  },
+  {
+   "id": "huile-de-coco--tel-que-vendu",
+   "name": "Huile de coco",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 862,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-colza--tel-que-vendu",
+   "name": "Huile de colza",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "gramsPerUnit": {
+    "tbsp": 14
+   },
+   "unitLabel": "1 c. à soupe (15 ml)",
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-lin--tel-que-vendu",
+   "name": "Huile de lin",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-mais--tel-que-vendu",
+   "name": "Huile de maïs",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-noix--tel-que-vendu",
+   "name": "Huile de noix",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-palme--tel-que-vendu",
+   "name": "Huile de palme",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100
+  },
+  {
+   "id": "huile-de-pepins-de-raisin--tel-que-vendu",
+   "name": "Huile de pépins de raisin",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-sesame--tel-que-vendu",
+   "name": "Huile de sésame",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-soja--tel-que-vendu",
+   "name": "Huile de soja",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "density": 0.92
+  },
+  {
+   "id": "huile-de-tournesol--tel-que-vendu",
+   "name": "Huile de tournesol",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 884,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100,
+   "gramsPerUnit": {
+    "tbsp": 14
+   },
+   "unitLabel": "1 c. à soupe (15 ml)",
+   "density": 0.92
+  },
+  {
+   "id": "margarine--tel-que-vendu",
+   "name": "Margarine",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 717,
+   "protein": 0.2,
+   "carbs": 0.7,
+   "fat": 80.7
+  },
+  {
+   "id": "margarine-allegee-env-40-mg--tel-que-vendu",
+   "name": "Margarine allégée (env. 40% MG)",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 365,
+   "protein": 0.3,
+   "carbs": 0.5,
+   "fat": 40,
+   "synonyms": "beurre allégé"
+  },
+  {
+   "id": "mayonnaise--tel-que-vendu",
+   "name": "Mayonnaise",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 680,
+   "protein": 1,
+   "carbs": 0.6,
+   "fat": 74.9,
+   "gramsPerUnit": {
+    "tbsp": 15
+   },
+   "unitLabel": "1 c. à soupe"
+  },
+  {
+   "id": "mayonnaise-allegee--tel-que-vendu",
+   "name": "Mayonnaise allégée",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 290,
+   "protein": 0.8,
+   "carbs": 7,
+   "fat": 29,
+   "synonyms": "sauce"
+  },
+  {
+   "id": "saindoux--tel-que-vendu",
+   "name": "Saindoux",
+   "state": "Tel que vendu",
+   "category": "Huiles & matières grasses",
+   "kcal": 902,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 100
+  },
+  {
+   "id": "barre-chocolatee-type-mars-snickers--tel-que-vendu",
+   "name": "Barre chocolatée (type Mars / Snickers)",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 480,
+   "protein": 7.5,
+   "carbs": 63,
+   "fat": 22,
+   "gramsPerUnit": {
+    "piece": 50
+   },
+   "unitLabel": "1 barre",
+   "synonyms": "snack"
+  },
+  {
+   "id": "barre-de-cereales-moyenne--tel-que-vendu",
+   "name": "Barre de céréales (moyenne)",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 400,
+   "protein": 6,
+   "carbs": 68,
+   "fat": 12,
+   "gramsPerUnit": {
+    "piece": 25
+   },
+   "unitLabel": "1 barre",
+   "synonyms": "snack"
+  },
+  {
+   "id": "biscuits-secs-type-petit-beurre--tel-que-vendu",
+   "name": "Biscuits secs (type petit-beurre)",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 450,
+   "protein": 7,
+   "carbs": 74,
+   "fat": 13,
+   "gramsPerUnit": {
+    "piece": 8
+   },
+   "unitLabel": "1 biscuit"
+  },
+  {
+   "id": "bonbons-gelifies--tel-que-vendu",
+   "name": "Bonbons gélifiés",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 340,
+   "protein": 6,
+   "carbs": 77,
+   "fat": 0.1,
+   "synonyms": "confiserie"
+  },
+  {
+   "id": "cacao-en-poudre-non-sucre--tel-que-vendu",
+   "name": "Cacao en poudre non sucré",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 228,
+   "protein": 19.6,
+   "carbs": 57.9,
+   "fat": 13.7
+  },
+  {
+   "id": "chips-de-pomme-de-terre--tel-que-vendu",
+   "name": "Chips de pomme de terre",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 536,
+   "protein": 7,
+   "carbs": 53,
+   "fat": 35,
+   "synonyms": "chips"
+  },
+  {
+   "id": "chocolat-au-lait--tel-que-vendu",
+   "name": "Chocolat au lait",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 535,
+   "protein": 7.7,
+   "carbs": 59.4,
+   "fat": 29.7,
+   "gramsPerUnit": {
+    "piece": 10
+   },
+   "unitLabel": "1 carré"
+  },
+  {
+   "id": "chocolat-blanc--tel-que-vendu",
+   "name": "Chocolat blanc",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 539,
+   "protein": 5.9,
+   "carbs": 59.2,
+   "fat": 32.1
+  },
+  {
+   "id": "chocolat-noir-45-59--tel-que-vendu",
+   "name": "Chocolat noir 45-59%",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 546,
+   "protein": 4.9,
+   "carbs": 61.2,
+   "fat": 31.3,
+   "gramsPerUnit": {
+    "piece": 10
+   },
+   "unitLabel": "1 carré"
+  },
+  {
+   "id": "chocolat-noir-70-85--tel-que-vendu",
+   "name": "Chocolat noir 70-85%",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 598,
+   "protein": 7.8,
+   "carbs": 45.9,
+   "fat": 42.6,
+   "gramsPerUnit": {
+    "piece": 10
+   },
+   "unitLabel": "1 carré"
+  },
+  {
+   "id": "confiture--tel-que-vendu",
+   "name": "Confiture",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 250,
+   "protein": 0.4,
+   "carbs": 65,
+   "fat": 0.1,
+   "gramsPerUnit": {
+    "tbsp": 20
+   },
+   "unitLabel": "1 c. à soupe"
+  },
+  {
+   "id": "cookies-aux-pepites-de-chocolat--tel-que-vendu",
+   "name": "Cookies aux pépites de chocolat",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 480,
+   "protein": 5.5,
+   "carbs": 64,
+   "fat": 22,
+   "gramsPerUnit": {
+    "piece": 25
+   },
+   "unitLabel": "1 cookie",
+   "synonyms": "biscuit"
+  },
+  {
+   "id": "halva--tel-que-vendu",
+   "name": "Halva",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 469,
+   "protein": 12.5,
+   "carbs": 50.2,
+   "fat": 21.5
+  },
+  {
+   "id": "melasse--tel-que-vendu",
+   "name": "Mélasse",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 290,
+   "protein": 0,
+   "carbs": 74.7,
+   "fat": 0.1
+  },
+  {
+   "id": "miel--tel-que-vendu",
+   "name": "Miel",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 304,
+   "protein": 0.3,
+   "carbs": 82.4,
+   "fat": 0,
+   "gramsPerUnit": {
+    "tbsp": 21
+   },
+   "unitLabel": "1 c. à soupe",
+   "density": 1.42
+  },
+  {
+   "id": "sirop-d-agave--tel-que-vendu",
+   "name": "Sirop d'agave",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 310,
+   "protein": 0.1,
+   "carbs": 76.4,
+   "fat": 0.5
+  },
+  {
+   "id": "sirop-d-erable--tel-que-vendu",
+   "name": "Sirop d'érable",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 260,
+   "protein": 0,
+   "carbs": 67,
+   "fat": 0.1,
+   "density": 1.33
+  },
+  {
+   "id": "sucre-blanc--tel-que-vendu",
+   "name": "Sucre blanc",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 387,
+   "protein": 0,
+   "carbs": 100,
+   "fat": 0,
+   "gramsPerUnit": {
+    "piece": 5
+   },
+   "unitLabel": "1 morceau"
+  },
+  {
+   "id": "sucre-glace--tel-que-vendu",
+   "name": "Sucre glace",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 389,
+   "protein": 0,
+   "carbs": 99.8,
+   "fat": 0
+  },
+  {
+   "id": "sucre-roux--tel-que-vendu",
+   "name": "Sucre roux",
+   "state": "Tel que vendu",
+   "category": "Sucres, sucreries & snacks",
+   "kcal": 380,
+   "protein": 0.1,
+   "carbs": 98,
+   "fat": 0
+  },
+  {
+   "id": "biere-blonde-env-5-alcool--tel-que-vendu",
+   "name": "Bière blonde (env. 5% alcool)",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 43,
+   "protein": 0.5,
+   "carbs": 3.6,
+   "fat": 0,
+   "density": 1.01,
+   "synonyms": "alcool"
+  },
+  {
+   "id": "boisson-energisante--tel-que-vendu",
+   "name": "Boisson énergisante",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 45,
+   "protein": 0,
+   "carbs": 11,
+   "fat": 0,
+   "density": 1.04
+  },
+  {
+   "id": "boisson-isotonique--tel-que-vendu",
+   "name": "Boisson isotonique",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 26,
+   "protein": 0,
+   "carbs": 6.2,
+   "fat": 0,
+   "density": 1.03
+  },
+  {
+   "id": "cafe-noir-sans-sucre--tel-que-vendu",
+   "name": "Café noir (sans sucre)",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 1,
+   "protein": 0.1,
+   "carbs": 0,
+   "fat": 0,
+   "density": 1
+  },
+  {
+   "id": "coca-cola--tel-que-vendu",
+   "name": "Coca-Cola",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 42,
+   "protein": 0.1,
+   "carbs": 10.6,
+   "fat": 0,
+   "gramsPerUnit": {
+    "piece": 343
+   },
+   "unitLabel": "1 canette (33 cl)",
+   "density": 1.04,
+   "synonyms": "soda cola"
+  },
+  {
+   "id": "eau--tel-que-vendu",
+   "name": "Eau",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 0,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 0,
+   "density": 1
+  },
+  {
+   "id": "eau-de-coco--tel-que-vendu",
+   "name": "Eau de coco",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 19,
+   "protein": 0.7,
+   "carbs": 3.7,
+   "fat": 0.2,
+   "density": 1.02
+  },
+  {
+   "id": "jus-d-orange--tel-que-vendu",
+   "name": "Jus d'orange",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 45,
+   "protein": 0.7,
+   "carbs": 10.4,
+   "fat": 0.2,
+   "density": 1.04
+  },
+  {
+   "id": "jus-de-citron--tel-que-vendu",
+   "name": "Jus de citron",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 22,
+   "protein": 0.4,
+   "carbs": 6.9,
+   "fat": 0.2,
+   "density": 1.03
+  },
+  {
+   "id": "jus-de-pomme--tel-que-vendu",
+   "name": "Jus de pomme",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 46,
+   "protein": 0.1,
+   "carbs": 11.3,
+   "fat": 0.1,
+   "density": 1.05
+  },
+  {
+   "id": "jus-de-raisin--tel-que-vendu",
+   "name": "Jus de raisin",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 60,
+   "protein": 0.4,
+   "carbs": 14.8,
+   "fat": 0.1,
+   "density": 1.06
+  },
+  {
+   "id": "jus-de-tomate--tel-que-vendu",
+   "name": "Jus de tomate",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 17,
+   "protein": 0.9,
+   "carbs": 3.9,
+   "fat": 0.1,
+   "density": 1.03
+  },
+  {
+   "id": "lait-chocolate--tel-que-vendu",
+   "name": "Lait chocolaté",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 83,
+   "protein": 3.2,
+   "carbs": 10.6,
+   "fat": 3.4,
+   "density": 1.05
+  },
+  {
+   "id": "lait-d-amande-non-sucre--tel-que-vendu",
+   "name": "Lait d'amande non sucré",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 15,
+   "protein": 0.6,
+   "carbs": 0.3,
+   "fat": 1.2,
+   "density": 1
+  },
+  {
+   "id": "lait-d-avoine--tel-que-vendu",
+   "name": "Lait d'avoine",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 43,
+   "protein": 1,
+   "carbs": 7,
+   "fat": 1.5,
+   "density": 1.03
+  },
+  {
+   "id": "lait-de-coco-conserve--tel-que-vendu",
+   "name": "Lait de coco (conserve)",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 197,
+   "protein": 2,
+   "carbs": 2.8,
+   "fat": 21.3,
+   "density": 1
+  },
+  {
+   "id": "lait-de-riz--tel-que-vendu",
+   "name": "Lait de riz",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 47,
+   "protein": 0.3,
+   "carbs": 9.2,
+   "fat": 1,
+   "density": 1.03
+  },
+  {
+   "id": "lait-de-soja-nature-non-sucre--tel-que-vendu",
+   "name": "Lait de soja nature non sucré",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 33,
+   "protein": 2.8,
+   "carbs": 1.8,
+   "fat": 1.6,
+   "density": 1.03
+  },
+  {
+   "id": "limonade--tel-que-vendu",
+   "name": "Limonade",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 41,
+   "protein": 0,
+   "carbs": 10.4,
+   "fat": 0,
+   "density": 1.04,
+   "synonyms": "soda"
+  },
+  {
+   "id": "soda-zero-light-sans-sucre--tel-que-vendu",
+   "name": "Soda zéro / light (sans sucre)",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 0,
+   "protein": 0,
+   "carbs": 0,
+   "fat": 0,
+   "density": 1,
+   "synonyms": "coca zéro light"
+  },
+  {
+   "id": "the-nature-sans-sucre--tel-que-vendu",
+   "name": "Thé nature (sans sucre)",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 1,
+   "protein": 0,
+   "carbs": 0.3,
+   "fat": 0,
+   "density": 1
+  },
+  {
+   "id": "vin-rouge--tel-que-vendu",
+   "name": "Vin rouge",
+   "state": "Tel que vendu",
+   "category": "Boissons",
+   "kcal": 85,
+   "protein": 0.1,
+   "carbs": 2.6,
+   "fat": 0,
+   "density": 0.99,
+   "synonyms": "alcool"
+  },
+  {
+   "id": "ail-en-poudre--tel-que-vendu",
+   "name": "Ail en poudre",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 331,
+   "protein": 16.6,
+   "carbs": 72.7,
+   "fat": 0.7
+  },
+  {
+   "id": "cannelle-moulue--tel-que-vendu",
+   "name": "Cannelle moulue",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 247,
+   "protein": 4,
+   "carbs": 80.6,
+   "fat": 1.2
+  },
+  {
+   "id": "cardamome--tel-que-vendu",
+   "name": "Cardamome",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 311,
+   "protein": 10.8,
+   "carbs": 68.5,
+   "fat": 6.7
+  },
+  {
+   "id": "clou-de-girofle--tel-que-vendu",
+   "name": "Clou de girofle",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 274,
+   "protein": 6,
+   "carbs": 65.5,
+   "fat": 13
+  },
+  {
+   "id": "coriandre-graines--tel-que-vendu",
+   "name": "Coriandre (graines)",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 298,
+   "protein": 12.4,
+   "carbs": 55,
+   "fat": 17.8
+  },
+  {
+   "id": "cumin-moulu--tel-que-vendu",
+   "name": "Cumin moulu",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 375,
+   "protein": 17.8,
+   "carbs": 44.2,
+   "fat": 22.3
+  },
+  {
+   "id": "curcuma-moulu--tel-que-vendu",
+   "name": "Curcuma moulu",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 312,
+   "protein": 9.7,
+   "carbs": 67.1,
+   "fat": 3.3
+  },
+  {
+   "id": "gelatine--tel-que-vendu",
+   "name": "Gélatine",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 335,
+   "protein": 85.6,
+   "carbs": 0,
+   "fat": 0.1
+  },
+  {
+   "id": "gingembre-moulu--tel-que-vendu",
+   "name": "Gingembre moulu",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 335,
+   "protein": 9,
+   "carbs": 71.6,
+   "fat": 4.2
+  },
+  {
+   "id": "guacamole--tel-que-vendu",
+   "name": "Guacamole",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 155,
+   "protein": 2,
+   "carbs": 8.5,
+   "fat": 14,
+   "synonyms": "avocat sauce"
+  },
+  {
+   "id": "ketchup--tel-que-vendu",
+   "name": "Ketchup",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 101,
+   "protein": 1,
+   "carbs": 27.4,
+   "fat": 0.1,
+   "gramsPerUnit": {
+    "tbsp": 17
+   },
+   "unitLabel": "1 c. à soupe"
+  },
+  {
+   "id": "moutarde--tel-que-vendu",
+   "name": "Moutarde",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 66,
+   "protein": 4.4,
+   "carbs": 5.8,
+   "fat": 4,
+   "gramsPerUnit": {
+    "tsp": 5
+   },
+   "unitLabel": "1 c. à café"
+  },
+  {
+   "id": "muscade--tel-que-vendu",
+   "name": "Muscade",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 525,
+   "protein": 5.8,
+   "carbs": 49.3,
+   "fat": 36.3
+  },
+  {
+   "id": "oignon-en-poudre--tel-que-vendu",
+   "name": "Oignon en poudre",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 341,
+   "protein": 10.4,
+   "carbs": 79.1,
+   "fat": 1
+  },
+  {
+   "id": "origan-seche--tel-que-vendu",
+   "name": "Origan séché",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 265,
+   "protein": 9,
+   "carbs": 68.9,
+   "fat": 4.3
+  },
+  {
+   "id": "paprika--tel-que-vendu",
+   "name": "Paprika",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 282,
+   "protein": 14.1,
+   "carbs": 54,
+   "fat": 12.9
+  },
+  {
+   "id": "pesto--tel-que-vendu",
+   "name": "Pesto",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 418,
+   "protein": 5,
+   "carbs": 5,
+   "fat": 42,
+   "gramsPerUnit": {
+    "tbsp": 16
+   },
+   "unitLabel": "1 c. à soupe"
+  },
+  {
+   "id": "piment-en-poudre--tel-que-vendu",
+   "name": "Piment en poudre",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 282,
+   "protein": 13.5,
+   "carbs": 49.7,
+   "fat": 14.3
+  },
+  {
+   "id": "poivre-noir--tel-que-vendu",
+   "name": "Poivre noir",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 251,
+   "protein": 10.4,
+   "carbs": 63.9,
+   "fat": 3.3
+  },
+  {
+   "id": "safran--tel-que-vendu",
+   "name": "Safran",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 310,
+   "protein": 11.4,
+   "carbs": 65.4,
+   "fat": 5.9
+  },
+  {
+   "id": "sauce-barbecue--tel-que-vendu",
+   "name": "Sauce barbecue",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 170,
+   "protein": 1,
+   "carbs": 40,
+   "fat": 0.5,
+   "synonyms": "bbq sauce"
+  },
+  {
+   "id": "sauce-soja--tel-que-vendu",
+   "name": "Sauce soja",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 53,
+   "protein": 8.1,
+   "carbs": 4.9,
+   "fat": 0.6,
+   "gramsPerUnit": {
+    "tbsp": 16
+   },
+   "unitLabel": "1 c. à soupe",
+   "density": 1.15
+  },
+  {
+   "id": "thym-seche--tel-que-vendu",
+   "name": "Thym séché",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 276,
+   "protein": 9.1,
+   "carbs": 63.9,
+   "fat": 7.4
+  },
+  {
+   "id": "vinaigre-balsamique--tel-que-vendu",
+   "name": "Vinaigre balsamique",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 88,
+   "protein": 0.5,
+   "carbs": 17,
+   "fat": 0,
+   "density": 1.1
+  },
+  {
+   "id": "vinaigre-blanc-de-cidre--tel-que-vendu",
+   "name": "Vinaigre blanc / de cidre",
+   "state": "Tel que vendu",
+   "category": "Condiments, épices & divers",
+   "kcal": 21,
+   "protein": 0,
+   "carbs": 0.9,
+   "fat": 0,
+   "density": 1.01
+  },
+  {
+   "id": "barre-proteinee-moyenne--tel-que-vendu",
+   "name": "Barre protéinée (moyenne)",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 370,
+   "protein": 32,
+   "carbs": 35,
+   "fat": 12,
+   "gramsPerUnit": {
+    "piece": 60
+   },
+   "unitLabel": "1 barre"
+  },
+  {
+   "id": "caseine-micellaire-poudre--tel-que-vendu",
+   "name": "Caséine micellaire (poudre)",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 360,
+   "protein": 80,
+   "carbs": 5,
+   "fat": 1.5,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 dose (scoop)",
+   "synonyms": "protéine poudre"
+  },
+  {
+   "id": "dextrose--tel-que-vendu",
+   "name": "Dextrose",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 365,
+   "protein": 0,
+   "carbs": 97,
+   "fat": 0
+  },
+  {
+   "id": "gainer-mass-gainer-moyenne--tel-que-vendu",
+   "name": "Gainer / mass gainer (moyenne)",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 385,
+   "protein": 20,
+   "carbs": 66,
+   "fat": 5,
+   "synonyms": "prise de masse"
+  },
+  {
+   "id": "maltodextrine--tel-que-vendu",
+   "name": "Maltodextrine",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 380,
+   "protein": 0,
+   "carbs": 95,
+   "fat": 0
+  },
+  {
+   "id": "proteine-de-pois-poudre--tel-que-vendu",
+   "name": "Protéine de pois (poudre)",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 380,
+   "protein": 80,
+   "carbs": 5,
+   "fat": 6,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 dose (scoop)",
+   "synonyms": "protéine poudre"
+  },
+  {
+   "id": "whey-concentre-80-poudre--tel-que-vendu",
+   "name": "Whey - concentré 80% (poudre)",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 400,
+   "protein": 80,
+   "carbs": 7,
+   "fat": 7,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 dose (scoop)",
+   "synonyms": "whey protéine poudre"
+  },
+  {
+   "id": "whey-isolat-poudre--tel-que-vendu",
+   "name": "Whey - isolat (poudre)",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 370,
+   "protein": 90,
+   "carbs": 1,
+   "fat": 1,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 dose (scoop)",
+   "synonyms": "whey protéine poudre"
+  },
+  {
+   "id": "whey-proteine-en-poudre-generique--tel-que-vendu",
+   "name": "Whey / protéine en poudre (générique)",
+   "state": "Tel que vendu",
+   "category": "Compléments sportifs",
+   "kcal": 390,
+   "protein": 80,
+   "carbs": 6,
+   "fat": 5,
+   "gramsPerUnit": {
+    "piece": 30
+   },
+   "unitLabel": "1 dose (scoop)",
+   "synonyms": "protéine poudre"
+  }
+ ]
+}

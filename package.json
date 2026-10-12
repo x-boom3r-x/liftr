@@ -8,11 +8,13 @@
     "test": "playwright test",
     "test:desktop": "playwright test --project=desktop",
     "test:mobile": "playwright test --project=mobile",
-    "vendor": "node scripts/vendor.js"
+    "vendor": "node scripts/vendor.js",
+    "foods": "node scripts/build-foods.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "xlsx": "^0.18.5"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2"
