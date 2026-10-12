@@ -84,6 +84,9 @@ button{background:none;border:none;cursor:pointer}
 }
 .panel{animation:fade .22s ease}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* fadeIn : entree sans translation. Une modale qui glisse deplace la cible
+   sous le doigt — appuis rapides sur + pendant l'ouverture = presses perdues. */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
 .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
 .section-title{font-size:1.18rem;font-weight:700;letter-spacing:-.02em}
@@ -207,13 +210,13 @@ button{background:none;border:none;cursor:pointer}
   align-items:flex-end;justify-content:center;
   background:rgba(0,0,0,.62);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
 }
-.overlay.show{display:flex;animation:fade .16s ease}
+.overlay.show{display:flex;animation:fadeIn .16s ease}
 .modal{
   width:100%;max-width:600px;max-height:92vh;overflow-y:auto;
   background:var(--surface);border:1px solid var(--border);border-bottom:none;
   border-radius:22px 22px 0 0;
   padding:8px 18px calc(22px + var(--safe-bottom));
-  animation:slideup .24s cubic-bezier(.2,.9,.3,1);
+  animation:fadeIn .16s ease;
 }
 @keyframes slideup{from{transform:translateY(38px);opacity:.4}to{transform:none;opacity:1}}
 @media(min-width:640px){
@@ -1761,7 +1764,7 @@ button{background:none;border:none;cursor:pointer}
   .ptile,.note-cell,.crew-cell,.card,.profile-card,.ctx-sug{
     transition:background-color .15s ease,border-color .15s ease,color .15s ease !important;
   }
-  .modal{animation:fade .16s ease !important}
+  .modal{animation:fadeIn .16s ease !important}
   .overlay-sheet .action-sheet,
   .overlay-sheet.show .action-sheet{
     transition:opacity .16s ease !important;transform:none !important;

@@ -31,6 +31,28 @@ test.describe('Steppers + / −', () => {
     expect(await page.locator('#weightInput').evaluate(el => el.validity.stepMismatch)).toBe(false);
   });
 
+  test('entrée de modale immobile : le + est visable dès la 1re frame, 10 appuis aveugles y atterrissent', async ({ page }) => {
+    await seed(page, { programme: [dayA] }, 'Mouataz');
+    await openSetModal(page);
+
+    const plus = plusOf(page, 'weightInput');
+    const b0 = await plus.boundingBox();
+    expect(b0).toBeTruthy();
+
+    /* appuis rapides au point figé, mesuré pendant l'entrée, sans re-localiser :
+       si la modale glissait, la cible partirait sous le doigt et ces clics
+       tomberaient ailleurs (bug « + » pressé vite à l'ouverture). */
+    const cx = b0.x + b0.width / 2, cy = b0.y + b0.height / 2;
+    for (let i = 0; i < 10; i++) await page.mouse.click(cx, cy);
+    expect(parseFloat(await page.locator('#weightInput').inputValue())).toBe(45); /* 20 + 10 × 2.5 */
+
+    /* après l'entrée, le bouton n'a pas bougé d'un pixel */
+    await page.waitForTimeout(400);
+    const b1 = await plus.boundingBox();
+    expect(Math.abs(b1.x - b0.x)).toBeLessThan(0.5);
+    expect(Math.abs(b1.y - b0.y)).toBeLessThan(0.5);
+  });
+
   test('départ hors grille (62,7) : reste valide après chaque clic', async ({ page }) => {
     await seed(page, { programme: [dayA] }, 'Mouataz');
     await openSetModal(page);
@@ -110,6 +132,7 @@ test.describe('Steppers + / −', () => {
   });
 
   test('poids du jour (stats) : 200 clics sans flottant parasite', async ({ page }) => {
+    test.slow(); /* ~100 ms/clic d'overhead Playwright : 200 clics ≈ 25 s, au-dessus du cap de 30 s */
     await seed(page, { weightLog: [{ date: daysAgo(1), kg: 82 }] }, 'Mouataz');
     await page.click('button[data-tab="stats"]');
 
