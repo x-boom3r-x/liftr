@@ -425,7 +425,7 @@ test.describe('C : éditeur plein écran (crop / gestes / export)', () => {
     await expect(page.locator('#editorAspect [data-aspect="9:16"]')).not.toHaveClass(/hidden/);
     await page.locator('#editorUse').click();
     await expect(page.locator('#editorModal')).toBeHidden();
-    await expect(page.locator('#storyPreview')).toBeVisible();
+    await expect(page.locator('#storyStageImg')).toBeVisible();
     const ia = await lastStory();
     expect(ia).toBeGreaterThanOrEqual(0);
     const A = await metrics(ia);
@@ -442,7 +442,7 @@ test.describe('C : éditeur plein écran (crop / gestes / export)', () => {
     await page.locator('#editorPresets [data-preset="mono"]').click();
     await page.locator('#editorUse').click();
     await expect(page.locator('#editorModal')).toBeHidden();
-    await expect(page.locator('#storyPreview')).toBeVisible();
+    await expect(page.locator('#storyStageImg')).toBeVisible();
     const ib = await lastStory();
     expect(ib).toBeGreaterThan(ia);
     const B = await metrics(ib);

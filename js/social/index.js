@@ -53,7 +53,8 @@ import {
   renderStories, initStories, initStoryViewer, openStoryViewer,
   closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
   deleteStory, deleteCurrentStory, resetStories, pickStoryMusic,
-  refreshStoryRings
+  refreshStoryRings, cycleStoryFont, toggleStoryStyle, storyAgain,
+  closeStoryComposer, renderStageText
 } from './stories.js';
 import {
   renderNotes, initNotes, openNoteComposer, submitNote, removeNote,
@@ -107,6 +108,7 @@ Object.assign(window, {
   renderStories, initStories, initStoryViewer, openStoryViewer,
   closeStoryViewer, openStoryComposer, pickStoryPhoto, submitStory,
   deleteStory, deleteCurrentStory, resetStories, pickStoryMusic, refreshStoryRings,
+  cycleStoryFont, toggleStoryStyle, storyAgain, closeStoryComposer, renderStageText,
   renderNotes, initNotes, openNoteComposer, submitNote, removeNote,
   resetNotes, pickNoteMusic,
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,

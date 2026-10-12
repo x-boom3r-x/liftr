@@ -320,6 +320,8 @@ test.describe('V3 : stories (24 h)', () => {
 
     await page.locator('#storyBody').fill('New PR today');
     await page.locator('#storySubmit').click();
+    await expect(page.locator('#storyDone')).toBeVisible();
+    await page.locator('#storyDoneBtn').click();
     await expect(page.locator('#storyModal')).toBeHidden();
 
     await expect.poll(() => api.st.stories.length).toBe(1);

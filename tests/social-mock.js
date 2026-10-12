@@ -60,6 +60,7 @@ function story(i, authorId, over){
     author_id: authorId || ME.id,
     body: 'Story ' + i,
     image_path: null,
+    style: null,
     created_at: new Date(Date.now() - i * 60000).toISOString(),
     expires_at: new Date(Date.now() + 86400000 - i * 60000).toISOString(),
     author: authorId === ANA
@@ -334,12 +335,34 @@ function mockApi(page, opts){
 
     /* ---------- stories ---------- */
     if (table === 'stories'){
+      /* La vraie table (v6) n'a que ces colonnes — on rejette comme
+         PostgREST (PGRST204) pour attraper toute incohérence. */
+      const STORY_COLS = ['id', 'author_id', 'body', 'image_path',
+        'created_at', 'expires_at', 'style'];
+      const pgrst204 = (col) => json(route, {
+        code: 'PGRST204',
+        message: "Could not find the '" + col + "' column of 'stories' in the schema cache",
+        details: null, hints: null
+      }, 400);
+      if (method === 'GET' || head){
+        const sm = u.match(/select=([^&]+)/);
+        if (sm){
+          const flat = decodeURIComponent(sm[1]).replace(/\([^)]*\)/g, '');
+          if (flat.split(',').some(c => {
+            const t = c.trim();
+            return t && !STORY_COLS.includes(t) && !t.startsWith('author:');
+          })) return pgrst204('updated_at');
+        }
+      }
       if (method === 'POST'){
         const body = parseBody();
+        const extra = Object.keys(body).filter(k => !STORY_COLS.includes(k));
+        if (extra.length) return pgrst204(extra[0]);
         const rec = Object.assign({
           id: 'story-new' + (++st.seq),
           created_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 86400000).toISOString(),
+          style: null,
           author: { id: body.author_id || ME.id, username: 'mouataz',
                     display_name: 'Mouataz', avatar_url: null }
         }, body);

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v57';
+const CACHE_NAME = 'liftr-v58';
 
 const ASSETS = [
   './',

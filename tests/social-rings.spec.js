@@ -198,6 +198,8 @@ test.describe('Chantier B : cellules You / Find et Set des stories actives', () 
     await page.locator('#crewRow [data-crew="compose"]').click();
     await page.locator('#storyBody').fill('Fresh story');
     await page.locator('#storySubmit').click();
+    await expect(page.locator('#storyDone')).toBeVisible();
+    await page.locator('#storyDoneBtn').click();
     await expect(page.locator('#storyModal')).toBeHidden();
     await expect.poll(() => api.st.stories.length).toBe(1);
     await page.waitForTimeout(400);

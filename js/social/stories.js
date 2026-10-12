@@ -20,8 +20,18 @@ const STORY_Q = 0.85;
 const MAX_BYTES = 12 * 1024 * 1024;
 const SLIDE_MS = 5000;
 const FOREVER_MS = 100 * 365 * 24 * 3600 * 1000;   /* « forever » = RLS > now() */
-const STORY_SELECT = 'id,author_id,body,image_path,created_at,expires_at,' +
+const STORY_SELECT = 'id,author_id,body,image_path,created_at,expires_at,style,' +
   'author:profiles!stories_author_id_fkey(id,username,display_name,avatar_url)';
+
+/* 6 polices 100 % offline : piles de polices système (aucun réseau). */
+const STORY_FONTS = [
+  { k: 'impact', label: 'Impact' },
+  { k: 'black', label: 'Heavy' },
+  { k: 'serif', label: 'Serif' },
+  { k: 'mono', label: 'Mono' },
+  { k: 'cursive', label: 'Script' },
+  { k: 'clean', label: 'Clean' }
+];
 
 let crewLoaded = false;
 let queue = [];        /* auteurs avec story, dans l'ordre de la rangée */
@@ -31,6 +41,32 @@ let timer = null;
 let photo = null;
 let photoUrl = null;
 let durDays = 1;       /* durée choisie dans le composeur (1 = 24 h) */
+let stStyle = null;    /* style texte riche du composeur (jsonb v6) */
+
+/* Style par défaut d'une nouvelle story. x/y en % du stage (0-100),
+   r en degrés, z l'échelle du texte. */
+function defaultStoryStyle(){
+  return { f: 'impact', c: '#ffffff', o: 1, s: 1, b: 0, x: 50, y: 40, r: 0, z: 1.15 };
+}
+
+/* bornes côté client (le serveur ne reçoit que cette forme compacte) */
+function sanitizeStoryStyle(raw){
+  if (!raw || typeof raw !== 'object') return null;
+  const f = STORY_FONTS.some(x => x.k === raw.f) ? raw.f : 'impact';
+  const c = /^#[0-9a-f]{6}$/i.test(raw.c || '') ? raw.c : '#ffffff';
+  const num = (v, lo, hi, dflt) => {
+    const n = parseFloat(v);
+    return isNaN(n) ? dflt : Math.min(hi, Math.max(lo, n));
+  };
+  return {
+    f: f, c: c,
+    o: raw.o ? 1 : 0, s: raw.s ? 1 : 0, b: raw.b ? 1 : 0,
+    x: Math.round(num(raw.x, 0, 100, 50)),
+    y: Math.round(num(raw.y, 0, 100, 40)),
+    r: Math.round(num(raw.r, -180, 180, 0)),
+    z: Math.round(num(raw.z, 0.5, 3, 1.15) * 100) / 100
+  };
+}
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -50,10 +86,14 @@ function cell(u, story){
     ? (story ? 'data-crew="story" data-uid="' + esc(u.id) + '"' : 'data-crew="compose"')
     : (story ? 'data-crew="story" data-uid="' + esc(u.id) + '"'
              : 'data-crew="profile" data-uid="' + esc(u.id) + '"');
+  /* compteur de stories actives sur « You » (Instagram-like) */
+  const count = (u.me && story && story.count > 0)
+    ? '<span class="crew-count">' + Math.min(99, story.count) + '</span>' : '';
   return '<button type="button" class="crew-cell' + (u.me ? ' is-me' : '') + state + '" ' + act + '>' +
     '<span class="crew-ring' + (u.me && !story ? ' me' : '') + (story ? '' : ' none') + '">' +
       '<span class="avatar crew-av' + (u.avatar_url ? '' : ' fallback') + '">' + av + '</span>' +
       (u.me && !story ? '<span class="crew-plus" aria-hidden="true">+</span>' : '') +
+      count +
     '</span>' +
     '<span class="crew-label">' + label + '</span>' +
     '</button>';
@@ -209,6 +249,8 @@ export function initStories(){
     input.addEventListener('change', onStoryPhoto);
   }
   wireDuration();
+  wireStoryStage();
+  wireStoryTools();
   wireRingRefresh();
 }
 
@@ -235,6 +277,184 @@ function wireDuration(){
 
 export function pickStoryMusic(){
   return openMusicPicker(t => setComposerMusic('story', t));
+}
+
+/* ------------------- composeur : texte riche (L2) ------------------- */
+/* Le texte tapé dans #storyBody est miroité dans une couche déplaçable
+   (#stgText) sur l'apercu 9:16. Drag = position, poignée = rotation. */
+
+export function renderStageText(){
+  const layer = el('stgText');
+  const inner = el('stgTextInner');
+  const ta = el('storyBody');
+  if (!layer || !inner || !ta || !stStyle) return;
+  const text = ta.value.replace(/\r\n/g, '\n').trim();
+  inner.textContent = text;
+  const tools = el('stgTools');
+  if (tools) tools.classList.toggle('hidden', !text);
+  layer.className = 'stg-text' + (text ? '' : ' hidden') +
+    ' stf-' + stStyle.f +
+    (stStyle.o ? ' has-o' : '') + (stStyle.s ? ' has-s' : '') + (stStyle.b ? ' has-b' : '');
+  layer.style.left = stStyle.x + '%';
+  layer.style.top = stStyle.y + '%';
+  layer.style.color = stStyle.c;
+  layer.style.transform =
+    'translate(-50%,-50%) rotate(' + stStyle.r + 'deg) scale(' + stStyle.z + ')';
+  const fc = el('stgFont');
+  if (fc){
+    const cur = STORY_FONTS.find(x => x.k === stStyle.f) || STORY_FONTS[0];
+    fc.textContent = 'Font · ' + cur.label;
+  }
+  document.querySelectorAll('#stgTools [data-st]').forEach(b =>
+    b.classList.toggle('on', !!stStyle[b.getAttribute('data-st')]));
+  document.querySelectorAll('#stgColors .stg-sw').forEach(b =>
+    b.classList.toggle('on', b.getAttribute('data-color') === stStyle.c));
+}
+
+export function cycleStoryFont(){
+  if (!stStyle) return false;
+  const i = STORY_FONTS.findIndex(x => x.k === stStyle.f);
+  stStyle.f = STORY_FONTS[(i + 1) % STORY_FONTS.length].k;
+  renderStageText();
+  return true;
+}
+
+export function toggleStoryStyle(k){
+  if (!stStyle || ['o', 's', 'b'].indexOf(k) < 0) return false;
+  stStyle[k] = stStyle[k] ? 0 : 1;
+  renderStageText();
+  return true;
+}
+
+/* glisser = déplacer, poignée = tourner (angle depuis le centre du texte) */
+function wireStoryStage(){
+  const stage = el('storyStage');
+  const layer = el('stgText');
+  const rot = el('stgRot');
+  if (!stage || !layer || !rot || stage.dataset.wired) return;
+  stage.dataset.wired = '1';
+
+  let drag = null;
+  layer.addEventListener('pointerdown', e => {
+    if (!stStyle || (e.target && e.target.closest && e.target.closest('.stg-rot'))) return;
+    const r = stage.getBoundingClientRect();
+    drag = {
+      dx: e.clientX - (r.left + r.width * stStyle.x / 100),
+      dy: e.clientY - (r.top + r.height * stStyle.y / 100),
+      r: r
+    };
+    try { layer.setPointerCapture(e.pointerId); } catch(err){}
+    e.preventDefault();
+  });
+  layer.addEventListener('pointermove', e => {
+    if (!drag || !stStyle) return;
+    const x = ((e.clientX - drag.dx - drag.r.left) / drag.r.width) * 100;
+    const y = ((e.clientY - drag.dy - drag.r.top) / drag.r.height) * 100;
+    stStyle.x = Math.round(Math.min(97, Math.max(3, x)));
+    stStyle.y = Math.round(Math.min(95, Math.max(5, y)));
+    renderStageText();
+  });
+  const drop = () => { drag = null; };
+  layer.addEventListener('pointerup', drop);
+  layer.addEventListener('pointercancel', drop);
+
+  let turning = false;
+  rot.addEventListener('pointerdown', e => {
+    if (!stStyle) return;
+    turning = true;
+    try { rot.setPointerCapture(e.pointerId); } catch(err){}
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  rot.addEventListener('pointermove', e => {
+    if (!turning || !stStyle) return;
+    const r = stage.getBoundingClientRect();
+    const cx = r.left + r.width * stStyle.x / 100;
+    const cy = r.top + r.height * stStyle.y / 100;
+    /* le haut de la poignée = 0°, on ajoute 90° pour aligner atan2 */
+    const ang = Math.round(Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI + 90);
+    stStyle.r = Math.max(-180, Math.min(180, ang));
+    renderStageText();
+  });
+  const stopTurn = () => { turning = false; };
+  rot.addEventListener('pointerup', stopTurn);
+  rot.addEventListener('pointercancel', stopTurn);
+}
+
+/* pastilles couleur + curseur de taille (branched une fois) */
+function wireStoryTools(){
+  const colors = el('stgColors');
+  if (colors && !colors.dataset.wired){
+    colors.dataset.wired = '1';
+    colors.addEventListener('click', e => {
+      const b = e.target && e.target.closest && e.target.closest('.stg-sw');
+      if (!b || !stStyle) return;
+      stStyle.c = b.getAttribute('data-color') || stStyle.c;
+      renderStageText();
+    });
+  }
+  const size = el('stgSize');
+  if (size && !size.dataset.wired){
+    size.dataset.wired = '1';
+    size.addEventListener('input', () => {
+      if (!stStyle) return;
+      stStyle.z = Math.round(parseInt(size.value, 10) || 115) / 100;
+      renderStageText();
+    });
+  }
+  const ta = el('storyBody');
+  if (ta && !ta.dataset.stWired){
+    ta.dataset.stWired = '1';
+    ta.addEventListener('input', renderStageText);
+  }
+}
+
+function resetStoryComposerFields(){
+  clearStoryPhoto();
+  clearComposerMusic('story');
+  const ta = el('storyBody');
+  if (ta) ta.value = '';
+  stStyle = defaultStoryStyle();
+  const size = el('stgSize');
+  if (size) size.value = String(Math.round(stStyle.z * 100));
+  renderStageText();
+  const done = el('storyDone');
+  if (done) done.classList.add('hidden');
+  const acts = el('storyActions');
+  if (acts) acts.classList.remove('hidden');
+  const err = el('storyError');
+  if (err){ err.textContent = ''; err.classList.add('hidden'); }
+}
+
+export function openStoryComposer(){
+  if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
+  if (!gateOk()){ toast('Sign in and go online to post a story.'); return false; }
+  resetStoryComposerFields();
+  setStoryDuration(1);
+  wireStoryStage();
+  wireStoryTools();
+  const input = el('storyPhoto');
+  if (input) input.value = '';
+  if (typeof window.openModal === 'function') window.openModal('storyModal');
+  const ta = el('storyBody');
+  if (ta) setTimeout(() => { try { ta.focus(); } catch(e){} }, 60);
+  return true;
+}
+
+/* Fermeture complète (bouton Done du strip de succès). */
+export function closeStoryComposer(){
+  resetStoryComposerFields();
+  setStoryDuration(1);
+  if (typeof window.closeModal === 'function') window.closeModal('storyModal');
+  return true;
+}
+
+/* « Add another » : on garde la durée, on vide le reste. */
+export function storyAgain(){
+  resetStoryComposerFields();
+  const ta = el('storyBody');
+  if (ta) setTimeout(() => { try { ta.focus(); } catch(e){} }, 60);
+  return true;
 }
 
 /* --------------------------- visualiseur ---------------------------- */
@@ -272,13 +492,22 @@ function paintSlide(){
   if (!stage || !s) return;
   const url = s.image_path ? mediaUrl(s.image_path, sb(), 'stories') : null;
   const parts = splitMusic(s.body || '');
+  const sty = sanitizeStoryStyle(s.style);
+  const text = (parts.text || '').trim();
   stage.classList.toggle('plain', !url);
   stage.classList.remove('is-916');
   if (url) stage.style.setProperty('--sv-src', 'url("' + String(url).replace(/"/g, '%22') + '")');
   else stage.style.removeProperty('--sv-src');
   stage.innerHTML =
     (url ? '<img class="sv-img" src="' + esc(url) + '" alt="">' : '') +
-    '<div class="sv-caption' + (url ? ' over' : '') + '">' + esc(parts.text || '') + '</div>' +
+    /* style riche (v6) : couche positionnée ; sinon légende classique */
+    (sty && text
+      ? '<div class="sv-text stf-' + sty.f +
+          (sty.o ? ' has-o' : '') + (sty.s ? ' has-s' : '') + (sty.b ? ' has-b' : '') +
+          '" style="left:' + sty.x + '%;top:' + sty.y + '%;color:' + sty.c +
+          ';transform:translate(-50%,-50%) rotate(' + sty.r + 'deg) scale(' + sty.z + ')">' +
+          esc(text) + '</div>'
+      : '<div class="sv-caption' + (url ? ' over' : '') + '">' + esc(text) + '</div>') +
     (parts.trackId ? '<div class="sv-music">' + musicChipHtml(parts.trackId, '', parts) + '</div>' : '');
   if (url){
     const img = stage.querySelector('.sv-img');
@@ -430,25 +659,8 @@ export function closeStoryViewer(){
 function clearStoryPhoto(){
   if (photoUrl){ URL.revokeObjectURL(photoUrl); photoUrl = null; }
   photo = null;
-  const box = el('storyPreview');
-  if (box) box.classList.add('hidden');
-}
-
-export function openStoryComposer(){
-  if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
-  if (!gateOk()){ toast('Sign in and go online to post a story.'); return false; }
-  clearStoryPhoto();
-  setStoryDuration(1);
-  clearComposerMusic('story');
-  const ta = el('storyBody');
-  if (ta) ta.value = '';
-  const err = el('storyError');
-  if (err){ err.textContent = ''; err.classList.add('hidden'); }
-  const input = el('storyPhoto');
-  if (input) input.value = '';
-  if (typeof window.openModal === 'function') window.openModal('storyModal');
-  if (ta) setTimeout(() => { try { ta.focus(); } catch(e){} }, 60);
-  return true;
+  const img = el('storyStageImg');
+  if (img){ img.removeAttribute('src'); img.classList.add('hidden'); }
 }
 
 export function pickStoryPhoto(){
@@ -471,13 +683,12 @@ export async function onStoryPhoto(e){
     async edited => {
       try {
         photo = await compressImage(edited, STORY_EDGE, STORY_Q);
-        const box = el('storyPreview');
-        if (box){
+        const img = el('storyStageImg');
+        if (img){
           if (photoUrl) URL.revokeObjectURL(photoUrl);
           photoUrl = URL.createObjectURL(photo);
-          const img = box.querySelector('img');
-          if (img) img.src = photoUrl;
-          box.classList.remove('hidden');
+          img.src = photoUrl;
+          img.classList.remove('hidden');
         }
         return true;
       } catch(err){
@@ -515,20 +726,45 @@ export async function submitStory(){
     }
     const now = Date.now();
     const ttl = durDays > 0 ? durDays * 86400000 : FOREVER_MS;
-    const { error } = await c.from('stories').insert({
+    /* style riche (v6) : présent seulement s'il y a du texte ; le mock
+       comme la vraie table rejettent les colonnes inconnues, donc on
+       n'envoie `style` qu'après la migration v6 — sinon on retente
+       sans (best-effort, comme les reposts du chantier G). */
+    const hasText = !!(body && String(body).trim());
+    const styled = hasText ? sanitizeStoryStyle(stStyle) : null;
+    const row = {
       author_id: me, body: body, image_path: image_path,
       expires_at: new Date(now + ttl).toISOString()
-    });
-    if (error) throw new Error(error.message || 'Could not share your story.');
+    };
+    if (styled){
+      row.style = styled;
+      const { error } = await c.from('stories').insert(row);
+      if (error && /style/i.test(error.message || '')){
+        delete row.style;
+        const retry = await c.from('stories').insert(row);
+        if (retry.error) throw new Error(retry.error.message || 'Could not share your story.');
+      } else if (error) throw new Error(error.message || 'Could not share your story.');
+    } else {
+      const { error } = await c.from('stories').insert(row);
+      if (error) throw new Error(error.message || 'Could not share your story.');
+    }
 
-    if (typeof window.closeModal === 'function') window.closeModal('storyModal');
-    clearStoryPhoto();
-    clearComposerMusic('story');
-    if (ta) ta.value = '';
+    /* strip « Story shared. » : Add another / Done — le modal reste ouvert
+       pour enchaîner sans rouvrir (Instagram-like). */
     crewLoaded = false;
     refreshStoryRings(true);
     if (typeof window.renderStories === 'function') window.renderStories();
-    toast('Story shared.');
+    if (ta) ta.value = '';
+    clearStoryPhoto();
+    clearComposerMusic('story');
+    stStyle = defaultStoryStyle();
+    renderStageText();
+    const acts = el('storyActions');
+    if (acts) acts.classList.add('hidden');
+    const done = el('storyDone');
+    if (done) done.classList.remove('hidden');
+    const again = el('storyAgainBtn');
+    if (again) again.focus();
     return true;
   } catch(e){
     const err = el('storyError');
@@ -618,6 +854,7 @@ export function resetStories(){
   slides = [];
   idx = 0;
   durDays = 1;
+  stStyle = defaultStoryStyle();
   clearComposerMusic('story');
   stopTimer();
   clearStoryPhoto();

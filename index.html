@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="57">
+<html lang="en" data-build="58">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -954,11 +954,30 @@
     <div class="grabber"></div>
     <div class="modal-title">Your story</div>
     <div class="modal-sub">Photo, words, or both — you choose how long it stays up.</div>
-    <textarea id="storyBody" class="composer-input" rows="3" maxlength="400"
-      placeholder="Say something…" aria-label="Your story"></textarea>
-    <div class="story-preview hidden" id="storyPreview">
-      <img id="storyPreviewImg" alt="Story photo">
+    <div class="story-stage" id="storyStage" aria-label="Story preview">
+      <img id="storyStageImg" class="stg-img hidden" alt="Story photo">
+      <div class="stg-text hidden" id="stgText">
+        <span class="stg-tin" id="stgTextInner"></span>
+        <button type="button" class="stg-rot" id="stgRot" aria-label="Rotate text">&#10227;</button>
+      </div>
     </div>
+    <div class="stg-tools hidden" id="stgTools">
+      <button type="button" class="chip stg-chip" id="stgFont" onclick="cycleStoryFont()">Font · Impact</button>
+      <div class="stg-swatches" id="stgColors" role="group" aria-label="Text color">
+        <button type="button" class="stg-sw on" data-color="#ffffff" style="background:#ffffff" aria-label="White"></button>
+        <button type="button" class="stg-sw" data-color="#ffe14d" style="background:#ffe14d" aria-label="Yellow"></button>
+        <button type="button" class="stg-sw" data-color="#7cf5c2" style="background:#7cf5c2" aria-label="Mint"></button>
+        <button type="button" class="stg-sw" data-color="#8ab4ff" style="background:#8ab4ff" aria-label="Blue"></button>
+        <button type="button" class="stg-sw" data-color="#ff8ab0" style="background:#ff8ab0" aria-label="Pink"></button>
+        <button type="button" class="stg-sw" data-color="#14121c" style="background:#14121c" aria-label="Ink"></button>
+      </div>
+      <button type="button" class="chip stg-chip on" data-st="o" onclick="toggleStoryStyle('o')">Outline</button>
+      <button type="button" class="chip stg-chip on" data-st="s" onclick="toggleStoryStyle('s')">Shadow</button>
+      <button type="button" class="chip stg-chip" data-st="b" onclick="toggleStoryStyle('b')">Box</button>
+      <input type="range" class="stg-size" id="stgSize" min="80" max="220" value="115" aria-label="Text size">
+    </div>
+    <textarea id="storyBody" class="composer-input" rows="2" maxlength="400"
+      placeholder="Say something…" aria-label="Your story"></textarea>
     <div class="music-slot hidden" id="storyMusicSlot"></div>
     <div class="seg-row" id="storyDur" role="group" aria-label="How long the story stays">
       <button type="button" class="seg active" data-dur="1">24 h</button>
@@ -966,8 +985,14 @@
       <button type="button" class="seg" data-dur="7">7 days</button>
       <button type="button" class="seg" data-dur="0">Forever</button>
     </div>
+    <div class="story-done hidden" id="storyDone" role="status">
+      <span class="story-done-msg">Story shared.</span>
+      <button type="button" class="chip chip-type" id="storyAgainBtn" onclick="storyAgain()">Add another</button>
+      <button type="button" class="btn btn-primary btn-sm" id="storyDoneBtn"
+        onclick="closeStoryComposer()">Done</button>
+    </div>
     <div class="composer-error hidden" id="storyError" role="alert"></div>
-    <div class="modal-actions">
+    <div class="modal-actions" id="storyActions">
       <button type="button" class="chip chip-type" onclick="pickStoryPhoto()">Photo</button>
       <button type="button" class="chip chip-type" id="storyMusicBtn"
         onclick="pickStoryMusic()">Music</button>

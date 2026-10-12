@@ -207,6 +207,8 @@ test.describe('V4 : durée des notes et des stories', () => {
     await page.locator('#storyDur [data-dur="3"]').click();
     await page.locator('#storyBody').fill('Three day story');
     await page.locator('#storySubmit').click();
+    await expect(page.locator('#storyDone')).toBeVisible();
+    await page.locator('#storyDoneBtn').click();
     await expect(page.locator('#storyModal')).toBeHidden();
     await expect.poll(() => api.st.stories.length).toBe(1);
 
