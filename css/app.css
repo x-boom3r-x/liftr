@@ -1026,6 +1026,17 @@ button{background:none;border:none;cursor:pointer}
 .nutri-form-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
 .nutri-form-row .input{margin-bottom:0}
 #nutriFoodSearch{margin-bottom:12px}
+.nutri-plan-row{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;
+  padding:7px 0;border-bottom:1px solid var(--line)}
+.nutri-plan-row:last-of-type{border-bottom:0}
+.nutri-plan-row b{white-space:nowrap}
+.nutri-plan-macros{font-size:.85rem;color:var(--text2);padding:9px 0 3px}
+.nutri-plan-macros b{color:var(--text)}
+.nutri-plan-note{display:inline-block;margin:6px 6px 0 0;font-size:.72rem;cursor:default}
+.nutri-plan-legal{margin-top:8px;opacity:.75}
+.nutri-adapt{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;font-size:.82rem;margin-top:10px}
+.nutri-adapt .chip{flex:0 0 auto}
 
 /* ---------- bouton flottant "nouveau post" ---------- */
 .fab{
