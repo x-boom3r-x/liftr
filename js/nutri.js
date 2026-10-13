@@ -8,7 +8,7 @@
    ================================================================== */
 import { buildPlan, macroTargets, projectWeight, adaptiveAdjustment,
   UNITS, nutrientsFor, sumNutrients, recipeToFood, atwaterCheck,
-  progress, weekSummary } from './nutrition.js';
+  progress, weekSummary, MACRO_PRESETS, targetsFromPercent, targetsFromPerKg } from './nutrition.js';
 import { loadFoods, searchFoods, getFood as getDbFood, allFoods, norm } from './foods.js';
 
 function nutriDB(){
@@ -74,19 +74,63 @@ function nutriPlan(){
   } catch (e) { return null; }
 }
 
-/* Objectif actif : plan du profil (recalculé à chaque lecture -> suit le poids)
-   sinon objectif manuel saisi dans le formulaire Goal.
-   sync=true : réécrit DB.nutri.goal si le plan a bougé (persistance/export). */
+/* ---- M2 : objectif custom (DB.nutri.custom) ----
+   mode 'auto' (défaut, plan J2 inchangé) ou 'custom'.
+   kcal : TDEE ± delta, ou manuel. Macros : preset, %, ou g/kg. */
+function nutriCustomDefault(){
+  return { mode: 'auto', kcalMode: 'tdee', kcalDelta: 0, kcalManual: 0,
+    macroMode: 'preset', preset: 'balanced',
+    pPct: 30, cPct: 40, fPct: 30, pPerKg: 2.0, fPerKg: 0.8 };
+}
+
+/* Cible custom ou null (incomplète / off). Pure par rapport à DB.nutri.custom. */
+function nutriCustomGoal(){
+  const n = nutriDB();
+  const cu = n && n.custom;
+  if (!cu || cu.mode !== 'custom') return null;
+  const p = nutriProfile();
+  const plan = nutriPlan();
+  const w = nutriWeight();
+  /* calories */
+  let kcal;
+  if (cu.kcalMode === 'manual'){
+    kcal = Math.round(+cu.kcalManual || 0);
+    if (!(kcal > 0)) return null;
+  } else {
+    if (!plan) return null;
+    const floor = Math.max(plan.bmr, p.sex === 'female' ? 1200 : 1500);
+    kcal = Math.max(Math.round(plan.tdee + (+cu.kcalDelta || 0)), floor);
+  }
+  /* macros */
+  let m;
+  if (cu.macroMode === 'percent'){
+    m = targetsFromPercent({ kcal: kcal, pPct: cu.pPct, cPct: cu.cPct, fPct: cu.fPct });
+  } else if (cu.macroMode === 'perkg'){
+    if (!(w > 0) || !(+cu.pPerKg > 0)) return null;
+    m = targetsFromPerKg({ kcal: kcal, weightKg: w, pPerKg: cu.pPerKg, fPerKg: cu.fPerKg });
+  } else {
+    const pr = MACRO_PRESETS[cu.preset] || MACRO_PRESETS.balanced;
+    m = targetsFromPercent({ kcal: kcal, pPct: pr.p, cPct: pr.c, fPct: pr.f });
+  }
+  return { kcal: kcal, p: m.protein, c: m.carbs, f: m.fat };
+}
+
+/* Objectif actif : custom > plan du profil (recalculé à chaque lecture
+   -> suit le poids) > objectif manuel saisi dans le formulaire Goal.
+   sync=true : réécrit DB.nutri.goal si la cible a bougé (persistance/export). */
 function nutriActiveGoal(sync){
   const n = nutriDB();
   if (!n) return { kcal: 0, p: 0, c: 0, f: 0 };
-  const plan = nutriPlan();
-  if (!plan) return n.goal;
-  const p = nutriProfile();
-  const floor = Math.max(plan.bmr, p.sex === 'female' ? 1200 : 1500);
-  const kcal = Math.max(plan.kcal + p.kcalOffset, floor);
-  const m = macroTargets({ kcal: kcal, weightKg: nutriWeight(), goal: p.goal });
-  const g = { kcal: kcal, p: m.protein, c: m.carbs, f: m.fat };
+  let g = nutriCustomGoal();
+  if (!g){
+    const plan = nutriPlan();
+    if (!plan) return n.goal;
+    const p = nutriProfile();
+    const floor = Math.max(plan.bmr, p.sex === 'female' ? 1200 : 1500);
+    const kcal = Math.max(plan.kcal + p.kcalOffset, floor);
+    const m = macroTargets({ kcal: kcal, weightKg: nutriWeight(), goal: p.goal });
+    g = { kcal: kcal, p: m.protein, c: m.carbs, f: m.fat };
+  }
   if (sync){
     const cur = nutriDB().goal;
     if (cur.kcal !== g.kcal || cur.p !== g.p || cur.c !== g.c || cur.f !== g.f){
@@ -863,6 +907,148 @@ function renderNutriWeek(){
   box.innerHTML = html;
 }
 
+/* ---- M2 : carte « How your target is computed » (Auto plan | Custom) ---- */
+function nutriCustom(){
+  const n = nutriDB();
+  return Object.assign(nutriCustomDefault(), n.custom || {});
+}
+
+function calcResultHtml(){
+  const g = nutriCustomGoal();
+  if (g) return 'Daily target: <b>' + g.kcal + '</b> kcal — ' +
+    g.p + 'P / ' + g.c + 'C / ' + g.f + 'F';
+  return 'Fill the missing fields to see your target.';
+}
+
+/* Bouton segmenté : [value, label, handler] */
+function calcSeg(id, cur, opts){
+  return '<div class="seg-row" id="' + id + '" role="group">' +
+    opts.map(o => '<button type="button" class="seg' + (String(cur) === String(o[0]) ? ' active' : '') +
+      '" onclick="' + o[2] + '(\'' + o[0] + '\')">' + o[1] + '</button>').join('') + '</div>';
+}
+
+function calcNum(id, val, min, max, step){
+  return '<input class="input" id="' + id + '" type="number" inputmode="decimal" min="' + min +
+    '" max="' + max + '" step="' + step + '" value="' + (+val || 0) + '" oninput="customFieldChange()">';
+}
+
+function renderCalcCard(){
+  const cu = nutriCustom();
+  const plan = nutriPlan();
+  const w = nutriWeight();
+  const on = cu.mode === 'custom';
+  let h = '<div class="card" id="calcModeCard">' +
+    '<div class="nutri-meal-name" style="margin-bottom:10px">How your target is computed</div>' +
+    calcSeg('calcMode', cu.mode, [['auto', 'Auto plan', 'setCalcMode'], ['custom', 'Custom', 'setCalcMode']]);
+  if (on){
+    /* calories : TDEE ± offset, ou manuel */
+    h += '<div class="calc-block"><div class="calc-label">Calories</div>' +
+      calcSeg('kcalSource', cu.kcalMode,
+        [['tdee', 'Daily burn ± offset', 'setKcalSource'], ['manual', 'Manual', 'setKcalSource']]);
+    if (cu.kcalMode === 'tdee'){
+      h += plan
+        ? '<div class="calc-fields"><div>' + calcNum('kcalDelta', cu.kcalDelta, -1000, 1000, 25) + '</div>' +
+          '<span class="calc-note">from TDEE ' + plan.tdee + ' kcal</span></div>'
+        : '<div class="calc-note">Calculate your plan first (profile above), or use Manual.</div>';
+    } else {
+      h += '<div class="calc-fields"><div>' + calcNum('kcalManual', cu.kcalManual, 800, 10000, 10) + '</div>' +
+        '<span class="calc-note">kcal / day</span></div>';
+    }
+    h += '</div>';
+    /* macros : presets, %, ou g/kg */
+    h += '<div class="calc-block"><div class="calc-label">Macros</div>' +
+      calcSeg('macroMode', cu.macroMode,
+        [['preset', 'Presets', 'setMacroMode'], ['percent', 'Percentages', 'setMacroMode'],
+         ['perkg', 'Per kg', 'setMacroMode']]);
+    if (cu.macroMode === 'preset'){
+      h += '<div class="seg-row">' + Object.keys(MACRO_PRESETS).map(k =>
+        '<button type="button" class="seg' + (cu.preset === k ? ' active' : '') +
+        '" onclick="setCustomPreset(\'' + k + '\')">' + MACRO_PRESETS[k].label + ' ' +
+        MACRO_PRESETS[k].p + '/' + MACRO_PRESETS[k].c + '/' + MACRO_PRESETS[k].f +
+        '</button>').join('') + '</div>';
+    } else if (cu.macroMode === 'percent'){
+      const sum = (+cu.pPct || 0) + (+cu.cPct || 0) + (+cu.fPct || 0);
+      h += '<div class="calc-fields calc-pct">' +
+        '<div><label class="label" for="pPct">Protein %</label>' + calcNum('pPct', cu.pPct, 0, 100, 1) + '</div>' +
+        '<div><label class="label" for="cPct">Carbs %</label>' + calcNum('cPct', cu.cPct, 0, 100, 1) + '</div>' +
+        '<div><label class="label" for="fPct">Fat %</label>' + calcNum('fPct', cu.fPct, 0, 100, 1) + '</div>' +
+        '</div><div class="calc-note' + (sum === 100 ? '' : ' warn') + '" id="calcPctWarn">' +
+        'Sum: ' + sum + '% (normalized automatically).</div>';
+    } else {
+      h += (w > 0 ? '' : '<div class="calc-note">Log your weight (Stats) to use per-kg targets.</div>') +
+        '<div class="calc-fields">' +
+        '<div><label class="label" for="pPerKg">Protein (g / kg)</label>' + calcNum('pPerKg', cu.pPerKg, 0, 5, 0.1) + '</div>' +
+        '<div><label class="label" for="fPerKg">Fat (g / kg, optional)</label>' + calcNum('fPerKg', cu.fPerKg, 0, 3, 0.1) + '</div>' +
+        '</div><div class="calc-note">Carbs = leftover calories ÷ 4.</div>';
+    }
+    h += '</div>';
+    h += '<div class="calc-result" id="calcResult">' + calcResultHtml() + '</div>';
+  }
+  return h + '</div>';
+}
+
+/* handlers (boutons = re-render complet ; champs numériques = update local) */
+function setCalcMode(mode){
+  const n = nutriDB();
+  const cu = nutriCustom();
+  /* premier passage en Custom : le delta suit le plan (pas de saut en maintenance) */
+  if (mode === 'custom' && cu.kcalMode === 'tdee' && !cu.kcalDeltaSeeded){
+    const plan = nutriPlan();
+    if (plan){ cu.kcalDelta = Math.round(plan.kcal - plan.tdee); cu.kcalDeltaSeeded = true; }
+  }
+  cu.mode = mode;
+  n.custom = cu;
+  save();
+  renderNutriGoal();
+}
+function setKcalSource(v){
+  const n = nutriDB();
+  const cu = nutriCustom();
+  cu.kcalMode = v;
+  n.custom = cu;
+  save();
+  renderNutriGoal();
+}
+function setMacroMode(v){
+  const n = nutriDB();
+  const cu = nutriCustom();
+  cu.macroMode = v;
+  n.custom = cu;
+  save();
+  renderNutriGoal();
+}
+function setCustomPreset(v){
+  const n = nutriDB();
+  const cu = nutriCustom();
+  cu.preset = v;
+  n.custom = cu;
+  save();
+  renderNutriGoal();
+}
+/* lecture directe des champs numériques, persistance, mise a jour du seul resultat */
+function customFieldChange(){
+  const n = nutriDB();
+  const cu = nutriCustom();
+  const rd = id => { const el = $(id); return el && el.value !== '' ? +el.value : 0; };
+  if ($('kcalDelta')) cu.kcalDelta = rd('kcalDelta');
+  if ($('kcalManual')) cu.kcalManual = rd('kcalManual');
+  if ($('pPct')) cu.pPct = rd('pPct');
+  if ($('cPct')) cu.cPct = rd('cPct');
+  if ($('fPct')) cu.fPct = rd('fPct');
+  if ($('pPerKg')) cu.pPerKg = rd('pPerKg');
+  if ($('fPerKg')) cu.fPerKg = rd('fPerKg');
+  n.custom = cu;
+  save();
+  const res = $('calcResult');
+  if (res) res.innerHTML = calcResultHtml();
+  const warn = $('calcPctWarn');
+  if (warn){
+    const sum = (+cu.pPct || 0) + (+cu.cPct || 0) + (+cu.fPct || 0);
+    warn.textContent = 'Sum: ' + sum + '% (normalized automatically).';
+    warn.classList.toggle('warn', sum !== 100);
+  }
+}
+
 /* ---- Goal : profil J2 + plan expliqué + objectif manuel (avancé) ---- */
 function goalOpt(v, label, cur){ return '<option value="' + v + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + label + '</option>'; }
 
@@ -915,6 +1101,9 @@ function renderNutriGoal(){
     '<button class="btn btn-primary btn-block" id="profCalc" style="margin-top:12px" onclick="saveNutriProfile()">Calculate target</button>' +
     '</div>';
 
+  /* M2 : mode de calcul (Auto plan | Custom) — custom gagne sur le plan */
+  html += renderCalcCard();
+
   if (plan){
     const adapt = nutriAdaptive();
     const proj4 = projectWeight({ weightKg: w, tdee: plan.tdee, kcalPerDay: goal.kcal, weeks: 4 });
@@ -940,10 +1129,10 @@ function renderNutriGoal(){
       '</div>';
   }
 
-  /* objectif manuel (avancé) : conservé tel quel */
+  /* objectif manuel (avancé) : conservé tel quel — repli si ni plan ni Custom */
   const g = nutriDB().goal;
   html += '<div class="card nutri-form" style="margin-top:12px">' +
-    '<div class="section-hint" style="margin-bottom:8px">Manual target (advanced) — used only until a plan is calculated.</div>' +
+    '<div class="section-hint" style="margin-bottom:8px">Manual target (advanced) — used when Auto plan has no plan, and Custom is off.</div>' +
     '<label class="label" for="goalKcal">Daily calories (kcal)</label>' +
     '<input class="input" id="goalKcal" type="number" inputmode="numeric" min="0" value="' + (+g.kcal || '') + '">' +
     '<label class="label" for="goalP">Protein (g)</label>' +
@@ -1027,5 +1216,8 @@ Object.assign(window, {
   addFood, submitFood, removeFood, logFood, toggleNutriFav,
   /* J2 : profil / plan */
   nutriProfile, nutriWeight, nutriPlan, nutriActiveGoal, nutriAdaptive,
-  saveNutriProfile, applyAdaptive, saveNutriGoal
+  saveNutriProfile, applyAdaptive, saveNutriGoal,
+  /* M2 : objectif custom */
+  nutriCustomGoal, setCalcMode, setKcalSource, setMacroMode, setCustomPreset, customFieldChange,
+  MACRO_PRESETS, targetsFromPercent, targetsFromPerKg
 });

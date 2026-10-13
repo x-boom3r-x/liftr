@@ -2196,6 +2196,20 @@ html{background:var(--bg)}
 .food-macros .label{margin-bottom:4px}
 .food-form .composer-actions{margin-top:12px}
 #tab-nutri-foods > .input{margin:0 0 12px}
+/* M2 : carte mode de calcul (Auto plan | Custom) */
+#calcModeCard .seg-row{margin-top:10px}
+.calc-block{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.calc-label{font-size:.72rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.calc-fields{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-top:10px}
+.calc-fields > div{min-width:0}
+.calc-fields .input{width:110px;margin-bottom:0}
+.calc-pct{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.calc-pct .input{width:100%}
+.calc-note{font-size:.72rem;color:var(--text3);margin-top:8px}
+.calc-note.warn{color:var(--yellow);font-weight:700}
+.calc-result{margin-top:14px;padding:11px 14px;border-radius:12px;background:var(--primary-dim);
+  border:1px solid rgba(255,107,53,.35);font-size:.8rem;color:var(--text2)}
+.calc-result b{font-size:1rem;font-weight:850;color:var(--text);font-variant-numeric:tabular-nums}
 .atwater-warn{font-size:.74rem;color:#FFD60A;margin-top:6px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0,0,0,0);white-space:nowrap;border:0}

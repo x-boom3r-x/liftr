@@ -79,6 +79,38 @@ export function macroTargets({ kcal, weightKg, goal = 'maintain' }) {
   return { protein: Math.round(protein), fat: Math.round(fat), carbs: Math.round(carbsKcal / KCAL_PER.carbs) };
 }
 
+/* ---- M2 : objectif custom (cible personnalisée) ---- */
+/** Presets de macros en % des kcal (somme = 100). */
+export const MACRO_PRESETS = {
+  balanced:    { label: 'Balanced',     p: 30, c: 40, f: 30 },
+  highprotein: { label: 'High protein', p: 40, c: 30, f: 30 },
+  cutting:     { label: 'Cutting',      p: 35, c: 35, f: 30 },
+  lowcarb:     { label: 'Low carb',     p: 40, c: 15, f: 45 },
+  keto:        { label: 'Keto',         p: 25, c:  5, f: 70 }
+};
+
+/** Macros depuis des pourcentages de kcal. La somme est normalisée (jamais bloquée). */
+export function targetsFromPercent({ kcal, pPct, cPct, fPct }) {
+  const p = +pPct || 0, c = +cPct || 0, f = +fPct || 0;
+  const sum = p + c + f;
+  if (!(kcal > 0) || !(sum > 0)) return { protein: 0, carbs: 0, fat: 0, pctSum: sum };
+  return {
+    protein: Math.round((kcal * p / sum / KCAL_PER.protein)),
+    carbs: Math.round((kcal * c / sum / KCAL_PER.carbs)),
+    fat: Math.round((kcal * f / sum / KCAL_PER.fat)),
+    pctSum: sum
+  };
+}
+
+/** Macros depuis g/kg : protéines + lipides saisis, glucides = reste (kcal restantes / 4). */
+export function targetsFromPerKg({ kcal, weightKg, pPerKg, fPerKg }) {
+  const w = +weightKg || 0;
+  const protein = (+pPerKg || 0) * w;
+  const fat = (+fPerKg || 0) * w;
+  const carbs = Math.max(0, ((+kcal || 0) - protein * KCAL_PER.protein - fat * KCAL_PER.fat) / KCAL_PER.carbs);
+  return { protein: Math.round(protein), carbs: Math.round(carbs), fat: Math.round(fat) };
+}
+
 /** Tout en un depuis le profil. */
 export function buildPlan(profile) {
   const { sex, weightKg, heightCm, age, activity = 'moderate', goal = 'maintain', rateKgPerWeek = 0.5, bodyFatPct } = profile;
