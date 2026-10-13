@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="69">
+<html lang="en" data-build="70">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -455,10 +455,12 @@
         <div class="prof-actions" id="profActions"></div>
         <div class="prof-tabs" id="profTabs">
           <button type="button" class="ptab active" data-ptab="grid" onclick="setProfileTab('grid')">Posts</button>
-          <button type="button" class="ptab" data-ptab="liked" onclick="setProfileTab('liked')">Liked</button>
+          <button type="button" class="ptab" data-ptab="reposts" onclick="setProfileTab('reposts')">Reposts</button>
+          <button type="button" class="ptab hidden" data-ptab="liked" onclick="setProfileTab('liked')">Liked</button>
           <button type="button" class="ptab hidden" data-ptab="saved" onclick="setProfileTab('saved')">Saved</button>
         </div>
         <div class="prof-grid" id="profGrid"></div>
+        <div class="prof-grid hidden" id="profGridReposts"></div>
         <div class="prof-grid hidden" id="profGridLiked"></div>
         <div class="prof-grid hidden" id="profGridSaved"></div>
       </div>

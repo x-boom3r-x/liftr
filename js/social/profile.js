@@ -29,6 +29,7 @@ let grid = [];
 let gridCounts = {};      /* post_id -> { c, l } */
 let liked = [];
 let saved = [];
+let repostGrid = [];      /* posts repostés par ce profil (onglet Reposts) */
 let ptab = 'grid';
 let busy = false;
 
@@ -107,15 +108,19 @@ function paintProfile(){
 
   const tabs = el('profTabs');
   if (tabs){
+    /* Reposts visible sur tous les profils ; Liked + Saved = moi seulement */
+    const repostsBtn = tabs.querySelector('[data-ptab="reposts"]');
+    if (repostsBtn) repostsBtn.classList.remove('hidden');
     const likedBtn = tabs.querySelector('[data-ptab="liked"]');
     if (likedBtn) likedBtn.classList.toggle('hidden', !isMe);
     const savedBtn = tabs.querySelector('[data-ptab="saved"]');
     if (savedBtn) savedBtn.classList.toggle('hidden', !isMe);
-    if (!isMe && ptab !== 'grid') ptab = 'grid';
+    if (!isMe && (ptab === 'liked' || ptab === 'saved')) ptab = 'grid';
     tabs.querySelectorAll('.ptab').forEach(b =>
       b.classList.toggle('active', b.dataset.ptab === ptab));
   }
   paintTiles();
+  paintReposts();
   paintLiked();
   paintSaved();
 
@@ -143,9 +148,12 @@ function emptyTile(msg, sub){
 
 function paintTiles(){
   const g = el('profGrid');
-  const wrap = el('profGridLiked');
   if (g) g.classList.toggle('hidden', ptab !== 'grid');
-  if (wrap) wrap.classList.add('hidden');
+  /* en revenir sur Posts on masque les autres grilles (chacune se
+     re-masque aussi via son propre paint, redondance sans danger) */
+  ['profGridReposts', 'profGridLiked', 'profGridSaved'].forEach(id => {
+    const n = el(id); if (n) n.classList.add('hidden');
+  });
   if (!g) return;
   const isMe = !!current && current.id === meId();
   if (current && !isMe && isPrivateProfile(current) && !following){
@@ -192,10 +200,25 @@ function paintSaved(){
   wrap.innerHTML = saved.map(p => tileHtml(p, null)).join('');
 }
 
+function paintReposts(){
+  const wrap = el('profGridReposts');
+  if (!wrap) return;
+  wrap.classList.toggle('hidden', ptab !== 'reposts');
+  if (ptab !== 'reposts') return;
+  if (!repostGrid.length){
+    wrap.className = 'prof-grid empty';
+    wrap.innerHTML = emptyTile('No reposts yet', 'Tap the repost icon on a post to share it here.');
+    return;
+  }
+  wrap.className = 'prof-grid';
+  wrap.innerHTML = repostGrid.map(p => tileHtml(p, null)).join('');
+}
+
 export function setProfileTab(next){
-  ptab = next === 'liked' ? 'liked' : (next === 'saved' ? 'saved' : 'grid');
+  ptab = (next === 'liked' || next === 'saved' || next === 'reposts') ? next : 'grid';
   paintProfile();
   if (ptab === 'liked' && !liked.length) loadLiked();
+  if (ptab === 'reposts') loadReposts();   /* toujours recharger : les reposts bougent */
   if (ptab === 'saved') loadSaved();   /* toujours recharger : les saves bougent dans le fil */
   return ptab;
 }
@@ -275,6 +298,32 @@ async function loadSaved(c){
   paintSaved();
 }
 
+/* Reposts : publics (policy reposts_read) — la grille des posts
+   qu'on a repartagés, comme Instagram. */
+async function loadReposts(c){
+  const id = (current && current.id) || targetId || meId();
+  c = c || sb();
+  if (!c || !id){ repostGrid = []; paintReposts(); return; }
+  try {
+    const { data: rp } = await c.from('post_reposts')
+      .select('post_id,created_at')
+      .eq('user_id', id)
+      .order('created_at', { ascending: false })
+      .limit(GRID_LIMIT);
+    const ids = (rp || []).map(x => x.post_id).filter(Boolean);
+    if (!ids.length){ repostGrid = []; paintReposts(); return; }
+    const { data } = await withMissingColumn(
+      cc => c.from('posts').select(cc)
+        .in('id', ids)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
+      POST_GRID
+    );
+    repostGrid = data || [];
+  } catch(e){ repostGrid = []; }
+  paintReposts();
+}
+
 export async function renderProfile(){
   if (!SOCIAL_ENABLED){ toast('Social is not configured yet.'); return false; }
   if (!gateOk()){ toast('Sign in and go online to see profiles.'); return false; }
@@ -329,6 +378,7 @@ export async function renderProfile(){
     gridCounts = {};
     liked = [];
     saved = [];
+    repostGrid = [];
     counts = {
       posts: res[1].count || grid.length,
       followers: acceptedFollows(res[2].data || []).length,
@@ -344,6 +394,7 @@ export async function renderProfile(){
     paintProfile();
     fetchGridCounts(c, grid.map(p => p.id));
     if (ptab === 'liked') loadLiked(c);
+    if (ptab === 'reposts') loadReposts(c);
     return true;
   } catch(e){
     if (seq !== renderSeq) return false;   /* périmé : on n'affiche pas l'erreur */
@@ -733,6 +784,7 @@ export function initProfile(){
     });
   }
   wireTiles('profGrid', () => grid);
+  wireTiles('profGridReposts', () => repostGrid);
   wireTiles('profGridLiked', () => liked);
   wireTiles('profGridSaved', () => saved);
   const tabs = el('profTabs');
@@ -781,6 +833,7 @@ export function resetProfile(){
   gridCounts = {};
   liked = [];
   saved = [];
+  repostGrid = [];
   ptab = 'grid';
   avatarFile = null;
   avatarDrop = false;

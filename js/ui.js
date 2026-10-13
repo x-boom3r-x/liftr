@@ -103,7 +103,17 @@ function pinTabbar(){
     const bar = document.querySelector('.tabbar');
     if (!bar) return;
     const vv = window.visualViewport;
-    const delta = vv ? Math.round(vv.height - window.innerHeight) : 0;
+    /* M4 : on mesure par rapport à la hauteur RÉELLE du shell (#mainApp, en
+       100dvh), pas window.innerHeight. Dans l'app shell la barre est un enfant
+       flex du shell : quand dvh suit déjà le visualViewport (iOS, barre
+       d'outils qui se rétracte), l'ancienne formule vv.height - innerHeight
+       décalait la barre une SECONDE fois et laissait un gap blanc en dessous.
+       En prenant le shell comme référence, on ne bouge la barre que si elle en
+       diffère vraiment (dvh en retard). Les tests iOS (vv.height forcée à
+       innerHeight - 60, dvh inchangé) gardent delta = -60. */
+    const shell = document.getElementById('mainApp');
+    const refH = shell ? shell.offsetHeight : window.innerHeight;
+    const delta = vv ? Math.round(vv.height - refH) : 0;
     if (delta < -1) bar.style.transform = 'translateY(' + delta + 'px)';
     else if (bar.style.transform) bar.style.transform = '';
   });

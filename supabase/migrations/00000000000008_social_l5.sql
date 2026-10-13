@@ -39,7 +39,7 @@ begin
     alter table public.notifications drop constraint notifications_type_check;
   end if;
   alter table public.notifications add constraint notifications_type_check
-    check (type in ('follow','comment','mention','follow_request'));
+    check (type in ('follow','like','comment','mention','follow_request'));
 end $$;
 
 -- 5. Un abonnement en attenne ne donne acces a RIEN : les quatre
