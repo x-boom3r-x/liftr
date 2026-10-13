@@ -456,7 +456,9 @@ test.describe('V4 : barre du bas', () => {
     /* état nominal : bas de la tabbar = bas de l'écran */
     const at = async () => page.evaluate(() => {
       const b = document.querySelector('.tabbar').getBoundingClientRect();
+      const shell = document.getElementById('mainApp').getBoundingClientRect();
       return { bottom: Math.round(b.bottom), vh: Math.round(window.innerHeight),
+               shellH: Math.round(shell.height),
                transform: document.querySelector('.tabbar').style.transform || '' };
     });
     let r = await at();
@@ -464,7 +466,8 @@ test.describe('V4 : barre du bas', () => {
     expect(r.transform).toBe('');
 
     /* simulation iOS : le visualViewport est plus bas que le layout
-       (barre du navigateur qui réapparaît) → la tabbar doit suivre */
+       (barre du navigateur qui réapparaît) → le shell suit en hauteur et la
+       tabbar (enfant flex) reste collée au bas visible */
     await page.evaluate(() => {
       const vv = window.visualViewport;
       Object.defineProperty(vv, 'height', { value: window.innerHeight - 60, configurable: true });
@@ -473,7 +476,8 @@ test.describe('V4 : barre du bas', () => {
     });
     await page.waitForTimeout(120);
     r = await at();
-    expect(r.transform).toBe('translateY(-60px)');
+    expect(r.transform, 'le shell absorbe le décalage, plus de translateY').toBe('');
+    expect(r.shellH, 'la hauteur du shell suit le visualViewport').toBe(r.vh - 60);
     expect(Math.abs(r.bottom - (r.vh - 60))).toBeLessThanOrEqual(2);
 
     /* retour à la normale : plus aucune correction */
@@ -486,6 +490,7 @@ test.describe('V4 : barre du bas', () => {
     await page.waitForTimeout(120);
     r = await at();
     expect(r.transform).toBe('');
+    expect(r.shellH, 'le shell revient à la pleine hauteur').toBe(r.vh);
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
     /* la correction reste appliquée pendant les changements d'onglet */
@@ -505,14 +510,16 @@ test.describe('V4 : barre du bas', () => {
 
     const at = async () => page.evaluate(() => {
       const b = document.querySelector('.tabbar').getBoundingClientRect();
+      const shell = document.getElementById('mainApp').getBoundingClientRect();
       return { bottom: Math.round(b.bottom), vh: Math.round(window.innerHeight),
+               shellH: Math.round(shell.height),
                transform: document.querySelector('.tabbar').style.transform || '' };
     });
     let r = await at();
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
     /* pendant un scroll rebond, iOS décale le visualViewport vers le haut SANS
-       réduire sa hauteur visible → aucun translateY n'est autorisé */
+       réduire sa hauteur visible → le shell ne bouge pas (offsetTop ignoré) */
     await page.evaluate(() => {
       const vv = window.visualViewport;
       Object.defineProperty(vv, 'offsetTop', { value: -90, configurable: true });
@@ -522,6 +529,7 @@ test.describe('V4 : barre du bas', () => {
     await page.waitForTimeout(150);
     r = await at();
     expect(r.transform).toBe('');
+    expect(r.shellH, 'offsetTop négatif ne redimensionne pas le shell').toBe(r.vh);
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
     /* la hauteur réellement réduite reste corrigée (la vraie toolbar) */
@@ -532,7 +540,9 @@ test.describe('V4 : barre du bas', () => {
     });
     await page.waitForTimeout(150);
     r = await at();
-    expect(r.transform).toBe('translateY(-60px)');
+    expect(r.transform, 'le shell absorbe la réduction, plus de translateY').toBe('');
+    expect(r.shellH, 'la hauteur du shell suit la vraie toolbar').toBe(r.vh - 60);
+    expect(Math.abs(r.bottom - (r.vh - 60))).toBeLessThanOrEqual(2);
 
     await page.evaluate(() => {
       const vv = window.visualViewport;

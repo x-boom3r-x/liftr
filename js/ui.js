@@ -100,22 +100,28 @@ function pinTabbar(){
   if (_pinRaf) return;
   _pinRaf = requestAnimationFrame(() => {
     _pinRaf = 0;
-    const bar = document.querySelector('.tabbar');
-    if (!bar) return;
-    const vv = window.visualViewport;
-    /* M4 : on mesure par rapport à la hauteur RÉELLE du shell (#mainApp, en
-       100dvh), pas window.innerHeight. Dans l'app shell la barre est un enfant
-       flex du shell : quand dvh suit déjà le visualViewport (iOS, barre
-       d'outils qui se rétracte), l'ancienne formule vv.height - innerHeight
-       décalait la barre une SECONDE fois et laissait un gap blanc en dessous.
-       En prenant le shell comme référence, on ne bouge la barre que si elle en
-       diffère vraiment (dvh en retard). Les tests iOS (vv.height forcée à
-       innerHeight - 60, dvh inchangé) gardent delta = -60. */
     const shell = document.getElementById('mainApp');
-    const refH = shell ? shell.offsetHeight : window.innerHeight;
-    const delta = vv ? Math.round(vv.height - refH) : 0;
-    if (delta < -1) bar.style.transform = 'translateY(' + delta + 'px)';
-    else if (bar.style.transform) bar.style.transform = '';
+    if (!shell) return;
+    const vv = window.visualViewport;
+    /* M4 (revisité) : le gap blanc SOUS la tabbar vient de `height:100dvh`
+       sur #mainApp. Sur iOS Safari, 100dvh peut rester plus PETIT que la
+       hauteur réellement visible (barre d'outils qui se rétracte) : le shell
+       s'arrête alors trop haut et la tabbar — dernier enfant flex — laisse un
+       blanc en dessous qu'aucun translateY ne peut combler (le shell a
+       overflow:hidden, il clipserait une barre poussée vers le bas).
+
+       Le vrai visualViewport est la seule source fiable de « bas visible ».
+       On aligne donc la HAUTEUR du shell sur vv.height : le shell occupe
+       exactement la zone visible, la tabbar touche le bas, sans transformation.
+       On n'utilise PAS vv.offsetTop (rebond iOS : offsetTop négatif ne doit
+       rien décaler, cf. test social-v4 rebond). */
+    if (vv && vv.height > 0){
+      shell.style.height = Math.round(vv.height) + 'px';
+    }
+    /* La tabbar suit désormais le shell : plus aucune transformation. On purge
+       tout translateY résiduel de l'ancien mécanisme. */
+    const bar = shell.querySelector('.tabbar');
+    if (bar && bar.style.transform) bar.style.transform = '';
   });
 }
 window.addEventListener('resize', pinTabbar);
