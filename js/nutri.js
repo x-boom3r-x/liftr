@@ -215,6 +215,7 @@ function nutriMacroBar(cls, label, val, goal){
 function nutriMealCard(m, editable){
   const mt = nutriMealTotal(m);
   const t = mt.n;
+  const type = m.type || 'lunch';
   const rows = (m.items || []).map((it, ii) => {
     const acts = editable
       ? '<span class="ing-actions">' +
@@ -236,11 +237,14 @@ function nutriMealCard(m, editable){
       '<button class="icon-btn" onclick="saveMealAsRecipe(' + esc(JSON.stringify(m.id)) + ')" aria-label="Save as recipe">★</button>' +
       '<button class="icon-btn" onclick="removeMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Delete meal">🗑</button></span>'
     : '';
-  return '<div class="card meal-card">' +
+  return '<div class="card meal-card meal-' + esc(type) + '">' +
     '<div class="meal-head">' +
+    '<span class="meal-dot ' + esc(type) + '" aria-hidden="true"></span>' +
     '<div class="meal-title"><div class="meal-name">' + esc(m.name) + '</div>' +
-    '<div class="meal-sub">' + Math.round(t.protein) + 'P · ' + Math.round(t.carbs) + 'C · ' + Math.round(t.fat) + 'F</div></div>' +
-    '<div class="meal-head-right"><span class="meal-kcal">' + Math.round(t.kcal) + ' kcal</span>' + acts + '</div>' +
+    '<div class="meal-sub">' + mealTypeLabel(type) + ' · ' + Math.round(t.protein) + 'P / ' +
+    Math.round(t.carbs) + 'C / ' + Math.round(t.fat) + 'F</div></div>' +
+    '<div class="meal-head-right"><span class="meal-kcal">' + Math.round(t.kcal) +
+    ' <small>kcal</small></span>' + acts + '</div>' +
     '</div>' + rows + miss + '</div>';
 }
 
@@ -424,12 +428,17 @@ function mealPickResultsHtml(d){
       ? 'No food matches “' + esc(q) + '”.'
       : 'Searching the database…') + '</div>';
   }
-  return '<div class="food-list">' + rows.map(r =>
+  return '<div class="builder-results">' +
+    '<div class="br-head"><span>Add ingredients</span><span class="br-count">' +
+    rows.length + ' found</span></div>' +
+    '<div class="food-list">' + rows.map(r =>
     '<button type="button" class="food-item food-pick" onclick="pickMealFood(' + esc(JSON.stringify(r.f.id)) + ')">' +
     '<span class="fi-main"><span class="fn">' + esc(r.f.name) + '</span>' +
     '<span class="fm">' + Math.round(+r.f.kcal || 0) + ' kcal / 100 g' +
-    (r.custom ? ' · yours' : (r.f.state ? ' · ' + esc(r.f.state) : '')) + '</span></span></button>'
-  ).join('') + '</div>';
+    (r.custom ? ' · yours' : (r.f.state ? ' · ' + esc(r.f.state) : '')) + '</span></span>' +
+    '<span class="fi-kcal"><b>' + Math.round(+r.f.kcal || 0) + '</b><i>/100g</i></span>' +
+    '</button>'
+    ).join('') + '</div></div>';
 }
 
 function draftTotals(){
@@ -452,7 +461,7 @@ function mealBuilderHtml(){
   const typeOpts = MEAL_TYPES.map(([v, l]) =>
     '<option value="' + v + '"' + (d.type === v ? ' selected' : '') + '>' + l + '</option>').join('');
   const itemsCard = d.items.length
-    ? '<div class="card meal-card">' +
+    ? '<div class="card meal-card builder-items">' +
       d.items.map((it, i) =>
         '<div class="ing-row"><span class="ing-n">' + esc(nutriItemName(it)) + '</span>' +
         '<span class="ing-g">' + esc(nutriQtyLabel(it)) + '</span>' +
@@ -463,22 +472,35 @@ function mealBuilderHtml(){
         '</span></div>').join('') +
       '</div>'
     : '';
-  return '<div class="card nutri-form">' +
+  /* barre de totaux : kcal en chiffre + macros colorees + mini-barre de part */
+  let totals;
+  if (d.items.length){
+    const kp = t.protein * 4, kc = t.carbs * 4, kf = t.fat * 9;
+    const kk = kp + kc + kf || 1;
+    const sp = Math.round(kp / kk * 100), sc = Math.round(kc / kk * 100);
+    totals = '<div class="builder-totals" id="mealDraftTotals">' +
+      '<span class="bt-kcal">Totals: <b>' + Math.round(t.kcal) + '</b> kcal</span>' +
+      '<span class="bt-macros">' +
+      '<span class="bt-p">' + Math.round(t.protein) + 'P</span>' +
+      '<span class="bt-c">' + Math.round(t.carbs) + 'C</span>' +
+      '<span class="bt-f">' + Math.round(t.fat) + 'F</span></span>' +
+      '<span class="bt-bar" aria-hidden="true"><i class="p" style="width:' + sp +
+      '%"></i><i class="c" style="width:' + sc + '%"></i><i class="f" style="width:' +
+      Math.max(0, 100 - sp - sc) + '%"></i></span></div>';
+  } else {
+    totals = '<div class="builder-totals empty" id="mealDraftTotals">' +
+      'Search a food, set the quantity, add it.</div>';
+  }
+  return '<div class="card nutri-form builder-form">' +
     '<input class="input" id="mealName" placeholder="Meal name" maxlength="60" value="' + esc(d.name) + '"' +
     ' oninput="mealNameInput(this.value)">' +
-    '<div class="nutri-form-row">' +
+    '<div class="nutri-form-row builder-row">' +
     '<select class="input" id="mealType" aria-label="Meal type" onchange="mealTypeChange(this.value)">' + typeOpts + '</select>' +
-    '<input class="input" id="mealFoodSearch" placeholder="Search foods…" aria-label="Search foods to add"' +
+    '<input class="input builder-search" id="mealFoodSearch" placeholder="Search foods…" aria-label="Search foods to add"' +
     ' value="' + esc(d.q || '') + '" oninput="mealSearchInput(this.value)">' +
     '</div>' +
     (d.pick ? itemEditorHtml() : mealPickResultsHtml(d)) +
-    copyRow + itemsCard +
-    '<div class="section-hint" id="mealDraftTotals">' +
-    (d.items.length
-      ? 'Totals: ' + Math.round(t.kcal) + ' kcal · ' + Math.round(t.protein) + 'P / ' +
-        Math.round(t.carbs) + 'C / ' + Math.round(t.fat) + 'F'
-      : 'Search a food, set the quantity, add it.') +
-    '</div>' +
+    copyRow + itemsCard + totals +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="cancelNutriForm()">Cancel</button>' +
     '<button class="btn btn-primary btn-sm" onclick="saveMealDraft()">Save meal</button>' +
@@ -619,14 +641,19 @@ function saveMealAsRecipe(id){
 
 /* ---- Foods : recherche (perso + base 690), favoris, recents, per 100 g ---- */
 function foodFormHtml(){
-  return '<div class="card nutri-form">' +
+  return '<div class="card nutri-form food-form">' +
     '<div class="section-hint" style="margin-bottom:8px">Per 100 g — stored as typed.</div>' +
+    '<label class="label" for="foodName">Name</label>' +
     '<input class="input" id="foodName" placeholder="Food name" maxlength="60">' +
-    '<div class="nutri-form-row">' +
-    '<input class="input" id="foodKcal" type="number" inputmode="numeric" min="0" placeholder="kcal">' +
-    '<input class="input" id="foodP" type="number" inputmode="numeric" min="0" placeholder="Protein g">' +
-    '<input class="input" id="foodC" type="number" inputmode="numeric" min="0" placeholder="Carbs g">' +
-    '<input class="input" id="foodF" type="number" inputmode="numeric" min="0" placeholder="Fat g">' +
+    '<div class="food-macros">' +
+    '<div><label class="label" for="foodKcal">kcal</label>' +
+    '<input class="input" id="foodKcal" type="number" inputmode="numeric" min="0" placeholder="0"></div>' +
+    '<div><label class="label" for="foodP">Protein (g)</label>' +
+    '<input class="input" id="foodP" type="number" inputmode="numeric" min="0" placeholder="0"></div>' +
+    '<div><label class="label" for="foodC">Carbs (g)</label>' +
+    '<input class="input" id="foodC" type="number" inputmode="numeric" min="0" placeholder="0"></div>' +
+    '<div><label class="label" for="foodF">Fat (g)</label>' +
+    '<input class="input" id="foodF" type="number" inputmode="numeric" min="0" placeholder="0"></div>' +
     '</div>' +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="cancelNutriForm()">Cancel</button>' +
@@ -637,13 +664,15 @@ function foodFormHtml(){
 function foodRowHtml(f, custom){
   const n = nutriDB();
   const fav = (n.favs || []).indexOf(f.id) >= 0;
-  const meta = Math.round(+f.kcal || 0) + ' kcal / 100 g · ' +
-    Math.round(+f.protein || +f.p || 0) + 'P / ' +
+  const kcal = Math.round(+f.kcal || 0);
+  const meta = Math.round(+f.protein || +f.p || 0) + 'P / ' +
     Math.round(+f.carbs || +f.c || 0) + 'C / ' +
-    Math.round(+f.fat || +f.f || 0) + 'F';
+    Math.round(+f.fat || +f.f || 0) + 'F' +
+    (custom ? ' · yours' : (f.state ? ' · ' + esc(f.state) : ''));
   return '<div class="food-item">' +
     '<span class="fi-main"><span class="fn">' + esc(f.name) + '</span>' +
     '<span class="fm">' + meta + '</span></span>' +
+    '<span class="fi-kcal"><b>' + kcal + '</b><i>/100g</i></span>' +
     '<span class="fi-acts">' +
     '<button class="chip" onclick="toggleNutriFav(' + esc(JSON.stringify(f.id)) + ')"' +
     ' aria-label="Favorite" aria-pressed="' + (fav ? 'true' : 'false') + '">' + (fav ? '★' : '☆') + '</button>' +
@@ -683,19 +712,15 @@ function renderNutriFoods(){
     const favs = (n.favs || []).map(asRow).filter(Boolean);
     const recents = (n.recents || []).slice(0, 10).map(asRow)
       .filter(x => x && !favs.some(v => v.f.id === x.f.id));
-    if (favs.length){
-      html += '<div class="section-hint">Favorites</div><div class="food-list">' +
-        favs.map(x => foodRowHtml(x.f, x.custom)).join('') + '</div>';
-    }
-    if (recents.length){
-      html += '<div class="section-hint">Recent</div><div class="food-list">' +
-        recents.map(x => foodRowHtml(x.f, x.custom)).join('') + '</div>';
-    }
-    const mine = n.foods.slice(-30).reverse();
-    if (mine.length){
-      html += '<div class="section-hint">Your foods</div><div class="food-list">' +
-        mine.map(f => foodRowHtml(f, true)).join('') + '</div>';
-    } else if (!favs.length && !recents.length){
+    const mine = n.foods.slice(-30).reverse().map(f => ({ f: f, custom: true }));
+    /* en-tete de section + compteur ; .section-hint reste adjacent a .food-list */
+    const fxSec = (label, list) => '<div class="section-hint fx-head">' + label +
+      '<span class="fx-n">' + list.length + '</span></div>' +
+      '<div class="food-list">' + list.map(x => foodRowHtml(x.f, x.custom)).join('') + '</div>';
+    if (favs.length) html += fxSec('Favorites', favs);
+    if (recents.length) html += fxSec('Recent', recents);
+    if (mine.length) html += fxSec('Your foods', mine);
+    else if (!favs.length && !recents.length){
       html += '<div class="empty">Your food list is empty — tap <b>+ Food</b> to add staples (per 100 g), or type to search the full database.</div>';
     }
     html += '<div class="section-hint" style="margin-top:10px">' +
