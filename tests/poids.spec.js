@@ -67,17 +67,17 @@ test.describe('Body weight', () => {
     const badge = page.locator('.w-today');
     await expect(badge).toHaveClass(/todo/);
     await expect(badge).toContainText("Today's weigh-in due");
-    await expect(badge).toContainText('🔥 3 days');
+    await expect(page.locator('.w-streak')).toContainText('3 days');
     expect(await page.evaluate(() => weightStreak())).toBe(3);
 
     await noter(page).click();
 
     await expect(badge).toHaveClass(/ok/);
     await expect(badge).toContainText("Today's weigh-in ·");
-    await expect(badge).toContainText('🔥 4 days');
+    await expect(page.locator('.w-streak')).toContainText('4 days');
     expect(await page.evaluate(() => weightStreak())).toBe(4);
     expect(await page.evaluate(() => weightTodayKg())).toBe(82.5);
-    await expect(page.locator('#toast')).toContainText('🔥 4 days');
+    await expect(page.locator('#toast')).toContainText('4 days');
   });
 
   test('la variation s’affiche entre deux pesées', async ({ page }) => {

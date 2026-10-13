@@ -8,8 +8,9 @@
      × 20 exercices, JSON < 16 Ko. Tout champ inconnu est ignoré et le
      rendu ne passe que par esc() (textContent via innerHTML échappé) :
      un attachement invalide = post affiché sans carte, jamais une
-     exception.
+      exception.
    ================================================================== */
+import { iconS } from '../icons.js';
 
 const MAX_JSON = 16 * 1024;   /* < 16 Ko (contrainte de la colonne) */
 const MAX_DAYS = 12;
@@ -140,7 +141,7 @@ export function shareEmbedHtml(att){
   const id = 'sa' + (++_impSeq);
   _imp[id] = a;
   return '<div class="share-embed program">' +
-    '<div class="se-head"><span aria-hidden="true">📋</span> Shared program</div>' +
+    '<div class="se-head"><span aria-hidden="true">' + iconS('clipboard') + '</span> Shared program</div>' +
     '<div class="se-title">' + esc(a.name) + ' — ' + a.days.length + ' day' + (a.days.length !== 1 ? 's' : '') + '</div>' +
     '<div class="se-rows">' +
       '<div class="se-row"><span>Days</span><b>' + a.days.length + '</b></div>' +

@@ -143,7 +143,7 @@ test.describe('V4 : like des publications', () => {
     const up = page.locator('#feedList [data-act="like"]').first();
     /* G : icônes seules — le libellé vit dans aria-label */
     await expect(up).toHaveAttribute('aria-label', 'Like');
-    await expect(up.locator('.post-act-ico')).toHaveText('♥');
+    await expect(up.locator('.post-act-ico svg[data-i="heart"]')).toBeVisible();
     await expect(up.locator('[data-n="likes"]')).toHaveText('0');
 
     const n = up.locator('[data-n="likes"]');

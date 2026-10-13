@@ -1,6 +1,7 @@
 ﻿/* ==================================================================
    LIFTR - statistiques & detail d'une seance passee
    ================================================================== */
+import { icon, iconS } from './icons.js';
 
 
 /* ---------- détail d'une séance passée (Stats / Calendrier) ---------- */
@@ -49,7 +50,7 @@ function openSessionDetail(hid){
     html += '</div>';
   }
 
-  if (h.note) html += '<div class="hist-note">📝 ' + esc(h.note) + '</div>';
+  if (h.note) html += '<div class="hist-note">' + icon('memo') + ' ' + esc(h.note) + '</div>';
   $('daySheetContent').innerHTML = html;
   $('daySheetDelete').onclick = () => deleteHistoryEntry(h.id);
   openModal('daySheetModal');
@@ -249,7 +250,7 @@ function dashHint(txt){
   return '<div class="dash-hint">' + txt + '</div>';
 }
 function dashEmpty(){
-  return '<div class="empty dash-empty"><div class="empty-icon">📈</div>' +
+  return '<div class="empty dash-empty"><div class="empty-icon">' + iconS('chartup') + '</div>' +
     '<div class="empty-title">Not enough data yet</div>' +
     '<div class="empty-text">Keep logging your workouts to see your progress.</div></div>';
 }
@@ -383,7 +384,7 @@ function prRowsHtml(){
       (pr.assisted ? '+' + pr.assisted + 'A' : '') + '</span></div>' +
       '<button type="button" class="icon-btn pr-share" data-key="' + esc(encodeURIComponent(pr.key)) + '" ' +
       'onclick="event.stopPropagation();sharePrFromCard(this)" ' +
-      'title="Share this record" aria-label="Share this record">↗</button></div></div>';
+      'title="Share this record" aria-label="Share this record">' + icon('share') + '</button></div></div>';
   }).join('');
 }
 
@@ -492,7 +493,7 @@ function volCardHtml(){
 
   const ct = cardioInRange(volRange);
   const cardioLine = (ct.km || ct.min)
-    ? '<div class="cardio-line">🏃 ' + fmtNum(ct.km) + ' km · ' + ct.min + ' minutes · ' + ct.sorties + ' run' + (ct.sorties !== 1 ? 's' : '') + '</div>'
+    ? '<div class="cardio-line">' + iconS('run') + ' ' + fmtNum(ct.km) + ' km · ' + ct.min + ' minutes · ' + ct.sorties + ' run' + (ct.sorties !== 1 ? 's' : '') + '</div>'
     : '';
 
   return '<div class="card vol-card">' +
@@ -637,7 +638,7 @@ function weekCardHtml(sessions, today){
       (delta == null ? 'var(--muted)' : delta >= 0 ? 'var(--green)' : 'var(--red)') + '">' +
       (delta == null ? '—' : (delta > 0 ? '+' : '') + delta + '%') +
       '</div><div class="stat-label">vs 4w avg</div></div>',
-    '<div class="stat-box"><div class="stat-value" style="color:var(--primary)">🔥' + c.streakWeeks +
+    '<div class="stat-box"><div class="stat-value" style="color:var(--primary)">' + iconS('flame') + c.streakWeeks +
       '</div><div class="stat-label">week streak</div></div>'
   ].join('');
   return '<div class="card week-card"><div class="card-title">This week</div>' +
@@ -795,19 +796,19 @@ function weightCardHtml(){
     '<button class="range-opt' + (weightRange === r[0] ? ' on' : '') + '" onclick="setWeightRange(' + r[0] + ')">' + r[1] + '</button>'
   ).join('');
 
-  /* today state: ✓ done / ⏳ due (+ day streak) */
+  /* today state: done / due (+ day streak) */
   const todayHtml = todayKg != null
-    ? '<div class="w-today ok"><span>✓ Today\'s weigh-in · ' + fmtNum(todayKg) + ' kg</span>' +
-      (streak ? '<span class="w-streak">🔥 ' + streak + ' day' + (streak !== 1 ? 's' : '') + '</span>' : '') + '</div>'
-    : '<div class="w-today todo"><span>⏳ ' + (hasLog ? 'Today\'s weigh-in due' : 'First weigh-in of the day') + '</span>' +
-      (streak ? '<span class="w-streak">🔥 ' + streak + ' day' + (streak > 1 ? 's' : ' to keep') + '</span>' : '') + '</div>';
+    ? '<div class="w-today ok"><span>' + iconS('check') + ' Today\'s weigh-in · ' + fmtNum(todayKg) + ' kg</span>' +
+      (streak ? '<span class="w-streak">' + iconS('flame') + ' ' + streak + ' day' + (streak !== 1 ? 's' : '') + '</span>' : '') + '</div>'
+    : '<div class="w-today todo"><span>' + (hasLog ? 'Today\'s weigh-in due' : 'First weigh-in of the day') + '</span>' +
+      (streak ? '<span class="w-streak">' + iconS('flame') + ' ' + streak + ' day' + (streak > 1 ? 's' : ' to keep') + '</span>' : '') + '</div>';
 
   /* pré-rempli : poids du jour s'il existe, sinon dernier poids connu (ajuste et Noter) */
   const seedVal = todayKg != null ? todayKg : (hasLog ? last.kg : '');
 
   return '<div class="card weight-card">' +
     '<div class="card-header">' +
-      '<div class="card-title">⚖️ Body weight</div>' +
+      '<div class="card-title">' + iconS('scale') + ' Body weight</div>' +
       '<div class="range-picker">' + ranges + '</div>' +
     '</div>' +
     '<div class="weight-main">' +
@@ -865,8 +866,8 @@ function logWeight(){
   save();
   renderStats();
   const s = weightStreak();
-  const suffix = s > 1 ? ' · 🔥 ' + s + ' days' : '';
-  toast((wasNew ? 'Today\'s weight logged ✓' : 'Today\'s weigh-in updated ✓') + suffix);
+  const suffix = s > 1 ? ' · ' + s + ' days' : '';
+  toast((wasNew ? 'Today\'s weight logged' : 'Today\'s weigh-in updated') + suffix);
 }
 
 /* ==================================================================
@@ -926,7 +927,7 @@ function renderStats(){
   const ct = cardioInRange(0);
   if (ct.sorties){
     html += '<div class="card cardio-card">' +
-      '<div class="card-title" style="margin-bottom:10px">🏃 Cardio · total</div>' +
+      '<div class="card-title" style="margin-bottom:10px">' + iconS('run') + ' Cardio · total</div>' +
       '<div class="stats-grid" style="margin:0">' +
         '<div class="stat-box"><div class="stat-value" style="color:var(--blue)">' + fmtNum(ct.km) + '</div><div class="stat-label">km</div></div>' +
         '<div class="stat-box"><div class="stat-value" style="color:var(--green)">' + ct.min + '</div><div class="stat-label">minutes</div></div>' +
@@ -980,7 +981,7 @@ function renderStats(){
           '<div class="hist-ex"><b>' + esc(e.name) + '</b> — ' +
           e.sets.map(setShort).join(', ') +
           '</div>').join('') +
-        (h.note ? '<div class="hist-note">📝 ' + esc(h.note) + '</div>' : '') +
+        (h.note ? '<div class="hist-note">' + icon('memo') + ' ' + esc(h.note) + '</div>' : '') +
       '</div>'
     ).join('');
   }

@@ -11,6 +11,8 @@ import {
   withMusic, musicChipForBody, hydrateMusic,
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
 } from './music.js';
+import { setGlobalMuted, isGlobalMuted } from './autoplay.js';
+import { icon, iconS } from '../icons.js';
 
 const PAGE_SIZE = 20;
 const SCROLL_KEY = 'at_feedScroll';
@@ -64,7 +66,7 @@ function likeBurst(zone){
     const b = document.createElement('span');
     b.className = 'like-burst';
     b.setAttribute('aria-hidden', 'true');
-    b.textContent = '♥';
+    b.innerHTML = iconS('heart');
     zone.appendChild(b);
     setTimeout(() => { if (b.parentNode) b.parentNode.removeChild(b); }, 700);
   } catch(e){}
@@ -574,7 +576,7 @@ function paintRepostBanner(){
   const preview = String(p.body || (p.image_path ? 'Photo' : 'Post')).slice(0, 80);
   box.innerHTML = '<span class="repost-banner-ico" aria-hidden="true">⟲</span>' +
     '<span class="repost-banner-txt">Reposting <b>' + esc(name) + '</b> · ' + esc(preview) + '</span>' +
-    '<button type="button" class="chip" onclick="cancelRepostQuote()" aria-label="Cancel repost">✕</button>';
+    '<button type="button" class="chip" onclick="cancelRepostQuote()" aria-label="Cancel repost">' + icon('x') + '</button>';
   box.classList.remove('hidden');
 }
 
@@ -585,7 +587,7 @@ function paintShareBanner(){
   if (!box) return;
   if (!shareDraft){ box.classList.add('hidden'); box.innerHTML = ''; return; }
   box.innerHTML = shareEmbedHtml(shareDraft) +
-    '<button type="button" class="chip share-banner-x" onclick="cancelShareDraft()" aria-label="Cancel share">✕</button>';
+    '<button type="button" class="chip share-banner-x" onclick="cancelShareDraft()" aria-label="Cancel share">' + icon('x') + '</button>';
   box.classList.remove('hidden');
 }
 
@@ -866,46 +868,53 @@ export function postCardHtml(p){
   const more =
     '<button type="button" class="post-more" data-act="menu" data-post="' + esc(p.id || '') + '" ' +
     'aria-label="Post options" title="Post options"><span aria-hidden="true">⋯</span></button>';
+  /* M3 : mute global dans chaque post (icône en tête, pattern IG) */
+  const muteIco = isGlobalMuted() ? 'mute' : 'volume';
+  const mute =
+    '<button type="button" class="post-mute" data-act="mute" ' +
+    'aria-label="' + (isGlobalMuted() ? 'Unmute music' : 'Mute music') + '" ' +
+    'aria-pressed="' + (isGlobalMuted() ? 'true' : 'false') + '" title="Mute music">' +
+    iconS(muteIco) + '</button>';
 
-  /* Rangée G1 : [▲ score ▼] ♥ n 💬 n ⟲ n ····· 🔖 ↗ — icônes seules,
+  /* Rangée G1 : votes / like / coms / repost / save / share — icônes seules,
      tenue sans débordement de 320 à 430 px (voir css .post-foot). */
   const foot = '<div class="post-foot">' +
     '<span class="post-vote">' +
       '<button type="button" class="post-act post-act-up' + (k.rv === 1 ? ' on' : '') + '" ' +
         'data-act="up" data-post="' + esc(p.id || '') + '" ' +
         'aria-label="Upvote" aria-pressed="' + (k.rv === 1 ? 'true' : 'false') + '" title="Upvote">' +
-        '<span class="post-act-ico" aria-hidden="true">▲</span></button>' +
+        '<span class="post-act-ico" aria-hidden="true">' + iconS('up') + '</span></button>' +
       '<span class="post-act-n post-vote-n" data-n="votes">' + (k.v || 0) + '</span>' +
       '<button type="button" class="post-act post-act-down' + (k.rv === -1 ? ' on' : '') + '" ' +
         'data-act="down" data-post="' + esc(p.id || '') + '" ' +
         'aria-label="Downvote" aria-pressed="' + (k.rv === -1 ? 'true' : 'false') + '" title="Downvote">' +
-        '<span class="post-act-ico" aria-hidden="true">▼</span></button>' +
+        '<span class="post-act-ico" aria-hidden="true">' + iconS('down') + '</span></button>' +
     '</span>' +
     '<button type="button" class="post-act post-act-like' + (k.liked ? ' on' : '') + '" ' +
       'data-act="like" data-post="' + esc(p.id || '') + '" ' +
       'aria-label="Like" aria-pressed="' + (k.liked ? 'true' : 'false') + '" title="Like">' +
-      '<span class="post-act-ico" aria-hidden="true">♥</span>' +
+      '<span class="post-act-ico" aria-hidden="true">' + icon('heart') + '</span>' +
       '<span class="post-act-n" data-n="likes">' + k.l + '</span>' +
     '</button>' +
     '<button type="button" class="post-act" data-act="reply" data-post="' + esc(p.id || '') + '" ' +
       'aria-label="Comments">' +
-      '<span class="post-act-ico" aria-hidden="true">💬</span>' +
+      '<span class="post-act-ico" aria-hidden="true">' + icon('chat') + '</span>' +
       '<span class="post-act-n" data-n="comments">' + k.c + '</span>' +
     '</button>' +
     '<button type="button" class="post-act post-act-repost' + (k.reposted ? ' on' : '') + '" ' +
       'data-act="repost" data-post="' + esc(p.id || '') + '" ' +
       'aria-label="Repost" aria-pressed="' + (k.reposted ? 'true' : 'false') + '" title="Repost">' +
-      '<span class="post-act-ico" aria-hidden="true">⟲</span>' +
+      '<span class="post-act-ico" aria-hidden="true">' + icon('repost') + '</span>' +
       '<span class="post-act-n" data-n="reposts">' + k.r + '</span>' +
     '</button>' +
     /* ⋯ (menu) reste dans l''en-tête de la carte : une seule occurrence */
     '<button type="button" class="post-act post-act-save' + (k.saved ? ' on' : '') + '" ' +
       'data-act="save" data-post="' + esc(p.id || '') + '" ' +
       'aria-label="Save" aria-pressed="' + (k.saved ? 'true' : 'false') + '" title="Save">' +
-      '<span class="post-act-ico" aria-hidden="true">🔖</span></button>' +
+      '<span class="post-act-ico" aria-hidden="true">' + icon('bookmark') + '</span></button>' +
     '<button type="button" class="post-act post-act-share" data-act="share" ' +
       'data-post="' + esc(p.id || '') + '" aria-label="Share" title="Share">' +
-      '<span class="post-act-ico" aria-hidden="true">↗</span></button>' +
+      '<span class="post-act-ico" aria-hidden="true">' + icon('share') + '</span></button>' +
     '</div>';
 
   return '<article class="post" data-post="' + esc(p.id || '') + '">' +
@@ -918,7 +927,7 @@ export function postCardHtml(p){
           (handle ? '<span class="post-handle">' + esc(handle) + '</span><span class="post-dot" aria-hidden="true">·</span>' : '') +
           '<span class="post-time">' + esc(timeAgo(p.created_at)) + '</span>' +
         '</div>' +
-      '</div>' + kind + more +
+      '</div>' + kind + mute + more +
     '</div>' +
     body + music + embed + statStrip(p) + media + foot +
     '</article>';
@@ -946,7 +955,7 @@ function emptyHtml(){
   }
   if (scope === 'top'){
     return '<div class="feed-empty">' +
-      '<div class="feed-empty-ico">▲</div>' +
+      '<div class="feed-empty-ico">' + iconS('up') + '</div>' +
       '<div class="feed-empty-t">No top posts this week</div>' +
       '<div class="feed-empty-s">Upvote posts to shape the ranking — the Top tab refreshes every 7 days.</div>' +
       '</div>';
@@ -1259,6 +1268,8 @@ export function initFeed(){
         sharePost(id);
       } else if (act === 'menu'){
         openPostMenu(id);
+      } else if (act === 'mute'){
+        setGlobalMuted(!isGlobalMuted());
       } else if (act === 'profile'){
         const uid = btn.getAttribute('data-uid');
         if (uid && typeof window.openProfile === 'function') window.openProfile(uid);

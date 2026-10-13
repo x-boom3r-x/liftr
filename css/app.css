@@ -840,7 +840,12 @@ button{background:none;border:none;cursor:pointer}
   touch-action:manipulation;-webkit-tap-highlight-color:transparent;
 }
 .post-act:active{background:var(--surface3)}
+/* M3 : icônes SVG — taille de base + contextuelle */
+svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align:-.15em}
 .post-act-ico{font-size:.92rem;line-height:1}
+.post-act-ico svg{width:1.05em;height:1.05em;display:block}
+.mchip-ico svg,.feed-empty-ico svg,.empty-icon svg{width:1em;height:1em;display:block}
+.w-streak svg,.hist-note svg,.lib-tick svg,.cardio-line svg,.stat-box .stat-value svg{width:1em;height:1em;vertical-align:-.15em}
 .post-act-n{font-variant-numeric:tabular-nums;color:var(--text)}
 
 .comment-list{display:flex;flex-direction:column;gap:12px;max-height:46vh;overflow-y:auto;padding-right:2px}
@@ -1720,7 +1725,7 @@ button{background:none;border:none;cursor:pointer}
    ================================================================ */
 
 /* --- 1. Reponse : pas de tache fantome, geste immediat ----------- */
-.btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.post-more,.fab,.as-item,
+.btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.post-more,.post-mute,.fab,.as-item,
 .type-opt,.stepper button,.profile-btn,.file-btn,.chip,.crew-cell,.dm,
 .person,.ptile,.note-cell,.hist-item.tap,.lib-item,.plan-cell,.card,
 .profile-card,.ctx-sug,.add-set-btn,.add-ex-btn,.liftr-refresh,
@@ -1756,7 +1761,7 @@ button{background:none;border:none;cursor:pointer}
   .seg:hover,.tab:hover,.snav-item:hover{color:var(--text)}
   .dm:hover,.person:hover{background:var(--surface2)}
   .post:hover,.card:hover,.profile-card:hover{border-color:rgba(255,255,255,.16)}
-  .post-act:hover,.post-more:hover{background:var(--surface3);color:var(--text)}
+  .post-act:hover,.post-more:hover,.post-mute:hover{background:var(--surface3);color:var(--text)}
   .ptile:hover img{transform:scale(1.05);transition:transform .5s cubic-bezier(.22,.61,.36,1)}
   .as-item:hover{background:rgba(255,255,255,.1)}
 }
@@ -2057,16 +2062,15 @@ html{background:var(--bg)}
 
 
 /* ===================== L3 - MUSIQUE : autoplay + page piste ======= */
-.music-mute{
-  position:fixed;right:14px;bottom:calc(var(--tabbar-h) + 14px);z-index:55;
-  width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
-  background:rgba(20,20,24,.62);color:#fff;font-size:19px;line-height:1;
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 6px 18px rgba(0,0,0,.28);cursor:pointer;
+/* M3 : mute global dans chaque post (icône SVG, pattern IG) */
+.post-mute{
+  flex:none;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;color:var(--text3);
+  transition:background .14s ease,color .14s ease,transform .1s ease;
 }
-.music-mute:active{transform:scale(.92)}
-.music-mute.is-on{border-color:rgba(255,255,255,.42)}
+.post-mute:active{background:var(--surface3);color:var(--text);transform:scale(.9)}
+.post-mute svg{width:17px;height:17px;display:block}
+.post-mute.is-on{color:var(--yellow)}
 
 .mchip-auto{
   flex:0 0 auto;height:30px;padding:0 10px;border-radius:999px;

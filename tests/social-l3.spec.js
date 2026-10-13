@@ -150,20 +150,20 @@ test.describe('L3 : bouton mute global (bas droite)', () => {
     await expect(page.locator('#feedList .post-music .mchip')).toHaveCount(1);
 
     /* bouton visible dès qu'une chip est en viewport, mais rien ne joue */
-    await expect(page.locator('#musicMute')).toBeVisible();
-    await expect(page.locator('#musicMute')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#feedList .post-mute')).toBeVisible();
+    await expect(page.locator('#feedList .post-mute')).toHaveAttribute('aria-pressed', 'true');
     await page.waitForTimeout(700);
     expect(await page.evaluate(() => window.musicPlayingId())).toBe(null);
 
     /* 🔊 : le contenu visible démarre, choix persisté ('0' = son activé) */
-    await page.locator('#musicMute').click();
+    await page.locator('#feedList .post-mute').click();
     await expect.poll(() => page.evaluate(() => window.musicPlayingId())).toBe('1234567890');
     expect(await page.evaluate(() => localStorage.getItem('liftr_music_muted'))).toBe('0');
-    await expect(page.locator('#musicMute')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#feedList .post-mute')).toHaveAttribute('aria-pressed', 'false');
     await expect.poll(() => page.evaluate(() => window.__playing().length)).toBe(1);
 
     /* 🔇 : stop immédiat, choix persisté ('1') */
-    await page.locator('#musicMute').click();
+    await page.locator('#feedList .post-mute').click();
     await expect.poll(() => page.evaluate(() => window.musicPlayingId())).toBe(null);
     await expect.poll(() => page.evaluate(() => window.__playing().length)).toBe(0);
     expect(await page.evaluate(() => localStorage.getItem('liftr_music_muted'))).toBe('1');
@@ -180,7 +180,7 @@ test.describe('L3 : bouton mute global (bas droite)', () => {
     mockApi(page, { posts: [post(0, ME.id, { body: 'Hush ♪1234567890@0-15!m' })] });
 
     await openFeed(page);
-    await page.locator('#musicMute').click();
+    await page.locator('#feedList .post-mute').click();
     await expect.poll(() => page.evaluate(() => localStorage.getItem('liftr_music_muted'))).toBe('0');
     await page.waitForTimeout(800);
     expect(await page.evaluate(() => window.musicPlayingId())).toBe(null);
@@ -267,7 +267,7 @@ test.describe('L3 : page Musique + sauvegarde', () => {
 
     /* save : localStorage + appel cloud best-effort */
     await page.locator('#trackSaveBtn').click();
-    await expect(page.locator('#trackSaveBtn')).toHaveText('Saved ✓');
+    await expect(page.locator('#trackSaveBtn')).toHaveText('Saved');
     expect(await page.evaluate(() => window.isTrackSaved('1234567890'))).toBe(true);
     expect(await page.evaluate(() =>
       JSON.parse(localStorage.getItem('liftr_music_saves') || '[]')
@@ -281,7 +281,7 @@ test.describe('L3 : page Musique + sauvegarde', () => {
     await expect(page.locator('#trackSaveBtn')).toHaveText('Save');
     expect(await page.evaluate(() => window.isTrackSaved('1234567890'))).toBe(false);
     await page.locator('#trackSaveBtn').click();
-    await expect(page.locator('#trackSaveBtn')).toHaveText('Saved ✓');
+    await expect(page.locator('#trackSaveBtn')).toHaveText('Saved');
 
     /* rang « Saved » en tête du sélecteur du composeur */
     await page.locator('#trackModal .modal-actions .btn-ghost').click();

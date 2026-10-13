@@ -12,6 +12,7 @@ import {
 } from './privacy.js';
 import { pushLayer, popLayer } from '../gestures.js';
 import { profileBack } from './shell.js';
+import { iconS } from '../icons.js';
 
 const USER_RE = /^[a-z0-9_]{3,24}$/;
 const GRID_LIMIT = 90;
@@ -127,8 +128,8 @@ function tileHtml(p, countsRow){
     ? '<img src="' + esc(url) + '" alt="" loading="lazy">'
     : '<span class="ptile-text">' + esc((p.body || '').slice(0, 120)) + '</span>';
   const stats = countsRow
-    ? '<span class="ptile-stats"><span aria-hidden="true">♥ ' + (countsRow.l || 0) + '</span>' +
-      '<span aria-hidden="true">💬 ' + (countsRow.c || 0) + '</span></span>'
+    ? '<span class="ptile-stats"><span aria-hidden="true">' + iconS('heart') + ' ' + (countsRow.l || 0) + '</span>' +
+      '<span aria-hidden="true">' + iconS('chat') + ' ' + (countsRow.c || 0) + '</span></span>'
     : '';
   return '<button type="button" class="ptile' + (url ? '' : ' txt') + '" ' +
     'data-post="' + esc(p.id || '') + '" aria-label="Open post">' + inner + stats + '</button>';

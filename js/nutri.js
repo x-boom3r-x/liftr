@@ -10,6 +10,7 @@ import { buildPlan, macroTargets, projectWeight, adaptiveAdjustment,
   UNITS, nutrientsFor, sumNutrients, recipeToFood, atwaterCheck,
   progress, weekSummary, MACRO_PRESETS, targetsFromPercent, targetsFromPerKg } from './nutrition.js';
 import { loadFoods, searchFoods, getFood as getDbFood, allFoods, norm } from './foods.js';
+import { icon, iconS } from './icons.js';
 
 function nutriDB(){
   if (!window.DB) return null;
@@ -263,8 +264,8 @@ function nutriMealCard(m, editable){
   const rows = (m.items || []).map((it, ii) => {
     const acts = editable
       ? '<span class="ing-actions">' +
-        '<button class="icon-btn" onclick="editMealItem(' + esc(JSON.stringify(m.id)) + ',' + ii + ')" aria-label="Edit ingredient">✎</button>' +
-        '<button class="icon-btn" onclick="removeMealItem(' + esc(JSON.stringify(m.id)) + ',' + ii + ')" aria-label="Remove ingredient">✕</button>' +
+        '<button class="icon-btn" onclick="editMealItem(' + esc(JSON.stringify(m.id)) + ',' + ii + ')" aria-label="Edit ingredient">' + icon('pencil') + '</button>' +
+        '<button class="icon-btn" onclick="removeMealItem(' + esc(JSON.stringify(m.id)) + ',' + ii + ')" aria-label="Remove ingredient">' + icon('x') + '</button>' +
         '</span>'
       : '';
     const qty = nutriQtyLabel(it);
@@ -277,9 +278,9 @@ function nutriMealCard(m, editable){
     : '';
   const acts = editable
     ? '<span class="meal-head-actions">' +
-      '<button class="icon-btn" onclick="editMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Edit meal">✎</button>' +
-      '<button class="icon-btn" onclick="saveMealAsRecipe(' + esc(JSON.stringify(m.id)) + ')" aria-label="Save as recipe">★</button>' +
-      '<button class="icon-btn" onclick="removeMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Delete meal">🗑</button></span>'
+      '<button class="icon-btn" onclick="editMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Edit meal">' + icon('pencil') + '</button>' +
+      '<button class="icon-btn" onclick="saveMealAsRecipe(' + esc(JSON.stringify(m.id)) + ')" aria-label="Save as recipe">' + icon('star') + '</button>' +
+      '<button class="icon-btn" onclick="removeMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Delete meal">' + icon('trash') + '</button></span>'
     : '';
   return '<div class="card meal-card meal-' + esc(type) + '">' +
     '<div class="meal-head">' +
@@ -511,8 +512,8 @@ function mealBuilderHtml(){
         '<span class="ing-g">' + esc(nutriQtyLabel(it)) + '</span>' +
         '<span class="ing-k">' + Math.round(nutriItemKcal(it)) + ' kcal</span>' +
         '<span class="ing-actions">' +
-        '<button class="icon-btn" onclick="editDraftItem(' + i + ')" aria-label="Edit ingredient">✎</button>' +
-        '<button class="icon-btn" onclick="removeDraftItem(' + i + ')" aria-label="Remove ingredient">✕</button>' +
+        '<button class="icon-btn" onclick="editDraftItem(' + i + ')" aria-label="Edit ingredient">' + icon('pencil') + '</button>' +
+        '<button class="icon-btn" onclick="removeDraftItem(' + i + ')" aria-label="Remove ingredient">' + icon('x') + '</button>' +
         '</span></div>').join('') +
       '</div>'
     : '';
@@ -719,10 +720,10 @@ function foodRowHtml(f, custom){
     '<span class="fi-kcal"><b>' + kcal + '</b><i>/100g</i></span>' +
     '<span class="fi-acts">' +
     '<button class="chip" onclick="toggleNutriFav(' + esc(JSON.stringify(f.id)) + ')"' +
-    ' aria-label="Favorite" aria-pressed="' + (fav ? 'true' : 'false') + '">' + (fav ? '★' : '☆') + '</button>' +
+    ' aria-label="Favorite" aria-pressed="' + (fav ? 'true' : 'false') + '">' + icon('star') + '</button>' +
     '<button class="chip" onclick="logFood(' + esc(JSON.stringify(f.id)) + ')">Log</button>' +
     (custom
-      ? '<button class="icon-btn" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ')" aria-label="Delete food">🗑</button>'
+      ? '<button class="icon-btn" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ')" aria-label="Delete food">' + icon('trash') + '</button>'
       : '') +
     '</span></div>';
 }

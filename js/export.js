@@ -171,7 +171,7 @@ function exportStatsCSV(){
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
   closeModal('exportModal');
-  toast('CSV downloaded ✓');
+  toast('CSV downloaded');
 }
 
 Object.assign(window, {

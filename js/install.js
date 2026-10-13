@@ -24,14 +24,14 @@ async function installApp(){
   try {
     p.prompt();
     const res = await p.userChoice;
-    if (res && res.outcome === 'accepted') toast('Liftr installed on your device ✓');
+    if (res && res.outcome === 'accepted') toast('Liftr installed on your device');
   } catch (e){ /* prompt déjà consommé */ }
 }
 
 window.addEventListener('appinstalled', () => {
   _deferredPrompt = null;
   _showInstallBtn(false);
-  toast('Liftr installed on your device ✓');
+  toast('Liftr installed on your device');
 });
 
 Object.assign(window, { installApp, hasInstallPrompt: () => !!_deferredPrompt });

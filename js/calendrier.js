@@ -1,6 +1,7 @@
 /* ==================================================================
    LIFTR - calendrier, semaines, progressions
    ================================================================== */
+import { icon } from './icons.js';
 
 
 /* ==================================================================
@@ -80,7 +81,7 @@ function renderWeekCard(){
           '<div class="card-sub">' + fmtShort(h.date) + (exists ? ' · active session' : ' · deleted session') + '</div></div>' +
           '<div class="hist-right"><div style="text-align:right"><div style="font-weight:750;font-size:.9rem">' + (h.totalSets || 0) + ' sets</div>' +
           '<div class="card-sub">' + fmtVolume(h.volume || 0) + '</div></div>' + histDelBtn(h) + '</div></div>' +
-          (h.note ? '<div class="hist-note">📝 ' + esc(h.note) + '</div>' : '') +
+          (h.note ? '<div class="hist-note">' + icon('memo') + ' ' + esc(h.note) + '</div>' : '') +
           '</div>';
       }).join('')
     : '<div class="empty" style="padding:20px"><div class="empty-text">No session finished on this day.</div></div>';
@@ -138,19 +139,19 @@ function renderPlan(ws){
     if (e && e.dayId) assigned++;
     if (st === 'done') done++;
 
-    let name = '—', icon = '';
+    let name = '—', stIco = '';
     if (e && e.dayId){
       const day = DB.programme.find(x => x.id === e.dayId);
       name = day ? day.name : 'Deleted day';
-      icon = st === 'done' ? '✓' : st === 'missed' ? '✕' : '○';
+      stIco = st === 'done' ? icon('check') : st === 'missed' ? icon('x') : icon('circle');
     } else if (st === 'skip'){
-      name = 'Rest'; icon = '−';
+      name = 'Rest'; stIco = '−';
     }
     html += '<button class="plan-cell ' + st + (iso === todayISO() ? ' today' : '') + '"' +
       ' onclick="openPlanPick(\'' + iso + '\')" title="' + fmtShort(iso) + '">' +
       '<span class="dow">' + DOW[i] + '</span>' +
       '<span class="nm' + (name === '—' ? ' dim' : '') + '">' + esc(name) + '</span>' +
-      (icon ? '<span class="st">' + icon + '</span>' : '') +
+      (stIco ? '<span class="st">' + stIco + '</span>' : '') +
       '</button>';
   }
   $('planRow').innerHTML = html;

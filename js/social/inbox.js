@@ -6,6 +6,7 @@ import { sb } from './client.js';
 import { timeAgo } from './feed.js';
 import { pushLayer, popLayer } from '../gestures.js';
 import { postLinkText } from './deeplink.js';
+import { iconS } from '../icons.js';
 
 const CONV_SELECT = 'id,user_a,user_b,last_message_at,last_preview,last_sender_id';
 const PROFILE_SELECT = 'id,username,display_name,avatar_url';
@@ -46,7 +47,7 @@ function paintInbox(){
   if (!list) return;
   if (!convos.length){
     list.innerHTML = '<div class="feed-empty">' +
-      '<div class="feed-empty-ico">✉</div>' +
+      '<div class="feed-empty-ico">' + iconS('mail') + '</div>' +
       '<div class="feed-empty-t">No messages yet</div>' +
       '<div class="feed-empty-s">Open a lifter’s profile and tap Message.</div>' +
       '<button type="button" class="btn btn-sm" onclick="setSView(\'search\')">Find people</button>' +
@@ -147,7 +148,7 @@ function bubbleHtml(text){
     const m = part.match(/^#p=([A-Za-z0-9_-]{1,64})$/);
     if (!m) return esc(part);
     return '<button type="button" class="bub-link" data-deeplink-post="' + esc(m[1]) +
-      '" aria-label="Open the shared post">Open post ↗</button>';
+      '" aria-label="Open the shared post">Open post ' + iconS('share') + '</button>';
   }).join('');
 }
 

@@ -17,6 +17,7 @@
    ================================================================== */
 
 import { sb } from './client.js';
+import { icon, iconS } from '../icons.js';
 
 const API = 'https://itunes.apple.com';
 const MARK = '♪';
@@ -250,7 +251,7 @@ function paintPlayStates(){
     const on = String(btn.getAttribute('data-mplay')) === String(playingId || '');
     btn.classList.toggle('on', on);
     const ico = btn.querySelector('.mchip-ico');
-    if (ico) ico.textContent = on ? '❚❚' : '▶';
+    if (ico) ico.innerHTML = iconS(on ? 'pause' : 'play');
     btn.setAttribute('aria-label', on ? 'Pause preview' : 'Play preview');
   });
 }
@@ -328,7 +329,7 @@ export function musicChipHtml(trackId, cls, clip){
   return '<div class="mchip ' + (cls || '') + (clip && clip.muted ? ' is-muted' : '') +
     '" data-track="' + esc(id) + '"' + start + end + muted + '>' +
     '<button type="button" class="mchip-play" data-mplay="' + esc(id) + '" ' +
-      'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">▶</span></button>' +
+      'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">' + iconS('play') + '</span></button>' +
     '<span class="mchip-art" aria-hidden="true"' + art + '></span>' +
     '<span class="mchip-txt"><b class="mchip-t">' + esc(t ? t.title : 'Music') + '</b>' +
     '<i class="mchip-a">' + esc(t ? t.artist : 'Tap to load') +
@@ -490,7 +491,7 @@ function paintTrackSave(){
   if (!btn) return;
   const id = btn.getAttribute('data-track') || '';
   const on = isTrackSaved(id);
-  btn.textContent = on ? 'Saved ✓' : 'Save';
+  btn.innerHTML = on ? icon('check') + 'Saved' : 'Save';
   btn.classList.toggle('sel', on);
 }
 
@@ -507,7 +508,7 @@ export function openTrackPage(trackId, clip){
     '<span class="track-txt"><b>' + esc(t ? t.title : 'Music') + '</b>' +
     '<i>' + esc(t ? t.artist : 'Tap to load') + '</i></span>' +
     '<button type="button" class="music-play" data-mplay="' + esc(id) + '" ' +
-    'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">▶</span></button>';
+    'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">' + iconS('play') + '</span></button>';
   const save = el('trackSaveBtn');
   if (save){
     save.setAttribute('data-track', id);
@@ -551,7 +552,7 @@ function rowHtml(t){
     '<span class="music-art" aria-hidden="true"' + art + '></span>' +
     '<span class="music-txt"><b>' + esc(t.title) + '</b><i>' + esc(t.artist) + '</i></span>' +
     '<button type="button" class="music-play" data-mplay="' + esc(t.id) + '" ' +
-      'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">▶</span></button>' +
+      'aria-label="Play preview"><span class="mchip-ico" aria-hidden="true">' + iconS('play') + '</span></button>' +
     '</div>';
 }
 

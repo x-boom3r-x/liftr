@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="68">
+<html lang="en" data-build="69">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -68,7 +68,7 @@
   <div class="tag">Two-person lifting tracker, 100% offline.</div>
   <p>Program, sessions, weekly progress and personal records. Everything stays on your device.</p>
 
-  <button class="btn btn-primary btn-block hidden" id="installBtn" style="margin-bottom:14px" onclick="installApp()">📲 Install Liftr on this device</button>
+  <button class="btn btn-primary btn-block hidden" id="installBtn" style="margin-bottom:14px" onclick="installApp()"><svg class="ico" data-i="mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg> Install Liftr on this device</button>
 
   <button class="btn btn-block hidden" id="socialCta" style="margin-bottom:14px" onclick="openAuth()">Sign in to the Feed</button>
 
@@ -485,9 +485,6 @@
       </button>
     </div>
   </nav>
-  <!-- Musique : mute global (feed + stories), style Instagram -->
-  <button type="button" id="musicMute" class="music-mute hidden"
-    aria-label="Mute music" aria-pressed="false">🔊</button>
 </div>
 
 <!-- ================= MODALS ================= -->
@@ -614,7 +611,7 @@
   <div class="modal">
     <div class="modal-top">
       <div class="modal-title">Comments</div>
-      <button type="button" class="modal-x" id="commentsCloseBtn" aria-label="Close comments">✕</button>
+      <button type="button" class="modal-x" id="commentsCloseBtn" aria-label="Close comments"><svg class="ico" data-i="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div class="modal-sub" id="commentsSub">Join the conversation.</div>
     <div id="commentsPost" class="cpost hidden"></div>
@@ -624,7 +621,7 @@
     <div id="commentList" class="comment-list" aria-live="polite"></div>
     <div id="replyChip" class="reply-chip hidden">
       <span class="reply-chip-txt" id="replyChipText">Replying</span>
-      <button type="button" class="reply-chip-x" id="replyChipX" aria-label="Cancel reply">✕</button>
+      <button type="button" class="reply-chip-x" id="replyChipX" aria-label="Cancel reply"><svg class="ico" data-i="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div class="comment-compose" id="commentCompose">
       <textarea id="commentBody" class="composer-input comment-input" rows="1" maxlength="1000"
@@ -934,9 +931,9 @@
   <div class="liftr-notif-head">
     <span class="liftr-mark">LIFTR</span>
     <span class="liftr-notif-actions">
-      <button class="liftr-refresh hidden" id="liftrShare" onclick="shareSession()" title="Share this session" aria-label="Share this session">↗</button>
+      <button class="liftr-refresh hidden" id="liftrShare" onclick="shareSession()" title="Share this session" aria-label="Share this session"><svg class="ico" data-i="share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></button>
       <button class="liftr-refresh" id="liftrChange" onclick="changeLiftrComment()" title="Another comment" aria-label="Another comment">↻</button>
-      <button class="liftr-refresh" id="liftrClose" onclick="hideSessionComment()" title="Close" aria-label="Close">✕</button>
+      <button class="liftr-refresh" id="liftrClose" onclick="hideSessionComment()" title="Close" aria-label="Close"><svg class="ico" data-i="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </span>
   </div>
   <div class="liftr-notif-sum" id="liftrSum"></div>
@@ -1094,7 +1091,7 @@
 
 <!-- Photo de profil en grand (autre profil) -->
 <div class="overlay avatar-view" id="avatarView" onclick="if(event.target===this)closeModal('avatarView')">
-  <button type="button" class="avw-close" onclick="closeModal('avatarView')" aria-label="Close">✕</button>
+  <button type="button" class="avw-close" onclick="closeModal('avatarView')" aria-label="Close"><svg class="ico" data-i="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
   <img id="avatarViewImg" alt="">
   <div class="avw-name" id="avatarViewName"></div>
 </div>

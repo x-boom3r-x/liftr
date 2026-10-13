@@ -109,7 +109,7 @@ function resetProfileData(){
     closeModal('dayDetailModal');
     closeModal('daySheetModal');
     renderAll();
-    toast('Data erased ✓');
+    toast('Data erased');
   });
 }
 /* Chargement : on garde la source la plus fraiche.

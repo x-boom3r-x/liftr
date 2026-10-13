@@ -1,7 +1,7 @@
 /* ==================================================================
    LIFTR - programme, jours, bibliotheque d'exercices
    ================================================================== */
-
+import { icon } from './icons.js';
 
 let detailDayId = null;
 let newDayType = 'PUSH';
@@ -52,9 +52,9 @@ function renderProgramme(){
         '</div>' +
         '<div class="card-actions">' + typeChip(d.type) +
           '<span class="icon-btn" onclick="event.stopPropagation();shareProgramme()" ' +
-          'title="Share program" aria-label="Share program">↗</span>' +
-          '<span class="icon-btn" onclick="event.stopPropagation();renamePrompt(\'' + d.id + '\')" title="Rename">✎</span>' +
-          '<span class="icon-btn danger" onclick="event.stopPropagation();deleteDay(\'' + d.id + '\')" title="Delete">×</span>' +
+          'title="Share program" aria-label="Share program">' + icon('share') + '</span>' +
+          '<span class="icon-btn" onclick="event.stopPropagation();renamePrompt(\'' + d.id + '\')" title="Rename">' + icon('pencil') + '</span>' +
+          '<span class="icon-btn danger" onclick="event.stopPropagation();deleteDay(\'' + d.id + '\')" title="Delete">' + icon('trash') + '</span>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -187,9 +187,9 @@ function renderDayExercises(){
       '<div class="ex-name"><span>' + (i+1) + '. ' + esc(e.name) +
         (e.cardio ? ' <span class="chip chip-cardio">CARDIO</span>' : '') + '</span>' +
         '<span class="card-actions">' +
-          '<span class="icon-btn' + (e.cardio ? ' on' : '') + '" onclick="toggleCardio(\'' + e.id + '\')" title="Cardio exercise (time / distance)">' + (e.cardio ? '🏃' : '💪') + '</span>' +
-          '<span class="icon-btn" onclick="renameExercise(\'' + e.id + '\')" title="Rename">✎</span>' +
-          '<span class="icon-btn danger" onclick="deleteExercise(\'' + e.id + '\')" title="Delete">×</span>' +
+          '<span class="icon-btn' + (e.cardio ? ' on' : '') + '" onclick="toggleCardio(\'' + e.id + '\')" title="Cardio exercise (time / distance)">' + (e.cardio ? icon('run') : icon('flex')) + '</span>' +
+          '<span class="icon-btn" onclick="renameExercise(\'' + e.id + '\')" title="Rename">' + icon('pencil') + '</span>' +
+          '<span class="icon-btn danger" onclick="deleteExercise(\'' + e.id + '\')" title="Delete">' + icon('trash') + '</span>' +
         '</span>' +
       '</div>' +
       '<div class="card-sub">' + exerciseHistoryLine(e.name, e.cardio) + '</div>' +
@@ -205,7 +205,7 @@ function toggleCardio(exId){
   ex.cardio = !ex.cardio;
   save();
   renderDayExercises(); renderProgramme(); renderSeance();
-  toast(ex.cardio ? '"' + ex.name + '" is now a cardio exercise ✓' : '"' + ex.name + '" is back to lifting ✓');
+  toast(ex.cardio ? '"' + ex.name + '" is now a cardio exercise' : '"' + ex.name + '" is back to lifting');
 }
 
 function exerciseHistoryLine(name, cardio){
@@ -271,7 +271,7 @@ function renderLibrary(){
         const on = have.has(e.name.toLowerCase());
         return '<button class="lib-item' + (on ? ' on' : '') + '" data-name="' + esc(e.name) + '">' +
           '<span>' + esc(e.name) + '<span class="grp">' + esc(e.group) + '</span></span>' +
-          '<span class="lib-tick">' + (on ? '✓' : '+') + '</span></button>';
+          '<span class="lib-tick">' + (on ? icon('check') : '+') + '</span></button>';
       }).join('')
     : '<div class="lib-empty">No result.<br>Add it below, it will be kept under "Custom".</div>';
   $('libGrid').querySelectorAll('.lib-item').forEach(b => b.onclick = () => toggleLibExercise(b.dataset.name));

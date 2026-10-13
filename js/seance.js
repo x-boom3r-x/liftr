@@ -1,6 +1,7 @@
 /* ==================================================================
    LIFTR - seance en cours
    ================================================================== */
+import { icon, iconS } from './icons.js';
 
 
 let addSetExIdx = null;
@@ -35,7 +36,7 @@ function renderSeance(){
   const el = $('seanceDays');
   const days = DB.programme.filter(d => (d.type || '').toUpperCase() !== 'REST');
   if (!days.length){
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🏋️</div>' +
+    el.innerHTML = '<div class="empty"><div class="empty-icon">' + iconS('flex') + '</div>' +
       '<div class="empty-text">Create a session first in the Program tab.</div></div>';
     return;
   }
@@ -346,7 +347,7 @@ function renderAddEx(){
         const on = have.has(e.name.toLowerCase());
         return '<button class="lib-item' + (on ? ' on' : '') + '" data-name="' + esc(e.name) + '">' +
           '<span>' + esc(e.name) + '<span class="grp">' + esc(e.group) + '</span></span>' +
-          '<span class="lib-tick">' + (on ? '✓' : '+') + '</span></button>';
+          '<span class="lib-tick">' + (on ? icon('check') : '+') + '</span></button>';
       }).join('')
     : '<div class="lib-empty">No result.<br>Type it below, it stays in this session only.</div>';
   $('addExGrid').querySelectorAll('.lib-item').forEach(b => b.onclick = () => toggleSessionExercise(b.dataset.name));
@@ -376,7 +377,7 @@ function toggleSessionExercise(name){
     toast('"' + name + '" removed from this session');
   } else {
     addSessionExercise(name);
-    toast('"' + name + '" added to this session ✓');
+    toast('"' + name + '" added to this session');
   }
   save();
   renderAddEx();
@@ -401,7 +402,7 @@ function addExCustom(){
   input.value = '';
   renderAddEx();
   resumeSession();
-  toast('"' + name + '" added to this session ✓');
+  toast('"' + name + '" added to this session');
   input.focus();
 }
 
@@ -468,7 +469,7 @@ function restTick(){
     if (!DB.active.restDone){
       DB.active.restDone = true;
       save();
-      toast('Rest over 💪');
+      toast('Rest over');
       if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
     }
     bar.classList.add('done');

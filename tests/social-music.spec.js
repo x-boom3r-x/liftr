@@ -293,20 +293,20 @@ test.describe('D : lecteur singleton', () => {
     const second = page.locator('#feedList .post-music .mchip').nth(1);
     await first.locator('[data-mplay]').click();
     await expect(first.locator('[data-mplay]')).toHaveClass(/on/);
-    await expect(first.locator('.mchip-ico')).toHaveText('❚❚');
+    await expect(first.locator('.mchip-ico svg[data-i="pause"]')).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.__playing().length)).toBe(1);
 
     await second.locator('[data-mplay]').click();
     await expect(second.locator('[data-mplay]')).toHaveClass(/on/);
     await expect(first.locator('[data-mplay]')).not.toHaveClass(/on/);
-    await expect(first.locator('.mchip-ico')).toHaveText('▶');
+    await expect(first.locator('.mchip-ico svg[data-i="play"]')).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.__playing().length)).toBe(1);
     expect(await page.evaluate(() => window.__playing()[0].src)).toContain('preview-b');
 
     /* re-rendu du fil : l’état « en lecture » survit */
     await page.evaluate(() => window.renderFeed());
     await expect(second.locator('[data-mplay]')).toHaveClass(/on/);
-    await expect(second.locator('.mchip-ico')).toHaveText('❚❚');
+    await expect(second.locator('.mchip-ico svg[data-i="pause"]')).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.__playing().length)).toBe(1);
     expect(errs).toEqual([]);
   });
@@ -381,7 +381,7 @@ test.describe('D : lecteur singleton', () => {
     await play.click();
 
     await expect(play).not.toHaveClass(/on/);
-    await expect(play.locator('.mchip-ico')).toHaveText('▶');
+    await expect(play.locator('.mchip-ico svg[data-i="play"]')).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.__playing().length)).toBe(0);
     expect(await page.evaluate(() => window.musicPlayingId())).toBe(null);
     const toast = await page.evaluate(() => {

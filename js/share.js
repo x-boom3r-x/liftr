@@ -80,7 +80,7 @@ function openShare(){
 function copyShareCode(){
   const ta = $('shareCode');
   if (!ta.value) return;
-  const done = () => toast('Code copied ✓');
+  const done = () => toast('Code copied');
   if (navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(ta.value).then(done).catch(() => fallbackCopy(ta, done));
   } else fallbackCopy(ta, done);
@@ -110,7 +110,7 @@ function downloadShare(){
   a.download = 'liftr-program-' + (currentUser || 'profile').toLowerCase() + '.json';
   document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
-  toast('File downloaded ✓');
+  toast('File downloaded');
 }
 
 function openImport(code, forceMerge){
@@ -141,7 +141,7 @@ function previewImport(forceMerge){
   }
   pendingImport = p;
   hint.className = 'hint ok';
-  hint.textContent = 'Valid code ✓ ' + p.programme.length + ' session(s) found';
+  hint.textContent = 'Valid code ' + p.programme.length + ' session(s) found';
 
   const exos = new Set();
   p.programme.forEach(d => d.exercises.forEach(e => exos.add(e.name.toLowerCase())));
@@ -220,7 +220,7 @@ function applyImport(){
   save();
   renderAll();
   closeModal('importModal');
-  toast('Program imported ✓ ' + n + ' day(s)');
+  toast('Program imported ' + n + ' day(s)');
 }
 
 /* ---------- sauvegarde complète du profil (toutes données) ---------- */
@@ -232,7 +232,7 @@ function exportBackup(){
   a.download = 'liftr-backup-' + (currentUser || 'profile').toLowerCase() + '.json';
   document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
-  toast('Backup downloaded ✓');
+  toast('Backup downloaded');
 }
 
 function importBackup(input){
@@ -258,7 +258,7 @@ function importBackup(input){
       normalizeDB();
       save();
       renderAll();
-      toast('Backup restored ✓');
+      toast('Backup restored');
     });
   };
   r.readAsText(f);
