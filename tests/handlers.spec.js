@@ -6,7 +6,7 @@ const fs = require('fs');
    (chaque module publie sa surface via Object.assign(window, {...})). */
 
 const JS_FILES = [
-  'js/app.js', 'js/state.js', 'js/data.js', 'js/store.js', 'js/ui.js',
+  'js/app.js', 'js/state.js', 'js/data.js', 'js/exercise-demo.js', 'js/store.js', 'js/ui.js',
   'js/programme.js', 'js/suggest.js', 'js/seance.js', 'js/calendrier.js',
   'js/stats.js', 'js/comments.js', 'js/motivation.js', 'js/install.js',
   'js/share.js', 'js/idb.js', 'js/export.js', 'js/nutri.js', 'js/icons.js',

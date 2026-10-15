@@ -97,7 +97,7 @@ function renderActive(){
       '<div class="ex-name"><span class="ex-title">' + esc(ex.name) +
         (ex.cardio ? '<span class="chip chip-cardio">CARDIO</span>' : '') +
         (ex.extra ? '<span class="chip chip-extra">New</span>' : '') +
-        '</span><span class="ex-tags">' +
+        '</span>' + demoBtn(ex.name) + '<span class="ex-tags">' +
         '<span class="chip chip-type">' + ex.sets.length + (ex.cardio ? ' run' + (ex.sets.length !== 1 ? 's' : '') : '×') + '</span>' +
         (ex.extra ? '<span class="icon-btn danger ex-del" onclick="removeActiveExercise(\'' + ex.id + '\')" title="Remove from this session">×</span>' : '') +
         '</span></div>' +
@@ -346,6 +346,7 @@ function renderAddEx(){
     ? list.map(e => {
         const on = have.has(e.name.toLowerCase());
         return '<button class="lib-item' + (on ? ' on' : '') + '" data-name="' + esc(e.name) + '">' +
+          libThumb(e.name) +
           '<span>' + esc(e.name) + '<span class="grp">' + esc(e.group) + '</span></span>' +
           '<span class="lib-tick">' + (on ? icon('check') : '+') + '</span></button>';
       }).join('')

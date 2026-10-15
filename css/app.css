@@ -446,6 +446,60 @@ button{background:none;border:none;cursor:pointer}
 .lib-tick{font-size:.85rem;flex:none}
 .lib-empty{grid-column:1/-1;text-align:center;padding:22px 8px;font-size:.82rem;color:var(--text3)}
 
+/* ---------- EXERCISE DEMO (RepDB) ---------- */
+.lib-thumb{
+  flex:none;width:34px;height:34px;border-radius:8px;overflow:hidden;
+  background:var(--surface2);border:1px solid var(--border);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.lib-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.lib-thumb:active{transform:scale(.94)}
+.lib-item.on .lib-thumb{border-color:rgba(75,224,122,.35)}
+.ex-demo{
+  flex:none;width:26px;height:26px;margin-left:6px;padding:0;border-radius:8px;
+  background:var(--surface3);border:1px solid var(--border);color:var(--text3);
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.ex-demo .ico{width:13px;height:13px}
+.ex-demo:active{background:var(--surface2)}
+.demo-modal{max-width:440px}
+.demo-stage{
+  position:relative;border-radius:14px;overflow:hidden;background:var(--surface2);
+  border:1px solid var(--border);min-height:180px;display:flex;align-items:center;justify-content:center;
+}
+.demo-stage img{width:100%;max-height:56vh;object-fit:contain;display:block}
+.demo-fallback{
+  width:100%;min-height:180px;display:flex;align-items:center;justify-content:center;
+  color:var(--text3);font-size:.78rem;font-weight:650;background:var(--surface2);
+}
+.demo-step-tag{
+  position:absolute;left:10px;bottom:10px;padding:3px 9px;border-radius:999px;
+  background:rgba(0,0,0,.6);color:#fff;font-size:.66rem;font-weight:700;
+  letter-spacing:.02em;backdrop-filter:blur(3px);
+}
+.demo-nav{display:flex;align-items:center;gap:12px;justify-content:center;margin-top:12px}
+.demo-arrow{
+  width:32px;height:32px;border-radius:999px;flex:none;cursor:pointer;
+  background:var(--surface3);border:1px solid var(--border);color:var(--text2);
+  font-size:1rem;line-height:1;display:flex;align-items:center;justify-content:center;
+}
+.demo-arrow:disabled{opacity:.35;cursor:default}
+.demo-arrow:not(:disabled):active{background:var(--surface2)}
+.demo-dots{display:flex;gap:6px;align-items:center}
+.demo-dot{width:7px;height:7px;border-radius:999px;background:var(--surface3);border:1px solid var(--border)}
+.demo-dot.on{background:var(--green-dim);border-color:rgba(48,209,88,.5)}
+.demo-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.demo-meta .chip{
+  font-size:.68rem;font-weight:650;color:var(--text2);
+  background:var(--surface3);border:1px solid var(--border);border-radius:999px;padding:4px 10px;
+}
+.demo-instr{margin-top:14px;font-size:.82rem;line-height:1.55;color:var(--text2)}
+.demo-instr ol{margin:0;padding-left:20px}
+.demo-instr li{margin-bottom:6px}
+.demo-instr p{margin:0}
+.demo-credit{margin-top:16px;font-size:.68rem;color:var(--text3);text-align:center}
+.demo-credit a{color:var(--text2);text-decoration:underline}
+
 /* ---------- WELCOME ---------- */
 .welcome{
   min-height:100vh;display:flex;flex-direction:column;justify-content:center;

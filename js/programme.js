@@ -270,6 +270,7 @@ function renderLibrary(){
     ? list.map(e => {
         const on = have.has(e.name.toLowerCase());
         return '<button class="lib-item' + (on ? ' on' : '') + '" data-name="' + esc(e.name) + '">' +
+          libThumb(e.name) +
           '<span>' + esc(e.name) + '<span class="grp">' + esc(e.group) + '</span></span>' +
           '<span class="lib-tick">' + (on ? icon('check') : '+') + '</span></button>';
       }).join('')

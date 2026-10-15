@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="72">
+<html lang="en" data-build="73">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1196,6 +1196,26 @@
       <button class="btn" onclick="closeModal('exportModal')">Cancel</button>
       <button class="btn btn-primary" onclick="exportStatsCSV()">Download CSV</button>
     </div>
+  </div>
+</div>
+
+<!-- Exercise demonstration (RepDB illustrations) -->
+<div class="overlay" id="demoModal" onclick="if(event.target===this)closeDemo()">
+  <div class="modal demo-modal">
+    <div class="grabber"></div>
+    <div class="modal-top">
+      <div class="modal-title" id="demoTitle"></div>
+      <button class="modal-x" onclick="closeDemo()" aria-label="Close">✕</button>
+    </div>
+    <div class="demo-stage" id="demoStage"></div>
+    <div class="demo-nav" id="demoNav" hidden>
+      <button class="demo-arrow" id="demoPrev" onclick="demoStep(-1)" aria-label="Previous step">‹</button>
+      <div class="demo-dots" id="demoDots"></div>
+      <button class="demo-arrow" id="demoNext" onclick="demoStep(1)" aria-label="Next step">›</button>
+    </div>
+    <div class="demo-meta" id="demoMeta"></div>
+    <div class="demo-instr" id="demoInstr"></div>
+    <div class="demo-credit">Exercise data by <a href="https://repdb.co" target="_blank" rel="noopener">RepDB (repdb.co)</a></div>
   </div>
 </div>
 </body>
