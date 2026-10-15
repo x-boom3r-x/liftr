@@ -465,9 +465,10 @@ test.describe('V4 : barre du bas', () => {
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
     expect(r.transform).toBe('');
 
-    /* simulation iOS : le visualViewport est plus bas que le layout
-       (barre du navigateur qui réapparaît) → le shell suit en hauteur et la
-       tabbar (enfant flex) reste collée au bas visible */
+    /* simulation iOS : le visualViewport est plus bas que le layout (barre du
+       navigateur qui réapparaît). #mainApp est ancré top:0;bottom:0 sur le
+       layout viewport : ni sa hauteur ni la tabbar ne bougent — la barre reste
+       collée au bas PHYSIQUE (innerHeight), pas au bas du visualViewport. */
     await page.evaluate(() => {
       const vv = window.visualViewport;
       Object.defineProperty(vv, 'height', { value: window.innerHeight - 60, configurable: true });
@@ -476,11 +477,11 @@ test.describe('V4 : barre du bas', () => {
     });
     await page.waitForTimeout(120);
     r = await at();
-    expect(r.transform, 'le shell absorbe le décalage, plus de translateY').toBe('');
-    expect(r.shellH, 'la hauteur du shell suit le visualViewport').toBe(r.vh - 60);
-    expect(Math.abs(r.bottom - (r.vh - 60))).toBeLessThanOrEqual(2);
+    expect(r.transform, 'plus de translateY').toBe('');
+    expect(r.shellH, 'le shell ancré ignore le visualViewport (reste = innerHeight)').toBe(r.vh);
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
-    /* retour à la normale : plus aucune correction */
+    /* retour à la normale */
     await page.evaluate(() => {
       const vv = window.visualViewport;
       delete vv.height;
@@ -490,10 +491,10 @@ test.describe('V4 : barre du bas', () => {
     await page.waitForTimeout(120);
     r = await at();
     expect(r.transform).toBe('');
-    expect(r.shellH, 'le shell revient à la pleine hauteur').toBe(r.vh);
+    expect(r.shellH).toBe(r.vh);
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
-    /* la correction reste appliquée pendant les changements d'onglet */
+    /* la barre reste au bas pendant les changements d'onglet */
     await page.evaluate(() => showTab('stats'));
     r = await at();
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
@@ -519,7 +520,7 @@ test.describe('V4 : barre du bas', () => {
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
     /* pendant un scroll rebond, iOS décale le visualViewport vers le haut SANS
-       réduire sa hauteur visible → le shell ne bouge pas (offsetTop ignoré) */
+       réduire sa hauteur visible → rien ne bouge (le shell l'ancre au layout) */
     await page.evaluate(() => {
       const vv = window.visualViewport;
       Object.defineProperty(vv, 'offsetTop', { value: -90, configurable: true });
@@ -532,7 +533,9 @@ test.describe('V4 : barre du bas', () => {
     expect(r.shellH, 'offsetTop négatif ne redimensionne pas le shell').toBe(r.vh);
     expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
-    /* la hauteur réellement réduite reste corrigée (la vraie toolbar) */
+    /* même avec la hauteur visuelle réduite (la vraie toolbar), la barre reste
+       collée au bas PHYSIQUE : #mainApp est ancré top:0;bottom:0, il ignore
+       le visualViewport — pas d'espace noir sous la barre sur Safari iOS */
     await page.evaluate(() => {
       const vv = window.visualViewport;
       Object.defineProperty(vv, 'height', { value: window.innerHeight - 60, configurable: true });
@@ -540,9 +543,9 @@ test.describe('V4 : barre du bas', () => {
     });
     await page.waitForTimeout(150);
     r = await at();
-    expect(r.transform, 'le shell absorbe la réduction, plus de translateY').toBe('');
-    expect(r.shellH, 'la hauteur du shell suit la vraie toolbar').toBe(r.vh - 60);
-    expect(Math.abs(r.bottom - (r.vh - 60))).toBeLessThanOrEqual(2);
+    expect(r.transform, 'plus de translateY').toBe('');
+    expect(r.shellH, 'le shell ancré ignore la toolbar (reste = innerHeight)').toBe(r.vh);
+    expect(Math.abs(r.bottom - r.vh)).toBeLessThanOrEqual(2);
 
     await page.evaluate(() => {
       const vv = window.visualViewport;

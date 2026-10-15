@@ -95,42 +95,14 @@ window.addEventListener('offline', checkNet);
    négatif alors que la hauteur visible est inchangée → l'ancienne formule
    appliquait un translateY parasite et la barre restait bloquée trop haut
    ("la barre remonte un peu"). Un viewport réduit = hauteur plus petite. */
-let _pinRaf = 0;
-function pinTabbar(){
-  if (_pinRaf) return;
-  _pinRaf = requestAnimationFrame(() => {
-    _pinRaf = 0;
-    const shell = document.getElementById('mainApp');
-    if (!shell) return;
-    const vv = window.visualViewport;
-    /* M4 (revisité) : le gap blanc SOUS la tabbar vient de `height:100dvh`
-       sur #mainApp. Sur iOS Safari, 100dvh peut rester plus PETIT que la
-       hauteur réellement visible (barre d'outils qui se rétracte) : le shell
-       s'arrête alors trop haut et la tabbar — dernier enfant flex — laisse un
-       blanc en dessous qu'aucun translateY ne peut combler (le shell a
-       overflow:hidden, il clipserait une barre poussée vers le bas).
-
-       Le vrai visualViewport est la seule source fiable de « bas visible ».
-       On aligne donc la HAUTEUR du shell sur vv.height : le shell occupe
-       exactement la zone visible, la tabbar touche le bas, sans transformation.
-       On n'utilise PAS vv.offsetTop (rebond iOS : offsetTop négatif ne doit
-       rien décaler, cf. test social-v4 rebond). */
-    if (vv && vv.height > 0){
-      shell.style.height = Math.round(vv.height) + 'px';
-    }
-    /* La tabbar suit désormais le shell : plus aucune transformation. On purge
-       tout translateY résiduel de l'ancien mécanisme. */
-    const bar = shell.querySelector('.tabbar');
-    if (bar && bar.style.transform) bar.style.transform = '';
-  });
-}
-window.addEventListener('resize', pinTabbar);
-window.addEventListener('scroll', pinTabbar, { passive: true });
-if (window.visualViewport){
-  window.visualViewport.addEventListener('resize', pinTabbar);
-  window.visualViewport.addEventListener('scroll', pinTabbar);
-}
-pinTabbar();
+/* pinTabbar : OBSOLÈTE (build 72). La tabbar est un enfant flex RELATIF de
+   #mainApp, lequel est ancré top:0;bottom:0 sur toute la hauteur écran
+   (viewport-fit=cover) : la barre est donc toujours collée au bas
+   physique, sans JavaScript. Les anciens correctifs — translateY puis
+   hauteur = visualViewport.height — étaient des hacks qui laissaient un
+   espace noir sur Safari iOS (dvh ≠ bas écran). On garde la fonction
+   (exportée) comme no-op pour compatibilité. */
+function pinTabbar(){}
 
 /* --tabbar-h : hauteur RÉELLE de la barre, mesurée (fab / toast s'y calent,
    plus de 78 / 96 px en dur). ResizeObserver : le padding change avec

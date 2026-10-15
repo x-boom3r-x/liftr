@@ -2014,24 +2014,27 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 
 /* ==================================================================
    APP SHELL (iPhone) — la tabbar ne dépend plus de position:fixed
-   sur le document. #mainApp occupe exactement l'écran visible ;
+   sur le document. #mainApp occupe exactement l'écran VISIBLE ;
    le header et la tabbar sont des éléments de flex (jamais déplacés),
    seul .app défile. Aucun contenu ne peut plus élargir le document
    ni changer la hauteur du viewport => la barre reste collée en bas
    sur TOUS les onglets.
    ================================================================== */
-/* Safari iPhone : bottom:0 + hauteur de layout viewport laisse un gap
-   blanc quand la barre d'outils se rétracte. Ancre HAUT + hauteur
-   dvh = hauteur visible exacte ; repli pour les navigateurs sans dvh. */
+/* Safari iPhone : height:100dvh laissait un espace NOIR sous la tabbar.
+   100dvh = hauteur du viewport visible, qui S'ARRÊTE au-dessus de la
+   bande de l'indicateur Home (safe-area basse) : la barre — dernier
+   enfant flex — s'arrêtait donc trop haut et le fond du shell (var(--bg))
+   transparaissait en dessous. Ancre HAUT + BAS (top:0;bottom:0) sans
+   hauteur en unité de viewport : avec viewport-fit=cover, le cadre remplit
+   la hauteur ÉCRAN physique (safe-area comprise) et le fond de la barre
+   couvre la zone Home. Pas de white-gap au rétract de la barre d'outils :
+   le document ne défile pas (seul .app scrolle), le layout viewport est
+   stable. */
 #mainApp{
-  position:fixed;top:0;right:0;left:0;
-  height:100dvh;
+  position:fixed;top:0;right:0;left:0;bottom:0;
   display:flex;flex-direction:column;
   overflow:hidden;
   background:var(--bg);
-}
-@supports not (height:100dvh){
-  #mainApp{bottom:0;height:auto}
 }
 html{background:var(--bg)}
 #mainApp > .header{flex:none;position:relative;top:auto}
