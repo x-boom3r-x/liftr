@@ -65,8 +65,9 @@ test.describe('J2 : profil et calcul', () => {
     expect(st.plan.notes).toEqual([]);
 
     await page.locator('#rootSubnav [data-tab="nutri-today"]').click();
-    /* J3 : la carte kcal affiche « eaten / goal » (aucun repas ici -> 0) */
-    await expect(page.locator('.kcal-eaten')).toContainText('/ ' + st.goal.kcal + ' kcal');
+    /* J3 : l'anneau affiche eaten (0) / target (goal) */
+    await expect(page.locator('.ring-stats .ring-stat .rs-n').first()).toHaveText('0');
+    await expect(page.locator('.ring-stats .ring-stat.right .rs-n')).toHaveText(String(st.goal.kcal));
   });
 
   test('weight asked once, written to weightLog (single source)', async ({ page }) => {

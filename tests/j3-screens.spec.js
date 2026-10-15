@@ -1,7 +1,7 @@
-/* J3 : ecrans Nutrition — kcal-card (pbar aria + macros), builder de repas
+/* J3 : ecrans Nutrition — anneau ONT (ring-card + macros), builder de repas
    (foodId + qty, totaux TOUJOURS recalcules, jamais stockes), aliments
-   per-100 g (favoris / recents / Atwater qui AVERTIT sans bloquer),
-   semaine 7 jours (stats + tendance poids). */
+   per-100 g (fiche detail + favoris / recents / Atwater qui AVERTIT sans
+   bloquer), semaine (streak + graphe calories + moyennes). */
 const { test, expect } = require('@playwright/test');
 const { seed, today, daysAgo } = require('./helpers');
 
@@ -15,24 +15,22 @@ const openNutri = async (page, tab = 'nutri-today') => {
 
 test.describe('J3 : ecrans Nutrition', () => {
 
-  test('Today : kcal-card, pbar aria, macros, repas en lecture seule', async ({ page }) => {
+  test('Today : anneau kcal, eaten/target, macros, repas en lecture seule', async ({ page }) => {
     await seed(page, { nutri: { goal: GOAL, foods: [OATS], meals: [
       { id: 'm1', date: today(), type: 'lunch', name: 'Lunch',
         items: [{ foodId: 'oats', qty: 500, unit: 'g', name: 'Oats' }] }   /* 5x100g = 1900 kcal */
     ] } }, 'Mouataz');
     await openNutri(page);
 
-    await expect(page.locator('.kcal-card')).toBeVisible();
-    await expect(page.locator('.kcal-eaten')).toContainText('1900/ 2500 kcal');
-    const bar = page.locator('.kcal-card > .pbar');
-    await expect(bar).toHaveAttribute('role', 'progressbar');
-    await expect(bar).toHaveAttribute('aria-valuemin', '0');
-    await expect(bar).toHaveAttribute('aria-valuemax', '2500');
-    await expect(bar).toHaveAttribute('aria-valuenow', '1900');
-    await expect(bar.locator('.sr-only')).toHaveText('1900 of 2500 kcal');
+    await expect(page.locator('.ring-card')).toBeVisible();
+    await expect(page.locator('.ring-stats .ring-stat .rs-n').first()).toHaveText('1900');   /* eaten */
+    await expect(page.locator('.ring-stats .ring-stat.right .rs-n')).toHaveText('2500');      /* target */
+    await expect(page.locator('.ring-center')).toContainText('600');                          /* 2500-1900 */
+    await expect(page.locator('.ring-center')).toContainText('kcal left');
 
-    await expect(page.locator('.macro.p .macro-name')).toContainText('Protein');
-    await expect(page.locator('.macro.p .macro-val')).toContainText('65 / 180 g');   /* 13 g x 5 */
+    /* macros : 3 cartes Carbs / Fat / Protein */
+    await expect(page.locator('.mcard.p .mcard-top')).toContainText('Protein');
+    await expect(page.locator('.mcard.p .mcard-val')).toContainText('65 / 180 g');   /* 13 g x 5 */
 
     /* lecture seule : pas de boutons d'edition dans Today */
     const card = page.locator('#nutriToday .meal-card');
@@ -47,17 +45,18 @@ test.describe('J3 : ecrans Nutrition', () => {
     expect(await page.evaluate(() => currentTab)).toBe('nutri-meals');
   });
 
-  test('au-dela de 105 % : pbar.over + « over » au lieu de « left »', async ({ page }) => {
+  test('au-dela de 105 % : ring-center.over + « over » au lieu de « left »', async ({ page }) => {
     await seed(page, { nutri: { goal: { kcal: 1500, p: 150, c: 150, f: 50 }, foods: [OATS], meals: [
       { id: 'm1', date: today(), type: 'lunch', name: 'Big lunch',
         items: [{ foodId: 'oats', qty: 500, unit: 'g', name: 'Oats' }] }   /* 1900 vs 1500 */
     ] } }, 'Mouataz');
     await openNutri(page);
 
-    await expect(page.locator('.kcal-card > .pbar')).toHaveClass(/over/);
-    await expect(page.locator('.kcal-left')).toContainText('400');
-    await expect(page.locator('.kcal-left')).toContainText('over');
-    await expect(page.locator('.kcal-left')).not.toContainText('left');
+    await expect(page.locator('.ring-center')).toHaveClass(/over/);
+    await expect(page.locator('.ring-center')).toContainText('400');
+    await expect(page.locator('.ring-center')).toContainText('over');
+    await expect(page.locator('.ring-center')).not.toContainText('kcal left');
+    await expect(page.locator('.ring-fg')).toHaveClass(/over/);
   });
 
   test('repas legacy (sans foodId) : totaux stockes conserves a l\'affichage', async ({ page }) => {
@@ -67,7 +66,7 @@ test.describe('J3 : ecrans Nutrition', () => {
     ] } }, 'Mouataz');
     await openNutri(page);
 
-    await expect(page.locator('.kcal-eaten')).toContainText('400/ 2500 kcal');
+    await expect(page.locator('.ring-stats .ring-stat .rs-n').first()).toHaveText('400');
     await expect(page.locator('#nutriToday .meal-card')).toContainText('Legacy pie');
   });
 
@@ -173,7 +172,7 @@ test.describe('J3 : ecrans Nutrition', () => {
     await expect(page.locator('#nutriFoods')).toContainText('Yesterday lunch');
   });
 
-  test('Foods : recherche perso + base 690, favoris, recents, Atwater avertit sans bloquer', async ({ page }) => {
+  test('Foods : recherche perso + base 690, fiche detail, favoris, recents, Atwater', async ({ page }) => {
     await seed(page, { nutri: { goal: GOAL, foods: [
       { id: 'sauce', name: 'Steakhouse sauce', kcal: 200, protein: 2, carbs: 10, fat: 18 }
     ] } }, 'Mouataz');
@@ -183,42 +182,42 @@ test.describe('J3 : ecrans Nutrition', () => {
     await page.fill('#nutriFoodSearch', 'steak');
     await expect(page.locator('#nutriFoods .food-item:has-text("Steakhouse sauce")')).toBeVisible();
 
-    /* base 690 en asynchrone (fetch data/foods.json) */
+    /* fiche detail : clic sur la carte ouvre la modale */
+    await page.locator('#nutriFoods .food-item:has-text("Steakhouse sauce") .fn').click();
+    await expect(page.locator('#foodDetailModal')).toHaveClass(/show/);
+    await expect(page.locator('#foodDetailBody .fd-name')).toHaveText('Steakhouse sauce');
+    await expect(page.locator('#foodDetailBody')).toContainText('Per 100 g');
+    await expect(page.locator('#foodDetailBody .fd-row.big')).toContainText('Calories');
+
+    /* favori depuis la fiche */
+    await page.locator('#foodDetailBody [aria-label="Favorite"]').click();
+    expect(await page.evaluate(() => DB.nutri.favs), 'favori enregistre').toContain('sauce');
+
+    /* log depuis la fiche -> repas Snacks du jour */
+    await page.locator('#foodDetailBody button:has-text("Log food")').click();
+    await expect(page.locator('#toast')).toContainText('Steakhouse sauce logged');
+    await expect(page.locator('#foodDetailModal')).not.toHaveClass(/show/);
+
+    /* base 690 en asynchrone + log d'un aliment NON favori -> alimente la section Recent */
     await page.fill('#nutriFoodSearch', 'poulet');
     await expect(
       page.locator('#nutriFoods .food-item:has-text("Poulet")').first(),
       'resultats base apres fetch'
     ).toBeVisible({ timeout: 8000 });
     await expect(page.locator('#nutriFoods')).toContainText('Your foods first');
+    await page.locator('#nutriFoods .food-item:has-text("Poulet") .fadd').first().click();
+    await expect(page.locator('#toast')).toContainText('logged');
 
-    /* favori : etoile dans la section « Your foods » puis section « Favorites » */
+    /* sections Favorites / Recent visibles apres vidage de la recherche */
     await page.fill('#nutriFoodSearch', '');
-    await page.locator(
-      '#nutriFoods .section-hint:has-text("Your foods") + .food-list ' +
-      '.food-item:has-text("Steakhouse sauce") [aria-label="Favorite"]'
-    ).click();
     await expect(page.locator('#nutriFoods .section-hint:has-text("Favorites")')).toBeVisible();
-    await expect(page.locator(
-      '#nutriFoods .section-hint:has-text("Favorites") + .food-list button:has-text("Log")'
-    )).toBeVisible();
-
-    /* log -> repas Snacks du jour */
-    await page.locator(
-      '#nutriFoods .section-hint:has-text("Favorites") + .food-list button:has-text("Log")'
-    ).click();
-    await expect(page.locator('#toast')).toContainText('Steakhouse sauce logged');
-
-    /* un aliment de la base (pas un favori) -> section Recent apres vidage */
-    await page.fill('#nutriFoodSearch', 'Nuggets de poulet');
-    await page.locator(
-      '#nutriFoods .food-item:has-text("Nuggets de poulet") button:has-text("Log")'
-    ).click();
-    await expect(page.locator('#toast')).toContainText('Nuggets de poulet logged');
-    await page.fill('#nutriFoodSearch', '');
     await expect(page.locator('#nutriFoods .section-hint:has-text("Recent")')).toBeVisible();
-    await expect(page.locator(
-      '#nutriFoods .section-hint:has-text("Recent") + .food-list'
-    )).toContainText('Nuggets de poulet');
+
+    /* chips de filtre : Favorites n'affiche que les favoris */
+    await page.locator('.fchip:has-text("Favorites")').click();
+    await expect(page.locator('.fchip:has-text("Favorites")')).toHaveClass(/active/);
+    await expect(page.locator('#nutriFoods .food-item:has-text("Steakhouse sauce")')).toBeVisible();
+    await page.locator('.fchip:has-text("All")').click();
 
     /* Atwater : on AVERTIT, on n'enregistre PAS moins (ici 0 vs 100 kcal) */
     await page.locator('#tab-nutri-foods button:has-text("+ Food")').click();
@@ -233,16 +232,14 @@ test.describe('J3 : ecrans Nutrition', () => {
       favs: DB.nutri.favs,
       snack: (DB.nutri.meals.find(m => m.type === 'snack') || {}).items
     }));
-    expect(st.foods, 'sauce + Soda enregistres malgre l\'avertissement').toBe(2);
+    expect(st.foods, 'sauce (perso) + Soda enregistres ; Poulet (base) logge sans etre importe')
+      .toBe(2);
     expect(st.favs).toContain('sauce');
     expect(st.snack[0], 'log sans totaux stockes')
       .toEqual({ foodId: 'sauce', qty: 100, unit: 'g', name: 'Steakhouse sauce' });
-    expect(st.snack[1].foodId).toBe('nuggets-de-poulet--cuit');
-    expect(st.snack[1].qty).toBe(100);
-    expect(st.snack[1].unit).toBe('g');
   });
 
-  test('Week : 7 jours, stats, aria de la barre, tendance poids', async ({ page }) => {
+  test('Week : streak, graphe calories, moyennes, tendance poids', async ({ page }) => {
     await seed(page, {
       nutri: { goal: GOAL, foods: [OATS], meals: [
         { id: 'm1', date: today(), type: 'lunch', name: 'Lunch',
@@ -256,21 +253,30 @@ test.describe('J3 : ecrans Nutrition', () => {
     await page.locator('#rootSubnav [data-tab="nutri-week"]').click();
     await expect(page.locator('#tab-nutri-week')).toBeVisible();
 
-    await expect(page.locator('#nutriWeek .week-row')).toHaveCount(7);
-    const todayRow = page.locator('#nutriWeek .week-row').last();
-    await expect(todayRow.locator('.pbar')).toHaveAttribute('role', 'progressbar');
-    await expect(todayRow.locator('.pbar')).toHaveAttribute('aria-valuemax', '2500');
-    await expect(todayRow.locator('.pbar')).toHaveAttribute('aria-valuenow', '1900');
-    await expect(todayRow.locator('.week-kcal')).toContainText('1900 kcal');
+    /* streak : aujourd'hui loggue mais hier non -> 1 jour */
+    await expect(page.locator('#nutriWeek .streak-card')).toBeVisible();
+    await expect(page.locator('#nutriWeek .streak-n')).toContainText('1');
+    await expect(page.locator('#nutriWeek .streak-n')).toContainText('day');
 
-    await expect(page.locator('#nutriWeek .week-stat')).toHaveCount(3);
-    await expect(page.locator('#nutriWeek')).toContainText('days logged');
-    await expect(page.locator('#nutriWeek')).toContainText('avg kcal');
-    await expect(page.locator('#nutriWeek')).toContainText('days on target');
+    /* plage 7j active + graphe (aire + ligne + points) */
+    await expect(page.locator('#nutriWeek .seg.active')).toHaveText('7d');
+    await expect(page.locator('#nutriWeek .chart-line')).toBeVisible();
+    await expect(page.locator('#nutriWeek .chart-area')).toBeVisible();
+    expect(await page.locator('#nutriWeek .chart-goal').count(), 'ligne objectif pointillee').toBe(1);
+    await expect(page.locator('#nutriWeek')).toContainText('Dashed line = goal');
+    expect(await page.locator('#nutriWeek .chart-dot').count()).toBe(7);
 
-    /* tendance poids sur la fenêtre affichee */
-    await expect(page.locator('#nutriWeek')).toContainText('82.0 → 81.2 kg');
+    /* moyennes journalieres : 2 jours loggues (1900 + 380) / 2 = 1140 */
+    await expect(page.locator('#nutriWeek .daysum-kcal')).toContainText('1140');
+    await expect(page.locator('#nutriWeek .daysum-kcal')).toContainText('/ 2500 kcal');
+    await expect(page.locator('#nutriWeek .avg-row:has-text("Carbs")')).toBeVisible();
+    await expect(page.locator('#nutriWeek .avg-row:has-text("Fat")')).toBeVisible();
+    await expect(page.locator('#nutriWeek .avg-row:has-text("Protein")')).toBeVisible();
+
+    /* tendance poids sur la fenetre affichee */
+    await expect(page.locator('#nutriWeek')).toContainText('82.0 kg');
     await expect(page.locator('#nutriWeek')).toContainText('-0.8 kg');
+    await expect(page.locator('#nutriWeek')).toContainText('81.2');
 
     /* vers Progression */
     await page.locator('#nutriWeek .nutri-add-bar button').click();
@@ -281,6 +287,7 @@ test.describe('J3 : ecrans Nutrition', () => {
     await seed(page, { nutri: { goal: GOAL, foods: [], meals: [] } }, 'Mouataz');
     await openNutri(page, 'nutri-week');
     await expect(page.locator('#nutriWeek')).toContainText('Nothing logged this week');
+    await expect(page.locator('#nutriWeek .chart-line')).toHaveCount(0);
     await expect(page.locator('#nutriWeek .week-row')).toHaveCount(0);
   });
 });

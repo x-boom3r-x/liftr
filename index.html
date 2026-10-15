@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="74">
+<html lang="en" data-build="75">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -289,8 +289,11 @@
           <button class="btn btn-sm btn-primary" onclick="addFood()">+ Food</button>
         </div>
       </div>
-      <input class="input" id="nutriFoodSearch" placeholder="Search foods…"
-        aria-label="Search foods" oninput="renderNutrition('nutri-foods')">
+      <div class="search-wrap">
+        <input class="input" id="nutriFoodSearch" placeholder="Search foods or scan…"
+          aria-label="Search foods" oninput="renderNutrition('nutri-foods')">
+        <button class="search-scan" onclick="openScanner()" aria-label="Scan a barcode"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6v12M8 6v12M11 6v12M14 6v12M18 6v12M20 6v12"/></svg></button>
+      </div>
       <div id="nutriFoods"></div>
     </section>
 
@@ -1229,6 +1232,17 @@
       <button class="modal-x" onclick="closeScanner()" aria-label="Close">✕</button>
     </div>
     <div id="scanBody"></div>
+  </div>
+</div>
+
+<div class="overlay" id="foodDetailModal" aria-hidden="true" onclick="if(event.target===this)closeFoodDetail()">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-top">
+      <div class="modal-title">Food</div>
+      <button class="modal-x" onclick="closeFoodDetail()" aria-label="Close">✕</button>
+    </div>
+    <div id="foodDetailBody"></div>
   </div>
 </div>
 </body>

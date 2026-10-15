@@ -137,32 +137,33 @@ test.describe('Chantier Nutrition (build 74)', () => {
     await expect(extra).toContainText('35 g');
   });
 
-  test('multi-jour : navigation par jour, isolement des repas, retour Today', async ({ page }) => {
+  test('multi-jour : calendrier, isolement des repas, retour Today', async ({ page }) => {
+    const yd = daysAgo(1);
     await seed(page, { nutri: { goal: GOAL, foods: [OATS], meals: [
-      { id: 'ym', date: daysAgo(1), type: 'lunch', name: 'Yesterday lunch',
+      { id: 'ym', date: yd, type: 'lunch', name: 'Yesterday lunch',
         items: [{ foodId: 'oats', qty: 100, unit: 'g', name: 'Oats' }] },
       { id: 'td', date: today(), type: 'dinner', name: 'Today dinner',
         items: [{ foodId: 'oats', qty: 100, unit: 'g', name: 'Oats' }] }
     ] } }, 'Mouataz');
     await openNutri(page, 'nutri-meals');
 
-    /* aujourd'hui par defaut : Next desactive, pas de bouton Today cliquable */
-    await expect(page.locator('#nutriMeals .date-nav')).toBeVisible();
-    await expect(page.locator('#nutriMeals button[aria-label="Next day"]')).toBeDisabled();
-    await expect(page.locator('#nutriMeals .date-nav-today')).toHaveText('Today');
+    /* aujourd'hui par defaut : jour .today + .sel, seul le repas du jour */
+    await expect(page.locator('#nutriMeals .cal-day.today')).toBeVisible();
+    await expect(page.locator('#nutriMeals .cal-day.sel')).toHaveClass(/today/);
+    await expect(page.locator('#nutriMeals .daysum-date')).toHaveText('Today');
     await expect(page.locator('#nutriMeals')).toContainText('Today dinner');
     await expect(page.locator('#nutriMeals')).not.toContainText('Yesterday lunch');
 
-    /* jour precedent : hier apparait, chip Today actif */
-    await page.locator('#nutriMeals button[aria-label="Previous day"]').click();
+    /* jour precedent via le calendrier */
+    await page.locator('#nutriMeals .cal-day[aria-label^="' + yd + '"]').click();
     await expect(page.locator('#nutriMeals')).toContainText('Yesterday lunch');
     await expect(page.locator('#nutriMeals')).not.toContainText('Today dinner');
-    await expect(page.locator('#nutriMeals .chip:has-text("Today")')).toBeVisible();
+    await expect(page.locator('#nutriMeals .daysum-date')).not.toHaveText('Today');
 
     /* retour Today */
-    await page.locator('#nutriMeals .chip:has-text("Today")').click();
+    await page.locator('#nutriMeals .calstrip-head .chip:has-text("Today")').click();
     await expect(page.locator('#nutriMeals')).toContainText('Today dinner');
-    await expect(page.locator('#nutriMeals button[aria-label="Next day"]')).toBeDisabled();
+    await expect(page.locator('#nutriMeals .cal-day.sel')).toHaveClass(/today/);
   });
 
   test('recettes : repas sauve en recette, liste dans Foods, reutilisable', async ({ page }) => {
@@ -228,7 +229,7 @@ test.describe('Chantier Nutrition (build 74)', () => {
     /* Log depuis le web : importe dans n.foods (source off) + toast */
     await page.locator(
       '#nutriFoods .section-hint:has-text("From the web") + .food-list ' +
-      '.food-item:has-text("Nutella") button:has-text("Log")'
+      '.food-item:has-text("Nutella") .fadd'
     ).click();
     await expect(page.locator('#toast')).toContainText('Nutella logged');
     const persisted = await page.evaluate(() => DB.nutri.foods.find(f => f.id === 'off:3017620422003'));

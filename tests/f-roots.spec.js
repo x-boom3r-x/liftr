@@ -142,7 +142,7 @@ test.describe('Chantier F : 3 onglets racine', () => {
 
     /* today : totaux recalculés + macros */
     await nav.locator('[data-tab="nutri-today"]').click();
-    await expect(page.locator('.kcal-eaten')).toContainText('700');
+    await expect(page.locator('.ring-stats .ring-stat .rs-n').first()).toHaveText('700');
     await expect(page.locator('#nutriToday')).toContainText('Protein');
 
     /* aliments : ajout + log vers Snacks (100 g) */
@@ -155,11 +155,11 @@ test.describe('Chantier F : 3 onglets racine', () => {
     await page.locator('#nutriFoods button:has-text("Add")').click();
     await expect(page.locator('#toast')).toContainText('Food added');
     await expect(page.locator('#toast')).not.toContainText('check Atwater');
-    await page.locator('#nutriFoods .food-item:has-text("Rice 100g") button:has-text("Log")').click();
+    await page.locator('#nutriFoods .food-item:has-text("Rice 100g") .fadd').click();
     await expect(page.locator('#toast')).toContainText('Rice 100g logged');
 
     await nav.locator('[data-tab="nutri-today"]').click();
-    await expect(page.locator('.kcal-eaten')).toContainText('830');
+    await expect(page.locator('.ring-stats .ring-stat .rs-n').first()).toHaveText('830');
 
     /* les données nutrition sont persistées dans DB.nutri */
     const n = await page.evaluate(() => DB.nutri);

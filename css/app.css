@@ -2328,3 +2328,198 @@ html{background:var(--bg)}
 .nutri-add-bar .btn{width:100%}
 .nutri-copy-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
 .food-item .fn,.food-item .fm{display:block}
+
+/* ================= Nutrition ONT-style (build 75) =================
+   Structure d'OpenNutriTracker (anneau, cartes macros, sections repas,
+   cartes aliment a vignette, filtres, IMC, streak, graphe) — style LIFTR. */
+
+/* --- chips haut (poids + eau) --- */
+.nchips{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.nchip{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;
+  background:var(--surface2);border:1px solid var(--border);font-size:.82rem;font-weight:750;
+  color:var(--text);font-variant-numeric:tabular-nums}
+.nchip .ic{color:var(--text2);display:inline-flex}
+.nchip b{font-weight:850}
+.nchip .edit{color:var(--text3);font-size:.72rem;margin-left:2px}
+.nchip.water{margin-left:auto}
+.nchip-plus{border:0;background:var(--primary-dim);color:var(--primary);width:26px;height:26px;
+  border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:850}
+
+/* --- anneau calories --- */
+.ring-card{padding:16px}
+.ring-stats{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ring-stat{display:flex;flex-direction:column;gap:2px}
+.ring-stat.right{align-items:flex-end;text-align:right}
+.ring-stat .rs-ic{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;
+  background:var(--green-dim);color:var(--green)}
+.ring-stat.right .rs-ic{background:var(--yellow-dim);color:var(--yellow)}
+.ring-stat .rs-n{font-size:1.15rem;font-weight:850;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.ring-stat .rs-l{font-size:.66rem;color:var(--text3);font-weight:700}
+.ring-wrap{position:relative;width:210px;max-width:74%;margin:8px auto 2px;aspect-ratio:1}
+.ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:11}
+.ring-fg{fill:none;stroke:url(#calRingGrad);stroke-width:11;stroke-linecap:round;
+  transition:stroke-dashoffset .7s cubic-bezier(.22,.61,.36,1)}
+.ring-fg.over{stroke:var(--red)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.ring-center b{font-size:2.5rem;font-weight:880;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.ring-center span{font-size:.74rem;color:var(--text2);font-weight:700}
+.ring-center.over b{color:var(--red)}
+.ring-meta{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text3);
+  margin-top:10px;font-variant-numeric:tabular-nums}
+
+/* --- cartes macros (dot + valeur + barre) --- */
+.mcards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.mcard{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:10px 11px}
+.mcard-top{display:flex;align-items:center;gap:6px;font-size:.7rem;font-weight:800;color:var(--text2)}
+.mcard .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.mcard.c .dot{background:var(--yellow);box-shadow:0 0 8px rgba(255,214,10,.4)}
+.mcard.f .dot{background:var(--red);box-shadow:0 0 8px rgba(255,69,58,.4)}
+.mcard.p .dot{background:var(--green);box-shadow:0 0 8px rgba(48,209,88,.4)}
+.mcard-val{font-size:.9rem;font-weight:850;margin-top:5px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mcard-val small{font-size:.66rem;color:var(--text3);font-weight:700}
+.mcard .pbar{height:5px;margin-top:7px}
+
+/* --- bandeau date (calendrier simplifie) --- */
+.calstrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;margin-bottom:6px;
+  scrollbar-width:none}
+.calstrip::-webkit-scrollbar{display:none}
+.cal-day{flex:0 0 auto;width:44px;padding:7px 0;border-radius:12px;background:var(--surface2);
+  border:1px solid var(--border);text-align:center;cursor:pointer}
+.cal-day .cd-w{font-size:.6rem;color:var(--text3);font-weight:750;text-transform:uppercase;letter-spacing:.04em}
+.cal-day .cd-d{font-size:1rem;font-weight:820;margin-top:2px;font-variant-numeric:tabular-nums}
+.cal-day .cd-dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin:4px auto 0}
+.cal-day .cd-dot.none{background:transparent}
+.cal-day .cd-dot.over{background:var(--red)}
+.cal-day.sel{background:var(--primary);border-color:var(--primary)}
+.cal-day.sel .cd-w,.cal-day.sel .cd-d{color:#160802}
+.cal-day.sel .cd-dot{background:#160802}
+
+/* --- resume du jour (Meals) : kcal + mini rings --- */
+.daysum{padding:14px 16px}
+.daysum-kcal{display:inline-block;font-size:1.5rem;font-weight:880;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;padding:6px 14px;border-radius:12px;background:var(--primary-dim)}
+.daysum-kcal small{font-size:.9rem;color:var(--text2);font-weight:750}
+.daysum-macros{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.dm{display:flex;align-items:center;gap:7px}
+.dm-ring{width:26px;height:26px;flex:none}
+.dm-ring circle{fill:none;stroke-width:5}
+.dm-val{font-size:.82rem;font-weight:800;font-variant-numeric:tabular-nums}
+.dm-lab{font-size:.66rem;color:var(--text3);font-weight:700;display:block;margin-top:-2px}
+
+/* --- sections repas (Breakfast / Lunch / Dinner / Snack) --- */
+.mse{margin-top:16px}
+.mse-head{display:flex;align-items:center;gap:9px;padding:0 2px 8px}
+.mse-ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;font-size:.9rem}
+.mse.breakfast .mse-ico{background:var(--yellow-dim);color:var(--yellow)}
+.mse.lunch .mse-ico{background:var(--primary-dim);color:var(--primary)}
+.mse.dinner .mse-ico{background:var(--violet-dim);color:var(--violet)}
+.mse.snack .mse-ico{background:var(--green-dim);color:var(--green)}
+.mse-title{flex:1;min-width:0}
+.mse-name{font-size:.86rem;font-weight:800;letter-spacing:-.01em}
+.mse-sub{font-size:.68rem;color:var(--text3);margin-top:1px;font-variant-numeric:tabular-nums}
+.mse-sub b{color:var(--text2)}
+.mse-add{flex:none}
+
+/* --- recherche avec scan integre + filtres --- */
+.search-wrap{position:relative;margin:0 0 10px}
+.search-wrap .input{padding-right:44px}
+.search-scan{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:9px;border:0;background:var(--surface3);color:var(--text2);
+  display:grid;place-items:center;cursor:pointer}
+.search-scan:active{background:var(--surface2)}
+.filter-chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.filter-chips::-webkit-scrollbar{display:none}
+.fchip{flex:0 0 auto;padding:7px 13px;border-radius:99px;background:var(--surface2);
+  border:1px solid var(--border);font-size:.78rem;font-weight:750;color:var(--text2);cursor:pointer}
+.fchip.active{background:var(--primary);border-color:var(--primary);color:#160802}
+
+/* --- cartes aliment avec vignette + quick-add --- */
+.food-item .fthumb{width:42px;height:42px;border-radius:11px;flex:none;display:grid;place-items:center;
+  font-weight:850;font-size:1.05rem;color:#160802;background:linear-gradient(135deg,#FF9A62,#FF6B35)}
+.food-item{grid-template-columns:auto minmax(0,1fr) auto auto}
+.fadd{width:34px;height:34px;border-radius:999px;border:0;background:var(--primary);color:#160802;
+  display:grid;place-items:center;font-weight:850;font-size:1.15rem;line-height:1;cursor:pointer;flex:none}
+.fadd:active{transform:scale(.92)}
+.fav-on{color:var(--yellow)}
+
+/* --- fiche aliment (nutrition + micros) --- */
+.fdetail{padding:4px 2px}
+.fd-name{font-size:1.15rem;font-weight:820;letter-spacing:-.01em}
+.fd-src{font-size:.72rem;color:var(--text3);margin-top:2px}
+.fd-per{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 6px;font-weight:800}
+.fd-nutri{display:flex;flex-direction:column}
+.fd-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 2px;
+  border-bottom:1px solid var(--border);font-size:.86rem}
+.fd-row:last-child{border-bottom:0}
+.fd-row .fdk{color:var(--text2)}
+.fd-row b{font-variant-numeric:tabular-nums;font-weight:800}
+.fd-row.big b{font-size:1.15rem}
+.fd-row .pbar{width:70px;height:5px;margin:0}
+.fd-micros{margin-top:12px}
+.micro-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.micro{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:9px 11px}
+.micro .mv{font-size:.95rem;font-weight:850;font-variant-numeric:tabular-nums}
+.micro .ml{font-size:.66rem;color:var(--text3);font-weight:700}
+.fd-barcode{font-size:.72rem;color:var(--text3);margin-top:10px;font-variant-numeric:tabular-nums}
+
+/* --- Goal (You) : IMC + objectif --- */
+.bmi-wrap{display:flex;flex-direction:column;align-items:center;padding:18px 16px}
+.bmi-circle{width:120px;height:120px;border-radius:999px;display:grid;place-items:center;
+  border:6px solid var(--yellow);background:var(--yellow-dim)}
+.bmi-circle.under{border-color:var(--blue);background:var(--blue-dim)}
+.bmi-circle.normal{border-color:var(--green);background:var(--green-dim)}
+.bmi-circle.over{border-color:var(--orange,#FF9A62);background:rgba(255,154,98,.14)}
+.bmi-circle.obese{border-color:var(--red);background:var(--red-dim)}
+.bmi-circle b{font-size:2rem;font-weight:880;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.bmi-circle span{font-size:.66rem;color:var(--text2);font-weight:750}
+.bmi-label{font-size:1.05rem;font-weight:820;margin-top:12px}
+.bmi-risk{font-size:.76rem;color:var(--text3);margin-top:3px;text-align:center}
+.goal-list{margin-top:4px}
+.goal-row{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--border)}
+.goal-row:last-child{border-bottom:0}
+.goal-ico{width:34px;height:34px;border-radius:10px;background:var(--primary-dim);color:var(--primary);
+  display:grid;place-items:center;flex:none}
+.goal-row .gr-main{flex:1;min-width:0}
+.goal-row .gr-t{font-size:.8rem;color:var(--text3);font-weight:700}
+.goal-row .gr-v{font-size:.95rem;font-weight:800;margin-top:1px}
+
+/* --- Week / Trends : streak + graphe --- */
+.streak-card{display:flex;align-items:center;gap:14px;padding:16px}
+.streak-ico{width:52px;height:52px;border-radius:999px;background:var(--green-dim);color:var(--green);
+  display:grid;place-items:center;flex:none;font-size:1.4rem}
+.streak-main{flex:1}
+.streak-n{font-size:1.7rem;font-weight:880;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.streak-n small{font-size:.8rem;color:var(--text2);font-weight:700;margin-left:4px}
+.streak-l{font-size:.74rem;color:var(--text3);margin-top:2px}
+.streak-best{margin-left:auto;font-size:.72rem;color:var(--text3);font-weight:700;text-align:right}
+.chart{margin-top:6px}
+.chart svg{width:100%;height:150px;display:block;overflow:visible}
+.chart .chart-line{fill:none;stroke:var(--primary);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.chart .chart-area{fill:url(#calAreaGrad);opacity:.5}
+.chart .chart-goal{stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 5}
+.chart .chart-dot{fill:var(--primary)}
+.chart .chart-ylab{font-size:9px;fill:var(--text3);font-weight:700}
+.avg-row{display:flex;align-items:center;gap:10px;padding:9px 0}
+.avg-row .avg-l{width:66px;flex:none;font-size:.78rem;font-weight:750;color:var(--text2)}
+.avg-row .pbar{flex:1;height:8px;margin:0}
+.avg-row .avg-v{width:74px;flex:none;text-align:right;font-size:.78rem;font-weight:800;
+  font-variant-numeric:tabular-nums}
+.avg-row .avg-v small{color:var(--text3);font-weight:700}
+/* additions build 75 : tete calendrier + mini-rings colores + wraps */
+.calstrip-wrap{margin-bottom:6px}
+.calstrip-head{display:flex;align-items:center;gap:8px;padding:0 2px 8px}
+.calstrip-month{flex:1;font-size:.86rem;font-weight:800;letter-spacing:-.01em}
+.dm-bg{stroke:rgba(255,255,255,.1)}
+.dm-fg{stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.22,.61,.36,1)}
+.dm-fg.c{stroke:var(--yellow)}
+.dm-fg.f{stroke:var(--red)}
+.dm-fg.p{stroke:var(--green)}
+.dm-fg.over{stroke:var(--red)}
+.daysum-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px}
+.daysum-date{font-size:.8rem;color:var(--text2);font-weight:750}
+@media (max-width:360px){
+  .mcards{grid-template-columns:1fr;gap:7px}
+  .micro-grid{grid-template-columns:1fr}
+  .ring-center b{font-size:2.2rem}
+}

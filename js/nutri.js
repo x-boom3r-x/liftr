@@ -411,6 +411,112 @@ function nutriMealCard(m, editable){
     '</div>' + rows + miss + '</div>';
 }
 
+/* ============ helpers UI ONT-style (build 75) ============ */
+const WATER_DROP = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.6 6 10.4A6 6 0 0 1 6 13.4C6 9.6 12 3 12 3z"/></svg>';
+const BARCODE_SVG = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6v12M8 6v12M11 6v12M14 6v12M18 6v12M20 6v12"/></svg>';
+const MEAL_SVG = {
+  breakfast: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg>',
+  lunch: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16a8 8 0 0 1-16 0z"/><path d="M12 4v3"/></svg>',
+  dinner: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v7a1.5 1.5 0 0 0 3 0V3"/><path d="M9.5 10v11"/><path d="M16 3c-1.5 1-2 3-2 5s.5 3 2 3"/><path d="M16 11v10"/></svg>',
+  snack: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7c-3-2-7 0-7 4 0 5 3 9 7 9s7-4 7-9c0-4-4-6-7-4z"/><path d="M12 7V4"/></svg>'
+};
+function nutriMacroCard(cls, label, val, goal){
+  const pr = progress(val, goal);
+  const g = Math.round(goal), v = Math.round(val);
+  return '<div class="mcard ' + cls + '"><div class="mcard-top"><span class="dot"></span>' + label + '</div>' +
+    '<div class="mcard-val">' + v + '<small> / ' + g + ' g</small></div>' +
+    '<div class="pbar ' + pr.status + '" role="progressbar" aria-label="' + label + '"' +
+    ' aria-valuemin="0" aria-valuemax="' + g + '" aria-valuenow="' + v + '">' +
+    '<i style="width:' + pr.pct + '%"></i></div></div>';
+}
+function nutriRingCard(date, g, t, plan){
+  const pr = progress(t.kcal, g.kcal);
+  const eaten = Math.round(t.kcal), goalK = Math.round(g.kcal);
+  const over = pr.status === 'over';
+  const num = over ? pr.overBy : pr.remaining;
+  const C = 2 * Math.PI * 52;
+  const fill = over ? 1 : Math.max(0, Math.min(1, (pr.pct || 0) / 100));
+  const off = C * (1 - fill);
+  const meta = plan
+    ? '<div class="ring-meta"><span>BMR ' + Math.round(plan.bmr) + '</span>' +
+      '<span>TDEE ' + Math.round(plan.tdee) + '</span>' +
+      '<span>Goal ' + (plan.kcal - plan.tdee >= 0 ? '+' : '−') + Math.abs(Math.round(plan.kcal - plan.tdee)) + '</span></div>'
+    : '';
+  return '<div class="card ring-card">' +
+    '<div class="ring-stats">' +
+    '<div class="ring-stat"><span class="rs-ic">' + icon('down') + '</span><span class="rs-n">' + eaten + '</span><span class="rs-l">eaten</span></div>' +
+    '<div class="ring-stat right"><span class="rs-ic">' + icon('up') + '</span><span class="rs-n">' + goalK + '</span><span class="rs-l">target</span></div>' +
+    '</div>' +
+    '<div class="ring-wrap"><svg viewBox="0 0 120 120" class="ring-svg" aria-hidden="true">' +
+    '<defs><linearGradient id="calRingGrad" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#FF9A62"/><stop offset="1" stop-color="#FF6B35"/></linearGradient></defs>' +
+    '<circle class="ring-bg" cx="60" cy="60" r="52"/>' +
+    '<circle class="ring-fg' + (over ? ' over' : '') + '" cx="60" cy="60" r="52"' +
+    ' style="stroke-dasharray:' + C.toFixed(1) + ';stroke-dashoffset:' + off.toFixed(1) + '"/></svg>' +
+    '<div class="ring-center' + (over ? ' over' : '') + '"><b>' + num + '</b><span>' + (over ? 'over' : 'kcal left') + '</span></div></div>' +
+    meta + '</div>';
+}
+function nutriChipsHtml(date){
+  const w = nutriWeight();
+  const wm = nutriWaterMl(date), wg = nutriWaterGoal();
+  const wChip = w > 0
+    ? '<button class="nchip" onclick="showTab(\'stats\')" aria-label="Weight"><span class="ic">' + icon('scale') + '</span><b>' + (Math.round(w * 10) / 10) + '</b> kg<span class="edit">' + icon('pencil') + '</span></button>'
+    : '';
+  const water = '<span class="nchip water"><span class="ic">' + WATER_DROP + '</span><b>' + wm + '</b> / ' + wg + ' ml' +
+    '<button class="nchip-plus" onclick="addWater(250)" aria-label="Add 250 ml water">+</button></span>';
+  return '<div class="nchips">' + wChip + water + '</div>';
+}
+function nutriBmi(){
+  const p = nutriProfile(), w = nutriWeight();
+  if (!p || !(p.heightCm > 0) || !(w > 0)) return null;
+  const m = p.heightCm / 100, bmi = w / (m * m);
+  let cls, label, risk;
+  if (bmi < 18.5){ cls = 'under'; label = 'Underweight'; risk = 'Risk of deficiency: increased'; }
+  else if (bmi < 25){ cls = 'normal'; label = 'Normal weight'; risk = 'Risk: within the normal range'; }
+  else if (bmi < 30){ cls = 'over'; label = 'Overweight'; risk = 'Risk of comorbidities: increased'; }
+  else { cls = 'obese'; label = 'Obesity'; risk = 'Risk of comorbidities: high'; }
+  return { value: Math.round(bmi * 10) / 10, cls: cls, label: label, risk: risk };
+}
+function nutriStreak(){
+  const n = nutriDB();
+  const logged = d => n.meals.some(m => m.date === d);
+  let cur = 0, start = logged(todayISO()) ? todayISO() : shiftISO(todayISO(), -1);
+  while (logged(start)){ cur++; start = shiftISO(start, -1); }
+  const seen = {}; n.meals.forEach(m => { seen[m.date] = 1; });
+  const all = Object.keys(seen).sort();
+  let best = 0, run = 0, prev = null;
+  all.forEach(dt => { run = (prev && shiftISO(prev, 1) === dt) ? run + 1 : 1; best = Math.max(best, run); prev = dt; });
+  return { cur: cur, best: Math.max(best, cur) };
+}
+function nutriChartHtml(days, goalK){
+  const W = 300, H = 148, pad = 10;
+  const vals = days.map(d => d.kcal);
+  const max = Math.max(goalK || 0, Math.max.apply(null, vals.concat([1]))) * 1.12;
+  const nN = days.length;
+  const x = i => pad + (i * (W - 2 * pad)) / (nN - 1 || 1);
+  const y = v => H - pad - (v / max) * (H - 2 * pad);
+  const line = vals.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+  const area = 'M' + x(0).toFixed(1) + ',' + (H - pad) + ' L' + line.replace(/ /g, ' L') + ' L' + x(nN - 1).toFixed(1) + ',' + (H - pad) + ' Z';
+  const goalLine = goalK ? '<line class="chart-goal" x1="' + pad + '" y1="' + y(goalK).toFixed(1) + '" x2="' + (W - pad) + '" y2="' + y(goalK).toFixed(1) + '" vector-effect="non-scaling-stroke"/>' : '';
+  const dots = nN <= 12 ? vals.map((v, i) => '<circle class="chart-dot" cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="2.6"/>').join('') : '';
+  return '<div class="card"><div class="section-hint">Calories vs goal</div><div class="chart">' +
+    '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Calories over time">' +
+    '<defs><linearGradient id="calAreaGrad" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0" stop-color="rgba(255,107,53,.35)"/><stop offset="1" stop-color="rgba(255,107,53,0)"/></linearGradient></defs>' +
+    goalLine + '<path class="chart-area" d="' + area + '"/>' +
+    '<polyline class="chart-line" points="' + line + '" vector-effect="non-scaling-stroke"/>' + dots +
+    '</svg>' + (goalK ? '<div class="section-hint" style="margin-top:2px">Dashed line = goal ' + Math.round(goalK) + ' kcal</div>' : '') + '</div></div>';
+}
+function foodThumbHtml(f){
+  const name = f.name || '?';
+  const ch = name.trim().charAt(0).toUpperCase() || '?';
+  const grads = ['linear-gradient(135deg,#FF9A62,#FF6B35)', 'linear-gradient(135deg,#4DA3FF,#0A84FF)',
+    'linear-gradient(135deg,#30D158,#0F9D4E)', 'linear-gradient(135deg,#BF5AF2,#8A5CFF)',
+    'linear-gradient(135deg,#FFD60A,#FF9A62)', 'linear-gradient(135deg,#FF453A,#FF6B35)'];
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h + name.charCodeAt(i)) % grads.length;
+  return '<span class="fthumb" style="background:' + grads[h] + '" aria-hidden="true">' + esc(ch) + '</span>';
+}
+
 function renderNutriToday(){
   const box = $('nutriToday');
   if (!box) return;
@@ -418,47 +524,29 @@ function renderNutriToday(){
   const date = todayISO();
   const meals = n.meals.filter(m => m.date === date);
   if (mealsNeedFoods(meals)) ensureFoodsDb('nutri-today');
-  const g = nutriActiveGoal(true);   /* plan du profil recalcule depuis le poids */
+  const g = nutriActiveGoal(true);
   const hasGoal = (+g.kcal || +g.p || +g.c || +g.f) > 0;
   const t = nutriTotalsOf(date);
   const plan = nutriPlan();
 
-  let card;
+  let ring, mcards;
   if (!hasGoal){
-    card = '<div class="empty">No goal set yet — open the <b>Goal</b> tab to set daily targets.</div>';
+    ring = '<div class="empty">No goal set yet — open the <b>Goal</b> tab to set daily targets.</div>';
+    mcards = '';
   } else {
-    const pr = progress(t.kcal, g.kcal);
-    const eaten = Math.round(t.kcal);
-    const goalK = Math.round(g.kcal);
-    const left = pr.status === 'over'
-      ? '<div class="kcal-left"><b>' + pr.overBy + '</b> over</div>'
-      : '<div class="kcal-left"><b>' + pr.remaining + '</b> left</div>';
-    const meta = plan
-      ? '<div class="kcal-meta"><span>BMR ' + Math.round(plan.bmr) + '</span>' +
-        '<span>TDEE ' + Math.round(plan.tdee) + '</span>' +
-        '<span>Goal ' + (plan.kcal - plan.tdee >= 0 ? '+' : '−') +
-        Math.abs(Math.round(plan.kcal - plan.tdee)) + '</span></div>'
-      : '';
-    card = '<div class="card kcal-card">' +
-      '<div class="kcal-top"><div class="kcal-eaten">' + eaten +
-      '<small>/ ' + goalK + ' kcal</small></div>' + left + '</div>' +
-      '<div class="pbar ' + pr.status + '" role="progressbar" aria-label="Calories today"' +
-      ' aria-valuemin="0" aria-valuemax="' + goalK + '" aria-valuenow="' + eaten + '">' +
-      '<span class="sr-only">' + eaten + ' of ' + goalK + ' kcal</span>' +
-      '<i style="width:' + pr.pct + '%"></i></div>' + meta +
-      '<div class="macros">' +
-      nutriMacroBar('p', 'Protein', t.p, g.p) +
-      nutriMacroBar('c', 'Carbs', t.c, g.c) +
-      nutriMacroBar('f', 'Fat', t.f, g.f) +
-      '</div></div>';
+    ring = nutriRingCard(date, g, t, plan);
+    mcards = '<div class="mcards">' +
+      nutriMacroCard('c', 'Carbs', t.c, g.c) +
+      nutriMacroCard('f', 'Fat', t.f, g.f) +
+      nutriMacroCard('p', 'Protein', t.p, g.p) + '</div>';
   }
-
   const water = nutriWaterCardHtml(date);
   const stack = meals.length
-    ? '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, false)).join('') + '</div>'
-    : '<div class="empty" style="margin-top:12px">Nothing logged yet — tap <b>+ Add meal</b> to record what you ate.</div>';
+    ? '<div class="section-hint fx-head" style="margin-top:16px">Today\'s meals<span class="fx-n">' + meals.length + '</span></div>' +
+      '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, false)).join('') + '</div>'
+    : '<div class="empty" style="margin-top:14px">Nothing logged yet — tap <b>+ Add meal</b> to record what you ate.</div>';
   const bar = '<div class="nutri-add-bar"><button class="btn btn-primary" onclick="addMeal()">+ Add meal</button></div>';
-  box.innerHTML = card + water + stack + bar;
+  box.innerHTML = nutriChipsHtml(date) + ring + mcards + water + stack + bar;
 }
 
 /* ---- Meals : liste du jour + builder (foodId + qty, totaux live) ---- */
@@ -672,6 +760,106 @@ function mealBuilderHtml(){
     '</div></div>';
 }
 
+/* ============ Meals ONT-style (build 75) ============ */
+const PLUS_SVG = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+const MEAL_SHARE = { breakfast: 0.25, lunch: 0.30, dinner: 0.30, snack: 0.15 };
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function nutriGotoDate(iso){ nutriSetDate(iso); renderNutrition('nutri-meals'); }
+function nutriMonthShift(delta){
+  const s = nutriDate();
+  const y = +s.slice(0, 4), mo = +s.slice(5, 7) - 1;
+  const d = new Date(y, mo + delta, Math.min(+s.slice(8), 28));
+  const p = x => String(x).padStart(2, '0');
+  nutriSetDate(d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()));
+  renderNutrition('nutri-meals');
+}
+function nutriPrevMonth(){ nutriMonthShift(-1); }
+function nutriNextMonth(){ nutriMonthShift(1); }
+
+function nutriCalendarStripHtml(){
+  const sel = nutriDate(), today = todayISO();
+  const y = +sel.slice(0, 4), mo = +sel.slice(5, 7) - 1;
+  const daysInMonth = new Date(y, mo + 1, 0).getDate();
+  const n = nutriDB();
+  const g = nutriActiveGoal(true);
+  const hasGoal = (+g.kcal || +g.p || +g.c || +g.f) > 0;
+  let cells = '';
+  for (let d = 1; d <= daysInMonth; d++){
+    const p = x => String(x).padStart(2, '0');
+    const iso = y + '-' + p(mo + 1) + '-' + p(d);
+    const isSel = iso === sel, isToday = iso === today;
+    const dayMeals = n.meals.filter(m => m.date === iso);
+    let dot = 'none';
+    if (dayMeals.length){
+      const kcal = dayMeals.reduce((s, m) => s + nutriMealTotal(m).n.kcal, 0);
+      dot = (hasGoal && kcal > g.kcal * 1.05) ? 'over' : 'on';
+    }
+    cells += '<button type="button" class="cal-day' + (isSel ? ' sel' : '') + (isToday ? ' today' : '') +
+      '" onclick="nutriGotoDate(\'' + iso + '\')" aria-label="' + iso + (isSel ? ', selected' : '') + '">' +
+      '<span class="cd-w">' + WD[new Date(iso + 'T12:00:00').getDay()].charAt(0) + '</span>' +
+      '<span class="cd-d">' + d + '</span>' +
+      '<span class="cd-dot ' + dot + '" aria-hidden="true"></span></button>';
+  }
+  return '<div class="calstrip-wrap"><div class="calstrip-head">' +
+    '<button class="icon-btn" onclick="nutriPrevMonth()" aria-label="Previous month">‹</button>' +
+    '<span class="calstrip-month">' + MONTHS[mo] + ' ' + y + '</span>' +
+    '<button class="icon-btn" onclick="nutriNextMonth()" aria-label="Next month">›</button>' +
+    '<button class="chip" onclick="nutriGotoToday()">Today</button></div>' +
+    '<div class="calstrip" role="group" aria-label="Pick a day">' + cells + '</div></div>';
+}
+
+function nutriDaySummaryHtml(date){
+  const g = nutriActiveGoal(true);
+  const hasGoal = (+g.kcal || +g.p || +g.c || +g.f) > 0;
+  const t = nutriTotalsOf(date);
+  const dt = new Date(date + 'T12:00:00');
+  const dateLbl = (date === todayISO() ? 'Today' : WD[dt.getDay()] + ' ' + date.slice(8) + '/' + date.slice(5, 7));
+  const ringMini = (val, goal, cls) => {
+    const pr = progress(val, goal);
+    const C = 2 * Math.PI * 9;
+    const off = C * (1 - Math.max(0, Math.min(1, (pr.pct || 0) / 100)));
+    return '<svg class="dm-ring" viewBox="0 0 24 24" aria-hidden="true">' +
+      '<circle class="dm-bg" cx="12" cy="12" r="9"/>' +
+      '<circle class="dm-fg ' + cls + (pr.status === 'over' ? ' over' : '') + '" cx="12" cy="12" r="9"' +
+      ' style="stroke-dasharray:' + C.toFixed(1) + ';stroke-dashoffset:' + off.toFixed(1) + '"/></svg>';
+  };
+  const kcal = Math.round(t.kcal), goalK = Math.round(g.kcal);
+  const macros = hasGoal
+    ? '<div class="daysum-macros">' +
+      '<span class="dm">' + ringMini(t.c, g.c, 'c') + '<span class="dm-val">' + Math.round(t.c) + '<span class="dm-lab">carbs</span></span></span>' +
+      '<span class="dm">' + ringMini(t.f, g.f, 'f') + '<span class="dm-val">' + Math.round(t.f) + '<span class="dm-lab">fat</span></span></span>' +
+      '<span class="dm">' + ringMini(t.p, g.p, 'p') + '<span class="dm-val">' + Math.round(t.p) + '<span class="dm-lab">protein</span></span></span>' +
+      '</div>'
+    : '';
+  return '<div class="card daysum">' +
+    '<div class="daysum-head"><span class="daysum-date">' + dateLbl + '</span></div>' +
+    '<div class="daysum-kcal">' + kcal + '<small>' + (hasGoal ? ' / ' + goalK + ' kcal' : ' kcal') + '</small></div>' +
+    macros + '</div>';
+}
+
+function nutriMealSectionHtml(type, meals){
+  const label = mealTypeLabel(type);
+  const dayMeals = meals.filter(m => (m.type || 'lunch') === type);
+  const g = nutriActiveGoal(true);
+  const hasGoal = (+g.kcal || +g.p || +g.c || +g.f) > 0;
+  let kcal = 0, p = 0, c = 0, f = 0;
+  dayMeals.forEach(m => { const t = nutriMealTotal(m).n; kcal += t.kcal; p += t.protein; c += t.carbs; f += t.fat; });
+  const target = hasGoal ? Math.round(g.kcal * MEAL_SHARE[type]) : 0;
+  const sub = hasGoal
+    ? '<b>' + Math.round(kcal) + '</b> / ' + target + ' kcal · ' + Math.round(p) + 'P / ' + Math.round(c) + 'C / ' + Math.round(f) + 'F'
+    : Math.round(kcal) + ' kcal · ' + Math.round(p) + 'P / ' + Math.round(c) + 'C / ' + Math.round(f) + 'F';
+  const addBtn = '<button class="icon-btn mse-add" onclick="addMealFor(\'' + type + '\')" aria-label="Add ' + label + '">' + PLUS_SVG + '</button>';
+  const cards = dayMeals.length
+    ? '<div class="meal-stack">' + dayMeals.map(m => nutriMealCard(m, true)).join('') + '</div>'
+    : '';
+  return '<section class="mse ' + type + '">' +
+    '<div class="mse-head"><span class="mse-ico" aria-hidden="true">' + MEAL_SVG[type] + '</span>' +
+    '<div class="mse-title"><div class="mse-name">' + label + '</div><div class="mse-sub">' + sub + '</div></div>' +
+    addBtn + '</div>' + cards + '</section>';
+}
+
 function renderNutriMeals(){
   const box = $('nutriMeals');
   if (!box) return;
@@ -685,12 +873,11 @@ function renderNutriMeals(){
     : (nutriIsToday() ? 'What you ate today' : 'Meals on this day');
 
   const open = nutriForm === 'meal' && !!nutriDraft;
-  let html = nutriDateNavHtml() + (open ? mealBuilderHtml() : '');
+  let html = nutriCalendarStripHtml() + nutriDaySummaryHtml(date);
+  if (open) html += mealBuilderHtml();
+  MEAL_TYPES.forEach(([type]) => { html += nutriMealSectionHtml(type, meals); });
   if (!meals.length && !open){
-    html += '<div class="empty">Nothing logged yet — tap <b>+ Meal</b> to add what you ate.</div>';
-  }
-  if (meals.length){
-    html += '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, true)).join('') + '</div>';
+    html += '<div class="empty" style="margin-top:14px">Nothing logged yet — tap <b>+</b> on a meal above.</div>';
   }
   box.innerHTML = html;
   if (open){
@@ -709,6 +896,12 @@ function renderNutriMeals(){
 function addMeal(){
   nutriForm = 'meal';
   nutriDraft = newDraft();
+  showTab('nutri-meals');
+}
+function addMealFor(type){
+  nutriForm = 'meal';
+  nutriDraft = newDraft();
+  if (type){ nutriDraft.type = type; nutriDraft.name = mealTypeLabel(type); }
   showTab('nutri-meals');
 }
 function editMeal(id){
@@ -882,26 +1075,23 @@ function foodFormHtml(){
 }
 
 function foodRowHtml(f, custom){
-  const n = nutriDB();
-  const fav = (n.favs || []).indexOf(f.id) >= 0;
   const kcal = Math.round(+f.kcal || 0);
   const src = f.source === 'off' ? 'OFF' : f.source === 'usda' ? 'USDA' : null;
   const tail = src ? ' · ' + src : custom ? ' · yours' : (f.state ? ' · ' + esc(f.state) : '');
   const meta = Math.round(+f.protein || +f.p || 0) + 'P / ' +
     Math.round(+f.carbs || +f.c || 0) + 'C / ' +
     Math.round(+f.fat || +f.f || 0) + 'F' + tail;
-  return '<div class="food-item">' +
+  const jid = esc(JSON.stringify(f.id));
+  return '<div class="food-item" role="button" tabindex="0"' +
+    ' onclick="openFoodDetail(' + jid + ')"' +
+    ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();openFoodDetail(' + jid + ')}">' +
+    foodThumbHtml(f) +
     '<span class="fi-main"><span class="fn">' + esc(f.name) + '</span>' +
     '<span class="fm">' + meta + '</span></span>' +
     '<span class="fi-kcal"><b>' + kcal + '</b><i>/100g</i></span>' +
-    '<span class="fi-acts">' +
-    '<button class="chip" onclick="toggleNutriFav(' + esc(JSON.stringify(f.id)) + ')"' +
-    ' aria-label="Favorite" aria-pressed="' + (fav ? 'true' : 'false') + '">' + icon('star') + '</button>' +
-    '<button class="chip" onclick="logFood(' + esc(JSON.stringify(f.id)) + ')">Log</button>' +
-    (custom
-      ? '<button class="icon-btn" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ')" aria-label="Delete food">' + icon('trash') + '</button>'
-      : '') +
-    '</span></div>';
+    '<button class="fadd" onclick="event.stopPropagation();logFood(' + jid + ')"' +
+    ' aria-label="Log ' + esc(f.name) + '">+</button>' +
+    '</div>';
 }
 
 /* ---- recherche distante (Open Food Facts + USDA), debounce + cache 90 j ---- */
@@ -978,17 +1168,88 @@ function addFoodWithBarcode(code){
   setTimeout(() => { const el = $('foodName'); if (el) el.focus(); }, 60);
 }
 
+/* ---- fiche aliment (nutrition + micros) ---- */
+const DRI = { kcal: 2000, protein: 50, carbs: 300, fat: 70, fiber: 25, sugar: 50, sodium_mg: 2000 };
+function nutriDriBar(val, goal){
+  const pr = progress(val, goal);
+  return '<div class="pbar ' + pr.status + '" role="progressbar" aria-valuemin="0"' +
+    ' aria-valuemax="' + Math.round(goal) + '" aria-valuenow="' + Math.round(val) + '">' +
+    '<i style="width:' + pr.pct + '%"></i></div>';
+}
+function microTile(l, v, u){
+  return '<div class="micro"><div class="mv">' + (Math.round(v * 10) / 10) + '<small> ' + u + '</small></div>' +
+    '<div class="ml">' + l + '</div></div>';
+}
+function foodDetailHtml(f){
+  const n = nutriDB();
+  const custom = n.foods.some(x => x && x.id === f.id);
+  const fav = (n.favs || []).indexOf(f.id) >= 0;
+  const kcal = +f.kcal || 0, p = +f.protein || +f.p || 0, c = +f.carbs || +f.c || 0, fat = +f.fat || +f.f || 0;
+  const fib = +f.fiber || 0, sug = +f.sugar || 0, sod = +f.sodium_mg || +f.sodium || 0;
+  const src = f.source === 'off' ? 'Open Food Facts' : f.source === 'usda' ? 'USDA'
+    : custom ? 'Your food' : (f.state || 'Food database');
+  const nutriRow = (label, val, goal, unitLbl, big) =>
+    '<div class="fd-row' + (big ? ' big' : '') + '"><span class="fdk">' + label + '</span>' +
+    (goal ? nutriDriBar(val, goal) : '') +
+    '<b>' + (Math.round(val * 10) / 10) + (unitLbl ? ' ' + unitLbl : '') + '</b></div>';
+  return '<div class="fdetail">' +
+    '<div class="fd-name">' + esc(f.name) + '</div>' +
+    '<div class="fd-src">' + esc(src) + (f.barcode ? ' · ' + esc(f.barcode) : '') + '</div>' +
+    '<div class="fd-per">Per 100 g</div>' +
+    '<div class="fd-nutri">' +
+    nutriRow('Calories', kcal, DRI.kcal, 'kcal', true) +
+    nutriRow('Protein', p, DRI.protein, 'g') +
+    nutriRow('Carbs', c, DRI.carbs, 'g') +
+    nutriRow('Fat', fat, DRI.fat, 'g') +
+    (fib > 0 ? nutriRow('Fiber', fib, DRI.fiber, 'g') : '') +
+    (sug > 0 ? nutriRow('Sugar', sug, DRI.sugar, 'g') : '') +
+    (sod > 0 ? nutriRow('Sodium', sod, DRI.sodium_mg, 'mg') : '') +
+    '</div>' +
+    '<div class="fd-micros"><div class="micro-grid">' +
+    microTile('Fiber', fib, 'g') + microTile('Sugar', sug, 'g') +
+    microTile('Sodium', sod, 'mg') + microTile('Energy', Math.round(kcal), 'kcal') +
+    '</div></div>' +
+    (f.barcode ? '<div class="fd-barcode">Barcode: ' + esc(f.barcode) + '</div>' : '') +
+    '<div class="composer-actions">' +
+    '<button class="chip" onclick="toggleNutriFav(' + esc(JSON.stringify(f.id)) + ')"' +
+    ' aria-pressed="' + fav + '" aria-label="Favorite">' + icon('star') + (fav ? ' Saved' : ' Save') + '</button>' +
+    (custom ? '<button class="chip" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ');closeFoodDetail()"' +
+      ' aria-label="Delete food">' + icon('trash') + ' Delete</button>' : '') +
+    '<button class="btn btn-primary btn-sm" onclick="logFood(' + esc(JSON.stringify(f.id)) + ');closeFoodDetail()">Log food</button>' +
+    '</div></div>';
+}
+function openFoodDetail(id){
+  const f = findNutriFood(id);
+  if (!f) return;
+  const body = $('foodDetailBody'), modal = $('foodDetailModal');
+  if (body) body.innerHTML = foodDetailHtml(f);
+  if (modal){ modal.classList.add('show'); modal.setAttribute('aria-hidden', 'false'); }
+}
+function closeFoodDetail(){
+  const modal = $('foodDetailModal');
+  if (modal){ modal.classList.remove('show'); modal.setAttribute('aria-hidden', 'true'); }
+}
+
+/* ---- filtres de la liste Foods (All / Favorites / Recent / Mine) ---- */
+let nutriFoodFilter = 'all';
+function setNutriFoodFilter(f){ nutriFoodFilter = f; renderNutriFoods(); }
+function nutriFilterChipsHtml(){
+  const opts = [['all', 'All'], ['fav', 'Favorites'], ['recent', 'Recent'], ['mine', 'Mine']];
+  return '<div class="filter-chips" role="tablist">' + opts.map(([v, l]) =>
+    '<button type="button" role="tab" class="fchip' + (nutriFoodFilter === v ? ' active' : '') + '"' +
+    ' aria-selected="' + (nutriFoodFilter === v) + '" onclick="setNutriFoodFilter(\'' + v + '\')">' +
+    l + '</button>').join('') + '</div>';
+}
+
 function renderNutriFoods(){
   const box = $('nutriFoods');
   if (!box) return;
   const n = nutriDB();
   const q = (($('nutriFoodSearch') && $('nutriFoodSearch').value) || '').trim();
   let html = nutriForm === 'food' ? foodFormHtml() : '';
-
   if (q){
-    /* base lazy : on affiche le perso tout de suite, la base apres fetch */
     if (!foodsDbReady()) ensureFoodsDb('nutri-foods');
-    scheduleRemoteSearch(q);   /* debounce -> Open Food Facts + USDA */
+    scheduleRemoteSearch(q);
     const cq = norm(q);
     const custom = n.foods.filter(f => norm(f.name).indexOf(cq) >= 0).slice(0, 10);
     const db = foodsDbReady() ? searchFoods(q, 20) : [];
@@ -1006,24 +1267,27 @@ function renderNutriFoods(){
     html += nutriRemoteResultsHtml(q);
   } else {
     nutriRemoteState = { q: '', foods: [], loading: false, empty: false };
-    const asRow = id => { const f = findNutriFood(id); return f ? { f: f, custom: n.foods.some(x => x.id === id) } : null; };
+    html += nutriFilterChipsHtml();
+    const asRow = id => { const f = findNutriFood(id); return f ? { f: f, custom: n.foods.some(x => x && x.id === id) } : null; };
     const favs = (n.favs || []).map(asRow).filter(Boolean);
     const recents = (n.recents || []).slice(0, 10).map(asRow)
       .filter(x => x && !favs.some(v => v.f.id === x.f.id));
     const mine = n.foods.slice(-30).reverse().map(f => ({ f: f, custom: true }));
-    /* en-tete de section + compteur ; .section-hint reste adjacent a .food-list */
     const fxSec = (label, list) => '<div class="section-hint fx-head">' + label +
       '<span class="fx-n">' + list.length + '</span></div>' +
       '<div class="food-list">' + list.map(x => foodRowHtml(x.f, x.custom)).join('') + '</div>';
-    if (favs.length) html += fxSec('Favorites', favs);
-    if (recents.length) html += fxSec('Recent', recents);
-    if (mine.length) html += fxSec('Your foods', mine);
-    if ((n.recipes || []).length) html += recipesSectionHtml();
-    if (!favs.length && !recents.length && !mine.length && !(n.recipes || []).length){
-      html += '<div class="empty">Your food list is empty — tap <b>+ Food</b> to add staples (per 100 g), or type to search the full database.</div>';
+    const fl = nutriFoodFilter;
+    if ((fl === 'all' || fl === 'fav') && favs.length) html += fxSec('Favorites', favs);
+    if ((fl === 'all' || fl === 'recent') && recents.length) html += fxSec('Recent', recents);
+    if ((fl === 'all' || fl === 'mine') && mine.length) html += fxSec('Your foods', mine);
+    if (fl === 'all' && (n.recipes || []).length) html += recipesSectionHtml();
+    const anyShown = ((fl === 'all') && (favs.length || recents.length || mine.length || (n.recipes || []).length)) ||
+      (fl === 'fav' && favs.length) || (fl === 'recent' && recents.length) || (fl === 'mine' && mine.length);
+    if (!anyShown){
+      html += '<div class="empty">' + (fl === 'all'
+        ? 'Your food list is empty — tap <b>+ Food</b> to add staples (per 100 g), or type to search.'
+        : 'Nothing in this filter yet.') + '</div>';
     }
-    html += '<div class="section-hint" style="margin-top:10px">' +
-      'Type above to search 690+ foods + the web, or <b>Scan</b> a barcode.</div>';
   }
   box.innerHTML = html;
 }
@@ -1121,68 +1385,66 @@ function renderNutriWeek(){
   for (let i = R - 1; i >= 0; i--){
     const date = nutriDateMinus(i);
     const meals = n.meals.filter(m => m.date === date);
-    let kcal = 0, protein = 0;
-    meals.forEach(m => { const x = nutriMealTotal(m).n; kcal += x.kcal; protein += x.protein; });
-    days.push({ date: date, kcal: Math.round(kcal), protein: Math.round(protein) });
+    let kcal = 0, protein = 0, carbs = 0, fat = 0;
+    meals.forEach(m => { const x = nutriMealTotal(m).n; kcal += x.kcal; protein += x.protein; carbs += x.carbs; fat += x.fat; });
+    days.push({ date: date, kcal: Math.round(kcal), protein: Math.round(protein), carbs: Math.round(carbs), fat: Math.round(fat), water: nutriWaterMl(date) });
   }
   const wk = weekSummary(days, goalK);
-  const last = days[days.length - 1].date;
-  /* bascule de fenêtre (défaut 7 : la vue historique reste intacte) */
+  const streak = nutriStreak();
   const seg = '<div class="seg-row" role="group" aria-label="Range">' +
     [7, 30, 90].map(v => '<button type="button" class="seg' + (R === v ? ' active' : '') +
       '" onclick="setNutriWeekRange(' + v + ')">' + v + 'd</button>').join('') + '</div>';
 
+  let html = '<div class="card streak-card">' +
+    '<span class="streak-ico">' + icon('flame') + '</span>' +
+    '<div class="streak-main"><div class="streak-n">' + streak.cur + '<small>day' + (streak.cur === 1 ? '' : 's') + '</small></div>' +
+    '<div class="streak-l">Current logging streak</div></div>' +
+    '<div class="streak-best">best<br><b>' + streak.best + '</b></div></div>' + seg;
+
   if (!wk.loggedDays){
-    box.innerHTML = seg + '<div class="empty">Nothing logged ' + (R === 7 ? 'this week' : 'in this period') +
+    html += '<div class="empty">Nothing logged ' + (R === 7 ? 'this week' : 'in this period') +
       ' yet — it appears here after your first meal.</div>';
+    box.innerHTML = html;
     return;
   }
 
-  let html = seg + '<div class="card"><div class="section-hint">Last ' + R + ' days</div>';
-  days.forEach(d => {
-    const p = goalK ? progress(d.kcal, goalK) : { pct: 0 };
-    const cls = p.status === 'ok' ? 'ok' : p.status === 'over' ? 'over' : '';
-    const dt = new Date(d.date + 'T12:00:00');
-    const wd = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
-    html += '<div class="week-row">' +
-      '<span class="week-day">' + wd + ' ' + d.date.slice(8) + '/' + d.date.slice(5, 7) + '</span>' +
-      '<span class="pbar ' + cls + '" role="progressbar" aria-valuemin="0"' +
-      ' aria-valuemax="' + (goalK || 100) + '" aria-valuenow="' + d.kcal + '"' +
-      ' aria-label="kcal ' + d.date + '"><i style="width:' + Math.min(100, +p.pct || 0) + '%"></i></span>' +
-      '<span class="week-kcal">' + (d.kcal ? d.kcal + ' kcal' : '—') + '</span>' +
-      '</div>';
-  });
-  html += '</div>';
+  /* graphe calories (aire + ligne objectif pointillee) */
+  html += nutriChartHtml(days, goalK);
 
-  html += '<div class="card"><div class="week-stats">' +
-    '<div class="week-stat"><b>' + wk.loggedDays + '</b><span>days logged</span></div>' +
-    '<div class="week-stat"><b>' + wk.avgKcal + '</b><span>avg kcal</span></div>' +
-    (goalK
-      ? '<div class="week-stat"><b>' + wk.daysOnTarget + '/' + R + '</b><span>days on target (±10%)</span></div>'
-      : '<div class="week-stat"><b>—</b><span>set a goal in Goal</span></div>') +
+  /* moyennes journalieres */
+  const dn = wk.loggedDays || 1;
+  const avg = k => Math.round(days.reduce((s, d) => s + d[k], 0) / dn);
+  const avgRow = (l, v, goalV) => {
+    const pr = goalV ? progress(v, goalV) : { pct: 0, status: 'under' };
+    return '<div class="avg-row"><span class="avg-l">' + l + '</span>' +
+      '<span class="pbar ' + pr.status + '" role="progressbar" aria-valuemin="0" aria-valuemax="' + (goalV || 100) +
+      '" aria-valuenow="' + v + '"><i style="width:' + (goalV ? pr.pct : 0) + '%"></i></span>' +
+      '<span class="avg-v">' + v + '<small>' + (goalV ? ' / ' + goalV : '') + '</small></span></div>';
+  };
+  html += '<div class="card"><div class="section-hint">Daily average · ' + wk.loggedDays + ' day' + (wk.loggedDays === 1 ? '' : 's') + ' logged</div>' +
+    '<div class="daysum-kcal" style="margin:6px 0 10px">' + avg('kcal') + '<small>' + (goalK ? ' / ' + goalK + ' kcal' : ' kcal') + '</small></div>' +
+    avgRow('Carbs', avg('carbs'), goal.c) +
+    avgRow('Fat', avg('fat'), goal.f) +
+    avgRow('Protein', avg('protein'), goal.p) +
     '</div>';
-  if (goalK && wk.loggedDays){
-    html += '<div class="section-hint" style="margin-top:8px">Avg vs goal: ' +
-      (wk.avgDeltaKcal >= 0 ? '+' : '') + wk.avgDeltaKcal + ' kcal</div>';
-  }
-  /* tendance protéines (moyenne des jours saisis) */
-  const logged = days.filter(d => d.protein > 0);
-  if (logged.length){
-    const avgP = Math.round(logged.reduce((s, d) => s + d.protein, 0) / logged.length);
-    html += '<div class="section-hint">Protein avg: <b>' + avgP + ' g</b>' +
-      (goal.p ? ' · target ' + goal.p + ' g' : '') + '</div>';
-  }
-  /* tendance poids sur la fenêtre affichée */
+
+  /* hydratation moyenne sur la fenetre */
+  const wGoal = nutriWaterGoal();
+  const avgW = Math.round(days.reduce((s, d) => s + d.water, 0) / R);
+  html += '<div class="card"><div class="section-hint">Water</div>' + avgRow('Avg', avgW, wGoal) + '</div>';
+
+  /* tendance poids */
+  const last = days[days.length - 1].date;
   const wlog = ((window.DB && Array.isArray(DB.weightLog)) ? DB.weightLog : [])
     .filter(e => e && +e.kg > 0 && String(e.date) >= days[0].date && String(e.date) <= last)
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
   if (wlog.length >= 2){
     const dlt = Math.round((+wlog[wlog.length - 1].kg - +wlog[0].kg) * 10) / 10;
-    html += '<div class="section-hint" style="margin-top:8px">Weight: ' +
-      (+wlog[0].kg).toFixed(1) + ' → ' + (+wlog[wlog.length - 1].kg).toFixed(1) +
-      ' kg (' + (dlt >= 0 ? '+' : '') + dlt + ' kg)</div>';
+    html += '<div class="card"><div class="section-hint">Weight</div><div class="avg-row">' +
+      '<span class="avg-l">' + (+wlog[0].kg).toFixed(1) + ' kg</span>' +
+      '<span style="flex:1;text-align:center;color:var(--text3)">→ ' + (dlt >= 0 ? '+' : '') + dlt + ' kg</span>' +
+      '<span class="avg-v">' + (+wlog[wlog.length - 1].kg).toFixed(1) + '<small> kg</small></span></div></div>';
   }
-  html += '</div>';
 
   html += '<div class="nutri-add-bar"><button class="btn" onclick="showTab(\'stats\')">Full stats →</button></div>';
   box.innerHTML = html;
@@ -1333,6 +1595,31 @@ function customFieldChange(){
 /* ---- Goal : profil J2 + plan expliqué + objectif manuel (avancé) ---- */
 function goalOpt(v, label, cur){ return '<option value="' + v + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + label + '</option>'; }
 
+function nutriBmiCardHtml(){
+  const b = nutriBmi();
+  if (!b){
+    return '<div class="card bmi-wrap"><div class="bmi-circle"><b>—</b><span>BMI</span></div>' +
+      '<div class="bmi-label">No data yet</div>' +
+      '<div class="bmi-risk">Log your height and weight to see your body mass index.</div></div>';
+  }
+  return '<div class="card bmi-wrap">' +
+    '<div class="bmi-circle ' + b.cls + '"><b>' + b.value + '</b><span>BMI</span></div>' +
+    '<div class="bmi-label">' + b.label + '</div>' +
+    '<div class="bmi-risk">' + b.risk + '</div></div>';
+}
+function nutriGoalListHtml(p, goal, w){
+  const actLabel = { sedentary: 'Sedentary', light: 'Light', moderate: 'Moderate', active: 'Active', very_active: 'Very active' }[p.activity] || 'Moderate';
+  const goalLabel = { lose: 'Lose weight', maintain: 'Maintain', gain: 'Gain weight' }[p.goal] || 'Maintain';
+  const rate = p.goal === 'maintain' ? 'Maintaining' : (p.rateKgPerWeek || 0.5) + ' kg / week';
+  const rowIco = (ico, t, v) => '<div class="goal-row"><span class="goal-ico">' + ico + '</span>' +
+    '<span class="gr-main"><span class="gr-t">' + t + '</span><span class="gr-v">' + v + '</span></span></div>';
+  return '<div class="card goal-list">' +
+    rowIco(icon('run'), 'Activity', actLabel) +
+    rowIco(icon('chartup'), 'Daily target', goal.kcal ? goal.kcal + ' kcal' : goalLabel) +
+    rowIco(icon('scale'), 'Weight', (w > 0 ? w + ' kg' : '—')) +
+    rowIco(icon('down'), 'Weekly rate', rate) +
+    '</div>';
+}
 function renderNutriGoal(){
   const box = $('nutriGoal');
   if (!box) return;
@@ -1342,7 +1629,7 @@ function renderNutriGoal(){
   const w = nutriWeight();
   const row = (label, val) => '<div class="nutri-plan-row"><span>' + label + '</span><b>' + val + '</b></div>';
 
-  let html = '<div class="card nutri-form">' +
+  let html = nutriBmiCardHtml() + nutriGoalListHtml(p, goal, w) + '<div class="card nutri-form">' +
     '<div class="nutri-meal-name" style="margin-bottom:10px">Your plan</div>' +
     (w > 0
       ? '<div class="section-hint">Current weight: <b>' + w + ' kg</b> — updated by your weigh-ins (Body weight, Stats).</div>'
@@ -1504,12 +1791,13 @@ function cancelNutriForm(){
 Object.assign(window, {
   renderNutrition, nutriDB, nutriTotalsOf,
   /* meals : liste + builder foodId/qty */
-  addMeal, editMeal, editMealItem, removeMeal, removeMealItem,
+  addMeal, addMealFor, editMeal, editMealItem, removeMeal, removeMealItem,
   saveMealDraft, cancelNutriForm, copyYestMeal, saveMealAsRecipe,
   mealNameInput, mealTypeChange, mealSearchInput, pickMealFood,
   itemQtyInput, itemUnitChange, addDraftItem, editDraftItem, removeDraftItem,
   /* foods : per 100 g + recherche + log */
   addFood, submitFood, removeFood, logFood, toggleNutriFav,
+  openFoodDetail, closeFoodDetail, setNutriFoodFilter,
   /* J2 : profil / plan */
   nutriProfile, nutriWeight, nutriPlan, nutriActiveGoal, nutriAdaptive,
   saveNutriProfile, applyAdaptive, saveNutriGoal,
@@ -1518,6 +1806,7 @@ Object.assign(window, {
   MACRO_PRESETS, targetsFromPercent, targetsFromPerKg,
   /* chantier Nutrition : multi-jour, eau, recettes, recherche web, scanner, semaine */
   nutriPrevDay, nutriNextDay, nutriGotoToday,
+  nutriGotoDate, nutriPrevMonth, nutriNextMonth,
   addWater, logWater, saveWaterGoal,
   useRecipe, deleteRecipe,
   logRemoteFood, addFoodWithBarcode,

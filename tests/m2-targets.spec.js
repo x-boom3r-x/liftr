@@ -70,7 +70,7 @@ test.describe('M2 : objectif custom', () => {
     await expect(page.locator('#calcResult')).toContainText('Daily target: ' + g.kcal + ' kcal');
     /* Today suit la cible custom */
     await page.locator('#rootSubnav [data-tab="nutri-today"]').click();
-    await expect(page.locator('.kcal-eaten')).toContainText('/ ' + g.kcal + ' kcal');
+    await expect(page.locator('.ring-stats .ring-stat.right .rs-n')).toHaveText(String(g.kcal));
     /* persistence : reload -> Custom toujours actif */
     await page.reload();
     await page.waitForSelector('#mainApp:not(.hidden)');
@@ -91,7 +91,7 @@ test.describe('M2 : objectif custom', () => {
     await expect(page.locator('#calcResult')).toContainText('2000');
     /* Today : eaten / 2000 */
     await page.locator('#rootSubnav [data-tab="nutri-today"]').click();
-    await expect(page.locator('.kcal-eaten')).toContainText('/ 2000 kcal');
+    await expect(page.locator('.ring-stats .ring-stat.right .rs-n')).toHaveText('2000');
   });
 
   test('TDEE - offset : delta applique, planche kcal reste', async ({ page }) => {
