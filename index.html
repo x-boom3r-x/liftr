@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="73">
+<html lang="en" data-build="74">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -284,7 +284,10 @@
           <div class="section-title">Foods</div>
           <div class="section-hint">Your food list</div>
         </div>
-        <button class="btn btn-sm btn-primary" onclick="addFood()">+ Food</button>
+        <div class="section-head-acts">
+          <button class="btn btn-sm" onclick="openScanner()">Scan</button>
+          <button class="btn btn-sm btn-primary" onclick="addFood()">+ Food</button>
+        </div>
       </div>
       <input class="input" id="nutriFoodSearch" placeholder="Search foods…"
         aria-label="Search foods" oninput="renderNutrition('nutri-foods')">
@@ -1215,7 +1218,17 @@
     </div>
     <div class="demo-meta" id="demoMeta"></div>
     <div class="demo-instr" id="demoInstr"></div>
-    <div class="demo-credit">Exercise data by <a href="https://repdb.co" target="_blank" rel="noopener">RepDB (repdb.co)</a></div>
+  </div>
+</div>
+
+<div class="overlay" id="scanModal" aria-hidden="true" onclick="if(event.target===this)closeScanner()">
+  <div class="modal scan-modal">
+    <div class="grabber"></div>
+    <div class="modal-top">
+      <div class="modal-title">Scan barcode</div>
+      <button class="modal-x" onclick="closeScanner()" aria-label="Close">✕</button>
+    </div>
+    <div id="scanBody"></div>
   </div>
 </div>
 </body>

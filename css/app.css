@@ -497,8 +497,6 @@ button{background:none;border:none;cursor:pointer}
 .demo-instr ol{margin:0;padding-left:20px}
 .demo-instr li{margin-bottom:6px}
 .demo-instr p{margin:0}
-.demo-credit{margin-top:16px;font-size:.68rem;color:var(--text3);text-align:center}
-.demo-credit a{color:var(--text2);text-decoration:underline}
 
 /* ---------- WELCOME ---------- */
 .welcome{
@@ -1098,6 +1096,48 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .nutri-adapt{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:10px 12px;font-size:.82rem;margin-top:10px}
 .nutri-adapt .chip{flex:0 0 auto}
+
+/* ---------- chantier Nutrition : eau, multi-jour, scanner, recettes ---------- */
+.section-head-acts{display:flex;gap:8px;align-items:center}
+.water-card{margin-top:12px}
+.water-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.water-label{font-weight:600;font-size:.92rem}
+.water-val{color:var(--text2);font-size:.85rem}
+.water-val b{color:var(--text);font-size:1.05rem}
+.water-actions{display:flex;align-items:center;gap:8px;margin-top:10px}
+.water-add{font-weight:600}
+.water-glasses{margin-left:auto;color:var(--text3);font-size:.78rem}
+.date-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px;
+  padding:6px 8px;border:1px solid var(--line);border-radius:12px}
+.date-nav-label{font-weight:600;font-size:.9rem;min-width:64px;text-align:center}
+.date-nav .icon-btn{font-size:1.3rem;line-height:1;padding:2px 10px}
+.date-nav-today{margin-left:auto;color:var(--text3);font-size:.78rem;font-weight:600}
+.date-nav .chip{margin-left:0}
+.date-nav-today + .chip, .date-nav .chip{margin-left:auto}
+.recipe-list{display:flex;flex-direction:column;gap:2px}
+.recipe-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.recipe-row:last-child{border-bottom:0}
+.recipe-row .fi-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.recipe-row .fi-acts{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+.seg-row{display:flex;gap:6px;margin:2px 0 12px;flex-wrap:wrap}
+/* scanner */
+.scan-modal{max-width:460px}
+.scan-region{position:relative;background:#000;border-radius:14px;overflow:hidden;
+  min-height:180px;display:grid;place-items:center;margin-bottom:10px}
+.scan-region video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-msg{color:var(--text2);font-size:.85rem;text-align:center;padding:6px 4px 10px}
+.scan-found{display:flex;flex-direction:column;gap:6px;padding:4px 2px 8px}
+.scan-name{font-weight:700;font-size:1.02rem}
+.scan-brand{color:var(--text2);font-size:.82rem}
+.scan-src{color:var(--text3);font-size:.72rem}
+.scan-nutri{display:flex;flex-wrap:wrap;gap:10px;font-size:.85rem;color:var(--text2);margin-top:2px}
+.scan-nutri b{color:var(--text)}
+.scan-per{color:var(--text3);font-size:.72rem}
+.scan-qty{display:flex;gap:8px;margin-top:6px}
+.scan-qty .input{margin-bottom:0}
+.scan-found .input{margin-bottom:0}
+.scan-preview{font-size:.82rem;color:var(--text2);min-height:1.1em}
+.scan-notfound{display:flex;flex-direction:column;gap:8px;margin:4px 0 8px}
 
 /* ---------- bouton flottant "nouveau post" ---------- */
 .fab{

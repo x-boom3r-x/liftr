@@ -8,9 +8,12 @@
    ================================================================== */
 import { buildPlan, macroTargets, projectWeight, adaptiveAdjustment,
   UNITS, nutrientsFor, sumNutrients, recipeToFood, atwaterCheck,
-  progress, weekSummary, MACRO_PRESETS, targetsFromPercent, targetsFromPerKg } from './nutrition.js';
+  progress, weekSummary, MACRO_PRESETS, targetsFromPercent, targetsFromPerKg,
+  waterGoalMl, fiberTargetG } from './nutrition.js';
 import { loadFoods, searchFoods, getFood as getDbFood, allFoods, norm } from './foods.js';
+import { searchRemote, importRemoteFood, isBarcodeFormat } from './nutri-remote.js';
 import { icon, iconS } from './icons.js';
+import './nutri-scan.js';   /* attache openScanner/closeScanner aux boutons onclick */
 
 function nutriDB(){
   if (!window.DB) return null;
@@ -21,6 +24,8 @@ function nutriDB(){
   if (!Array.isArray(n.meals)) n.meals = [];
   if (!Array.isArray(n.favs)) n.favs = [];
   if (!Array.isArray(n.recents)) n.recents = [];
+  if (!Array.isArray(n.recipes)) n.recipes = [];
+  if (!n.water || typeof n.water !== 'object') n.water = {};
   n.meals.forEach(m => { if (!Array.isArray(m.items)) m.items = []; });
   /* aliments persos legacy (p/c/f) -> noms nutrition.js (per 100 g) */
   n.foods.forEach(f => {
@@ -32,6 +37,103 @@ function nutriDB(){
 }
 
 let nutriForm = null;   /* 'meal' | 'food' | null */
+let nutriViewDate = null;   /* jour affiche dans Meals (null = aujourd'hui) */
+let nutriRemoteState = { q: '', foods: [], loading: false, empty: false };
+let _remoteTimer = null;
+
+/* ---- multi-jour : jour affiche dans Meals (null = aujourd'hui) ---- */
+function shiftISO(iso, n){
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + n);
+  const p = x => String(x).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function nutriDate(){ return nutriViewDate || todayISO(); }
+function nutriSetDate(iso){ nutriViewDate = (iso && iso !== todayISO()) ? iso : null; }
+function nutriShiftDate(delta){ nutriSetDate(shiftISO(nutriDate(), delta)); }
+function nutriIsToday(){ return nutriDate() === todayISO(); }
+
+/* barre de navigation par jour (Meals) : ◀ date ▶ [Today] */
+function nutriDateNavHtml(){
+  const iso = nutriDate();
+  const dt = new Date(iso + 'T12:00:00');
+  const wd = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()];
+  const label = wd + ' ' + iso.slice(8) + '/' + iso.slice(5, 7);
+  const todayChip = nutriIsToday()
+    ? '<span class="date-nav-today">Today</span>'
+    : '<button class="chip" onclick="nutriGotoToday()">Today</button>';
+  const next = nutriIsToday()
+    ? '<button class="icon-btn" disabled aria-label="Next day">›</button>'
+    : '<button class="icon-btn" onclick="nutriNextDay()" aria-label="Next day">›</button>';
+  return '<div class="date-nav">' +
+    '<button class="icon-btn" onclick="nutriPrevDay()" aria-label="Previous day">‹</button>' +
+    '<span class="date-nav-label">' + label + '</span>' + next + todayChip + '</div>';
+}
+function nutriPrevDay(){ nutriShiftDate(-1); renderNutriMeals(); }
+function nutriNextDay(){ if (!nutriIsToday()){ nutriShiftDate(1); renderNutriMeals(); } }
+function nutriGotoToday(){ nutriSetDate(todayISO()); renderNutriMeals(); }
+
+/* ---- hydratation (DB.nutri.water : { 'YYYY-MM-DD': ml }) ---- */
+function nutriWaterMl(date){
+  const n = nutriDB();
+  return n && n.water ? (+n.water[date] || 0) : 0;
+}
+function nutriWaterGoal(){
+  const w = nutriWeight();
+  const n = nutriDB();
+  if (n && n.profile && +n.profile.waterGoalMl > 0) return +n.profile.waterGoalMl;
+  return waterGoalMl({ weightKg: w });
+}
+function setWaterGoalMl(ml){
+  const n = nutriDB();
+  if (!n) return;
+  nutriProfile().waterGoalMl = Math.max(0, Math.round(+ml || 0));
+  save();
+}
+function saveWaterGoal(){
+  const el = $('waterGoalInput');
+  if (el) setWaterGoalMl(+el.value);
+  renderNutriGoal();
+  toast('Water goal saved');
+}
+/* delta en ml ; borne a [0, 24*200] (coherence) */
+function addWater(delta){
+  const n = nutriDB();
+  if (!n) return;
+  const date = todayISO();
+  const cur = nutriWaterMl(date);
+  const next = Math.max(0, Math.min(24000, cur + (+delta || 0)));
+  n.water[date] = next;
+  save();
+  renderNutrition(currentTab);
+}
+function logWater(ml){ addWater(+ml || 0); }
+
+/* Objectif fibres du jour (g) depuis l'objectif actif. */
+function nutriFiberGoal(){
+  const g = nutriActiveGoal(true);
+  return g && g.kcal > 0 ? fiberTargetG(g.kcal) : 0;
+}
+
+/* Carte hydratation (Today). Boutons +250 / +500 / −250 ; compteur de verres. */
+function nutriWaterCardHtml(date){
+  const ml = nutriWaterMl(date);
+  const goal = nutriWaterGoal();
+  const pr = progress(ml, goal);
+  const glasses = Math.round(ml / 250);
+  return '<div class="card water-card">' +
+    '<div class="water-top"><span class="water-label">Water</span>' +
+    '<span class="water-val"><b>' + ml + '</b> / ' + goal + ' ml</span></div>' +
+    '<div class="pbar ' + pr.status + '" role="progressbar" aria-label="Water"' +
+    ' aria-valuemin="0" aria-valuemax="' + goal + '" aria-valuenow="' + ml + '">' +
+    '<i style="width:' + pr.pct + '%"></i></div>' +
+    '<div class="water-actions">' +
+    '<button class="chip" onclick="addWater(-250)" aria-label="Remove 250 ml">−</button>' +
+    '<button class="chip water-add" onclick="addWater(250)">+ 250 ml</button>' +
+    '<button class="chip" onclick="addWater(500)">+ 500</button>' +
+    '<span class="water-glasses">' + glasses + ' glass' + (glasses === 1 ? '' : 'es') + '</span>' +
+    '</div></div>';
+}
 
 /* ---- J2 : profil, poids, plan ---- */
 function nutriProfile(){
@@ -188,7 +290,23 @@ function findNutriFood(id){
   if (!n || !id) return null;
   const c = n.foods.find(f => f.id === id);
   if (c) return c;
+  /* aliments distants encore en cache de recherche : resolvables avant import */
+  if (nutriRemoteState && Array.isArray(nutriRemoteState.foods)){
+    const r = nutriRemoteState.foods.find(f => f && f.id === id);
+    if (r) return r;
+  }
   return (window.LiftrFoods && LiftrFoods.get(id)) || null;
+}
+/* Un aliment distant (off:/usda:) est persiste dans n.foods la premiere
+   fois qu'on l'utilise : il reste resolvable hors ligne ensuite. */
+function ensureFoodPersisted(f){
+  const n = nutriDB();
+  if (!n || !f) return f;
+  if (n.foods.some(x => x && x.id === f.id)) return f;
+  if (f.source === 'off' || f.source === 'usda'){
+    n.foods.push(Object.assign({}, f));
+  }
+  return f;
 }
 function foodsDbReady(){ return !!(window.LiftrFoods && LiftrFoods.all().length); }
 function ensureFoodsDb(tab){
@@ -335,11 +453,12 @@ function renderNutriToday(){
       '</div></div>';
   }
 
+  const water = nutriWaterCardHtml(date);
   const stack = meals.length
     ? '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, false)).join('') + '</div>'
     : '<div class="empty" style="margin-top:12px">Nothing logged yet — tap <b>+ Add meal</b> to record what you ate.</div>';
   const bar = '<div class="nutri-add-bar"><button class="btn btn-primary" onclick="addMeal()">+ Add meal</button></div>';
-  box.innerHTML = card + stack + bar;
+  box.innerHTML = card + water + stack + bar;
 }
 
 /* ---- Meals : liste du jour + builder (foodId + qty, totaux live) ---- */
@@ -381,8 +500,9 @@ function mealSearchInput(v){
 function pickMealFood(id){
   const d = nutriDraft;
   if (!d) return;
-  const f = findNutriFood(id);
+  let f = findNutriFood(id);
   if (!f) return;
+  f = ensureFoodPersisted(f);
   const unit = defaultUnit(f);
   d.pick = { foodId: f.id, name: f.name, qty: String(defaultQty(unit)), unit: unit, from: -1 };
   d.focus = null;
@@ -497,7 +617,7 @@ function mealBuilderHtml(){
   if (!d) return '';
   const n = nutriDB();
   const t = draftTotals();
-  const yMeals = n.meals.filter(m => m.date === nutriDateMinus(1));
+  const yMeals = n.meals.filter(m => m.date === shiftISO(nutriDate(), -1));
   const copyRow = (yMeals.length && !d.items.length)
     ? '<div class="nutri-copy-row"><span class="section-hint" style="margin:0">Copy from yesterday:</span>' +
       yMeals.map(m => '<button type="button" class="chip" onclick="copyYestMeal(' +
@@ -556,15 +676,16 @@ function renderNutriMeals(){
   const box = $('nutriMeals');
   if (!box) return;
   const n = nutriDB();
-  const meals = n.meals.filter(m => m.date === todayISO());
+  const date = nutriDate();
+  const meals = n.meals.filter(m => m.date === date);
   if (mealsNeedFoods(meals)) ensureFoodsDb('nutri-meals');
   const hint = $('nutriMealsHint');
   if (hint) hint.textContent = meals.length
-    ? meals.length + ' meal' + (meals.length !== 1 ? 's' : '') + ' today'
-    : 'What you ate today';
+    ? meals.length + ' meal' + (meals.length !== 1 ? 's' : '') + (nutriIsToday() ? ' today' : ' that day')
+    : (nutriIsToday() ? 'What you ate today' : 'Meals on this day');
 
   const open = nutriForm === 'meal' && !!nutriDraft;
-  let html = open ? mealBuilderHtml() : '';
+  let html = nutriDateNavHtml() + (open ? mealBuilderHtml() : '');
   if (!meals.length && !open){
     html += '<div class="empty">Nothing logged yet — tap <b>+ Meal</b> to add what you ate.</div>';
   }
@@ -645,7 +766,7 @@ function saveMealDraft(){
   let m = dd.id ? n.meals.find(x => x.id === dd.id) : null;
   if (m){ m.name = name; m.type = dd.type; m.items = items; }
   else {
-    m = { id: uid(), date: todayISO(), type: dd.type, name: name, items: items };
+    m = { id: uid(), date: nutriDate(), type: dd.type, name: name, items: items };
     n.meals.push(m);
   }
   touchNutriRecent(items.filter(i => i.foodId).map(i => i.foodId));
@@ -679,13 +800,59 @@ function saveMealAsRecipe(id){
   catch (e){ food = null; }
   if (!food || !(food.kcal >= 0) || !isFinite(food.kcal)){ toast('Could not save this recipe'); return; }
   n.foods.push(food);
+  /* template reutilisable : ingredients d'origine (foodId + qty) */
+  if (!Array.isArray(n.recipes)) n.recipes = [];
+  n.recipes.push({
+    id: uid(), name: m.name, type: m.type || 'lunch',
+    items: (m.items || []).filter(it => it.foodId).map(it =>
+      ({ foodId: it.foodId, qty: +it.qty || 0, unit: it.unit || 'g', name: it.name }))
+  });
   save();
   renderNutriMeals();
   toast('"' + m.name + '" saved to Foods');
 }
 
+/* ---- recettes : liste dans Foods + reutilisee dans le builder ---- */
+function recipesSectionHtml(){
+  const n = nutriDB();
+  const list = (n.recipes || []);
+  if (!list.length) return '';
+  return '<div class="section-hint fx-head">Recipes<span class="fx-n">' + list.length + '</span></div>' +
+    '<div class="recipe-list">' + list.map(r => {
+      let kcal = 0;
+      (r.items || []).forEach(it => { const f = findNutriFood(it.foodId); if (f){ try { kcal += nutrientsFor(f, +it.qty || 0, it.unit || 'g').kcal; } catch (e){} } });
+      return '<div class="recipe-row">' +
+        '<span class="fi-main"><span class="fn">' + esc(r.name) + '</span>' +
+        '<span class="fm">' + (r.items || []).length + ' items · ' + Math.round(kcal) + ' kcal / batch</span></span>' +
+        '<span class="fi-acts">' +
+        '<button class="chip" onclick="useRecipe(' + esc(JSON.stringify(r.id)) + ')">Use</button>' +
+        '<button class="icon-btn" onclick="deleteRecipe(' + esc(JSON.stringify(r.id)) + ')" aria-label="Delete recipe">' + icon('trash') + '</button>' +
+        '</span></div>';
+    }).join('') + '</div>';
+}
+function useRecipe(id){
+  const n = nutriDB();
+  const r = (n.recipes || []).find(x => x.id === id);
+  if (!r) return;
+  nutriForm = 'meal';
+  nutriDraft = newDraft();
+  nutriDraft.name = r.name;
+  if (r.type) nutriDraft.type = r.type;
+  nutriDraft.items = (r.items || []).map(it => Object.assign({}, it));
+  showTab('nutri-meals');
+  toast('Recipe loaded into a new meal');
+}
+function deleteRecipe(id){
+  const n = nutriDB();
+  n.recipes = (n.recipes || []).filter(x => x.id !== id);
+  save();
+  renderNutriFoods();
+  toast('Recipe deleted');
+}
+
 /* ---- Foods : recherche (perso + base 690), favoris, recents, per 100 g ---- */
 function foodFormHtml(){
+  const bc = _pendingBarcode || '';
   return '<div class="card nutri-form food-form">' +
     '<div class="section-hint" style="margin-bottom:8px">Per 100 g — stored as typed.</div>' +
     '<label class="label" for="foodName">Name</label>' +
@@ -700,6 +867,14 @@ function foodFormHtml(){
     '<div><label class="label" for="foodF">Fat (g)</label>' +
     '<input class="input" id="foodF" type="number" inputmode="numeric" min="0" placeholder="0"></div>' +
     '</div>' +
+    '<div class="food-macros">' +
+    '<div><label class="label" for="foodFiber">Fiber (g)</label>' +
+    '<input class="input" id="foodFiber" type="number" inputmode="decimal" min="0" step="any" placeholder="—"></div>' +
+    '<div><label class="label" for="foodSugar">Sugar (g)</label>' +
+    '<input class="input" id="foodSugar" type="number" inputmode="decimal" min="0" step="any" placeholder="—"></div>' +
+    '</div>' +
+    '<label class="label" for="foodBarcode">Barcode (optional)</label>' +
+    '<input class="input" id="foodBarcode" inputmode="numeric" placeholder="Scan or type" value="' + esc(bc) + '">' +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="cancelNutriForm()">Cancel</button>' +
     '<button class="btn btn-primary btn-sm" onclick="submitFood()">Add</button>' +
@@ -710,10 +885,11 @@ function foodRowHtml(f, custom){
   const n = nutriDB();
   const fav = (n.favs || []).indexOf(f.id) >= 0;
   const kcal = Math.round(+f.kcal || 0);
+  const src = f.source === 'off' ? 'OFF' : f.source === 'usda' ? 'USDA' : null;
+  const tail = src ? ' · ' + src : custom ? ' · yours' : (f.state ? ' · ' + esc(f.state) : '');
   const meta = Math.round(+f.protein || +f.p || 0) + 'P / ' +
     Math.round(+f.carbs || +f.c || 0) + 'C / ' +
-    Math.round(+f.fat || +f.f || 0) + 'F' +
-    (custom ? ' · yours' : (f.state ? ' · ' + esc(f.state) : ''));
+    Math.round(+f.fat || +f.f || 0) + 'F' + tail;
   return '<div class="food-item">' +
     '<span class="fi-main"><span class="fn">' + esc(f.name) + '</span>' +
     '<span class="fm">' + meta + '</span></span>' +
@@ -728,6 +904,80 @@ function foodRowHtml(f, custom){
     '</span></div>';
 }
 
+/* ---- recherche distante (Open Food Facts + USDA), debounce + cache 90 j ---- */
+function scheduleRemoteSearch(q){
+  q = String(q || '').trim();
+  if (q.length < 2){ nutriRemoteState = { q: '', foods: [], loading: false, empty: false }; return; }
+  if (nutriRemoteState.q === q) return;   /* deja lance / charge pour cette requete */
+  clearTimeout(_remoteTimer);
+  if (q.length < 3){
+    /* raccourci : cache local seulement (pas d'appel par lettre) */
+    searchRemote(q, { skipRemote: true }).then(r => {
+      if (nutriRemoteState.q === q || true) nutriRemoteState = { q: q, foods: r.foods, loading: false, empty: false };
+      if (currentTab === 'nutri-foods') renderNutriFoods();
+    }).catch(() => {});
+    return;
+  }
+  nutriRemoteState = { q: q, foods: [], loading: true, empty: false };
+  _remoteTimer = setTimeout(() => {
+    searchRemote(q).then(r => {
+      nutriRemoteState = { q: q, foods: r.foods, loading: false, empty: r.remoteEmpty };
+      if (currentTab === 'nutri-foods') renderNutriFoods();
+    }).catch(() => {
+      if (nutriRemoteState.q === q){ nutriRemoteState = { q: q, foods: [], loading: false, empty: false }; }
+    });
+  }, 450);
+}
+
+function nutriRemoteResultsHtml(q){
+  const st = nutriRemoteState;
+  const qq = String(q || '').trim();
+  if (!st || st.q !== qq){
+    return st && st.loading && st.q === qq ? '<div class="section-hint">Searching the web…</div>' : '';
+  }
+  if (st.loading) return '<div class="section-hint">Searching the web…</div>';
+  if (!st.foods.length){
+    return st.empty ? '<div class="section-hint">No packaged product found on the web for “' + esc(qq) + '”.</div>' : '';
+  }
+  const n = nutriDB();
+  const shown = st.foods.filter(f => f && !n.foods.some(x => x && x.id === f.id));
+  if (!shown.length) return '';
+  return '<div class="section-hint fx-head">From the web<span class="fx-n">' + shown.length + '</span></div>' +
+    '<div class="food-list">' + shown.map(f => foodRowHtml(f, false)).join('') + '</div>' +
+    '<div class="section-hint">Open Food Facts · USDA — tap <b>Log</b> to save and use offline.</div>';
+}
+
+/* Log depuis une recherche distante : importe l'aliment puis logue (Snacks). */
+function logRemoteFood(id, grams, unit){
+  const n = nutriDB();
+  let f = findNutriFood(id);
+  if (!f) return;
+  f = ensureFoodPersisted(f);
+  const u = unit || defaultUnit(f);
+  const q = grams > 0 ? grams : defaultQty(u);
+  let snack = n.meals.find(m => m.date === nutriDate() && (m.type === 'snack' || m.name === 'Snacks'));
+  if (!snack){
+    snack = { id: uid(), date: nutriDate(), type: 'snack', name: 'Snacks', items: [] };
+    n.meals.push(snack);
+  }
+  snack.items.push({ foodId: f.id, qty: q, unit: u, name: f.name });
+  touchNutriRecent([f.id]);
+  save();
+  if (currentTab === 'nutri-foods') renderNutriFoods();
+  else if (currentTab === 'nutri-meals') renderNutriMeals();
+  else if (currentTab === 'nutri-today') renderNutriToday();
+  toast(f.name + ' logged');
+}
+
+/* Fiche perso pre-remplie avec un code-barres (produit introuvable). */
+let _pendingBarcode = null;
+function addFoodWithBarcode(code){
+  _pendingBarcode = isBarcodeFormat(code) ? String(code).trim() : null;
+  nutriForm = 'food';
+  showTab('nutri-foods');
+  setTimeout(() => { const el = $('foodName'); if (el) el.focus(); }, 60);
+}
+
 function renderNutriFoods(){
   const box = $('nutriFoods');
   if (!box) return;
@@ -738,6 +988,7 @@ function renderNutriFoods(){
   if (q){
     /* base lazy : on affiche le perso tout de suite, la base apres fetch */
     if (!foodsDbReady()) ensureFoodsDb('nutri-foods');
+    scheduleRemoteSearch(q);   /* debounce -> Open Food Facts + USDA */
     const cq = norm(q);
     const custom = n.foods.filter(f => norm(f.name).indexOf(cq) >= 0).slice(0, 10);
     const db = foodsDbReady() ? searchFoods(q, 20) : [];
@@ -752,7 +1003,9 @@ function renderNutriFoods(){
         ? 'No food matches “' + esc(q) + '”.'
         : 'Searching the database…') + '</div>';
     }
+    html += nutriRemoteResultsHtml(q);
   } else {
+    nutriRemoteState = { q: '', foods: [], loading: false, empty: false };
     const asRow = id => { const f = findNutriFood(id); return f ? { f: f, custom: n.foods.some(x => x.id === id) } : null; };
     const favs = (n.favs || []).map(asRow).filter(Boolean);
     const recents = (n.recents || []).slice(0, 10).map(asRow)
@@ -765,11 +1018,12 @@ function renderNutriFoods(){
     if (favs.length) html += fxSec('Favorites', favs);
     if (recents.length) html += fxSec('Recent', recents);
     if (mine.length) html += fxSec('Your foods', mine);
-    else if (!favs.length && !recents.length){
+    if ((n.recipes || []).length) html += recipesSectionHtml();
+    if (!favs.length && !recents.length && !mine.length && !(n.recipes || []).length){
       html += '<div class="empty">Your food list is empty — tap <b>+ Food</b> to add staples (per 100 g), or type to search the full database.</div>';
     }
     html += '<div class="section-hint" style="margin-top:10px">' +
-      'Type above to search 690+ foods (accents optional).</div>';
+      'Type above to search 690+ foods + the web, or <b>Scan</b> a barcode.</div>';
   }
   box.innerHTML = html;
 }
@@ -783,16 +1037,22 @@ function submitFood(){
   const name = ($('foodName') && $('foodName').value.trim()) || '';
   if (!name){ toast('Give the food a name.'); return; }
   const n = nutriDB();
+  const rd = id => { const el = $(id); return el && el.value !== '' ? +el.value : 0; };
   const f = {
     id: uid(), name: name,
-    kcal: +($('foodKcal') && $('foodKcal').value) || 0,
-    protein: +($('foodP') && $('foodP').value) || 0,
-    carbs: +($('foodC') && $('foodC').value) || 0,
-    fat: +($('foodF') && $('foodF').value) || 0
+    kcal: rd('foodKcal'),
+    protein: rd('foodP'),
+    carbs: rd('foodC'),
+    fat: rd('foodF')
   };
+  const fib = rd('foodFiber'); if (fib > 0) f.fiber = fib;
+  const sug = rd('foodSugar'); if (sug > 0) f.sugar = sug;
+  const bc = ($('foodBarcode') && $('foodBarcode').value.trim()) || _pendingBarcode || '';
+  if (isBarcodeFormat(bc)){ f.barcode = bc; f.source = 'custom'; }
   const chk = atwaterCheck(f);
   n.foods.push(f);
   nutriForm = null;
+  _pendingBarcode = null;
   save();
   renderNutriFoods();
   /* Atwater : on AVERTIT, on ne bloque jamais */
@@ -811,6 +1071,8 @@ function removeFood(id){
 
 function toggleNutriFav(id){
   const n = nutriDB();
+  const f = findNutriFood(id);
+  if (f) ensureFoodPersisted(f);
   const favs = n.favs || [];
   n.favs = favs.indexOf(id) >= 0 ? favs.filter(x => x !== id) : favs.concat([id]);
   save();
@@ -827,8 +1089,9 @@ function touchNutriRecent(ids){
 /* Log rapide : repas « Snacks » du jour (cree si besoin), qty par defaut. */
 function logFood(id){
   const n = nutriDB();
-  const f = findNutriFood(id);
+  let f = findNutriFood(id);
   if (!f) return;
+  f = ensureFoodPersisted(f);   /* distant -> n.foods pour rester resolvable */
   const unit = defaultUnit(f);
   const qty = defaultQty(unit);
   let snack = n.meals.find(m => m.date === todayISO() && (m.type === 'snack' || m.name === 'Snacks'));
@@ -843,29 +1106,39 @@ function logFood(id){
   toast(f.name + ' logged');
 }
 
-/* ---- Week : 7 derniers jours vs objectif + tendance poids ---- */
+/* ---- Week : fenêtre glissante (7 / 30 / 90 j) vs objectif + tendances ---- */
+let nutriWeekRange = 7;
+function setNutriWeekRange(v){ nutriWeekRange = v === 30 ? 30 : v === 90 ? 90 : 7; renderNutriWeek(); }
+
 function renderNutriWeek(){
   const box = $('nutriWeek');
   if (!box) return;
   const n = nutriDB();
   const goal = nutriActiveGoal(true);
   const goalK = goal && goal.kcal > 0 ? goal.kcal : 0;
+  const R = nutriWeekRange;
   const days = [];
-  for (let i = 6; i >= 0; i--){
+  for (let i = R - 1; i >= 0; i--){
     const date = nutriDateMinus(i);
     const meals = n.meals.filter(m => m.date === date);
-    let kcal = 0;
-    meals.forEach(m => { kcal += nutriMealTotal(m).n.kcal; });
-    days.push({ date: date, kcal: Math.round(kcal) });
+    let kcal = 0, protein = 0;
+    meals.forEach(m => { const x = nutriMealTotal(m).n; kcal += x.kcal; protein += x.protein; });
+    days.push({ date: date, kcal: Math.round(kcal), protein: Math.round(protein) });
   }
   const wk = weekSummary(days, goalK);
+  const last = days[days.length - 1].date;
+  /* bascule de fenêtre (défaut 7 : la vue historique reste intacte) */
+  const seg = '<div class="seg-row" role="group" aria-label="Range">' +
+    [7, 30, 90].map(v => '<button type="button" class="seg' + (R === v ? ' active' : '') +
+      '" onclick="setNutriWeekRange(' + v + ')">' + v + 'd</button>').join('') + '</div>';
 
   if (!wk.loggedDays){
-    box.innerHTML = '<div class="empty">Nothing logged this week yet — your week appears here after your first meal.</div>';
+    box.innerHTML = seg + '<div class="empty">Nothing logged ' + (R === 7 ? 'this week' : 'in this period') +
+      ' yet — it appears here after your first meal.</div>';
     return;
   }
 
-  let html = '<div class="card"><div class="section-hint">Last 7 days</div>';
+  let html = seg + '<div class="card"><div class="section-hint">Last ' + R + ' days</div>';
   days.forEach(d => {
     const p = goalK ? progress(d.kcal, goalK) : { pct: 0 };
     const cls = p.status === 'ok' ? 'ok' : p.status === 'over' ? 'over' : '';
@@ -885,16 +1158,23 @@ function renderNutriWeek(){
     '<div class="week-stat"><b>' + wk.loggedDays + '</b><span>days logged</span></div>' +
     '<div class="week-stat"><b>' + wk.avgKcal + '</b><span>avg kcal</span></div>' +
     (goalK
-      ? '<div class="week-stat"><b>' + wk.daysOnTarget + '/7</b><span>days on target (±10%)</span></div>'
+      ? '<div class="week-stat"><b>' + wk.daysOnTarget + '/' + R + '</b><span>days on target (±10%)</span></div>'
       : '<div class="week-stat"><b>—</b><span>set a goal in Goal</span></div>') +
     '</div>';
   if (goalK && wk.loggedDays){
     html += '<div class="section-hint" style="margin-top:8px">Avg vs goal: ' +
       (wk.avgDeltaKcal >= 0 ? '+' : '') + wk.avgDeltaKcal + ' kcal</div>';
   }
+  /* tendance protéines (moyenne des jours saisis) */
+  const logged = days.filter(d => d.protein > 0);
+  if (logged.length){
+    const avgP = Math.round(logged.reduce((s, d) => s + d.protein, 0) / logged.length);
+    html += '<div class="section-hint">Protein avg: <b>' + avgP + ' g</b>' +
+      (goal.p ? ' · target ' + goal.p + ' g' : '') + '</div>';
+  }
   /* tendance poids sur la fenêtre affichée */
   const wlog = ((window.DB && Array.isArray(DB.weightLog)) ? DB.weightLog : [])
-    .filter(e => e && +e.kg > 0 && String(e.date) >= days[0].date && String(e.date) <= days[6].date)
+    .filter(e => e && +e.kg > 0 && String(e.date) >= days[0].date && String(e.date) <= last)
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
   if (wlog.length >= 2){
     const dlt = Math.round((+wlog[wlog.length - 1].kg - +wlog[0].kg) * 10) / 10;
@@ -1130,6 +1410,21 @@ function renderNutriGoal(){
       '</div>';
   }
 
+  /* objectifs additionnels : hydratation + fibres (recalcules depuis le poids / kcal) */
+  const wGoal = nutriWaterGoal();
+  const fGoal = nutriFiberGoal();
+  html += '<div class="card" id="nutriExtraGoals">' +
+    '<div class="nutri-meal-name" style="margin-bottom:10px">Daily targets</div>' +
+    row('Fiber', (fGoal ? fGoal + ' g' : '—')) +
+    row('Water', wGoal + ' ml') +
+    '<div class="nutri-form-row" style="margin-top:8px">' +
+    '<div><label class="label" for="waterGoalInput">Water goal (ml)</label>' +
+    '<input class="input" id="waterGoalInput" type="number" inputmode="numeric" min="0" max="8000" step="50" value="' + wGoal + '"></div>' +
+    '</div>' +
+    '<button class="chip" style="margin-top:8px" onclick="saveWaterGoal()">Save water goal</button>' +
+    '<div class="section-hint">Fiber ≈ 14 g / 1 000 kcal. Water ≈ 35 ml / kg (editable).</div>' +
+    '</div>';
+
   /* objectif manuel (avancé) : conservé tel quel — repli si ni plan ni Custom */
   const g = nutriDB().goal;
   html += '<div class="card nutri-form" style="margin-top:12px">' +
@@ -1220,5 +1515,11 @@ Object.assign(window, {
   saveNutriProfile, applyAdaptive, saveNutriGoal,
   /* M2 : objectif custom */
   nutriCustomGoal, setCalcMode, setKcalSource, setMacroMode, setCustomPreset, customFieldChange,
-  MACRO_PRESETS, targetsFromPercent, targetsFromPerKg
+  MACRO_PRESETS, targetsFromPercent, targetsFromPerKg,
+  /* chantier Nutrition : multi-jour, eau, recettes, recherche web, scanner, semaine */
+  nutriPrevDay, nutriNextDay, nutriGotoToday,
+  addWater, logWater, saveWaterGoal,
+  useRecipe, deleteRecipe,
+  logRemoteFood, addFoodWithBarcode,
+  setNutriWeekRange
 });

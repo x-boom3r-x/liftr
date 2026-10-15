@@ -233,3 +233,21 @@ export function adaptiveAdjustment({ goal, expectedKgPerWeek, observedKgPerWeek,
   const delta = (Math.max(-150, Math.min(150, Math.round(-(errKgWk * KCAL_PER_KG_FAT) / 7 / 2 / 10) * 10))) || 0;   // || 0 : évite -0
   return { deltaKcal: delta, reason: Math.abs(delta) < 30 ? 'on_track' : 'adjust' };
 }
+
+/* ---------- 5. objectifs additionnels (eau, fibres) — chantier Nutrition ---------- */
+
+/**
+ * Hydratation quotidienne : ~35 ml / kg (fourchette 1,5–4 L), arrondie à 100 ml.
+ * Simple heuristique populaire, pas un avis médical.
+ */
+export function waterGoalMl({ weightKg }) {
+  const w = +weightKg || 0;
+  if (!(w > 0)) return 2000;
+  return Math.min(4000, Math.max(1500, Math.round((w * 35) / 100) * 100));
+}
+
+/** Fibres : ~14 g pour 1 000 kcal (apport usuel), arrondi à l'entier. */
+export function fiberTargetG(kcal) {
+  const k = +kcal || 0;
+  return k > 0 ? Math.round((k / 1000) * 14) : 0;
+}
