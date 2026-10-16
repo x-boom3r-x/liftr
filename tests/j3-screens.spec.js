@@ -76,7 +76,6 @@ test.describe('J3 : ecrans Nutrition', () => {
     await page.locator('#tab-nutri-meals button:has-text("+ Meal")').click();
 
     await page.fill('#mealName', 'Breakfast');
-    await page.selectOption('#mealType', 'breakfast');
     await page.fill('#mealFoodSearch', 'Oats');
     await page.locator('#nutriMeals .food-pick').first().click();
 
@@ -110,9 +109,8 @@ test.describe('J3 : ecrans Nutrition', () => {
 
     const st = await page.evaluate(() => {
       const m = DB.nutri.meals.find(x => x.name === 'Breakfast');
-      return { type: m.type, items: m.items };
+      return { items: m.items };
     });
-    expect(st.type).toBe('breakfast');
     expect(st.items).toHaveLength(1);
     expect(st.items[0].foodId).toBe('oats');
     expect(st.items[0].qty).toBe(500);

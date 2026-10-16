@@ -1,7 +1,7 @@
 /* ==================================================================
    NUTRI-SCAN (chantier Nutrition) — scanner de codes-barres par caméra.
-   html5-qrcode (Apache-2.0) est vendorisé dans js/vendor/ et chargé à
-   la demande (lazy) : pas de poids au boot. Le décodage natif
+   quagga2 (@ericblade/quagga2, MIT) est vendorisé dans js/vendor/ et
+   chargé à la demande (lazy) : pas de poids au boot. Le décodage natif
    BarcodeDetector n'existe pas sur Safari/iPhone → lib nécessaire.
    Flux : ouvrir caméra -> décodage EAN/UPC -> lookup OFF -> fiche
    produit -> quantité -> ajout au repas/jour. Gère : HTTPS requis,
@@ -11,20 +11,24 @@
 import { nutrientsFor } from './nutrition.js';
 import { lookupBarcode, importRemoteFood } from './nutri-remote.js';
 
-const VENDOR_QR = 'js/vendor/html5-qrcode.js';
-let _scanner = null;          /* instance Html5Qrcode */
+const VENDOR_QUAGGA = 'js/vendor/quagga2.js';
+/* EAN-13/EAN-8/UPC-A (via ean_reader)/UPC-E — formats produits Open Food Facts */
+const QUAGGA_READERS = ['ean_reader', 'ean_8_reader', 'upc_e_reader'];
 let _scanState = null;        /* { food, code } résultat courant */
+let _scanActive = false;      /* décodage actif (caméra ouverte) */
+let _lookupBusy = false;      /* anti-rebond pendant un lookup */
+let _boundDetect = false;     /* handler onDetected monté une seule fois */
 
 function scanModal(){ return document.getElementById('scanModal'); }
 function scanRegion(){ return document.getElementById('scanRegion'); }
 
-function lazyLoadQr(){
-  if (window.Html5Qrcode) return Promise.resolve(true);
+function lazyLoadQuagga(){
+  if (window.Quagga) return Promise.resolve(true);
   if (scanLoadPromise) return scanLoadPromise;
   scanLoadPromise = new Promise(resolve => {
     const s = document.createElement('script');
-    s.src = VENDOR_QR;
-    s.onload = () => resolve(true);
+    s.src = VENDOR_QUAGGA;
+    s.onload = () => resolve(!!window.Quagga);
     s.onerror = () => resolve(false);
     document.head.appendChild(s);
   });
@@ -61,7 +65,7 @@ async function openScanner(){
     '<div class="scan-msg" id="scanStatus">Starting the camera…</div>' +
     '<div class="composer-actions"><button class="chip" onclick="closeScanner()">Cancel</button></div>');
 
-  const ok = await lazyLoadQr();
+  const ok = await lazyLoadQuagga();
   if (!ok){
     scanSet('<div class="scan-msg">Scanner library failed to load. Add the product by name instead.</div>' +
       '<div class="composer-actions"><button class="btn btn-primary" onclick="scanToManual()">Search manually</button>' +
@@ -71,65 +75,84 @@ async function openScanner(){
   startCamera();
 }
 
-function startCamera(){
-  const region = scanRegion();
-  const status = document.getElementById('scanStatus');
-  if (!region || !window.Html5Qrcode) return;
-  const fmts = window.Html5QrcodeSupportedFormats;
-  const formats = fmts ? [fmts.EAN_13, fmts.EAN_8, fmts.UPC_A, fmts.UPC_E] : undefined;
-  try {
-    _scanner = new window.Html5Qrcode(region.id, { formatsToSupport: formats, verbose: false });
-  } catch (e){
-    if (status) status.textContent = 'Could not start the camera.';
-    return;
-  }
-  const cfg = { fps: 10, qrbox: { width: 230, height: 150 } };
-  _scanner.start({ facingMode: 'environment' }, cfg,
-    /* succès */
-    decoded => onDecoded(String(decoded)),
-    /* erreurs de fréquence : ignorées (pas un vrai échec) */
-    () => {}
-  ).catch(err => {
-    const name = err && (err.name || err.message || '');
-    const denied = /NotAllowed|Permission|denied|SecurityError/i.test(name);
-    if (status) status.textContent = denied
-      ? 'Camera permission denied. Allow camera access, or add the product by name.'
-      : 'Could not open the camera on this device.';
-    const acts = document.querySelector('#scanBody .composer-actions');
-    if (acts && denied){
-      acts.insertAdjacentHTML('afterbegin',
-        '<button class="btn btn-primary" onclick="scanToManual()">Search manually</button>');
-    }
+function bindDetect(){
+  if (_boundDetect || !window.Quagga) return;
+  _boundDetect = true;
+  window.Quagga.onDetected(det => {
+    if (!_scanActive) return;
+    const code = det && det.codeResult && det.codeResult.code;
+    if (code) onDecoded(String(code));
   });
 }
 
+function startCamera(){
+  const region = scanRegion();
+  const status = document.getElementById('scanStatus');
+  if (!region || !window.Quagga) return;
+  _scanActive = false;
+  try {
+    window.Quagga.init({
+      inputStream: {
+        name: 'Live',
+        type: 'LiveStream',
+        target: region,
+        constraints: { width: 640, height: 480, facingMode: 'environment' }
+      },
+      decoder: { readers: QUAGGA_READERS, multiple: false },
+      locate: true,
+      frequency: 10
+    }, err => {
+      if (err){
+        const name = (err && (err.name || err.message || err)) || '';
+        const denied = /NotAllowed|Permission|denied|SecurityError|Could not start/i.test(String(name));
+        if (status) status.textContent = denied
+          ? 'Camera permission denied. Allow camera access, or add the product by name.'
+          : 'Could not open the camera on this device.';
+        const acts = document.querySelector('#scanBody .composer-actions');
+        if (acts && denied){
+          acts.insertAdjacentHTML('afterbegin',
+            '<button class="btn btn-primary" onclick="scanToManual()">Search manually</button>');
+        }
+        return;
+      }
+      if (status) status.textContent = 'Point the camera at the barcode.';
+      bindDetect();
+      _scanActive = true;
+    });
+  } catch (e){
+    if (status) status.textContent = 'Could not start the camera.';
+  }
+}
+
 function stopCamera(){
-  if (_scanner){
-    try {
-      const p = _scanner.stop();
-      if (p && p.then) p.catch(() => {});
-    } catch (e){}
-    _scanner = null;
+  _scanActive = false;
+  if (window.Quagga){
+    try { window.Quagga.stop(); } catch (e){}
   }
 }
 
 async function onDecoded(code){
-  /* anti-rebond : une seule fiche par scan */
+  /* anti-rebond : un seul lookup à la fois, une seule fiche par code */
+  if (_lookupBusy) return;
   if (_scanState && _scanState.code === code) return;
+  _lookupBusy = true;
+  _scanActive = false;                 /* fige le décodage pendant le lookup */
   const status = document.getElementById('scanStatus');
   if (status) status.textContent = 'Looking up ' + code + '…';
-  const res = await lookupBarcode(code);
-  if (res.invalid){
+  let res;
+  try { res = await lookupBarcode(code); }
+  catch (e){ res = { invalid: true }; }
+  if (res && res.invalid){
     if (status) status.textContent = 'That doesn’t look like a valid barcode. Try another.';
+    _scanActive = true;                /* reprend la visée */
+    _lookupBusy = false;
     return;
   }
   stopCamera();
+  _lookupBusy = false;
   _scanState = { food: res.food, code: code };
-  if (res.food){
-    renderScanFood(res.food);
-  } else {
-    renderScanNotFound(code, res.offline);
-  }
+  if (res.food) renderScanFood(res.food);
+  else renderScanNotFound(code, res.offline);
 }
 
 /* ---- fiche produit trouvé ---- */

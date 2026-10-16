@@ -1,5 +1,5 @@
-/* Chantier Nutrition (build 74) : multi-jour, eau, fibres, recettes,
-   recherche web (Open Food Facts + USDA), codes-barres / scanner.
+/* Chantier Nutrition : multi-jour, eau, fibres, recettes,
+   recherche web (Open Food Facts + USDA), codes-barres / scanner (quagga2).
    Aucune regression des 5 sous-onglets Today/Meals/Foods/Goal/Week :
    les screens existants (j1/j2/j3/m2/f-roots) restent la reference. */
 const { test, expect } = require('@playwright/test');
@@ -32,7 +32,7 @@ const USDA_WHEAT = {
   ]
 };
 
-test.describe('Chantier Nutrition (build 74)', () => {
+test.describe('Chantier Nutrition', () => {
 
   test('helpers purs : codes-barres (format + modulo-10) via LiftrRemote', async ({ page }) => {
     await seed(page, {}, 'Mouataz');

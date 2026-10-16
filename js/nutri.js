@@ -404,7 +404,7 @@ function nutriMealCard(m, editable){
     '<div class="meal-head">' +
     '<span class="meal-dot ' + esc(type) + '" aria-hidden="true"></span>' +
     '<div class="meal-title"><div class="meal-name">' + esc(m.name) + '</div>' +
-    '<div class="meal-sub">' + mealTypeLabel(type) + ' · ' + Math.round(t.protein) + 'P / ' +
+    '<div class="meal-sub">' + Math.round(t.protein) + 'P / ' +
     Math.round(t.carbs) + 'C / ' + Math.round(t.fat) + 'F</div></div>' +
     '<div class="meal-head-right"><span class="meal-kcal">' + Math.round(t.kcal) +
     ' <small>kcal</small></span>' + acts + '</div>' +
@@ -560,7 +560,7 @@ function mealTypeLabel(t){
 function newDraft(){
   const h = new Date().getHours();
   const type = h < 11 ? 'breakfast' : h < 16 ? 'lunch' : 'dinner';
-  return { id: null, type: type, name: mealTypeLabel(type), items: [], pick: null, q: '' };
+  return { id: null, type: type, name: '', items: [], pick: null, q: '' };
 }
 function draftFromMeal(m){
   return { id: m.id, type: m.type || 'lunch', name: m.name || 'Meal',
@@ -711,8 +711,6 @@ function mealBuilderHtml(){
       yMeals.map(m => '<button type="button" class="chip" onclick="copyYestMeal(' +
         esc(JSON.stringify(m.id)) + ')">' + esc(m.name) + '</button>').join('') + '</div>'
     : '';
-  const typeOpts = MEAL_TYPES.map(([v, l]) =>
-    '<option value="' + v + '"' + (d.type === v ? ' selected' : '') + '>' + l + '</option>').join('');
   const itemsCard = d.items.length
     ? '<div class="card meal-card builder-items">' +
       d.items.map((it, i) =>
@@ -747,11 +745,8 @@ function mealBuilderHtml(){
   return '<div class="card nutri-form builder-form">' +
     '<input class="input" id="mealName" placeholder="Meal name" maxlength="60" value="' + esc(d.name) + '"' +
     ' oninput="mealNameInput(this.value)">' +
-    '<div class="nutri-form-row builder-row">' +
-    '<select class="input" id="mealType" aria-label="Meal type" onchange="mealTypeChange(this.value)">' + typeOpts + '</select>' +
     '<input class="input builder-search" id="mealFoodSearch" placeholder="Search foods…" aria-label="Search foods to add"' +
     ' value="' + esc(d.q || '') + '" oninput="mealSearchInput(this.value)">' +
-    '</div>' +
     (d.pick ? itemEditorHtml() : mealPickResultsHtml(d)) +
     copyRow + itemsCard + totals +
     '<div class="composer-actions">' +
@@ -875,9 +870,9 @@ function renderNutriMeals(){
   const open = nutriForm === 'meal' && !!nutriDraft;
   let html = nutriCalendarStripHtml() + nutriDaySummaryHtml(date);
   if (open) html += mealBuilderHtml();
-  MEAL_TYPES.forEach(([type]) => { html += nutriMealSectionHtml(type, meals); });
+  if (meals.length) html += '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, true)).join('') + '</div>';
   if (!meals.length && !open){
-    html += '<div class="empty" style="margin-top:14px">Nothing logged yet — tap <b>+</b> on a meal above.</div>';
+    html += '<div class="empty" style="margin-top:14px">Nothing logged yet.</div>';
   }
   box.innerHTML = html;
   if (open){
@@ -952,7 +947,7 @@ function saveMealDraft(){
   if (d.pick) addDraftItem();   /* ligne en cours de saisie : ajoutee aussi */
   if (!nutriDraft || !nutriDraft.items.length){ toast('Add at least one food'); return; }
   const dd = nutriDraft;
-  const name = (dd.name || '').trim() || mealTypeLabel(dd.type);
+  const name = (dd.name || '').trim() || 'Meal';
   const items = dd.items.map(it => it.foodId
     ? { foodId: it.foodId, qty: +it.qty || 0, unit: it.unit || 'g', name: it.name }
     : Object.assign({}, it));
