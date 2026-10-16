@@ -61,6 +61,10 @@ import {
   resetNotes, pickNoteMusic
 } from './notes.js';
 import {
+  openNotifications, closeNotifications, loadNotifications,
+  refreshNotifBadge, markAllRead, initNotifications, resetNotifications
+} from './notifications.js';
+import {
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount
 } from './account.js';
 import {
@@ -116,6 +120,8 @@ Object.assign(window, {
   cycleStoryFont, toggleStoryStyle, storyAgain, closeStoryComposer, renderStageText,
   renderNotes, initNotes, openNoteComposer, submitNote, removeNote,
   resetNotes, pickNoteMusic,
+  openNotifications, closeNotifications, loadNotifications,
+  refreshNotifBadge, markAllRead, initNotifications,
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,
   togglePrivateEdit,
   openImageEditor, closeEditor, useEditedImage, initEditor,
@@ -164,6 +170,7 @@ function initSocial(){
   initMusic();
   initAutoplay();
   initEditor();
+  initNotifications();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
   window.routeSharedLink = routeSharedLink;
   window.addEventListener('hashchange', routeSharedLink);

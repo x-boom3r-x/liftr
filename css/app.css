@@ -954,6 +954,24 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .person-meta{font-size:.73rem;color:var(--text3);margin-top:2px}
 .person-bio{font-size:.75rem;color:var(--text2);margin-top:4px;line-height:1.4}
 .person .btn{flex:none;min-width:92px}
+/* Centre de notifications (social) */
+.chip-dot{
+  min-width:14px;height:14px;padding:0 3px;border-radius:999px;
+  background:var(--gx2);color:#fff;font-size:.58rem;font-weight:800;
+  display:grid;place-items:center;line-height:1
+}
+.notif-list{display:flex;flex-direction:column;gap:9px;max-height:56vh;overflow-y:auto;padding-right:2px;margin-top:12px}
+.notif{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:14px;padding:11px 12px;color:inherit;font:inherit;cursor:pointer;
+}
+.notif-avatar{width:38px;height:38px;border-radius:12px;flex:none;overflow:hidden;padding:0;display:grid;place-items:center;background:var(--surface3);font-weight:800;color:var(--text2)}
+.notif-body{min-width:0;flex:1}
+.notif-text{display:block;font-size:.85rem;line-height:1.35;color:var(--text)}
+.notif-time{display:block;font-size:.72rem;color:var(--text3);margin-top:3px}
+.notif-pip{width:9px;height:9px;border-radius:999px;background:var(--primary);flex:none}
+.notif-unread{border-color:var(--primary);background:var(--primary-dim)}
 /* L5 — section « Requests » (demandes reçues) */
 .people-sec{
   font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;

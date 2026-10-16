@@ -100,6 +100,7 @@ export async function signOutSocial(){
   if (typeof window.resetProfile === 'function') window.resetProfile();
   if (typeof window.resetSearch === 'function') window.resetSearch();
   if (typeof window.resetInbox === 'function') window.resetInbox();
+  if (typeof window.resetNotifications === 'function') window.resetNotifications();
   if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
 }
 
@@ -108,7 +109,12 @@ export async function signOutSocial(){
 function adoptUser(user){
   window.socialUser = user || null;
   if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
-  if (window.socialUser) ensureMyProfile();
+  if (window.socialUser){
+    ensureMyProfile();
+    if (typeof window.refreshNotifBadge === 'function'){
+      try { window.refreshNotifBadge(); } catch(e){}
+    }
+  }
 }
 
 /* Endpoint Supabase — pur, testable sans navigateur. */

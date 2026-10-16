@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v76';
+const CACHE_NAME = 'liftr-v77';
 
 const ASSETS = [
   './',
@@ -62,6 +62,7 @@ const ASSETS = [
   './js/social/rings.js',
   './js/social/stories.js',
   './js/social/notes.js',
+  './js/social/notifications.js',
   './js/social/account.js',
   './js/social/index.js',
   './manifest.json',

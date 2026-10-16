@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="76">
+<html lang="en" data-build="77">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -349,6 +349,10 @@
         </nav>
       </div>
       <div class="feed-actions">
+        <button type="button" class="chip" id="notifBtn" onclick="openNotifications()" aria-label="Notifications">
+          Notifications
+          <span class="chip-dot hidden" id="notifDot" aria-hidden="true"></span>
+        </button>
         <button class="chip" id="peopleBtn" onclick="openPeople()">People</button>
         <button class="chip" onclick="signOutSocial()">Sign out</button>
       </div>
@@ -647,6 +651,19 @@
     <div class="modal-title">People</div>
     <div class="modal-sub" id="peopleSub">Lifters on Liftr — follow them to build your crew.</div>
     <div id="peopleList" class="people-list" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- Notifications -->
+<div class="overlay" id="notifModal" onclick="if(event.target===this)closeNotifications()">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-title">Notifications</div>
+    <div class="modal-sub" id="notifSub">Likes, comments and new followers.</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-sm btn-ghost" onclick="markAllRead()">Mark all read</button>
+    </div>
+    <div id="notifList" class="notif-list" aria-live="polite"></div>
   </div>
 </div>
 
