@@ -903,6 +903,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .comment-list{display:flex;flex-direction:column;gap:12px;max-height:46vh;overflow-y:auto;padding-right:2px}
 .comment-empty{font-size:.83rem;color:var(--text3);text-align:center;padding:22px 8px}
 .comment{display:flex;gap:10px;align-items:flex-start;margin-left:var(--cd,0px)}
+.comment-pending{opacity:.55}
 .comment-avatar{width:32px;height:32px;border-radius:10px;font-size:.8rem;flex:none;overflow:hidden;padding:0}
 .comment-main{
   min-width:0;flex:1;background:var(--surface2);

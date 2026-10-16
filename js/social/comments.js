@@ -20,6 +20,7 @@ let sending = false;
 let postCur = null;     /* post affiché — porte comments_enabled */
 let expanded = false;   /* liste dépliée */
 let replyTo = null;     /* commentaire auquel on répond */
+let pendingSeq = 0;     /* id local des commentaires en attente (optimiste) */
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -35,7 +36,8 @@ function commentHtml(r, depth){
     ? '<img class="post-avatar-img" src="' + esc(a.avatar_url) + '" alt="">'
     : esc(String(name).trim().charAt(0).toUpperCase() || '?');
   const cd = Math.min(depth, 3) * 16;
-  return '<div class="comment" style="--cd:' + cd + 'px">' +
+  /* ligne optimiste (en attente du serveur) : atténuée, sans Reply */
+  return '<div class="comment' + (r.pending ? ' comment-pending' : '') + '" style="--cd:' + cd + 'px">' +
     '<button type="button" class="avatar comment-avatar' + storyRingClass(r.author_id) +
       '" data-act="profile" data-uid="' + esc(r.author_id || '') + '" ' +
       'aria-label="Open profile">' + avatar + '</button>' +
@@ -46,7 +48,8 @@ function commentHtml(r, depth){
         '<span class="comment-time">' + esc(timeAgo(r.created_at)) + '</span>' +
       '</div>' +
       '<div class="comment-body">' + esc(r.body) + '</div>' +
-      '<button type="button" class="comment-reply" data-reply="' + esc(r.id || '') + '">Reply</button>' +
+      (r.pending ? '' :
+        '<button type="button" class="comment-reply" data-reply="' + esc(r.id || '') + '">Reply</button>') +
     '</div>' +
     '</div>';
 }
@@ -234,34 +237,68 @@ export async function submitComment(){
   const user = window.socialUser || {};
   if (!c || !user.id){ toast('Sign in to comment.'); return false; }
 
-  const payload = { author_id: user.id, post_id: postId, body: body };
-  if (replyTo && replyTo.id){
-    payload.parent_id = replyTo.id;
-    payload.root_id = replyTo.root_id || replyTo.id;
-  }
-
+  /* --------- insertion optimiste : la ligne apparaît tout de suite ---- */
   const btn = el('commentSubmit');
+  const savedReply = replyTo;
+  const tmpId = 'pending-' + (++pendingSeq) + '-' + Date.now();
+  const um = user.user_metadata || {};
+  const dname = um.display_name || um.name ||
+    (user.email ? String(user.email).split('@')[0] : '') || 'You';
+  const optimistic = {
+    id: tmpId,
+    body: body,
+    created_at: new Date().toISOString(),
+    post_id: postId,
+    author_id: user.id,
+    parent_id: (savedReply && savedReply.id) ? savedReply.id : null,
+    root_id: (savedReply && (savedReply.root_id || savedReply.id)) || null,
+    pending: true,
+    author: { username: um.username || null, display_name: dname, avatar_url: null }
+  };
+
   sending = true;
   if (btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+  rows = rows.concat([optimistic]);
+  expanded = true;                    /* la nouvelle réponse se voit */
+  replyTo = null;
+  setChip(false);
+  clearBody();
+  render();
+
   try {
     /* parent_id / root_id n'existent pas avant v8 : withMissingFields
        les retire du payload (la réponse retombe en racine) et du select. */
+    const payload = { author_id: user.id, post_id: postId, body: body };
+    if (savedReply && savedReply.id){
+      payload.parent_id = savedReply.id;
+      payload.root_id = savedReply.root_id || savedReply.id;
+    }
     const res = await withMissingFields(
       (p, cols) => c.from('comments').insert(p).select(cols),
       payload, CMT_SELECT
     );
     if (res.error) throw new Error(res.error.message || 'Could not post your comment.');
 
+    /* la ligne serveur (vrai id, avatar, horodatage) remplace la locale */
     const row = Array.isArray(res.data) ? res.data[0] : res.data;
-    if (row) rows = rows.concat([row]);
-    expanded = true;                    /* la nouvelle réponse se voit */
-    replyTo = null;
-    setChip(false);
-    clearBody();
+    rows = row
+      ? rows.map(r => (r.id === tmpId ? row : r))
+      : rows.filter(r => r.id !== tmpId);
     render();
     if (typeof window.refreshCounts === 'function') window.refreshCounts();
     return true;
   } catch(e){
+    /* rollback : on retire la ligne et on rend le brouillon + la cible */
+    rows = rows.filter(r => r.id !== tmpId);
+    replyTo = savedReply || null;
+    if (savedReply){
+      const a = savedReply.author || {};
+      setChip(true, a.username || a.display_name || 'Athlete');
+    }
+    const box = el('commentBody');
+    if (box) box.value = body;
+    updateCommentComposer();
+    render();
     toast((e && e.message) || 'Could not post your comment.');
     return false;
   } finally {
