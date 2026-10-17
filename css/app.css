@@ -1089,6 +1089,99 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
    se colle pile sous le header grâce à sticky + cette marge. */
 #rootSubnav{margin-top:18px}
 
+/* ---------- Layout clone : barre sociale en bas + bouton Create ---------- */
+#tab-feed{padding-bottom:134px}
+.feed-bell{position:relative;flex:0 0 auto}
+.feed-bell svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.feed-bell .chip-dot{position:absolute;top:2px;right:2px}
+
+.socialnav{
+  position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:40;
+  display:flex;align-items:center;gap:2px;padding:6px 72px 7px 6px;
+  background:var(--glass),rgba(15,15,18,.94);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:var(--glass-b);
+}
+.socialnav .snav-item{flex:1;flex-direction:column;gap:2px;padding:5px 2px;border-radius:12px;min-width:0}
+.socialnav .snav-lbl{font-size:.56rem}
+.socialnav .snav-dot{top:2px;right:calc(50% - 16px)}
+.snav-create{flex:0 0 auto !important;width:44px}
+.snav-create .snav-ico{display:grid;place-items:center;width:38px;height:30px;border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),#ff8f5e);color:#12121a;
+  box-shadow:0 4px 14px rgba(255,107,53,.4)}
+.snav-create .snav-ico svg{width:22px;height:22px;stroke:#12121a;stroke-width:2.2}
+.snav-create:active .snav-ico{transform:scale(.94)}
+
+/* le FAB garde son contrat (bottom = --tabbar-h + 14, lu par app-shell)
+   mais passe au-dessus de la barre sociale (z-index) pour ne pas être
+   enterré par le fond de la nav ; la nav réserve la gouttière de droite. */
+#newPostFab{z-index:50}
+
+/* ---------- Reels : 1 image par écran, scroll-snap vertical ---------- */
+#view-reels{height:calc(100vh - 171px - var(--tabbar-h) - 61px);border-radius:16px;overflow:hidden}
+.reels-list{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:#000}
+.reel{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;
+  overflow:hidden;background:#000}
+.reel-media{position:absolute;inset:0}
+.reel-img{width:100%;height:100%;object-fit:cover;display:block}
+.reel-scrim{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(0,0,0,.55) 0%,rgba(0,0,0,0) 34%,rgba(0,0,0,0) 66%,rgba(0,0,0,.28) 100%)}
+.reel-meta{position:absolute;left:0;right:76px;bottom:16px;z-index:2;padding:0 14px;color:#fff}
+.reel-row{display:flex;align-items:center;gap:10px}
+.reel-who{display:flex;align-items:center;gap:8px;background:none;border:0;padding:0;color:#fff;
+  -webkit-tap-highlight-color:transparent}
+.reel-avatar{width:36px;height:36px;flex:0 0 auto}
+.reel-name{font-weight:800;font-size:.9rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.reel-follow{margin-left:2px;padding:4px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.85);
+  background:transparent;color:#fff;font-size:.74rem;font-weight:800;letter-spacing:.02em}
+.reel-follow.on{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.75)}
+.reel-caption{margin-top:10px;font-size:.86rem;line-height:1.32;color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.5);display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden}
+.reel-audio{margin-top:8px}
+.reel-audio .mchip{display:inline-flex;align-items:center;gap:6px;max-width:200px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:999px;
+  padding:3px 10px;color:#fff}
+.reel-audio .mchip svg{width:13px;height:13px;flex:0 0 auto;fill:none;stroke:#fff;stroke-width:1.8}
+.reel-audio .mchip-run{font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.reel-rail{position:absolute;right:8px;bottom:20px;z-index:2;display:flex;flex-direction:column;
+  align-items:center;gap:18px;color:#fff}
+.reel-act{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;
+  color:#fff;-webkit-tap-highlight-color:transparent}
+.reel-act .reel-ico{display:grid;place-items:center;width:30px;height:30px}
+.reel-act .reel-ico svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
+.reel-act .reel-n{font-size:.7rem;font-weight:800;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.reel-like.on .reel-ico svg{fill:var(--red);stroke:var(--red)}
+.reel-author-thumb{width:34px;height:34px;border-radius:8px;overflow:hidden;border:2px solid #fff;
+  display:grid;place-items:center;background:#333;font-weight:800;color:#fff;margin-top:4px}
+.reel-author-thumb .post-avatar-img{width:100%;height:100%;object-fit:cover}
+
+.reel-burst{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.4);
+  z-index:3;pointer-events:none;color:#fff;animation:reelBurst .9s ease forwards}
+.reel-burst svg{width:96px;height:96px;fill:#fff;stroke:#fff;filter:0 4px 16px rgba(0,0,0,.4)}
+@keyframes reelBurst{
+  0%{transform:translate(-50%,-50%) scale(.4);opacity:0}
+  20%{transform:translate(-50%,-50%) scale(1.15);opacity:1}
+  45%{transform:translate(-50%,-50%) scale(1);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(1.35);opacity:0}
+}
+.reel-empty{padding-top:48px}
+
+/* ---------- Timeline : grille d'exploration (mosaïque 3 colonnes) ---------- */
+.tl-search{width:100%;margin-bottom:10px;text-align:left;cursor:pointer;font:inherit}
+.tl-search-ph{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--text3)}
+.tl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;grid-auto-flow:dense}
+.tl-tile{position:relative;padding:0;border:0;background:#151519;aspect-ratio:1;
+  overflow:hidden;border-radius:4px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tl-tile.wide{grid-column:span 2;aspect-ratio:2/1}
+.tl-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tl-tile:active img{transform:scale(.97);transition:transform .12s}
+
 /* ---------- Nutrition ---------- */
 .nutri-kcal{text-align:center;padding:18px 14px}
 .nutri-kcal-num{font-size:2.4rem;font-weight:800;letter-spacing:-.03em;color:var(--primary)}

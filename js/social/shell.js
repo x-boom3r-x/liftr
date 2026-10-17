@@ -5,14 +5,16 @@
 import { SOCIAL_ENABLED } from './config.js';
 import { popLayer } from '../gestures.js';
 
-const VIEWS = ['home', 'search', 'inbox', 'thread', 'profile'];
+const VIEWS = ['home', 'search', 'inbox', 'thread', 'profile', 'reels', 'timeline'];
 
 const HEADS = {
   home:    ['Home',    'What your crew lifted today.'],
   search:  ['Search',  'Find lifters by their @username.'],
   inbox:   ['Messages','Direct messages — just the two of you.'],
   thread:  ['Messages',''],
-  profile: ['Profile', '']
+  profile: ['Profile', ''],
+  reels:   ['Reels',   'Full-screen clips from your crew.'],
+  timeline:['Timeline','Everyone, newest first.']
 };
 
 let view = 'home';
@@ -67,6 +69,8 @@ function loader(name){
     if (name === 'search' && typeof window.openSearch === 'function') return window.openSearch();
     if (name === 'inbox' && typeof window.renderInbox === 'function') return window.renderInbox();
     if (name === 'profile' && typeof window.renderProfile === 'function') return window.renderProfile();
+    if (name === 'reels' && typeof window.openReels === 'function') return window.openReels();
+    if (name === 'timeline' && typeof window.renderTimeline === 'function') return window.renderTimeline();
   } catch(e){}
   return undefined;
 }

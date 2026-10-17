@@ -65,6 +65,8 @@ import {
   refreshNotifBadge, markAllRead, initNotifications, resetNotifications
 } from './notifications.js';
 import { startRealtime, stopRealtime } from './realtime.js';
+import { renderReels, openReels, initReels, resetReels } from './reels.js';
+import { renderTimeline, openTimeline, initTimeline, resetTimeline } from './timeline.js';
 import {
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount
 } from './account.js';
@@ -124,6 +126,8 @@ Object.assign(window, {
   openNotifications, closeNotifications, loadNotifications,
   refreshNotifBadge, markAllRead, initNotifications,
   startRealtime, stopRealtime,
+  renderReels, openReels, initReels, resetReels,
+  renderTimeline, openTimeline, initTimeline, resetTimeline,
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,
   togglePrivateEdit,
   openImageEditor, closeEditor, useEditedImage, initEditor,
@@ -173,6 +177,8 @@ function initSocial(){
   initAutoplay();
   initEditor();
   initNotifications();
+  initReels();
+  initTimeline();
   if (SOCIAL_ENABLED && supabaseLoaded()) restoreSession();
   window.routeSharedLink = routeSharedLink;
   window.addEventListener('hashchange', routeSharedLink);

@@ -339,6 +339,20 @@ export async function refreshCounts(){
   paint();
 }
 
+/* --------------------------- accesseurs Reels ----------------------
+   Reels réutilise les posts « photo » du fil (image_path renseigné).
+   Ces deux accesseurs exposent la liste et les compteurs sans casser
+   l'encapsulation du module (counts / posts restent privés). */
+export function getPostsForReels(){
+  return posts.filter(p => p && p.image_path && !p.deleted_at);
+}
+export function getAllPosts(){
+  return posts.slice();
+}
+export function getPostCounts(id){
+  return counts[id] || blankCounts();
+}
+
 /* ------------------------------- likes ----------------------------- */
 export async function toggleLike(id){
   const c = sb();
