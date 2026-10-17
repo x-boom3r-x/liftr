@@ -149,6 +149,40 @@ test.describe('Feed : liste', () => {
     expect(seen).toEqual([0, PAGE_SIZE]);
   });
 
+  test('infinite scroll : la page suivante se charge au scroll, sans clic', async ({ page }) => {
+    await withSocial(page);
+    await seed(page, {});
+    await signedIn(page);
+
+    const seen = [];
+    supa(page, ({ route, kind, call }) => {
+      if (kind !== 'rest') return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+      const isPosts = call.url.indexOf('/rest/v1/posts?') !== -1;
+      if (!isPosts) return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' });
+      const m = call.url.match(/offset=(\d+)/);
+      const offset = m ? parseInt(m[1], 10) : 0;
+      seen.push(offset);
+      const rows = offset === 0
+        ? Array.from({ length: PAGE_SIZE }, (_, i) => post(i))
+        : [post(90), post(91)];
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(rows) });
+    });
+
+    await openFeed(page);
+    await expect(page.locator('#feedList .post')).toHaveCount(PAGE_SIZE);
+    await expect(page.locator('#feedMoreWrap')).toBeVisible();
+
+    /* on atteint le bas du conteneur : le chargement est automatique */
+    await page.evaluate(() => {
+      const sc = document.querySelector('.app');
+      sc.scrollTop = sc.scrollHeight;
+    });
+
+    await expect(page.locator('#feedList .post')).toHaveCount(PAGE_SIZE + 2);
+    await expect(page.locator('#feedMoreWrap')).toBeHidden();
+    expect(seen).toEqual([0, PAGE_SIZE]);
+  });
+
   test('erreur serveur : état d’erreur lisible puis Retry qui recharge', async ({ page }) => {
     await withSocial(page);
     await seed(page, {});

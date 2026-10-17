@@ -1108,6 +1108,7 @@ export async function renderFeed(opts){
     return false;
   } finally {
     loading = false;
+    requestAnimationFrame(maybeLoadMore);
   }
 }
 
@@ -1115,6 +1116,26 @@ export function loadMorePosts(){
   if (loading) return false;
   renderFeed({ more: true });
   return true;
+}
+
+/* --------------------------- infinite scroll ------------------------
+   La page suivante démarre quand le « Load more » approche du bas du
+   conteneur (600 px de garde). Le bouton reste cliquable : repli +
+   tests. Le recheck après chaque rendu (rAF) couvre le cas d'un fil
+   encore trop court, sans dépendre d'un scroll utilisateur. */
+let moreTicking = false;
+function maybeLoadMore(){
+  if (!hasMore || loading) return;
+  const wrap = el('feedMoreWrap');
+  if (!wrap || wrap.classList.contains('hidden')) return;
+  const sc = document.querySelector('.app') || document.documentElement;
+  if (wrap.getBoundingClientRect().top - sc.getBoundingClientRect().bottom < 600)
+    loadMorePosts();
+}
+function onFeedScroll(){
+  if (moreTicking) return;
+  moreTicking = true;
+  requestAnimationFrame(() => { moreTicking = false; maybeLoadMore(); });
 }
 
 export async function submitPost(){
@@ -1321,6 +1342,11 @@ export function initFeed(){
         lastTap.t = now; lastTap.el = zone;
       }
     }, { passive: true });
+  }
+  const sc = document.querySelector('.app');
+  if (sc && !sc.dataset.feedScrollWired){
+    sc.dataset.feedScrollWired = '1';
+    sc.addEventListener('scroll', onFeedScroll, { passive: true });
   }
   if (typeof window.initStories === 'function') window.initStories();
   renderComposer();

@@ -4,7 +4,7 @@
 
 /* Build partage avec index.html (data-build) et sw.js (liftr-vXX) :
    on le bump a chaque deploiement (test handlers.spec.js l'impose). */
-window.__LIFTR_BUILD__ = '78';
+window.__LIFTR_BUILD__ = '79';
 
 import './gestures.js';
 import './state.js';
