@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { seed } = require('./helpers');
 
-const MOCK_CONFIG = { supabaseUrl: 'https://demo-project.supabase.co', anonKey: 'anon-key-for-tests' };
+const MOCK_CONFIG = { supabaseUrl: 'https://demo-project.supabase.co', anonKey: 'anon-key-for-tests', realtime: false };
 const ME = { id: '11111111-1111-4111-8111-111111111111', user_metadata: { name: 'Mouataz' } };
 
 function withSocial(page){

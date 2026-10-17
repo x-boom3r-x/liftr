@@ -10,7 +10,7 @@ import {
   openAuth, closeAuth, toggleAuthMode, submitAuth
 } from './auth.js';
 import {
-  initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts,
+  initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts, refreshFeedNew,
   submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
@@ -64,6 +64,7 @@ import {
   openNotifications, closeNotifications, loadNotifications,
   refreshNotifBadge, markAllRead, initNotifications, resetNotifications
 } from './notifications.js';
+import { startRealtime, stopRealtime } from './realtime.js';
 import {
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount
 } from './account.js';
@@ -90,7 +91,7 @@ Object.assign(window, {
   buildAuthUrl, signInGoogle, restoreSession, signOutSocial,
   buildEmailEndpoint, signInEmail, signUpEmail, ensureMyProfile,
   openAuth, closeAuth, toggleAuthMode, submitAuth,
-  initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts,
+  initFeed, openFeed, saveFeedScroll, renderFeed, loadMorePosts, refreshFeedNew,
   submitPost, pickPhoto, removePhoto, compressImage, webpSupported,
   postCardHtml, timeAgo, updateComposer, resetFeed,
   setFeedScope, getFeedScope, refreshCounts, feedFollowChanged,
@@ -122,6 +123,7 @@ Object.assign(window, {
   resetNotes, pickNoteMusic,
   openNotifications, closeNotifications, loadNotifications,
   refreshNotifBadge, markAllRead, initNotifications,
+  startRealtime, stopRealtime,
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,
   togglePrivateEdit,
   openImageEditor, closeEditor, useEditedImage, initEditor,

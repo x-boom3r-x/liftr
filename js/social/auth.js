@@ -48,7 +48,12 @@ export async function restoreSession(){
     window.socialUser = null;
   }
   if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
-  if (window.socialUser) ensureMyProfile();
+  if (window.socialUser){
+    ensureMyProfile();
+    if (typeof window.startRealtime === 'function'){
+      try { window.startRealtime((window.socialUser || {}).id); } catch(e){}
+    }
+  }
   return window.socialUser;
 }
 
@@ -101,6 +106,9 @@ export async function signOutSocial(){
   if (typeof window.resetSearch === 'function') window.resetSearch();
   if (typeof window.resetInbox === 'function') window.resetInbox();
   if (typeof window.resetNotifications === 'function') window.resetNotifications();
+  if (typeof window.stopRealtime === 'function'){
+    try { window.stopRealtime(); } catch(e){}
+  }
   if (typeof window.updateSocialGate === 'function') window.updateSocialGate();
 }
 
@@ -113,6 +121,9 @@ function adoptUser(user){
     ensureMyProfile();
     if (typeof window.refreshNotifBadge === 'function'){
       try { window.refreshNotifBadge(); } catch(e){}
+    }
+    if (typeof window.startRealtime === 'function'){
+      try { window.startRealtime((window.socialUser || {}).id); } catch(e){}
     }
   }
 }

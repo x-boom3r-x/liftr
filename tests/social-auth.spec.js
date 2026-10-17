@@ -4,7 +4,7 @@ const { seed } = require('./helpers');
 /* Un projet Supabase réel n'est pas encore créé : on injecte la config
    avant le chargement des modules, ce qui reproduit exactement ce que
    ferait un déploiement avec les vraies clés. */
-const MOCK_CONFIG = { supabaseUrl: 'https://demo-project.supabase.co', anonKey: 'anon-key-for-tests' };
+const MOCK_CONFIG = { supabaseUrl: 'https://demo-project.supabase.co', anonKey: 'anon-key-for-tests', realtime: false };
 const ALLOWED_KEYS = ['at_lastUser', 'at_profiles', 'at_tab', 'at_v2_Mouataz', 'at_v2_Mouataz_t'];
 
 function withSocial(page){

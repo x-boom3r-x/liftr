@@ -855,6 +855,14 @@ button{background:none;border:none;cursor:pointer}
 .feed-empty-s{font-size:.83rem;color:var(--text3);margin-top:5px;line-height:1.5}
 .feed-empty .btn{margin-top:14px}
 .feed-more{display:flex;justify-content:center;padding:2px 0 20px}
+/* pastille « New posts » (realtime) : collée sous le composer, au-dessus du fil */
+.feed-newpill{
+  position:sticky;top:6px;z-index:5;display:flex;justify-content:center;
+  margin:0 auto 8px;padding:7px 16px;border-radius:999px;border:0;cursor:pointer;
+  background:var(--primary);color:#1a0e07;font-size:.82rem;font-weight:700;
+  box-shadow:0 6px 18px rgba(255,107,53,.35);width:max-content
+}
+.feed-newpill.hidden{display:none}
 
 .post-skeleton .sk{
   background:linear-gradient(90deg,var(--surface2),var(--surface3),var(--surface2));

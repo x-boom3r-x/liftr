@@ -1108,8 +1108,17 @@ export async function renderFeed(opts){
     return false;
   } finally {
     loading = false;
+    const pill = el('feedNewPill');
+    if (pill) pill.classList.add('hidden');
     requestAnimationFrame(maybeLoadMore);
   }
+}
+
+/* Clic sur la pastille « New posts » (realtime) : recharge le fil. */
+export function refreshFeedNew(){
+  const pill = el('feedNewPill');
+  if (pill) pill.classList.add('hidden');
+  return renderFeed();
 }
 
 export function loadMorePosts(){

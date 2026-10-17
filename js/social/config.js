@@ -20,11 +20,15 @@
    que les droits définis par les policies RLS. La clé secrète
    (sb_secret_...) ne doit JAMAIS figurer ici. */
 const SOCIAL_CONFIG = Object.assign(
-  { supabaseUrl: '', anonKey: '', googleAuth: false },
+  { supabaseUrl: '', anonKey: '', googleAuth: false, realtime: false },
   {
     supabaseUrl: 'https://fgpbhosklbcaapijmnkj.supabase.co',
     anonKey: 'sb_publishable_U1CSWnUnYIeQfxItuEtTqA_fLX46y7y',
-    googleAuth: true
+    googleAuth: true,
+    /* Realtime (postgres_changes) : badge notifications live + pastille
+       « New posts » sur le fil. false = tout reste sur le chargement
+       manuel (tests, ou websocket bloqué). */
+    realtime: true
   },
   window.LIFTR_SOCIAL_CONFIG || {}
 );

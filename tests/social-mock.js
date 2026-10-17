@@ -1,7 +1,7 @@
 /* Fake backend Supabase pour les tests sociaux (partagé par social-v3). */
 const { seed } = require('./helpers');
 
-const MOCK_CONFIG = { supabaseUrl: 'https://demo-project.supabase.co', anonKey: 'anon-key-for-tests' };
+const MOCK_CONFIG = { supabaseUrl: 'https://demo-project.supabase.co', anonKey: 'anon-key-for-tests', realtime: false };
 const ME = { id: '11111111-1111-4111-8111-111111111111', user_metadata: { name: 'Mouataz' } };
 const ANA = '22222222-2222-4222-8222-222222222222';
 
