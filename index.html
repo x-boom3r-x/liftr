@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="81">
+<html lang="en" data-build="82">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1120,27 +1120,64 @@
         <button type="button" class="seg" data-preset="mono">Mono</button>
         <button type="button" class="seg" data-preset="warm">Warm</button>
         <button type="button" class="seg" data-preset="cool">Cool</button>
+        <button type="button" class="seg" data-preset="vintage">Vintage</button>
+        <button type="button" class="seg" data-preset="cine">Cinematic</button>
         <button type="button" class="seg" data-preset="fade">Fade</button>
-        <button type="button" class="seg" data-preset="vivid">Vivid</button>
+        <button type="button" class="seg" data-preset="drama">Dramatic</button>
+      </div>
+      <div class="editor-row editor-turn">
+        <label class="editor-slider editor-zoom"><span>Intensity</span>
+          <input type="range" id="editorIntensity" min="0" max="100" step="1" value="100"></label>
       </div>
       <div class="editor-row" id="editorAspect" role="group" aria-label="Crop">
         <button type="button" class="seg active" data-aspect="free">Original</button>
         <button type="button" class="seg" data-aspect="1:1">1:1</button>
         <button type="button" class="seg" data-aspect="4:5">4:5</button>
+        <button type="button" class="seg" data-aspect="3:4">3:4</button>
         <button type="button" class="seg" data-aspect="9:16">9:16</button>
         <button type="button" class="seg" data-aspect="16:9">16:9</button>
       </div>
-      <div class="editor-row editor-sliders">
-        <label class="editor-slider"><span>Zoom</span>
-          <input type="range" id="editorZoom" min="1" max="5" step="0.05" value="1"></label>
-        <label class="editor-slider"><span>Light</span>
-          <input type="range" id="editorLight" min="0.7" max="1.4" step="0.01" value="1"></label>
-        <label class="editor-slider"><span>Color</span>
-          <input type="range" id="editorColor" min="0" max="2" step="0.02" value="1"></label>
+      <div class="editor-row" id="editorSize" role="group" aria-label="Export size">
+        <button type="button" class="seg" data-size="720">Small</button>
+        <button type="button" class="seg" data-size="1080">Medium</button>
+        <button type="button" class="seg active" data-size="1440">Large</button>
+        <span class="editor-dims" id="editorDims"></span>
       </div>
       <div class="editor-row editor-turn">
-        <button type="button" class="btn btn-sm" id="editorRotate" aria-label="Rotate">⟳ Rotate</button>
-        <button type="button" class="btn btn-sm" id="editorFlip" aria-label="Mirror">⇋ Mirror</button>
+        <label class="editor-slider editor-zoom"><span>Zoom</span>
+          <input type="range" id="editorZoom" min="1" max="5" step="0.05" value="1"></label>
+      </div>
+      <div class="editor-sliders" id="editorSliders">
+        <label class="editor-slider" data-p="exposure"><span>Exposure</span>
+          <input type="range" id="editorExposure" min="-100" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset exposure">&#8634;</button></label>
+        <label class="editor-slider" data-p="light"><span>Brightness</span>
+          <input type="range" id="editorLight" min="0.7" max="1.4" step="0.01" value="1"><button type="button" class="editor-rst hidden" aria-label="Reset brightness">&#8634;</button></label>
+        <label class="editor-slider" data-p="contrast"><span>Contrast</span>
+          <input type="range" id="editorContrast" min="0.5" max="1.5" step="0.01" value="1"><button type="button" class="editor-rst hidden" aria-label="Reset contrast">&#8634;</button></label>
+        <label class="editor-slider" data-p="color"><span>Saturation</span>
+          <input type="range" id="editorColor" min="0" max="2" step="0.02" value="1"><button type="button" class="editor-rst hidden" aria-label="Reset saturation">&#8634;</button></label>
+        <label class="editor-slider" data-p="temp"><span>Temp</span>
+          <input type="range" id="editorTemp" min="-100" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset temperature">&#8634;</button></label>
+        <label class="editor-slider" data-p="tint"><span>Tint</span>
+          <input type="range" id="editorTint" min="-100" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset tint">&#8634;</button></label>
+        <label class="editor-slider" data-p="shadows"><span>Shadows</span>
+          <input type="range" id="editorShadows" min="-100" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset shadows">&#8634;</button></label>
+        <label class="editor-slider" data-p="highlights"><span>Highlights</span>
+          <input type="range" id="editorHighlights" min="-100" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset highlights">&#8634;</button></label>
+        <label class="editor-slider" data-p="sharp"><span>Sharpness</span>
+          <input type="range" id="editorSharp" min="0" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset sharpness">&#8634;</button></label>
+        <label class="editor-slider" data-p="grain"><span>Grain</span>
+          <input type="range" id="editorGrain" min="0" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset grain">&#8634;</button></label>
+        <label class="editor-slider" data-p="vignette"><span>Vignette</span>
+          <input type="range" id="editorVignette" min="0" max="100" step="1" value="0"><button type="button" class="editor-rst hidden" aria-label="Reset vignette">&#8634;</button></label>
+      </div>
+      <div class="editor-row editor-turn">
+        <button type="button" class="btn btn-sm" id="editorRotate" aria-label="Rotate">&#10227; Rotate</button>
+        <button type="button" class="btn btn-sm" id="editorFlip" aria-label="Mirror">&#8652; Mirror</button>
+        <button type="button" class="btn btn-sm" id="editorFlipV" aria-label="Flip vertical">&#8645; Flip</button>
+        <button type="button" class="btn btn-sm" id="editorUndo" onclick="editorUndo()" aria-label="Undo" disabled>&#8630; Undo</button>
+        <button type="button" class="btn btn-sm" id="editorRedo" onclick="editorRedo()" aria-label="Redo" disabled>&#8631; Redo</button>
+        <button type="button" class="btn btn-sm" id="editorResetAll" onclick="editorResetAll()" aria-label="Reset all">&#8634; Reset</button>
       </div>
     </div>
   </div>

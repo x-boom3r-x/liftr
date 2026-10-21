@@ -71,7 +71,8 @@ import {
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount
 } from './account.js';
 import {
-  openImageEditor, closeEditor, useEditedImage, initEditor
+  openImageEditor, closeEditor, useEditedImage, initEditor,
+  editorUndo, editorRedo, editorResetAll
 } from './editor.js';
 import {
   openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
@@ -131,6 +132,7 @@ Object.assign(window, {
   initAccount, fillAccount, saveEmail, savePassword, signOutNow, deleteMyAccount,
   togglePrivateEdit,
   openImageEditor, closeEditor, useEditedImage, initEditor,
+  editorUndo, editorRedo, editorResetAll,
   openMusicPicker, closeMusicPicker, runMusicSearch, initMusic,
   stopMusic, hydrateMusic, splitMusic, withMusic, musicPlayingId,
   openTrackPage, closeTrackPage, toggleTrackSave, isTrackSaved, savedTracks,

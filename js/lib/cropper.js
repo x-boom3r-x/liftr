@@ -47,13 +47,14 @@ export function createCropper(stage, options = {}) {
 
   // --- état --------------------------------------------------------
   let source = null;                         // bitmap/img d'origine (borné à MAX_BASE)
-  let rot = 0, flip = false;                 // rot = quarts de tour
+  let rot = 0, flip = false, flipV = false;  // rot = quarts de tour
   let base = null;                           // canvas tourné/miroité
   let zoom = 1, cx = 0, cy = 0;              // zoom relatif + centre dans `base` (px)
   let W = 0, H = 0, frame = { x: 0, y: 0, w: 1, h: 1 };
   const listeners = new Set();
   const pointers = new Map();
   let lastTap = 0;
+  let afterRender = null;                    // couches additionnelles (texte) au-dessus du bitmap
 
   // --- géométrie ---------------------------------------------------
   const iw = () => (base ? base.width : 1);
@@ -104,6 +105,7 @@ export function createCropper(stage, options = {}) {
     ctx.imageSmoothingQuality = 'high';
     const dx = frame.x + frame.w / 2 - cx * s, dy = frame.y + frame.h / 2 - cy * s;
     ctx.drawImage(base, dx, dy, iw() * s, ih() * s);
+    if (afterRender) { try { afterRender(ctx, { x: frame.x, y: frame.y, w: frame.w, h: frame.h }); } catch (_) {} }
   }
   function update() { computeFrame(); clamp(); render(); emit(); }
 
@@ -116,6 +118,7 @@ export function createCropper(stage, options = {}) {
     g.translate(bw / 2, bh / 2);
     g.rotate(rot * Math.PI / 2);
     if (flip) g.scale(-1, 1);
+    if (flipV) g.scale(1, -1);
     g.drawImage(source, -sw / 2, -sh / 2);
     base = c;
   }
@@ -138,7 +141,7 @@ export function createCropper(stage, options = {}) {
     } else {
       const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(bmp, 0, 0); source = c;
     }
-    rot = 0; flip = false; zoom = 1;
+    rot = 0; flip = false; flipV = false; zoom = 1;
     buildBase(); cx = iw() / 2; cy = ih() / 2;
     update();
   }
@@ -164,7 +167,21 @@ export function createCropper(stage, options = {}) {
   function setZoom(z) { zoom = z; update(); }
   function rotate() { rot = (rot + 1) % 4; buildBase(); zoom = 1; cx = iw() / 2; cy = ih() / 2; update(); }
   function mirror() { flip = !flip; buildBase(); update(); }
+  function mirrorV() { flipV = !flipV; buildBase(); update(); }
   function reset() { zoom = 1; cx = iw() / 2; cy = ih() / 2; update(); }
+
+  /* Vue courante (zoom/centre/rotation/miroir) : sert aux instantanés
+     d'historique de l'éditeur, indépendamment de la taille de la source. */
+  function view() { return { zoom, cx, cy, rot, flip, flipV }; }
+  function setView(v) {
+    if (!v || !source) return false;
+    rot = v.rot | 0; flip = !!v.flip; flipV = !!v.flipV;
+    zoom = v.zoom || 1;
+    buildBase();
+    cx = v.cx; cy = v.cy;
+    update();
+    return true;
+  }
 
   function drawTo(g, w, h) {                                // le recadrage courant -> (0,0,w,h)
     const r = rect();
@@ -172,7 +189,7 @@ export function createCropper(stage, options = {}) {
   }
 
   function getState() {
-    return { zoom, rect: base ? rect() : null, frame: { ...frame }, iw: iw(), ih: ih(), rot, flip, aspect, round };
+    return { zoom, rect: base ? rect() : null, frame: { ...frame }, iw: iw(), ih: ih(), rot, flip, flipV, aspect, round };
   }
 
   // --- gestes ------------------------------------------------------
@@ -233,9 +250,11 @@ export function createCropper(stage, options = {}) {
   ro && ro.observe(stage);
 
   return {
-    load, setSource, setAspect, setZoom, rotate, mirror, reset, drawTo, getState,
+    load, setSource, setAspect, setZoom, rotate, mirror, mirrorV, reset, drawTo, getState,
+    view, setView,
     getZoom: () => zoom,
     onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+    onRender(fn) { afterRender = typeof fn === 'function' ? fn : null; },
     destroy() {
       ro && ro.disconnect(); frameEl.remove(); listeners.clear(); pointers.clear();
       stage.removeEventListener('pointerdown', onDown); stage.removeEventListener('pointermove', onMove);
