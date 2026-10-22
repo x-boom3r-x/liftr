@@ -441,6 +441,8 @@ function emitState(s){
     intensity: state.intensity,
     size: state.size,
     params: Object.assign({}, state.params),
+    layers: state.layers.map(l => Object.assign({}, l)),
+    layerSel: state.layerSel,
     canUndo: state.histI > 0,
     canRedo: state.histI < state.hist.length - 1
   });
@@ -507,6 +509,7 @@ function snap(){
     intensity: state.intensity,
     params: Object.assign({}, state.params),
     size: state.size,
+    layers: state.layers.map(l => Object.assign({}, l)),
     crop: crop ? crop.view() : null
   };
 }
@@ -540,11 +543,14 @@ function applySnap(s){
   state.preset = s.preset;
   state.intensity = s.intensity;
   state.params = Object.assign({}, s.params);
+  state.layers = (s.layers || []).map(l => Object.assign({}, l));
+  state.layerSel = state.layers.length ? Math.min(Math.max(state.layerSel, 0), state.layers.length - 1) : -1;
   if (s.size != null) state.size = s.size;
   setAspectUI(s.aspect);
   crop.setAspect(aspectValue(s.aspect), { round: !!MODES[state.mode].round });
   if (s.crop) crop.setView(s.crop);
   syncControls();
+  syncLayerBar();
   refreshWork();
   emitState();
 }
@@ -585,6 +591,135 @@ function compareOff(){
   comparing = false;
   if (!state || !crop) return;
   crop.setSource(state.work || state.src);
+}
+
+/* ------------------------ calques texte/stickers ------------------- */
+const STICKERS = ['\u2728', '\u2764\uFE0F', '\uD83D\uDD25', '\uD83D\uDE02', '\u2B50'];
+let dragL = null;
+let layerWinWired = false;
+
+function addLayer(kind){
+  if (!state || !crop) return;
+  const L = kind === 'text'
+    ? { t: 'text', text: 'Aa', x: .5, y: .5, size: .18, rot: 0, color: '#FFFFFF' }
+    : { t: 'sticker', emoji: STICKERS[state.layers.length % STICKERS.length],
+        x: .5, y: .5, size: .22, rot: 0 };
+  state.layers.push(L);
+  state.layerSel = state.layers.length - 1;
+  syncLayerBar();
+  crop.redraw();
+  emitState();
+  commit();
+}
+
+/* dessine les calques dans le repère du cadre (aperçu = coordonnées CSS,
+   export = pixels de sortie) : mêmes fractions, rendu identique. */
+function drawLayers(g, f, preview){
+  if (comparing || !state || !state.layers || !state.layers.length) return;
+  state.layers.forEach((L, i) => {
+    const cx = f.x + L.x * f.w, cy = f.y + L.y * f.h;
+    const fs = Math.max(6, L.size * f.w);
+    g.save();
+    g.translate(cx, cy);
+    g.rotate(L.rot || 0);
+    if (L.t === 'text'){
+      g.font = '800 ' + fs + 'px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.lineWidth = Math.max(2, fs * .07);
+      g.strokeStyle = 'rgba(0,0,0,.45)';
+      g.strokeText(L.text, 0, 0);
+      g.fillStyle = L.color || '#FFFFFF';
+      g.fillText(L.text, 0, 0);
+    } else {
+      g.font = fs + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(L.emoji, 0, 0);
+    }
+    g.restore();
+    if (preview && state.layerSel === i){
+      const r = Math.max(14, fs * .42);
+      g.save();
+      g.strokeStyle = 'rgba(255,255,255,.9)';
+      g.lineWidth = 2;
+      g.setLineDash([6, 4]);
+      g.strokeRect(cx - r, cy - r, r * 2, r * 2);
+      g.restore();
+    }
+  });
+}
+
+function layerAt(x, y){
+  if (!state || !crop || !state.layers.length) return -1;
+  const f = crop.getState().frame;
+  let best = -1, bd = Infinity;
+  state.layers.forEach((L, i) => {
+    const cx = f.x + L.x * f.w, cy = f.y + L.y * f.h;
+    const r = Math.max(16, L.size * f.w * .6);
+    const d = Math.hypot(x - cx, y - cy);
+    if (d <= r && d < bd){ bd = d; best = i; }
+  });
+  return best;
+}
+
+function syncLayerBar(){
+  const bar = el('editorLayerBar');
+  if (!bar) return;
+  const L = (state && state.layers) ? state.layers[state.layerSel] : null;
+  bar.classList.toggle('hidden', !L);
+  if (!L) return;
+  const ti = el('editorLayerText');
+  if (ti){
+    const isText = L.t === 'text';
+    ti.classList.toggle('hidden', !isText);
+    if (isText) ti.value = L.text;
+  }
+  const sz = el('editorLayerSize');
+  if (sz) sz.value = String(Math.round(L.size * 100));
+}
+
+/* déplacement d'un calque : intercepté en phase capture pour que le
+   pointerdown n'atteigne pas le pan du crop. */
+function layerDown(e){
+  if (!state || !crop || comparing || dragL || !state.layers.length) return;
+  if (e.isPrimary === false || gId !== -1) return;
+  const r = el('editorStage').getBoundingClientRect();
+  const i = layerAt(e.clientX - r.left, e.clientY - r.top);
+  if (i < 0) return;
+  e.stopImmediatePropagation();
+  if (e.cancelable) e.preventDefault();
+  state.layerSel = i;
+  syncLayerBar();
+  crop.redraw();
+  emitState();
+  const L = state.layers[i];
+  dragL = { i: i, id: e.pointerId, sx: e.clientX, sy: e.clientY,
+    ox: L.x, oy: L.y, moved: false };
+}
+
+function layerMove(e){
+  if (!dragL || e.pointerId !== dragL.id || !state || !crop) return;
+  const f = crop.getState().frame;
+  const L = state.layers[dragL.i];
+  if (!L){ dragL = null; return; }
+  const dx = (e.clientX - dragL.sx) / f.w;
+  const dy = (e.clientY - dragL.sy) / f.h;
+  if (!dragL.moved && Math.hypot(dx, dy) > .002) dragL.moved = true;
+  L.x = Math.max(0, Math.min(1, dragL.ox + dx));
+  L.y = Math.max(0, Math.min(1, dragL.oy + dy));
+  crop.redraw();
+}
+
+function layerUp(e){
+  if (!dragL || (e.pointerId !== undefined && e.pointerId !== dragL.id)) return;
+  const moved = dragL.moved;
+  dragL = null;
+  if (moved){
+    if (crop) crop.redraw();
+    emitState();
+    commit();
+  }
 }
 
 /* Appui long sur la photo = aperçu de l'original (relâche = retour).
@@ -690,6 +825,7 @@ async function exportEdited(){
   g.fillStyle = '#FFFFFF';              /* PNG transparent -> blanc (pas de noir) */
   g.fillRect(0, 0, w, h);
   crop.drawTo(g, w, h);
+  drawLayers(g, { x: 0, y: 0, w: w, h: h }, false);
   const out = await encodeJpeg(cv, e.quality);
   dispose(cv);
   return out;
@@ -716,6 +852,7 @@ async function openWith(src, modeKey, title, done){
     aspect: mode.def, freeAspect: Math.min(POST_MAX, Math.max(POST_MIN, w / h)),
     preset: 'none', intensity: 100, params: defaultParams(),
     size: modeKey === 'post' ? 1440 : null,
+    layers: [], layerSel: -1,
     workRaf: 0, exportCv: null, hist: [], histI: 0
   };
   comparing = false;
@@ -741,6 +878,8 @@ async function openWith(src, modeKey, title, done){
   const srow = el('editorSize');
   if (srow) srow.classList.toggle('hidden', modeKey !== 'post');
   crop.onChange(onCropChange);
+  crop.onRender((g, f) => drawLayers(g, f, true));
+  syncLayerBar();
   state.hist = [snap()];
   state.histI = 0;
   syncHistoryBtns();
@@ -765,6 +904,7 @@ export function closeEditor(){
   state = null;
   onDone = null;
   comparing = false;
+  dragL = null;
   window.__editorState = null;
   if (typeof window.closeModal === 'function') window.closeModal('editorModal');
   return true;
@@ -916,5 +1056,74 @@ export function initEditor(){
   if (flipV && !flipV.dataset.wired){
     flipV.dataset.wired = '1';
     flipV.addEventListener('click', () => { if (crop){ crop.mirrorV(); commit(); } });
+  }
+
+  const addT = el('editorAddText');
+  if (addT && !addT.dataset.wired){
+    addT.dataset.wired = '1';
+    addT.addEventListener('click', () => addLayer('text'));
+  }
+  const addS = el('editorAddSticker');
+  if (addS && !addS.dataset.wired){
+    addS.dataset.wired = '1';
+    addS.addEventListener('click', () => addLayer('sticker'));
+  }
+  const ltext = el('editorLayerText');
+  if (ltext && !ltext.dataset.wired){
+    ltext.dataset.wired = '1';
+    ltext.addEventListener('input', () => {
+      const L = state && state.layers[state.layerSel];
+      if (!L || L.t !== 'text') return;
+      L.text = ltext.value;
+      if (crop) crop.redraw();
+      emitState();
+    });
+    ltext.addEventListener('change', () => { if (state){ emitState(); commit(); } });
+  }
+  const lsize = el('editorLayerSize');
+  if (lsize && !lsize.dataset.wired){
+    lsize.dataset.wired = '1';
+    lsize.addEventListener('input', () => {
+      const L = state && state.layers[state.layerSel];
+      if (!L) return;
+      L.size = Math.max(.03, Math.min(.6, (parseFloat(lsize.value) || 18) / 100));
+      if (crop) crop.redraw();
+    });
+    lsize.addEventListener('change', () => { if (state){ emitState(); commit(); } });
+  }
+  const lrot = el('editorLayerRot');
+  if (lrot && !lrot.dataset.wired){
+    lrot.dataset.wired = '1';
+    lrot.addEventListener('click', () => {
+      const L = state && state.layers[state.layerSel];
+      if (!L) return;
+      L.rot = (L.rot || 0) + Math.PI / 12;
+      if (crop) crop.redraw();
+      emitState();
+      commit();
+    });
+  }
+  const ldel = el('editorLayerDel');
+  if (ldel && !ldel.dataset.wired){
+    ldel.dataset.wired = '1';
+    ldel.addEventListener('click', () => {
+      if (!state || state.layerSel < 0) return;
+      state.layers.splice(state.layerSel, 1);
+      state.layerSel = -1;
+      syncLayerBar();
+      if (crop) crop.redraw();
+      emitState();
+      commit();
+    });
+  }
+  if (stage && !stage.dataset.layers){
+    stage.dataset.layers = '1';
+    stage.addEventListener('pointerdown', layerDown, true);
+  }
+  if (!layerWinWired){
+    layerWinWired = true;
+    window.addEventListener('pointermove', layerMove);
+    window.addEventListener('pointerup', layerUp);
+    window.addEventListener('pointercancel', layerUp);
   }
 }

@@ -352,4 +352,82 @@ test.describe('Build 82 : éditeur d’image complet', () => {
     expect(await state(page)).toBeFalsy();
     expect(errs).toEqual([]);
   });
+
+  test('calques : ajout de texte, édition, taille, rotation, suppression', async ({ page }) => {
+    const { errs } = await boot(page);
+    await openPost(page);
+
+    await page.locator('#editorAddText').click();
+    await expect.poll(async () => (await state(page)).layers.length).toBe(1);
+    expect((await state(page)).layers[0].t).toBe('text');
+    await expect(page.locator('#editorLayerBar')).toBeVisible();
+
+    await page.locator('#editorLayerText').fill('Ciao');
+    await expect.poll(async () => (await state(page)).layers[0].text).toBe('Ciao');
+
+    await setSlider(page, 'editorLayerSize', 30);
+    await expect.poll(async () => (await state(page)).layers[0].size).toBeCloseTo(.3, 2);
+
+    await page.locator('#editorLayerRot').click();
+    await expect.poll(async () => (await state(page)).layers[0].rot).toBeGreaterThan(.2);
+
+    await page.locator('#editorUndo').click();
+    await expect.poll(async () => (await state(page)).layers[0].rot).toBe(0);
+    await page.locator('#editorRedo').click();
+    await expect.poll(async () => (await state(page)).layers[0].rot).toBeGreaterThan(.2);
+
+    await page.locator('#editorLayerDel').click();
+    await expect.poll(async () => (await state(page)).layers.length).toBe(0);
+    await expect(page.locator('#editorLayerBar')).toBeHidden();
+    expect(errs).toEqual([]);
+  });
+
+  test('calque : glisser le texte le déplace, le recadrage ne bouge pas', async ({ page }) => {
+    const { errs } = await boot(page);
+    await openPost(page);
+    await page.locator('#editorAddText').click();
+    await expect.poll(async () => (await state(page)).layers.length).toBe(1);
+
+    const before = await state(page);
+    const c = await stageCenter(page);
+    await pointer(page, 'pointerdown', c.x, c.y);
+    await pointer(page, 'pointermove', c.x + 70, c.y + 30);
+    await pointer(page, 'pointerup', c.x + 70, c.y + 30);
+
+    await expect.poll(async () => (await state(page)).layers[0].x).toBeGreaterThan(.55);
+    const after = await state(page);
+    expect(after.zoom).toBe(before.zoom);
+    expect(after.frame).toEqual(before.frame);
+    expect(after.rect).toEqual(before.rect);
+    expect(errs).toEqual([]);
+  });
+
+  test('le texte est gravé dans le JPEG exporté', async ({ page }) => {
+    const { errs } = await boot(page);
+    await openPost(page);
+    await page.locator('#editorAddText').click();
+    await setSlider(page, 'editorLayerSize', 40);
+    await page.locator('#editorUse').click();
+    await expect(page.locator('#editorModal')).toBeHidden();
+
+    await expect.poll(() => page.evaluate(() =>
+      window.__exports.some(e => e.blob && e.type === 'image/jpeg')), { timeout: 4000 }).toBe(true);
+    const white = await page.evaluate(async () => {
+      const e = window.__exports.find(x => x.type === 'image/jpeg' && x.blob);
+      const bmp = await createImageBitmap(e.blob);
+      const c = document.createElement('canvas');
+      c.width = bmp.width; c.height = bmp.height;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(bmp, 0, 0);
+      const d = g.getImageData(Math.floor(c.width * .35), Math.floor(c.height * .35),
+        Math.ceil(c.width * .3), Math.ceil(c.height * .3)).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4){
+        if (d[i] >= 235 && d[i + 1] >= 235 && d[i + 2] >= 235) n++;
+      }
+      return n;
+    });
+    expect(white).toBeGreaterThan(0);
+    expect(errs).toEqual([]);
+  });
 });

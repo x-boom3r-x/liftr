@@ -2216,6 +2216,13 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 }
 .editor-turn{gap:9px}
 .editor-turn .btn{flex:none}
+.editor-layer{gap:8px;flex-wrap:nowrap}
+.editor-layer-input{
+  flex:1;min-width:0;padding:6px 9px;border-radius:9px;
+  border:1px solid var(--line,#2a2a2a);background:var(--bg2,rgba(255,255,255,.04));
+  color:var(--text,#fff);font:inherit;font-size:.76rem;
+}
+.editor-layer-size{flex:1;min-width:0}
 
 
 /* ---------- iPhone / Safari viewport fixes ---------- */

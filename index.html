@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="82">
+<html lang="en" data-build="83">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1178,6 +1178,18 @@
         <button type="button" class="btn btn-sm" id="editorUndo" onclick="editorUndo()" aria-label="Undo" disabled>&#8630; Undo</button>
         <button type="button" class="btn btn-sm" id="editorRedo" onclick="editorRedo()" aria-label="Redo" disabled>&#8631; Redo</button>
         <button type="button" class="btn btn-sm" id="editorResetAll" onclick="editorResetAll()" aria-label="Reset all">&#8634; Reset</button>
+      </div>
+      <div class="editor-row editor-turn">
+        <button type="button" class="btn btn-sm" id="editorAddText" aria-label="Add text">T Text</button>
+        <button type="button" class="btn btn-sm" id="editorAddSticker" aria-label="Add sticker">&#9786; Sticker</button>
+      </div>
+      <div class="editor-row editor-layer hidden" id="editorLayerBar">
+        <input type="text" id="editorLayerText" class="editor-layer-input" maxlength="40"
+          aria-label="Layer text" autocomplete="off" spellcheck="false">
+        <label class="editor-slider editor-layer-size"><span>Size</span>
+          <input type="range" id="editorLayerSize" min="5" max="50" step="1" value="18"></label>
+        <button type="button" class="btn btn-sm" id="editorLayerRot" aria-label="Rotate layer">&#10227;</button>
+        <button type="button" class="btn btn-sm" id="editorLayerDel" aria-label="Delete layer">&#10005;</button>
       </div>
     </div>
   </div>

@@ -255,6 +255,7 @@ export function createCropper(stage, options = {}) {
     getZoom: () => zoom,
     onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     onRender(fn) { afterRender = typeof fn === 'function' ? fn : null; },
+    redraw() { render(); },
     destroy() {
       ro && ro.disconnect(); frameEl.remove(); listeners.clear(); pointers.clear();
       stage.removeEventListener('pointerdown', onDown); stage.removeEventListener('pointermove', onMove);
