@@ -16,7 +16,7 @@ const prs = { 'développé couché': { name: 'Développé couché', weight: 65, 
 
 async function startSession(page){
   await page.click('button[data-tab="seance"]');
-  await page.locator('button:has-text("Start")').first().click();
+  await page.locator('#tab-seance button:has-text("Start")').first().click();
   await expect(page.locator('#activeModal')).toHaveClass(/show/);
 }
 

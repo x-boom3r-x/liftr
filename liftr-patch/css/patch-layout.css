@@ -1,0 +1,292 @@
+/* ==================================================================
+   LIFTR — PATCH LAYOUT v2  (à AJOUTER À LA FIN de css/app.css)
+   Testé : Chromium mobile 390x844 / 375x667, safe-top 47px, safe-bottom 34px
+   Sections :
+     0. variables (dont --line qui n'était PAS définie)
+     1. tabbar collée en bas + --tabbar-h pour fab / toast
+     2. anneaux de story : visibles UNIQUEMENT s'il y a une story active
+     3. visionneuse de story (safe-area, 9:16, légende, musique)
+     4. éditeur d'image / crop plein écran
+     5. modale musique : sélection explicite, lecture, progression
+     6. sous-navigation (Gym / Nutrition) + barre du haut du Feed
+     7. actions d'un post : upvote, like, commentaire, repost, enregistrer, partager
+     8. cartes de partage (exploit / séance / programme) dans le feed
+     9. nutrition : barre de progression kcal, macros, repas, ingrédients
+   ================================================================== */
+
+/* ---------- 0. variables ---------- */
+:root{
+  --line:#3A3A42;                         /* manquait : anneau "vu", .acct, note perso */
+  --story-ring:linear-gradient(45deg,#ffb347,#ff4d6d 50%,#8a5cff);
+  /* espace SOUS les libellés de la tabbar. Réglable : -2px = plus bas, +2px = plus haut.
+     iPhone (safe 34px) => 10px ; sans encoche => 8px */
+  --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
+  /* hauteur réelle de la tabbar : défaut calculé, affiné en JS (ResizeObserver) */
+  --tabbar-h:calc(61px + var(--tabbar-pad-b));
+}
+
+/* ---------- 1. tabbar ---------- */
+.tabbar{padding:8px 10px var(--tabbar-pad-b)}
+.fab{bottom:calc(var(--tabbar-h) + 14px)}
+.toast{bottom:calc(var(--tabbar-h) + 20px)}
+
+/* ---------- 2. anneaux de story ---------- */
+/* Par défaut : AUCUN anneau. Le dégradé n'existe que si la story est active. */
+.crew-ring{background:transparent;padding:3px}
+.crew-ring.me,.crew-ring.find,.crew-ring.none{background:transparent}
+.crew-cell.live .crew-ring{background:var(--story-ring)}
+.crew-cell.seen .crew-ring{background:var(--line)}
+.crew-cell.live .crew-label{color:var(--text);font-weight:750}
+
+.avatar.ring,.avatar.ring.fallback{
+  border:0;background:var(--primary-dim);
+}
+.avatar.ring.has-story,.avatar.ring.fallback.has-story{
+  border:2px solid transparent;
+  background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--story-ring) border-box;
+}
+.avatar.ring.has-story.seen{
+  background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--line) border-box;
+}
+.prof-av{
+  border:3px solid transparent;
+  background:linear-gradient(var(--bg),var(--bg)) padding-box,linear-gradient(var(--border),var(--border)) border-box;
+}
+.prof-av.has-story{
+  background:linear-gradient(var(--bg),var(--bg)) padding-box,var(--story-ring) border-box;
+}
+.prof-av.has-story.seen{
+  background:linear-gradient(var(--bg),var(--bg)) padding-box,var(--line) border-box;
+}
+
+/* ---------- 3. visionneuse de story ---------- */
+/* inset:0 au lieu de height:100dvh (100vh = trop haut dans Safari < 15.4, footer rogné) */
+.story-view{
+  top:0;right:0;bottom:0;left:0;
+  width:auto;height:auto;min-height:0;max-height:none;
+  padding:0;touch-action:none;
+  z-index:50;
+}
+@supports not (height:100dvh){.story-view{height:auto;min-height:0;max-height:none}}
+/* écran large : on garde un cadre 9:16 centré, le reste est assombri */
+@media (min-aspect-ratio:3/4){
+  .story-view{
+    left:50%;right:auto;width:min(100vw,calc(100vh * 9 / 16));
+    transform:translateX(-50%);
+    box-shadow:0 0 0 100vmax rgba(0,0,0,.94);
+  }
+}
+.sv-top{padding:calc(var(--safe-top) + 10px) 12px 14px}
+.sv-av{border-radius:50%}
+.sv-stage{background:#000;overflow:hidden}
+/* fond flouté de la même image : une photo non 9:16 n'est plus rognée de force */
+.sv-stage::before{
+  content:"";position:absolute;inset:-24px;
+  background:var(--sv-src,none) center/cover no-repeat;
+  filter:blur(28px) brightness(.55) saturate(1.2);
+}
+.sv-stage.plain::before{display:none}
+.sv-img{position:relative;object-fit:contain;background:transparent}
+/* photo déjà en 9:16 (cadrée par l'éditeur) : plein cadre */
+.sv-stage.is-916 .sv-img{object-fit:cover}
+.sv-caption{
+  padding:72px 18px calc(var(--safe-bottom) + 92px);
+  z-index:1;
+}
+.sv-stage.plain .sv-caption{padding:24px}
+.sv-foot{padding:18px 16px calc(var(--safe-bottom) + 14px);gap:10px}
+/* sous la barre de progression + l'en-tête (et sous l'encoche) */
+.sv-music{top:calc(var(--safe-top) + 80px);z-index:4}
+/* une notification Liftr ne doit jamais recouvrir une story */
+.liftr-notif{z-index:45}
+
+/* ---------- 4. éditeur d'image / crop : plein écran ---------- */
+.overlay.editor-overlay{align-items:stretch;background:#000}
+.editor{
+  max-width:none;width:100%;height:100%;max-height:none;
+  border-radius:0;border:0;gap:10px;overflow:hidden;
+  padding:calc(var(--safe-top) + 8px) 12px calc(var(--safe-bottom) + 10px);
+  background:#0B0B0D;
+}
+.editor-top{flex:none}
+.editor-stage{
+  flex:1 1 auto;min-height:0;aspect-ratio:auto;max-height:none;
+  border-radius:14px;background:#000;touch-action:none;
+  -webkit-user-select:none;user-select:none;
+}
+/* le canvas est dimensionné en JS (clientWidth x dpr) : jamais étiré par le CSS */
+.editor-stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.crop-frame{
+  position:absolute;pointer-events:none;
+  border:1.5px solid rgba(255,255,255,.92);
+  box-shadow:0 0 0 100vmax rgba(0,0,0,.58);   /* assombrit tout ce qui est hors cadre */
+  border-radius:4px;
+}
+.crop-frame.round{border-radius:50%}
+.crop-frame::before,.crop-frame::after{content:"";position:absolute;inset:0;pointer-events:none}
+.crop-frame:not(.round)::before{
+  background:
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 33.33% 0/1px 100% no-repeat,
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 66.66% 0/1px 100% no-repeat,
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 0 33.33%/100% 1px no-repeat,
+    linear-gradient(rgba(255,255,255,.28),rgba(255,255,255,.28)) 0 66.66%/100% 1px no-repeat;
+}
+.editor-tools{flex:none;gap:8px}
+.editor-row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.editor-row::-webkit-scrollbar{display:none}
+.editor-row .seg{flex:none}
+.editor-sliders{overflow:visible}
+
+/* ---------- 5. modale musique ---------- */
+.music-row{cursor:pointer;position:relative}
+.music-row.sel{border-color:rgba(255,107,53,.6);background:var(--primary-dim)}
+.music-row.sel::after{
+  content:"✓";position:absolute;top:6px;right:10px;font-size:.72rem;font-weight:800;color:var(--primary);
+}
+.music-play{touch-action:manipulation}
+.music-play.on{background:var(--primary);color:#160802}
+.music-prog{
+  position:absolute;left:8px;right:8px;bottom:0;height:2px;border-radius:2px;
+  background:transparent;overflow:hidden;
+}
+.music-prog>i{display:block;height:100%;width:0;background:var(--primary);transition:width .2s linear}
+.music-footer{
+  display:flex;gap:10px;margin-top:14px;align-items:center;
+}
+.music-footer .btn-primary{flex:1}
+.music-clip{
+  display:none;margin-top:12px;padding:10px 12px;border-radius:12px;
+  background:var(--surface2);border:1px solid var(--border);
+}
+.music-clip.show{display:block}
+.music-clip label{display:flex;align-items:center;gap:10px;font-size:.74rem;color:var(--text3)}
+.music-clip input[type=range]{flex:1;min-width:0;accent-color:var(--primary)}
+.music-clip output{font-variant-numeric:tabular-nums;color:var(--text);font-weight:700;min-width:44px;text-align:right}
+
+/* ---------- 6. navigation : 3 onglets racine + sous-navigation ---------- */
+.subnav{
+  position:sticky;top:0;z-index:15;display:flex;gap:4px;padding:4px;margin:0 0 14px;
+  background:rgba(21,21,25,.92);border:1px solid var(--border);border-radius:14px;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+.subnav-item{
+  flex:1;padding:8px 6px;border-radius:10px;font-size:.78rem;font-weight:700;
+  color:var(--text3);text-align:center;white-space:nowrap;
+  transition:background-color .16s,color .16s;touch-action:manipulation;
+}
+.subnav-item.active{background:var(--primary-dim);color:#FF8A5B}
+.subnav-item:active{transform:scale(.97)}
+
+.feed-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.feed-top .section-title{margin:0}
+.top-icons{display:flex;align-items:center;gap:8px}
+.top-icon{
+  position:relative;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface2);border:1px solid var(--border);color:var(--text2);touch-action:manipulation;
+}
+.top-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.top-icon:active{background:var(--surface3)}
+.top-icon .snav-dot{top:-3px;right:-3px}
+.feed-scope{display:flex;gap:6px;margin:0 0 12px}
+
+/* ---------- 7. actions d'un post ---------- */
+.post-actions{
+  display:flex;align-items:center;gap:2px;margin-top:12px;padding-top:10px;
+  border-top:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;      /* filet de sécurité sur écrans < 340px */
+}
+.post-actions::-webkit-scrollbar{display:none}
+.pa{
+  display:inline-flex;align-items:center;gap:4px;min-height:38px;padding:0 7px;border-radius:12px;flex:none;
+  color:var(--text2);font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;
+  touch-action:manipulation;transition:color .15s,background-color .15s,transform .1s;
+}
+.pa svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pa:active{transform:scale(.92);background:var(--surface2)}
+.pa.spacer{flex:1 1 0;padding:0;min-width:0;pointer-events:none}
+.pa-vote{
+  background:var(--surface2);border:1px solid var(--border);gap:0;padding:0 4px;margin-right:2px;
+}
+.pa-vote .up,.pa-vote .down{display:grid;place-items:center;width:24px;height:30px;border-radius:8px;color:var(--text3)}
+.pa-vote .up.on{color:var(--primary)}
+.pa-vote .down.on{color:#4DA3FF}
+.pa-vote .score{min-width:20px;text-align:center;color:var(--text)}
+.pa-vote.up-on .score{color:var(--primary)}
+@media (max-width:370px){.pa{padding:0 5px;gap:3px}.pa-vote .up,.pa-vote .down{width:21px}}
+.pa-like.on{color:#FF5C97}
+.pa-like.on svg{fill:#FF5C97}
+.pa-repost.on{color:var(--green)}
+.pa-save.on{color:var(--yellow)}
+.pa-save.on svg{fill:var(--yellow)}
+.pa-like.pop svg{animation:paPop .28s cubic-bezier(.3,1.6,.5,1)}
+@keyframes paPop{0%{transform:scale(.7)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.pa-like.pop svg{animation:none}}
+.post-repost-by{
+  display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;color:var(--text3);margin:-2px 0 9px;
+}
+.post-repost-by svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.like-burst{
+  position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;pointer-events:none;
+  fill:#FF5C97;opacity:0;transform:scale(.4);
+}
+.like-burst.go{animation:burst .6s ease-out}
+@keyframes burst{0%{opacity:0;transform:scale(.4)}25%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:scale(1.25)}}
+
+/* ---------- 8. carte de partage (exploit / séance / programme) ---------- */
+.share-embed{
+  margin-top:11px;padding:12px;border-radius:14px;background:var(--surface2);border:1px solid var(--border);
+}
+.share-embed.pr{border-color:rgba(255,214,10,.35);background:linear-gradient(135deg,rgba(255,214,10,.10),rgba(255,214,10,.02)),var(--surface2)}
+.share-embed.program{border-color:rgba(191,90,242,.35)}
+.se-head{display:flex;align-items:center;gap:8px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.se-title{font-size:1rem;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.se-big{font-size:1.9rem;font-weight:850;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--primary);margin-top:4px}
+.se-big small{font-size:.9rem;color:var(--text2);font-weight:700;margin-left:4px}
+.se-meta{font-size:.76rem;color:var(--text2);margin-top:4px}
+.se-rows{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.se-row{display:flex;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--text2)}
+.se-row b{color:var(--text);font-weight:700}
+.se-cta{margin-top:12px;width:100%}
+
+/* ---------- 9. nutrition ---------- */
+.kcal-card{padding:16px}
+.kcal-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.kcal-eaten{font-size:2.2rem;font-weight:850;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.kcal-eaten small{font-size:.85rem;color:var(--text2);font-weight:700;margin-left:4px}
+.kcal-left{font-size:.8rem;font-weight:750;color:var(--text2);text-align:right}
+.kcal-left b{color:var(--text);font-variant-numeric:tabular-nums}
+.pbar{height:12px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:12px}
+.pbar>i{
+  display:block;height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,#FF6B35,#FF9A62);
+  transition:width .5s cubic-bezier(.22,.61,.36,1),background-color .3s;
+}
+.pbar.ok>i{background:linear-gradient(90deg,#30D158,#6EE58A)}
+.pbar.over>i{background:linear-gradient(90deg,#FFD60A,#FF453A)}
+@media (prefers-reduced-motion:reduce){.pbar>i{transition:none}}
+.kcal-meta{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text3);margin-top:7px;font-variant-numeric:tabular-nums}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.macro-name{display:flex;justify-content:space-between;font-size:.7rem;font-weight:750;color:var(--text2)}
+.macro-val{font-size:.8rem;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.macro .pbar{height:6px;margin-top:6px}
+.macro.p .pbar>i{background:#4DA3FF}.macro.c .pbar>i{background:#FFD60A}.macro.f .pbar>i{background:#BF5AF2}
+.meal-card{padding:0;overflow:hidden}
+.meal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px}
+.meal-name{font-size:.92rem;font-weight:750}
+.meal-sub{font-size:.72rem;color:var(--text3);margin-top:2px;font-variant-numeric:tabular-nums}
+.meal-kcal{font-size:.95rem;font-weight:800;font-variant-numeric:tabular-nums}
+.ing-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 14px;border-top:1px solid var(--border);font-size:.82rem;
+}
+.ing-row .ing-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)}
+.ing-row .ing-g{color:var(--text3);font-variant-numeric:tabular-nums;flex:none}
+.ing-row .ing-k{font-weight:700;font-variant-numeric:tabular-nums;flex:none;min-width:58px;text-align:right}
+.food-list{display:flex;flex-direction:column;gap:7px;max-height:42vh;overflow-y:auto;overscroll-behavior:contain}
+.food-item{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;
+  padding:10px 12px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);
+}
+.food-item:active{background:var(--surface3)}
+.food-item .fn{font-size:.86rem;font-weight:700}
+.food-item .fm{font-size:.7rem;color:var(--text3);margin-top:2px}

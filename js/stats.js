@@ -578,9 +578,20 @@ function muscleCardHtml(){
         '<span class="musc-pct">' + pct + ' %</span>' +
       '</div>';
     }).join('');
+  /* carte musculaire maison (js/bodymap.js) : mêmes scores que la liste,
+     silhouette cliquable → ouvre Library filtrée sur le muscle */
+  const map = (typeof window.bodyMapHtml === 'function')
+    ? bodyMapHtml({
+        scores: muscleScores(volRange),
+        days: volRange,
+        selected: '',
+        select: true
+      })
+    : '';
   return '<div class="card musc-card">' +
     '<div class="card-header"><div class="card-title">Muscle split</div>' +
     '<div class="card-sub" style="margin:0">over ' + periodLabel(volRange) + '</div></div>' +
+    map +
     '<div class="musc-list">' + rows + '</div>' +
   '</div>';
 }

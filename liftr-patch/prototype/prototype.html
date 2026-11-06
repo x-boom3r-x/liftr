@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="stylesheet" href="../css/app.css"><!-- en dev : app.css + patch-layout.css concaténés -->
+<style>.sc{display:none}.sc.on{display:block}</style></head>
+<body>
+<div id="mainApp">
+ <header class="header"><div class="brand"><div class="brand-name">Liftr</div></div></header>
+ <main class="app">
+  <!-- ========== FEED (onglet 1, page d'accueil si en ligne) ========== -->
+  <section class="panel sc on" id="p-feed">
+   <div class="feed-top"><div class="section-title">Home</div>
+    <div class="top-icons">
+     <button class="top-icon" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg></button>
+     <button class="top-icon" aria-label="Messages"><svg viewBox="0 0 24 24"><path d="M4 6h16v11H8l-4 3z"/></svg><span class="snav-dot"></span></button>
+     <button class="top-icon" aria-label="Profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></button>
+    </div></div>
+   <div class="feed-scope"><button class="seg active">All</button><button class="seg">Following</button><button class="seg">Top</button></div>
+   <div class="crew">
+     <div class="crew-cell me"><div class="crew-ring me"><div class="avatar">M</div></div><span class="crew-label">Your story</span></div>
+     <div class="crew-cell live"><div class="crew-ring"><div class="avatar">A</div></div><span class="crew-label">Alex</span></div>
+     <div class="crew-cell seen"><div class="crew-ring"><div class="avatar">S</div></div><span class="crew-label">Sam</span></div>
+     <div class="crew-cell"><div class="crew-ring"><div class="avatar">L</div></div><span class="crew-label">Léa</span></div>
+   </div>
+   <article class="post">
+    <div class="post-repost-by"><svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>Sam a reposté</div>
+    <div class="post-head"><div class="avatar">A</div><div><div class="post-name">Alex</div><div class="post-time">il y a 2 h</div></div></div>
+    <div class="post-body">Nouveau record au squat 💪</div>
+    <div class="share-embed pr"><div class="se-head">🏆 Record personnel</div><div class="se-title">Back Squat</div><div class="se-big">142.5<small>kg × 3</small></div><div class="se-meta">1RM estimé 156 kg · +5 kg vs précédent</div></div>
+    <div class="post-actions">
+     <div class="pa pa-vote up-on"><button class="up on" aria-label="Upvote"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 6-6 6 6"/></svg></button><span class="score">24</span><button class="down" aria-label="Downvote"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 10 6 6 6-6"/></svg></button></div>
+     <button class="pa pa-like on"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>18</button>
+     <button class="pa"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>6</button>
+     <button class="pa pa-repost on"><svg viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>3</button>
+     <span class="pa spacer"></span>
+     <button class="pa pa-save on" aria-label="Enregistrer"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
+     <button class="pa" aria-label="Partager"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 14v6h14v-6"/></svg></button>
+    </div>
+   </article>
+   <article class="post"><div class="post-head"><div class="avatar">L</div><div><div class="post-name">Léa</div><div class="post-time">il y a 5 h</div></div></div>
+    <div class="share-embed program"><div class="se-head">📋 Programme partagé</div><div class="se-title">Push Pull Legs — 6 jours</div><div class="se-rows"><div class="se-row"><span>Séances</span><b>6 / semaine</b></div><div class="se-row"><span>Exercices</span><b>38</b></div></div><button class="btn btn-primary btn-sm se-cta">Importer ce programme</button></div></article>
+  </section>
+
+  <!-- ========== GYM (onglet 2) ========== -->
+  <section class="panel sc" id="p-gym">
+   <nav class="subnav"><button class="subnav-item">Programme</button><button class="subnav-item">Séance</button><button class="subnav-item">Calendrier</button><button class="subnav-item active">Progression</button></nav>
+   <div class="card" style="padding:16px"><div class="card-title">Insights</div><div class="card-sub">Squat stagne depuis 4 séances — vise 100 kg × 6.</div></div>
+  </section>
+
+  <!-- ========== NUTRITION (onglet 3) ========== -->
+  <section class="panel sc" id="p-nutri">
+   <nav class="subnav"><button class="subnav-item active">Aujourd'hui</button><button class="subnav-item">Repas</button><button class="subnav-item">Aliments</button><button class="subnav-item">Objectif</button></nav>
+   <div class="card kcal-card">
+    <div class="kcal-top"><div class="kcal-eaten">1 480<small>/ 2 209 kcal</small></div><div class="kcal-left"><b>729</b> restantes</div></div>
+    <div class="pbar"><i style="width:67%"></i></div>
+    <div class="kcal-meta"><span>BMR 1 780</span><span>TDEE 2 759</span><span>Objectif −550</span></div>
+    <div class="macros">
+     <div class="macro p"><div class="macro-name"><span>Prot.</span></div><div class="macro-val">118 / 176 g</div><div class="pbar"><i style="width:67%"></i></div></div>
+     <div class="macro c"><div class="macro-name"><span>Gluc.</span></div><div class="macro-val">160 / 230 g</div><div class="pbar"><i style="width:70%"></i></div></div>
+     <div class="macro f"><div class="macro-name"><span>Lip.</span></div><div class="macro-val">42 / 61 g</div><div class="pbar"><i style="width:69%"></i></div></div>
+    </div></div>
+   <div class="card meal-card" style="margin-top:12px"><div class="meal-head"><div><div class="meal-name">Déjeuner</div><div class="meal-sub">P 52 · G 56 · L 9</div></div><div class="meal-kcal">508 kcal</div></div>
+    <div class="ing-row"><span class="ing-n">Riz basmati cuit</span><span class="ing-g">200 g</span><span class="ing-k">260 kcal</span></div>
+    <div class="ing-row"><span class="ing-n">Blanc de poulet</span><span class="ing-g">150 g</span><span class="ing-k">248 kcal</span></div></div>
+  </section>
+ </main>
+ <nav class="tabbar"><div class="tabbar-inner">
+  <button class="tab active" data-p="p-feed"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span>Feed</span></button>
+  <button class="tab" data-p="p-gym"><svg viewBox="0 0 24 24"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg><span>Gym</span></button>
+  <button class="tab" data-p="p-nutri"><svg viewBox="0 0 24 24"><path d="M12 3c3 3 5 5 5 9a5 5 0 0 1-10 0c0-4 2-6 5-9z"/></svg><span>Nutrition</span></button>
+ </div></nav>
+</div>
+<script>document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));document.querySelectorAll('.sc').forEach(s=>s.classList.toggle('on',s.id===t.dataset.p))})</script>
+</body></html>

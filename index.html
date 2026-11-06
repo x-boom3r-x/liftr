@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="83">
+<html lang="en" data-build="84">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -111,6 +111,7 @@
         </div>
         <button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>
       </div>
+      <div id="todayCard"></div>
       <div id="daysList"></div>
 
       <div class="card share-card">
@@ -242,6 +243,33 @@
           <button class="btn btn-primary btn-block" onclick="addProgression()">Save progression</button>
         </div>
       </div>
+    </section>
+
+    <!-- ---------- LIBRARY : bibliothèque d'exercices + carte musculaire ---------- -->
+    <section id="tab-library" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Library</div>
+          <div class="section-hint" id="libScreenHint">Every exercise, by muscle</div>
+        </div>
+        <button class="btn btn-sm" onclick="showTab('programme')">My program</button>
+      </div>
+      <div class="card" id="libMapCard">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Muscle map</div>
+            <div class="card-sub" id="libMapSub">Tap a muscle to filter the library</div>
+          </div>
+          <span class="chip chip-type" id="libMapRange">30 D</span>
+        </div>
+        <div id="libScreenMap"></div>
+      </div>
+      <div class="search-wrap">
+        <input class="input" id="libScreenSearch" placeholder="Search an exercise…"
+          aria-label="Search an exercise" oninput="onLibScreenSearch(this.value)">
+      </div>
+      <div id="libScreenChips" class="lib-chips"></div>
+      <div id="libScreenGrid" class="lib-grid"></div>
     </section>
 
     <!-- ---------- STATS ---------- -->
@@ -511,21 +539,39 @@
       </nav>
     </section>
 
+    <!-- ---------- PROFIL (racine de la nav basse) ---------- -->
+    <section id="tab-profil" class="panel hidden">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Profil</div>
+          <div class="section-hint" id="profilHint">This device</div>
+        </div>
+      </div>
+      <div id="profilContent"></div>
+    </section>
+
   </main>
 
-  <nav class="tabbar">
+  <nav class="tabbar" id="tb" aria-label="Navigation principale">
     <div class="tabbar-inner">
-      <button class="tab active" id="tabFeedBtn" data-tab="feed" onclick="showRoot('feed')">
-        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-        Feed
+      <button class="tab active" id="tabFeedBtn" data-tab="feed" aria-current="true" onclick="showRoot('feed')" aria-label="Accueil">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        <span class="tab-lbl">Accueil</span>
       </button>
-      <button class="tab" data-tab="gym" onclick="showRoot('gym')">
-        <svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>
-        Gym
+      <button class="tab" data-tab="gym" aria-current="false" onclick="showRoot('gym')" aria-label="Muscu">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>
+        <span class="tab-lbl">Muscu</span>
       </button>
-      <button class="tab" data-tab="nutrition" onclick="showRoot('nutrition')">
-        <svg viewBox="0 0 24 24"><path d="M12 3c-3 3.6-4.5 6.3-4.5 9a4.5 4.5 0 0 0 9 0c0-2.7-1.5-5.4-4.5-9z"/><path d="M12 21v-3"/></svg>
-        Nutrition
+      <button class="plus" aria-label="Publier" onclick="navPublish()">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="tab" data-tab="nutrition" aria-current="false" onclick="showRoot('nutrition')" aria-label="Nutrition">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.3 3.9-5 6.9-5 9.8a5 5 0 0 0 10 0c0-2.9-1.7-5.9-5-9.8z"/></svg>
+        <span class="tab-lbl">Nutrition</span>
+      </button>
+      <button class="tab" data-tab="profil" aria-current="false" onclick="showRoot('profil')" aria-label="Profil">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+        <span class="tab-lbl">Profil</span>
       </button>
     </div>
   </nav>

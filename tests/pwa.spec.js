@@ -99,7 +99,7 @@ test.describe('PWA', () => {
       catch (e){ Object.defineProperty(navigator, 'vibrate', { value: () => { window.__vib = true; return true; }, configurable: true }); }
     });
 
-    await page.locator('button:has-text("Resume")').first().click();
+    await page.locator('#tab-seance button:has-text("Resume")').first().click();
     await expect(page.locator('#activeModal')).toHaveClass(/show/);
     await page.locator('#activeModal button:has-text("Finish session")').click();
     await expect.poll(() => page.evaluate(() => window.__vib)).toBe(true);

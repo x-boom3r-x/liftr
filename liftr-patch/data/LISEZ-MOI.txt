@@ -1,0 +1,3 @@
+Dépose ici ton fichier Excel de nutriments, par exemple :  liftr-patch/data/nutrition.xlsx
+(garde le nom que tu veux : l'IA le retrouvera avec  find . -name "*.xlsx")
+Ce fichier ne doit PAS être publié avec l'app : seul foods.json généré à partir de lui l'est.

@@ -9,7 +9,7 @@ const daySwim  = { id: 'd2', name: 'B', type: 'CARDIO', exercises: [{ id: 'e2', 
 
 async function startSession(page){
   await page.click('button[data-tab="seance"]');
-  await page.locator('button:has-text("Start")').first().click();
+  await page.locator('#tab-seance button:has-text("Start")').first().click();
   await expect(page.locator('#activeModal')).toHaveClass(/show/);
 }
 async function openDemoFromActive(page, i){

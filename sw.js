@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v83';
+const CACHE_NAME = 'liftr-v84';
 
 const ASSETS = [
   './',
@@ -13,6 +13,8 @@ const ASSETS = [
   './js/gestures.js',
   './js/ui.js',
   './js/programme.js',
+  './js/library.js',
+  './js/bodymap.js',
   './js/suggest.js',
   './js/seance.js',
   './js/calendrier.js',

@@ -116,13 +116,14 @@ if (_tabbarEl){
   _setTabbarH();
 }
 
-/* ---- Chantier F : 3 onglets racine (Feed | Gym | Nutrition) ----
+/* ---- Chantier F (build 84 : 4 racines + bouton Publier) ----
    showTab garde son contrat (un onglet concret) ; la couche root le mappe.
    Les boutons de sous-nav portent data-tab="<onglet concret>" : les
    selecteurs de tests (button[data-tab=seance]…) restent valides. */
 const TAB_ROOTS = {
   feed: 'feed',
-  programme: 'gym', seance: 'gym', calendrier: 'gym', stats: 'gym',
+  programme: 'gym', seance: 'gym', library: 'gym', calendrier: 'gym', stats: 'gym',
+  profil: 'profil',
   'nutri-today': 'nutrition', 'nutri-meals': 'nutrition',
   'nutri-foods': 'nutrition', 'nutri-goal': 'nutrition',
   'nutri-week': 'nutrition'
@@ -130,15 +131,16 @@ const TAB_ROOTS = {
 const ROOT_DEFAULT = {
   feed: 'feed',
   gym: 'programme',
-  nutrition: 'nutri-today'
+  nutrition: 'nutri-today',
+  profil: 'profil'
 };
-const ALL_TABS = ['programme','seance','calendrier','stats','feed',
-  'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week'];
+const ALL_TABS = ['programme','seance','library','calendrier','stats','feed',
+  'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week','profil'];
 const SUBNAV = {
-  gym: [['programme','Program'],['seance','Session'],['calendrier','Calendar'],['stats','Progression']],
+  gym: [['programme','Plan'],['seance','Session'],['library','Library'],['calendrier','Calendar'],['stats','Progression']],
   nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['nutri-foods','Foods'],['nutri-goal','Goal'],['nutri-week','Week']]
 };
-const lastSub = { gym: 'programme', nutrition: 'nutri-today' };
+const lastSub = { gym: 'programme', nutrition: 'nutri-today', profil: 'profil' };
 
 function rootOf(tab){ return TAB_ROOTS[tab] || 'gym'; }
 
@@ -214,12 +216,17 @@ function showTab(name){
     if (el) el.classList.toggle('hidden', t !== name);
   });
   /* onglets racine : l'actif = la racine de l'onglet courant */
-  document.querySelectorAll('.tabbar .tab').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === currentRoot));
+  document.querySelectorAll('.tabbar .tab').forEach(b => {
+    const on = b.dataset.tab === currentRoot;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-current', on ? 'true' : 'false');
+  });
   if (name === 'programme') renderProgramme();
   if (name === 'seance') renderSeance();
+  if (name === 'library' && typeof window.renderLibraryScreen === 'function') window.renderLibraryScreen();
   if (name === 'calendrier') renderCalendar();
   if (name === 'stats') renderStats();
+  if (name === 'profil' && typeof window.renderProfilScreen === 'function') window.renderProfilScreen();
   if (name === 'feed'){
     /* le panneau Feed peut être ouvert alors que la sous-vue sociale est
        encore profil / inbox / search : l'onglet racine ramène au fil (F/G) */
@@ -331,9 +338,86 @@ function wireActionSheet(){
   });
 }
 
+/* ---- écran Profil (racine de la nav basse) ----
+   État civil du profil local + actions. Refonte complète prévue dans une
+   phase ultérieure : ici, juste de quoi rendre le bouton utile. */
+function renderProfilScreen(){
+  const el = $('profilContent');
+  if (!el) return;
+  const name = currentUser || 'Guest';
+  const days = (DB.programme || []).length;
+  const sess = (DB.history || []).length;
+  const prs = Object.keys(DB.prs || {}).length;
+
+  const rows = [];
+  rows.push({
+    t: 'Switch profile',
+    s: (getProfiles().length) + ' profile' + (getProfiles().length !== 1 ? 's' : '') + ' on this device',
+    btn: '<button class="btn btn-sm" onclick="switchUser()">Switch</button>'
+  });
+  rows.push({
+    t: 'Backup & restore',
+    s: 'Program, sessions, records — one .json file',
+    btn: '<button class="btn btn-sm" onclick="exportBackup()">Export</button>' +
+         '<button class="btn btn-sm" style="margin-left:6px" onclick="openImport()">Import</button>'
+  });
+  if (typeof window.socialAvailable === 'function' && socialAvailable()){
+    rows.push({
+      t: 'The Feed',
+      s: 'Signed in as ' + esc((window.socialUser && socialUser.email) || 'you'),
+      btn: '<button class="btn btn-sm" onclick="signOutSocial()">Sign out</button>'
+    });
+  } else {
+    rows.push({
+      t: 'The Feed',
+      s: 'Optional — your training data stays on this device',
+      btn: '<button class="btn btn-sm btn-primary" onclick="openAuth()">Sign in</button>'
+    });
+  }
+  if (typeof window.hasInstallPrompt === 'function' && hasInstallPrompt()){
+    rows.push({
+      t: 'Install Liftr',
+      s: 'Add it to your home screen',
+      btn: '<button class="btn btn-sm btn-primary" onclick="installApp()">Install</button>'
+    });
+  }
+
+  el.innerHTML =
+    '<div class="profil-hero">' +
+      '<div class="avatar">' + esc(name.trim().charAt(0).toUpperCase() || '?') + '</div>' +
+      '<div><div class="ph-name">' + esc(name) + '</div>' +
+      '<div class="ph-meta">Local profile · build ' + esc(window.__LIFTR_BUILD__ || '') + '</div></div>' +
+    '</div>' +
+    '<div class="profil-stats">' +
+      '<div class="profil-stat"><div class="ps-n">' + days + '</div><div class="ps-l">Days</div></div>' +
+      '<div class="profil-stat"><div class="ps-n">' + sess + '</div><div class="ps-l">Sessions</div></div>' +
+      '<div class="profil-stat"><div class="ps-n">' + prs + '</div><div class="ps-l">Records</div></div>' +
+    '</div>' +
+    rows.map(r =>
+      '<div class="profil-row"><div><div class="pr-t">' + esc(r.t) + '</div>' +
+      '<div class="pr-s">' + r.s + '</div></div><div>' + r.btn + '</div></div>'
+    ).join('');
+
+  const hint = $('profilHint');
+  if (hint) hint.textContent = sess + ' session' + (sess !== 1 ? 's' : '') +
+    ' · ' + days + ' day' + (days !== 1 ? 's' : '') + ' in your program';
+}
+
+/* Bouton + central de la nav : on ramène d'abord au fil (le composer vit
+   dans #tab-feed, caché ailleurs), puis on ouvre la feuille de création. */
+function navPublish(){
+  if (!feedGateOk()){
+    toast('Sign in and go online to publish.');
+    showRoot('feed');
+    return;
+  }
+  showRoot('feed');
+  if (typeof window.openPostTypeSheet === 'function') window.openPostTypeSheet();
+}
+
 Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet,
-  pickInitialTab, ALL_TABS
+  pickInitialTab, navPublish, renderProfilScreen, ALL_TABS
 });

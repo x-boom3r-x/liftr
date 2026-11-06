@@ -189,7 +189,7 @@ test.describe('Tableau de bord Stats', () => {
     await seed(page, { programme: [dayA] });
 
     await page.click('button[data-tab="seance"]');
-    await page.locator('button:has-text("Start")').first().click();
+    await page.locator('#tab-seance button:has-text("Start")').first().click();
     await page.locator('#activeExercises button:has-text("+ Set")').first().click();
     await page.locator('#addSetModal button:has-text("Save set")').click();
     await page.locator('#activeModal button:has-text("Finish session")').click();

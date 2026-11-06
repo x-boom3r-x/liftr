@@ -5,7 +5,7 @@ const dayA = { id: 'd1', name: 'A', type: 'PUSH', exercises: [{ id: 'e1', name: 
 
 async function openSetModal(page){
   await page.click('button[data-tab="seance"]');
-  await page.locator('button:has-text("Start")').first().click();
+  await page.locator('#tab-seance button:has-text("Start")').first().click();
   await expect(page.locator('#activeModal')).toHaveClass(/show/);
   await page.locator('#activeExercises button:has-text("+ Set")').first().click();
   await expect(page.locator('#addSetModal')).toHaveClass(/show/);
@@ -118,7 +118,7 @@ test.describe('Steppers + / −', () => {
     }, 'Mouataz');
 
     await page.click('button[data-tab="seance"]');
-    await page.locator('button:has-text("Start")').first().click();
+    await page.locator('#tab-seance button:has-text("Start")').first().click();
     await expect(page.locator('#activeModal')).toHaveClass(/show/);
     await page.locator('#activeExercises button:has-text("+ Run")').first().click();
     await expect(page.locator('#addSetModal')).toHaveClass(/show/);

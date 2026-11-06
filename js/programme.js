@@ -31,9 +31,137 @@ function typeChip(type){
   return '<span class="chip chip-' + cls + '">' + esc(t) + '</span>';
 }
 
+/* --- carte « Aujourd'hui » (modèle openGym) : plan du jour, suggestion,
+       session en cours — reprend la couleur Liftr --- */
+const MUSCLE_CHIP = {
+  Chest: 'chip-push', Shoulders: 'chip-upper', Biceps: 'chip-pull',
+  Triceps: 'chip-pull', Back: 'chip-pull', Legs: 'chip-legs',
+  Glutes: 'chip-legs', Core: 'chip-rest', Cardio: 'chip-cardio'
+};
+function muscleChip(g){
+  return '<span class="chip ' + (MUSCLE_CHIP[g] || 'chip-type') + '">' + esc(g) + '</span>';
+}
+function dayMuscles(day){
+  const mm = (typeof window.muscleMap === 'function') ? muscleMap() : {};
+  const out = [];
+  (day.exercises || []).forEach(e => {
+    const g = mm[String(e.name || '').toLowerCase().trim()];
+    if (g && g !== 'Cardio' && out.indexOf(g) < 0) out.push(g);
+  });
+  return out;
+}
+function lastDoneOf(dayId){
+  let last = null;
+  (DB.history || []).forEach(h => {
+    if (h.dayId === dayId && (!last || h.date > last)) last = h.date;
+  });
+  return last;
+}
+/* séance la moins récemment faite (ou jamais faite) */
+function suggestDay(){
+  if (!DB.programme.length) return null;
+  return DB.programme.slice().sort((a, b) => {
+    const la = lastDoneOf(a.id) || '', lb = lastDoneOf(b.id) || '';
+    return la < lb ? -1 : la > lb ? 1 : 0;
+  })[0];
+}
+function todayCardEmpty(){
+  return '<div class="today-empty">' +
+    '<span class="te-ico" aria-hidden="true">🏋️</span>' +
+    '<div class="te-txt"><div class="te-t">No session in your program yet</div>' +
+    '<div class="te-s">Create a day (PUSH, PULL, LEGS…) and it shows up here.</div></div>' +
+    '<button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>' +
+  '</div>';
+}
+function renderTodayCard(){
+  const el = $('todayCard');
+  if (!el) return;
+  if (!DB.programme.length){ el.innerHTML = todayCardEmpty(); return; }
+
+  const iso = todayISO();
+  const entry = (typeof window.planEntry === 'function') ? planEntry(iso) : null;
+  const status = (typeof window.planStatus === 'function') ? planStatus(iso) : 'none';
+  const planned = (entry && entry.dayId)
+    ? DB.programme.find(d => d.id === entry.dayId) : null;
+
+  /* 1. session en cours */
+  if (DB.active){
+    const a = DB.active;
+    const sets = (a.exercises || []).reduce((n, e) => n + e.sets.length, 0);
+    const mins = Math.max(1, Math.round((Date.now() - a.startedAt) / 60000));
+    el.innerHTML = '<div class="today-card">' +
+      '<div class="today-top"><div>' +
+        '<div class="today-eyebrow"><span class="today-dot"></span>In progress</div>' +
+        '<div class="today-name">' + esc(a.dayName) + '</div>' +
+        '<div class="today-meta">' + mins + ' min · ' + sets + ' set' + (sets !== 1 ? 's' : '') +
+          ' logged</div>' +
+      '</div></div>' +
+      '<div class="today-acts">' +
+        '<button class="btn btn-primary btn-sm" onclick="resumeSession()">Resume</button>' +
+        '<button class="btn btn-sm" onclick="showTab(\'seance\')">Session tab</button>' +
+      '</div></div>';
+    return;
+  }
+
+  /* 2. plan du jour : à faire */
+  if (planned && status !== 'done' && status !== 'skip'){
+    const mus = dayMuscles(planned);
+    el.innerHTML = '<div class="today-card">' +
+      '<div class="today-top"><div>' +
+        '<div class="today-eyebrow"><span class="today-dot"></span>Today\'s plan</div>' +
+        '<div class="today-name">' + esc(planned.name) + '</div>' +
+        '<div class="today-meta">' + planned.exercises.length + ' exercise' +
+          (planned.exercises.length !== 1 ? 's' : '') +
+          (lastDoneOf(planned.id) ? ' · last done ' + fmtShort(lastDoneOf(planned.id)) : ' · never done') +
+        '</div>' +
+      '</div>' + typeChip(planned.type) + '</div>' +
+      (mus.length ? '<div class="today-muscles">' + mus.map(muscleChip).join('') + '</div>' : '') +
+      '<div class="today-acts">' +
+        '<button class="btn btn-primary btn-sm" onclick="startSession(\'' + planned.id + '\')">Start session</button>' +
+        '<button class="btn btn-sm" onclick="openDayDetail(\'' + planned.id + '\')">View</button>' +
+      '</div></div>';
+    return;
+  }
+
+  /* 3. plan du jour : fait */
+  if (planned && status === 'done'){
+    el.innerHTML = '<div class="today-card done">' +
+      '<div class="today-top"><div>' +
+        '<div class="today-eyebrow"><span class="today-dot"></span>Done today</div>' +
+        '<div class="today-name">' + esc(planned.name) + '</div>' +
+        '<div class="today-meta">Nice — recovery is programmed. See you tomorrow.</div>' +
+      '</div>' + typeChip(planned.type) + '</div>' +
+      '<div class="today-acts">' +
+        '<button class="btn btn-sm" onclick="openDayDetail(\'' + planned.id + '\')">View session</button>' +
+        '<button class="btn btn-sm" onclick="showTab(\'stats\')">Progress</button>' +
+      '</div></div>';
+    return;
+  }
+
+  /* 4. aucun plan : suggestion (séance la moins récente) */
+  const sugg = suggestDay();
+  if (!sugg){ el.innerHTML = todayCardEmpty(); return; }
+  const mus = dayMuscles(sugg);
+  const last = lastDoneOf(sugg.id);
+  el.innerHTML = '<div class="today-card">' +
+    '<div class="today-top"><div>' +
+      '<div class="today-eyebrow"><span class="today-dot"></span>Suggested today</div>' +
+      '<div class="today-name">' + esc(sugg.name) + '</div>' +
+      '<div class="today-meta">' + sugg.exercises.length + ' exercise' +
+        (sugg.exercises.length !== 1 ? 's' : '') +
+        (last ? ' · last done ' + fmtShort(last) : ' · never done') + '</div>' +
+    '</div>' + typeChip(sugg.type) + '</div>' +
+    (mus.length ? '<div class="today-muscles">' + mus.map(muscleChip).join('') + '</div>' : '') +
+    '<div class="today-acts">' +
+      '<button class="btn btn-primary btn-sm" onclick="startSession(\'' + sugg.id + '\')">Start session</button>' +
+      '<button class="btn btn-sm" onclick="openDayDetail(\'' + sugg.id + '\')">View</button>' +
+    '</div></div>';
+}
+
 function renderProgramme(){
   const el = $('daysList');
   $('progCount').textContent = DB.programme.length + ' day' + (DB.programme.length !== 1 ? 's' : '') + ' in your program';
+  renderTodayCard();
   if (!DB.programme.length){
     el.innerHTML = '<div class="empty"><div class="empty-icon">🗓️</div>' +
       '<div class="empty-text">No day created yet.<br>Start by adding a session (PUSH, PULL, LEGS…)</div></div>';
@@ -298,6 +426,22 @@ function toggleLibExercise(name){
   renderDayExercises(); renderProgramme(); renderSeance(); renderLibrary();
 }
 
+/* ajout/retrait direct depuis l'écran Library (pas de modale ouverte) */
+function libAddToDay(dayId, name){
+  const d = DB.programme.find(x => x.id === dayId);
+  if (!d) return;
+  const i = d.exercises.findIndex(e => e.name.toLowerCase() === name.toLowerCase());
+  if (i >= 0){
+    d.exercises.splice(i, 1);
+    toast('Removed from "' + d.name + '"');
+  } else {
+    d.exercises.push({ id: uid(), name: name, cardio: isCardioName(name) || undefined });
+    toast('Added to "' + d.name + '"');
+  }
+  save();
+  renderDayExercises(); renderProgramme(); renderSeance(); renderLibrary();
+}
+
 function addExercise(){
   const input = $('exNameInput');
   const name = input.value.trim();
@@ -403,8 +547,9 @@ function deleteCurrentDay(){
 
 Object.assign(window, {
   exoNameSet, othersHaveExo, dropExoRecords, typeChip, renderProgramme,
+  renderTodayCard, dayMuscles, suggestDay, muscleChip,
   openNewDay, renderTypePicker, saveNewDay, renamePrompt, applyDayName, deleteDay,
   openDayDetail, renameDay, renderDayExercises, exerciseHistoryLine, libEntries,
-  renderLibrary, onLibSearch, toggleLibExercise, addExercise, renameExercise,
+  renderLibrary, onLibSearch, toggleLibExercise, libAddToDay, addExercise, renameExercise,
   deleteExercise, deleteCurrentDay, toggleCardio, shareProgramme
 });

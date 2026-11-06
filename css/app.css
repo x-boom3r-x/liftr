@@ -192,19 +192,119 @@ button{background:none;border:none;cursor:pointer}
   border-top:1px solid var(--border);
   box-shadow:0 -1px 0 rgba(255,255,255,.05) inset;
 }
-.tabbar-inner{display:flex;gap:4px;width:100%;max-width:640px}
+.tabbar-inner{display:flex;align-items:stretch;gap:4px;width:100%;max-width:640px}
 .tab{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   padding:8px 4px;border-radius:13px;color:var(--text3);
-  font-size:.66rem;font-weight:650;letter-spacing:.01em;
+  font-size:.64rem;font-weight:650;letter-spacing:.01em;
 }
-.tab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tab svg,.tab svg.i{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tab.active{color:var(--primary);background:var(--primary-dim)}
 .tab .badge{
   position:absolute;transform:translate(13px,-4px);
   background:var(--primary);color:#160802;font-size:.6rem;font-weight:800;
   min-width:16px;height:16px;border-radius:999px;display:grid;place-items:center;padding:0 4px;
 }
+
+/* ---- nav basse (build 84) : 5 boutons + bouton Publier central ----
+   .plus n'est PAS un .tab : pas de data-tab, jamais l'état actif, et il ne
+   décale pas le tabGap mesuré (align-self:center). .tab reste étiré en
+   hauteur : le premier .tab touche le bord bas du contenu de la barre
+   (tests app-shell : tabGap = 8px sans inset, 10px avec 34px). */
+.tabbar .plus{
+  flex:0 0 auto;align-self:center;
+  width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;margin:0 3px;
+  background:var(--primary);color:#1A0A03;
+  box-shadow:0 6px 16px rgba(255,107,53,.34), inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .1s ease, filter .12s ease;
+}
+.tabbar .plus svg.i{width:24px;height:24px;stroke-width:2.4}
+.tabbar .plus:active{transform:scale(.92)}
+.tabbar .tab[aria-current="true"]{color:var(--primary)}
+.tab-lbl{display:block;line-height:1.15}
+
+/* ---- carte « Aujourd'hui » (séance du jour, modèle openGym) ---- */
+.today-card{
+  position:relative;overflow:hidden;margin-bottom:14px;
+  background:linear-gradient(155deg, rgba(255,107,53,.16), rgba(255,107,53,.04) 55%), var(--surface);
+  border:1px solid rgba(255,107,53,.32);border-radius:16px;padding:14px;
+}
+.today-card.done{background:var(--surface);border-color:var(--border)}
+.today-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.today-eyebrow{
+  font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:#FF8A5B;display:flex;align-items:center;gap:6px;
+}
+.today-card.done .today-eyebrow{color:var(--text3)}
+.today-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.today-name{font-size:1.06rem;font-weight:800;margin-top:5px;color:var(--text)}
+.today-meta{font-size:.74rem;color:var(--text3);margin-top:3px}
+.today-muscles{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.today-muscles .chip{font-size:.63rem;padding:3px 8px}
+.today-acts{display:flex;gap:8px;margin-top:12px}
+.today-acts .btn{flex:1}
+.today-empty{
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  background:var(--surface);border:1px dashed var(--border);border-radius:16px;padding:13px 14px;
+}
+.today-empty .te-ico{font-size:1.5rem;flex:none;opacity:.8}
+.today-empty .te-txt{flex:1;min-width:0}
+.today-empty .te-t{font-size:.86rem;font-weight:750;color:var(--text2)}
+.today-empty .te-s{font-size:.73rem;color:var(--text3);margin-top:2px}
+.today-empty .btn{flex:none}
+
+/* ---- carte musculaire (SVG maison, pas de copie openGym) ---- */
+.bodymap{display:flex;justify-content:center;gap:14px;padding:8px 0 2px}
+.bodymap svg{width:100%;max-width:250px;height:auto;display:block}
+.bm-zone{
+  fill:var(--surface3);stroke:var(--border);stroke-width:1.4;
+  stroke-linejoin:round;transition:fill .18s ease;
+}
+.bm-hit{cursor:pointer}
+.bm-hit:hover .bm-zone{stroke:rgba(255,107,53,.65)}
+.bm-hit.on .bm-zone{stroke:var(--primary);stroke-width:2}
+.bm-base{fill:var(--surface2);stroke:var(--border);stroke-width:1.4}
+.bm-title{fill:var(--text3);font-size:9px;font-weight:800;letter-spacing:.1em;text-anchor:middle}
+.bm-legend{display:flex;justify-content:center;align-items:center;gap:8px;font-size:.64rem;color:var(--text3);margin-top:2px}
+.bm-legend i{display:inline-block;width:26px;height:7px;border-radius:4px;border:1px solid var(--border)}
+.bm-empty{font-size:.76rem;color:var(--text3);text-align:center;padding:10px 4px 4px}
+
+/* ---- écran Library (sous-onglet Muscu) ---- */
+#libScreenGrid.lib-grid{max-height:none;overflow:visible}
+#libScreenChips.lib-chips{padding-top:4px}
+.lib-screen-stats{display:flex;gap:8px;margin-top:10px}
+.lib-stat{
+  flex:1;background:var(--surface3);border:1px solid var(--border);border-radius:11px;
+  padding:8px 10px;text-align:center;
+}
+.lib-stat .ls-n{font-size:.95rem;font-weight:800;color:var(--text)}
+.lib-stat .ls-l{font-size:.6rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* ---- écran Profil (racine de la nav) ---- */
+.profil-hero{
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(155deg, rgba(255,107,53,.15), rgba(255,107,53,.03) 60%), var(--surface);
+  border:1px solid rgba(255,107,53,.3);border-radius:16px;padding:16px 14px;margin-bottom:14px;
+}
+.profil-hero .avatar{width:56px;height:56px;font-size:1.5rem;flex:none}
+.profil-hero .ph-name{font-size:1.1rem;font-weight:800;color:var(--text)}
+.profil-hero .ph-meta{font-size:.76rem;color:var(--text3);margin-top:3px}
+.profil-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.profil-stat{
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:11px 8px;text-align:center;
+}
+.profil-stat .ps-n{font-size:1.12rem;font-weight:800;color:var(--primary)}
+.profil-stat .ps-l{font-size:.61rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.profil-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:13px 14px;margin-bottom:9px;
+}
+.profil-row .pr-t{font-size:.86rem;font-weight:700;color:var(--text2)}
+.profil-row .pr-s{font-size:.72rem;color:var(--text3);margin-top:2px}
+.profil-row .btn{flex:none}
 
 /* ---------- MODALS ---------- */
 .overlay{
