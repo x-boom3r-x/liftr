@@ -17,7 +17,6 @@ import {
   filterByCategory,
   getExercise,
   aliasFrToEn,
-  aliasEnToFr,
   makeCustomExercise,
 } from './gym/exercises.js';
 
@@ -163,20 +162,6 @@ function onLibScreenSearch(v){
   libScreenQuery = v;
   libScreenFilter = v.trim() ? 'All' : libScreenFilter;
   renderLibraryScreen();
-}
-
-async function ensureCatalogue(){
-  const exes = await catalogue;
-  if (Array.isArray(exes) && exes.length){
-    exes.forEach(ex => {
-      ex._lower = (ex.name || '').toLowerCase();
-      ex._search = `${ex._lower} ${(ex.bodyPart || '').toLowerCase()} ${(ex.category || '').toLowerCase()}`;
-      if (ex.name) {
-        const fr = aliasEnToFr(ex.name.toLowerCase());
-        if (fr) ex._frAlias = fr;
-      }
-    });
-  }
 }
 
 function libScreenPick(name){

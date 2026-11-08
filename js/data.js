@@ -2,6 +2,7 @@
    LIFTR - constantes & utilitaires purs
    ================================================================== */
 
+import { getCatalogue } from './gym/exercises.js';
 
 const TYPES = ['PUSH','PULL','LEGS','UPPER','FULL','CARDIO','REST'];
 
@@ -138,7 +139,16 @@ function volumeOf(s){
 
 /* --- cardio : durée (min) + distance (km) --- */
 function isCardioName(name){
-  return (LIB['Cardio'] || []).some(n => n.toLowerCase().trim() === exoKey(name));
+  if (!name) return false;
+  const k = String(name).toLowerCase().trim();
+  /* 1. Exercices legacy LIFTR (toujours disponibles) */
+  if ((LIB['Cardio'] || []).some(n => n.toLowerCase().trim() === k)) return true;
+  /* 2. Exercices du catalogue openGym (category === 'cardio') */
+  const cat = getCatalogue();
+  if (cat.length){
+    return cat.some(ex => ex._lower === k && (ex.category || '').toLowerCase() === 'cardio');
+  }
+  return false;
 }
 function cardioLine(s){
   const parts = [];

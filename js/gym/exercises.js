@@ -15,13 +15,30 @@ const EXO_ALIASES = (() => {
     'curl haltères': 'dumbbell curl',
     'extension triceps': 'triceps extension',
     'row haltères': 'dumbbell row',
+    'curl biceps': 'biceps curl',
     // Jambes
     'squat': 'squat',
     'levé de mollet': 'calf raise',
     'extension leg': 'leg extension',
+    'fente': 'lunge',
+    'soulevé de terre': 'deadlift',
     // Poitrine/épaules
-    'incliné': 'incline press',
-    'shoulder press': 'military press',
+    'développé incliné': 'incline press',
+    'développé décliné': 'decline press',
+    'développé militaire': 'overhead press',
+    'épaules': 'shoulder press',
+    'élévation latérale': 'lateral raise',
+    // Dos
+    'traction': 'pull-up',
+    'rowing': 'barbell row',
+    // Pectoraux
+    'écarté haltères': 'dumbbell fly',
+    'pompes': 'push-ups',
+    // Abdominaux
+    'crunch': 'crunch',
+    'gainage': 'plank',
+    // Général
+    'dips': 'dips',
   };
   const enToFr = {};
   Object.keys(frToEn).forEach(k => { enToFr[frToEn[k]] = k; });

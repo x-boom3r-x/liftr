@@ -15,8 +15,21 @@ let _demo = { name:null, images:[], i:0, data:null };
 /* lookup par nom d'exercice (g\u00e8re alias FR via exoKey) */
 function illustrationFor(name){
   if (!name) return null;
-  const k = (typeof exoKey === 'function' ? exoKey(name) : String(name).toLowerCase().trim());
-  return ILLUSTRATIONS[k] || null;
+  const k = String(name).toLowerCase().trim();
+  if (ILLUSTRATIONS[k]) return ILLUSTRATIONS[k];
+  if (typeof exoKey === 'function'){
+    const ek = exoKey(name);
+    if (ek !== k && ILLUSTRATIONS[ek]) return ILLUSTRATIONS[ek];
+  }
+  const eqPrefixes = ['barbell ','dumbbell ','cable ','machine ','smith ','kettlebell ','bodyweight ','body weight ','lever ','ez ','resistance ','suspension ','ring ','trap bar '];
+  for (const p of eqPrefixes){
+    if (k.startsWith(p)){
+      const rest = k.slice(p.length);
+      if (ILLUSTRATIONS[rest]) return ILLUSTRATIONS[rest];
+      break;
+    }
+  }
+  return null;
 }
 
 function _stepLabel(file, i, total){
