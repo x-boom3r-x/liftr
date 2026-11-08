@@ -9,7 +9,10 @@ import {
   getExercise,
   aliasFrToEn,
   aliasEnToFr,
-  makeCustomExercise
+  makeCustomExercise,
+  getCatalogue,
+  catalogueReady,
+  loadCatalogue
 } from './gym/exercises.js';
 import {
   policyOff,
@@ -22,6 +25,9 @@ import {
   suggestNextWeight
 } from './gym/progression.js';
 import { computePlateCombination } from './gym/plates.js';
+
+/* Démarre le chargement du catalogue openGym dès l'import du module. */
+loadCatalogue();
 
 let detailDayId = null;
 let newDayType = 'PUSH';
@@ -388,7 +394,13 @@ function libEntries(){
     seen.add(k);
     out.push({ name: name, group: group, custom: !!custom });
   };
-  Object.keys(LIB).forEach(g => LIB[g].forEach(n => push(n, g, false)));
+  /* Privilégie le catalogue openGym quand il est chargé, sinon fallback LIB legacy. */
+  const cat = getCatalogue();
+  if (cat.length){
+    cat.forEach(ex => push(ex.name, (ex.bodyPart || 'Autre').replace(/\b\w/g, c => c.toUpperCase()), ex.category === 'custom'));
+  } else {
+    Object.keys(LIB).forEach(g => LIB[g].forEach(n => push(n, g, false)));
+  }
   (DB.custom || []).forEach(n => push(n, 'Custom', true));
   return out;
 }
@@ -400,7 +412,8 @@ function renderLibrary(){
   const counts = {};
   all.forEach(e => counts[e.group] = (counts[e.group] || 0) + 1);
 
-  const groups = ['All'].concat(Object.keys(LIB), counts['Custom'] ? ['Custom'] : []);
+  const catGroups = [...new Set((getCatalogue() || []).map(e => e.bodyPart).filter(Boolean))].sort();
+  const groups = ['All'].concat(catGroups, counts['Custom'] ? ['Custom'] : []);
   $('libChips').innerHTML = groups.map(g => {
     const n = g === 'All' ? all.length : (counts[g] || 0);
     return '<button class="lib-chip' + (libFilter === g ? ' on' : '') + '" data-g="' + g + '">' +

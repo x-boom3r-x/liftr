@@ -1,112 +1,184 @@
 /* ==================================================================
    LIFTR - écran Library (sous-onglet Muscu)
-   Bibliothèque d'exercices en plein écran : carte musculaire cliquable,
-   filtres par groupe, recherche, fiche rapide (démo + ajout au programme).
+   Bibliothèque d'exercices en plein écran : utilise le catalogue
+   openGym (5 632 exercices) comme source, avec recherche FR/EN,
+   filtres muscle/équipement/catégorie, carte musculaire, favori,
+   récent et exercices personnalisés.
+
+   Source : loadCatalogue() (js/gym/exercises.js) ; libThumb et la
+   carte sont disponibles globalement (exercise-demo.js, bodymap.js).
    ================================================================== */
 
+import {
+  loadCatalogue,
+  searchExercises,
+  filterByMuscle,
+  filterByEquipment,
+  filterByCategory,
+  getExercise,
+  aliasFrToEn,
+  aliasEnToFr,
+  makeCustomExercise,
+} from './gym/exercises.js';
+
+/* Local persistence (favoris / récents) pour l'écran Library. */
+let libFavorites = new Set();
+let libRecent = new Set();
+
+function loadFavorites(){
+  try {
+    const s = localStorage.getItem('liftr_lib_favs');
+    libFavorites = new Set(s ? JSON.parse(s) : []);
+  } catch (_) { libFavorites = new Set(); }
+}
+function saveFavorites(){
+  try { localStorage.setItem('liftr_lib_favs', JSON.stringify(Array.from(libFavorites))); } catch (_) {}
+}
+function loadRecent(){
+  try {
+    const s = localStorage.getItem('liftr_lib_recents');
+    libRecent = new Set(s ? JSON.parse(s) : []);
+  } catch (_) { libRecent = new Set(); }
+}
+function saveRecent(){
+  try { localStorage.setItem('liftr_lib_recents', JSON.stringify(Array.from(libRecent))); } catch (_) {}
+}
+function markRecent(name){
+  libRecent.add(name);
+  const all = Array.from(libRecent);
+  if (all.length > 10) libRecent = new Set(all.slice(all.length - 10));
+  saveRecent();
+}
+
+/* Catalogue chargé (lazy, en cache) – résolu de façon asynchrone. */
+let catalogue = null;
+const cataloguePromise = loadCatalogue();
+
+/* ---- État de l'écran ---- */
 let libScreenFilter = 'All';
 let libScreenQuery = '';
+let libScreenSort = 'name';
+let libScreenFav = 'All';
+let libScreenRec = 'All';
 
-function libScreenCounts(){
-  const all = (typeof window.libEntries === 'function') ? libEntries() : [];
-  const counts = { All: all.length };
-  all.forEach(e => { counts[e.group] = (counts[e.group] || 0) + 1; });
-  return { all: all, counts: counts };
+function muscleLabel(part){
+  return (part || 'Autre').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+function groupLabel(part){
+  if (!part) return 'Autre';
+  return muscleLabel(part);
 }
 
-function libScreenList(){
-  const { all, counts } = libScreenCounts();
-  const q = libScreenQuery.toLowerCase().trim();
-  const list = all.filter(e =>
-    (libScreenFilter === 'All' || e.group === libScreenFilter || e.group === 'Custom') &&
-    (!q || e.name.toLowerCase().includes(q) || e.group.toLowerCase().includes(q))
-  );
-  return { list: list, counts: counts, total: all.length };
+function buildList(exes){
+  return exes.filter(ex => {
+    if (libScreenFav !== 'All' && libScreenFav !== 'Custom' && !libFavorites.has(ex.name)) return false;
+    if (libScreenFav === 'Custom' && !(ex.category === 'custom')) return false;
+    if (libScreenFav === 'Custom' && libFavorites.has(ex.name)) return false;
+    if (libScreenRec !== 'All' && libScreenRec !== 'Custom' && !libRecent.has(ex.name)) return false;
+    if (libScreenRec === 'Custom' && !libRecent.has(ex.name)) return false;
+    if (libScreenQuery.trim()){
+      const q = libScreenQuery.trim().toLowerCase();
+      const hay = `${ex.name || ''} ${ex.bodyPart || ''} ${ex.aliases_en || ''} ${ex.aliases_fr || ''} ${ex.category || ''} ${ex.equipment || ''} ${ex.target || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
 }
 
-function renderLibraryScreen(){
-  const { list, counts, total } = libScreenList();
-  const days = (DB.programme || []).length;
-  const hist = (DB.history || []).length;
-
-  /* carte musculaire : filtre actif mis en évidence */
-  const mapEl = $('libScreenMap');
-  if (mapEl){
-    const clickable = libScreenFilter !== 'All';
-    mapEl.innerHTML = bodyMapHtml({
-      scores: muscleScores(30),
-      selected: clickable ? libScreenFilter : '',
-      select: true,
-      days: 30
-    });
+async function renderLibraryScreen(){
+  const exes = await cataloguePromise;
+  if (!Array.isArray(exes) || !exes.length){
+    $('libScreenGrid').innerHTML = '<div class="lib-empty">Le catalogue n\'est pas encore disponible.</div>';
+    return;
   }
-  const sub = $('libMapSub');
-  if (sub){
-    sub.textContent = libScreenFilter === 'All'
-      ? 'Tap a muscle to filter the library'
-      : 'Filtered on ' + libScreenFilter + ' · tap it again to reset';
-  }
+  let list = buildList(exes);
 
-  /* chips de groupes */
+  if (libScreenSort === 'recent') list = list.sort((a,b) => (b._lastUsed||0) - (a._lastUsed||0));
+  else if (libScreenSort === 'used') list = list.sort((a,b) => (b.usageCount||0) - (a.usageCount||0));
+  else list = list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+
+  const bodyParts = [...new Set(exes.map(e => e.bodyPart).filter(Boolean))].sort();
+  const groups = ['All'].concat(bodyParts, (list.filter(e => e.category === 'custom').length) ? ['Custom'] : []);
+  const counts = { All: list.length };
+  list.forEach(e => { const g = e.group || e.bodyPart || 'other'; counts[g] = (counts[g] || 0) + 1; });
+
   const chips = $('libScreenChips');
   if (chips){
-    const groups = ['All'].concat(Object.keys(LIB),
-      counts['Custom'] ? ['Custom'] : []);
     chips.innerHTML = groups.map(g => {
-      const n = g === 'All' ? total : (counts[g] || 0);
-      return '<button class="lib-chip' + (libScreenFilter === g ? ' on' : '') +
-        '" data-g="' + g + '">' + esc(g) + ' <span class="n">' + n + '</span></button>';
+      const n = g === 'All' ? counts[g] : (counts[g] || 0);
+      return '<button class="lib-chip' + (libScreenFilter === g ? ' on' : '') + '" data-g="' + g + '">' + esc(g) + ' <span class="n">' + n + '</span></button>';
     }).join('');
     chips.querySelectorAll('.lib-chip').forEach(b => {
-      b.onclick = () => {
-        libScreenFilter = (libScreenFilter === b.dataset.g && b.dataset.g !== 'All')
-          ? 'All' : b.dataset.g;
-        renderLibraryScreen();
+      b.onclick = async () => {
+        libScreenFilter = (libScreenFilter === b.dataset.g && b.dataset.g !== 'All') ? 'All' : b.dataset.g;
+        await renderLibraryScreen();
       };
     });
   }
 
-  /* grille */
+  const mapEl = $('libScreenMap');
+  if (mapEl){
+    const clickable = libScreenFilter !== 'All';
+    mapEl.innerHTML = bodyMapHtml({ scores: muscleScores(30), selected: clickable ? libScreenFilter : '', select: true, days: 30 });
+    mapEl.querySelectorAll('.bm-hit').forEach(el => {
+      el.onclick = async () => {
+        libScreenFilter = (libScreenFilter === el.dataset.m) ? 'All' : el.dataset.m;
+        await renderLibraryScreen();
+      };
+    });
+  }
+  const sub = $('libMapSub');
+  if (sub) sub.textContent = libScreenFilter === 'All' ? 'Tout le catalogue : ' + list.length + ' exercices' : 'Filtre : ' + libScreenFilter;
+  const range = $('libMapRange');
+  if (range) range.textContent = hist ? '30 D' : 'NEW';
+
   const grid = $('libScreenGrid');
   if (grid){
     grid.innerHTML = list.length
-      ? list.map(e =>
-          '<button class="lib-item" data-name="' + esc(e.name) + '">' +
-            libThumb(e.name) +
-            '<span>' + esc(e.name) + '<span class="grp">' + esc(e.group) + '</span></span>' +
-            '<span class="lib-tick">›</span>' +
-          '</button>').join('')
-      : '<div class="lib-empty">No result.<br>Try another muscle or search.</div>';
+      ? list.map(ex => {
+          const thumb = libThumb(ex.name);
+          const isFav = libFavorites.has(ex.name);
+          const isRec = libRecent.has(ex.name);
+          const nameH = esc(ex.name);
+          const hint = [ex.category || '', ex.equipment || '', ex.target || ''].filter(Boolean).join(' · ');
+          const row = [nameH];
+          if (hint) row.push('<span class="grp">' + esc(hint) + '</span>');
+          return '<button class="lib-item' + (isFav ? ' fav' : '') + (isRec ? ' rec' : '') + '" data-name="' + esc(ex.name) + '">' +
+            thumb +
+            '<span>' + row.join('') + '</span>' +
+            '<span class="lib-tick">' + (isFav ? '★' : '›') + '</span>' +
+            '</button>';
+        }).join('')
+      : '<div class="lib-empty">Aucun résultat.</div>';
     grid.querySelectorAll('.lib-item').forEach(b => {
       b.onclick = () => libScreenPick(b.dataset.name);
     });
   }
 
   const hint = $('libScreenHint');
-  if (hint){
-    hint.textContent = list.length + ' exercise' + (list.length !== 1 ? 's' : '') +
-      (libScreenFilter !== 'All' ? ' · ' + libScreenFilter : '') +
-      ' · ' + days + ' session' + (days !== 1 ? 's' : '') + ' in your program';
-  }
-  const range = $('libMapRange');
-  if (range) range.textContent = hist ? '30 D' : 'NEW';
+  if (hint) hint.textContent = list.length + ' exercise' + (list.length !== 1 ? 's' : '') + ' · ' + days + ' session' + (days !== 1 ? 's' : '') + ' in your program';
 }
 
 function onLibScreenSearch(v){
   libScreenQuery = v;
-  if (v.trim() && libScreenFilter !== 'All') libScreenFilter = 'All';
+  libScreenFilter = v.trim() ? 'All' : libScreenFilter;
   renderLibraryScreen();
 }
 
-/* Clic sur une zone de la carte musculaire (global, appelé par le SVG) */
-function bmPick(muscle){
-  if (!muscle) return;
-  libScreenFilter = (libScreenFilter === muscle) ? 'All' : muscle;
-  if (currentTab !== 'library') showTab('library');
-  else renderLibraryScreen();
+async function ensureCatalogue(){
+  const exes = await catalogue;
+  if (Array.isArray(exes) && exes.length){
+    exes.forEach(ex => {
+      ex._lower = (ex.name || '').toLowerCase();
+      ex._search = `${ex._lower} ${(ex.bodyPart || '').toLowerCase()} ${(ex.category || '').toLowerCase()}`;
+      if (ex.name) {
+        const fr = aliasEnToFr(ex.name.toLowerCase());
+        if (fr) ex._frAlias = fr;
+      }
+    });
+  }
 }
 
-/* Fiche rapide d'un exercice : démo + ajout au programme */
 function libScreenPick(name){
   const days = DB.programme || [];
   const acts = [];
@@ -117,6 +189,7 @@ function libScreenPick(name){
     acts.push({ label: 'Add to a session…', fn: () => libScreenAddTo(name) });
   }
   openActionSheet(name, acts);
+  markRecent(name);
 }
 
 function libScreenAddTo(name){
@@ -124,14 +197,38 @@ function libScreenAddTo(name){
   if (!days.length){ toast('Create a session first.'); return; }
   openActionSheet('Add “' + name + '” to…', days.map(d => {
     const has = d.exercises.some(e => e.name.toLowerCase() === name.toLowerCase());
-    return {
-      label: (has ? '✓ ' : '+ ') + d.name,
-      fn: () => libAddToDay(d.id, name)
-    };
+    return { label: (has ? '✓ ' : '+ ') + d.name, fn: () => libAddToDay(d.id, name) };
   }));
 }
 
+function libAddToDay(dayId, name){
+  const d = DB.programme.find(x => x.id === dayId);
+  if (!d) return;
+  const i = d.exercises.findIndex(e => e.name.toLowerCase() === name.toLowerCase());
+  if (i >= 0) d.exercises.splice(i, 1);
+  else d.exercises.push({ id: uid(), name: name, cardio: isCardioName(name) || undefined });
+  save();
+  renderDayExercises(); renderProgramme(); renderSeance(); renderLibrary();
+}
+
+function toggleFavorite(name){
+  if (libFavorites.has(name)) libFavorites.delete(name);
+  else libFavorites.add(name);
+  saveFavorites();
+  renderLibraryScreen();
+}
+
+function toggleRecent(name){
+  if (libRecent.has(name)) libRecent.delete(name);
+  else { libRecent.add(name); markRecent(name); }
+  saveRecent();
+  renderLibraryScreen();
+}
+
+/* Renderiser & exposer en globals. */
+cataloguePromise.then(() => renderLibraryScreen()).catch(() => {});
 Object.assign(window, {
   renderLibraryScreen, onLibScreenSearch, bmPick,
-  libScreenPick, libScreenAddTo
+  libScreenPick, libScreenAddTo, toggleFavorite, toggleRecent,
+  libScreenFilter, libScreenQuery, libScreenSort, libScreenFav, libScreenRec,
 });

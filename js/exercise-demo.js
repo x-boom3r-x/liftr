@@ -108,3 +108,4 @@ function demoImgError(img){
 }
 
 Object.assign(window, { illustrationFor, libThumb, demoBtn, openDemo, demoStep, closeDemo, demoImgError });
+

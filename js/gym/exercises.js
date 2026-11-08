@@ -35,6 +35,19 @@ const EXO_ALIASES = (() => {
 let catalogue = null; // rempli par loadCatalogue()
 const CATALOGUE_URL = 'data/exercises-catalogue.json'; // chargé depuis la racine du projet
 
+// Démarre le chargement dès l'import du module (cache partagé)
+const cataloguePromise = loadCatalogue();
+
+/* Accès synchrone au catalogue déjà chargé (tableau vide si pas encore prêt). */
+export function getCatalogue() {
+  return Array.isArray(catalogue) ? catalogue : [];
+}
+
+/* Indique si le catalogue est déjà chargé. */
+export function catalogueReady() {
+  return Array.isArray(catalogue);
+}
+
 async function loadCatalogue() {
   if (catalogue) return catalogue;
   try {
@@ -173,4 +186,4 @@ export function makeCustomExercise(name, notes = '') {
 // Si tu veux que le catalogue se charge tout de suite au plutôt :
 // loadCatalogue().then(() => console.log('[gym/exercises] catalogue prêt,', catalogue.length, 'exercices'));
 
-export default { searchExercises, filterByMuscle, filterByEquipment, filterByCategory, getExercise, aliasFrToEn, aliasEnToFr, makeCustomExercise };
+export default { searchExercises, filterByMuscle, filterByEquipment, filterByCategory, getExercise, aliasFrToEn, aliasEnToFr, makeCustomExercise, getCatalogue, catalogueReady, loadCatalogue };

@@ -2,6 +2,7 @@
    LIFTR - statistiques & detail d'une seance passee
    ================================================================== */
 import { icon, iconS } from './icons.js';
+import { getCatalogue } from './gym/exercises.js';
 
 
 /* ---------- détail d'une séance passée (Stats / Calendrier) ---------- */
@@ -538,6 +539,13 @@ function muscleMap(){
   });
   /* legacy French names resolve through EXO_ALIASES to their English key */
   Object.keys(EXO_ALIASES).forEach(fr => { if (m[EXO_ALIASES[fr]]) m[fr] = m[EXO_ALIASES[fr]]; });
+  /* Ajoute les exercices du catalogue openGym (nom → bodyPart) quand disponible. */
+  const cat = getCatalogue();
+  if (cat.length){
+    cat.forEach(ex => {
+      if (ex.name && ex.bodyPart) m[String(ex.name).toLowerCase().trim()] = ex.bodyPart.replace(/\b\w/g, c => c.toUpperCase());
+    });
+  }
   return m;
 }
 function muscleSplit(days){

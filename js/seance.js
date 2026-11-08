@@ -2,7 +2,10 @@
    LIFTR - seance en cours
    ================================================================== */
 import { icon, iconS } from './icons.js';
+import { getCatalogue, loadCatalogue } from './gym/exercises.js';
 
+/* Démarre le chargement du catalogue openGym dès l'import du module. */
+loadCatalogue();
 
 let addSetExIdx = null;
 
@@ -328,7 +331,8 @@ function renderAddEx(){
   const all = libEntries();
   const counts = {};
   all.forEach(e => counts[e.group] = (counts[e.group] || 0) + 1);
-  const groups = ['All'].concat(Object.keys(LIB), counts['Custom'] ? ['Custom'] : []);
+  const catGroups = [...new Set((getCatalogue() || []).map(e => e.bodyPart).filter(Boolean))].sort();
+  const groups = ['All'].concat(catGroups, counts['Custom'] ? ['Custom'] : []);
 
   $('addExChips').innerHTML = groups.map(g => {
     const n = g === 'All' ? all.length : (counts[g] || 0);
