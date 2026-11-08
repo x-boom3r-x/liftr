@@ -40,7 +40,7 @@ async function loadCatalogue() {
   try {
     const resp = await fetch(CATALOGUE_URL, { cache: 'force-cache' });
     if (!resp.ok) throw new Error(`catalogue ${resp.status}`);
-    catalogue = await resp.json(); // tableau d'objets {id,name,bodyPart,equipment,target,secondaryMuscles,category,description,instructions}
+    catalogue = (await resp.json()).records; // openGym archive: {source,size,count,records[]}
     // Build lowercase index pour recherche rapide
     catalogue.forEach(ex => {
       ex._lower = (ex.name || '').toLowerCase();

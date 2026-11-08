@@ -1,7 +1,27 @@
 /* ==================================================================
-   LIFTR - programme, jours, bibliotheque d'exercices
-   ================================================================== */
+   LIFTR - programme, jours, bibliotheque d'exercices   ================================================================== */
 import { icon } from './icons.js';
+import {
+  searchExercises,
+  filterByMuscle,
+  filterByEquipment,
+  filterByCategory,
+  getExercise,
+  aliasFrToEn,
+  aliasEnToFr,
+  makeCustomExercise
+} from './gym/exercises.js';
+import {
+  policyOff,
+  policyLinear,
+  policyGreyskull,
+  policyDouble,
+  policyTriple,
+  policyTime,
+  getPolicy,
+  suggestNextWeight
+} from './gym/progression.js';
+import { computePlateCombination } from './gym/plates.js';
 
 let detailDayId = null;
 let newDayType = 'PUSH';
