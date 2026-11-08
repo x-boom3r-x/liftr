@@ -42,7 +42,13 @@ const EXO_ALIASES = (() => {
   };
   const enToFr = {};
   Object.keys(frToEn).forEach(k => { enToFr[frToEn[k]] = k; });
-  return { frToEn, enToFr };
+  // Copie normalisée (accents retirés) pour recherche sans accent
+  const frToEnNorm = {};
+  Object.keys(frToEn).forEach(k => {
+    const nk = k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    frToEnNorm[nk] = frToEn[k];
+  });
+  return { frToEn, enToFr, frToEnNorm };
 })();
 
 /* ------------------------------------------------------------------ */
@@ -168,7 +174,11 @@ export function getExercise(id) {
 /* ------------------------------------------------------------------ */
 
 export function aliasFrToEn(frName) {
-  return EXO_ALIASES.frToEn[frName.toLowerCase()] || null;
+  const key = String(frName || '').toLowerCase().trim();
+  if (!key) return null;
+  if (EXO_ALIASES.frToEn[key]) return EXO_ALIASES.frToEn[key];
+  const norm = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return EXO_ALIASES.frToEnNorm[norm] || null;
 }
 
 export function aliasEnToFr(enName) {

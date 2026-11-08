@@ -158,9 +158,15 @@ async function renderLibraryScreen(){
   if (hint) hint.textContent = list.length + ' exercise' + (list.length !== 1 ? 's' : '') + ' · ' + days + ' session' + (days !== 1 ? 's' : '') + ' in your program';
 }
 
+function normalizeForAlias(s){
+  return String(s || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function onLibScreenSearch(v){
-  libScreenQuery = v;
-  libScreenFilter = v.trim() ? 'All' : libScreenFilter;
+  const q = normalizeForAlias(v);
+  const alias = aliasFrToEn(q);
+  libScreenQuery = alias !== null ? alias : v;
+  libScreenFilter = libScreenQuery.trim() ? 'All' : libScreenFilter;
   renderLibraryScreen();
 }
 

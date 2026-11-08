@@ -2,7 +2,7 @@
    LIFTR - seance en cours
    ================================================================== */
 import { icon, iconS } from './icons.js';
-import { getCatalogue, loadCatalogue } from './gym/exercises.js';
+import { getCatalogue, loadCatalogue, aliasFrToEn } from './gym/exercises.js';
 
 /* Démarre le chargement du catalogue openGym dès l'import du module. */
 loadCatalogue();
@@ -319,9 +319,15 @@ function openAddEx(){
   setTimeout(() => { const i = $('addExSearch'); if (i) i.focus(); }, 120);
 }
 
+function normalizeForAlias(s){
+  return String(s || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function onAddExSearch(v){
-  addExQuery = v;
-  if (v.trim() && addExFilter !== 'All') addExFilter = 'All';
+  const q = normalizeForAlias(v);
+  const alias = aliasFrToEn(q);
+  addExQuery = alias !== null ? alias : v;
+  if (addExQuery.trim() && addExFilter !== 'All') addExFilter = 'All';
   renderAddEx();
 }
 
