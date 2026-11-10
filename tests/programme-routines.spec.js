@@ -129,6 +129,29 @@ test.describe('Programmes et organisation des routines', () => {
     expect(await page.evaluate(() => DB.programme.find(d => d.id === 'd1').exercises.map(e => e.id))).toEqual(['e2', 'e1']);
   });
 
+  test('le glisser-déposer natif réordonne journées et exercices et sauvegarde leur ordre', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === 'mobile', 'Le glisser-déposer natif est couvert sur ordinateur; le mobile utilise les contrôles tactiles.');
+    const second = { id: 'd2', name: 'Lower', type: 'LEGS', exercises: [{ id: 'e3', name: 'Squat' }] };
+    await seed(page, { programme: [routine, second] });
+    await page.click('button[data-tab="programme"]');
+
+    await page.locator('#daysList [data-day-id="d2"] .day-drag-handle').dragTo(
+      page.locator('#daysList [data-day-id="d1"]')
+    );
+    expect(await page.evaluate(() => getActiveProgrammeDays().map(d => d.id))).toEqual(['d2', 'd1']);
+
+    await page.locator('#daysList [data-day-id="d1"]').click();
+    await page.locator('#dayExercises .ex-drag-handle[data-ex-id="e2"]').dragTo(
+      page.locator('#dayExercises .ex-block[data-ex-id="e1"]')
+    );
+    expect(await page.evaluate(() => DB.programme.find(d => d.id === 'd1').exercises.map(e => e.id))).toEqual(['e2', 'e1']);
+
+    await page.reload();
+    await page.waitForSelector('#mainApp:not(.hidden)');
+    expect(await page.evaluate(() => getActiveProgrammeDays().map(d => d.id))).toEqual(['d2', 'd1']);
+    expect(await page.evaluate(() => DB.programme.find(d => d.id === 'd1').exercises.map(e => e.id))).toEqual(['e2', 'e1']);
+  });
+
   test('déplacer un exercice conserve ses objectifs et le retire proprement de son groupe', async ({ page }) => {
     const grouped = {
       id: 'd1', name: 'Upper', type: 'PUSH', exercises: [
