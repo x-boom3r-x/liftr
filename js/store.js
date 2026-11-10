@@ -121,6 +121,82 @@ if (DB.programme.length > 0 && DB.programmes.length === 0) {
 
 /* Les programmes orphelins (sans journée) sont CONSERVÉS, non supprimés */
 
+/* Garantir la cohérence des programmes (sans perte de données) */
+if (!Array.isArray(DB.programmes)) DB.programmes = [];
+DB.programmes.forEach(p => {
+  if (typeof p.active !== "boolean") p.active = false;
+  if (!p.createdAt) p.createdAt = new Date().toISOString().slice(0, 10);
+  if (!p.updatedAt) p.updatedAt = p.createdAt;
+});
+
+/* Un seul programme actif au maximum */
+const activeProgrammes = DB.programmes.filter(p => p.active === true);
+if (activeProgrammes.length > 1) {
+  activeProgrammes.sort((a, b) => (a.createdAt || "") < (b.createdAt || "") ? 1 : -1);
+  activeProgrammes.slice(1).forEach(p => { p.active = false; });
+}
+
+/* Assigner programId aux jours sans programme (programId = null si aucun programme) */
+const activeProgramme = DB.programmes.find(p => p.active === true);
+DB.programme.forEach(d => {
+  if (!d.programId) {
+    d.programId = activeProgramme ? activeProgramme.id : null;
+  }
+});
+
+/* Si des jours existent mais aucun programme, créer un programme par défaut */
+if (DB.programme.length > 0 && DB.programmes.length === 0) {
+  DB.programmes.push({
+    id: uid(),
+    name: "Programme par défaut",
+    description: "",
+    active: true,
+    createdAt: new Date().toISOString().slice(0, 10),
+    updatedAt: new Date().toISOString().slice(0, 10)
+  });
+  DB.programme.forEach(d => { if (!d.programId) d.programId = DB.programmes[0].id; });
+}
+
+/* Les programmes orphelins (sans journée) sont CONSERVÉS, non supprimés */
+
+const dayIds = new Set(DB.programme.map(d => d.id));
+
+/* ── PARAMÈTRES D'EXERCICE ── */
+/* Structure expandie pour la Phase 2.2 : */
+/* Exemple :
+{ id, name, order, sets, reps, weight, rest, notes }
+- order: position dans la journée (0 = premier)
+- sets: nombre de séries (e.g. 4)
+- reps: plage de répétitions (e.g. "8-12" ou 8)
+- weight: charge cible (kg)
+- rest: temps de repos (secondes)
+- notes: notes personnelles
+*/
+DB.programme.forEach(d => {
+  if (!d.exercises) d.exercises = [];
+  d.exercises.forEach(e => {
+    if (e.sets === undefined) e.sets = undefined;
+    if (e.reps === undefined) e.reps = undefined;
+    if (e.weight === undefined) e.weight = undefined;
+    if (e.rest === undefined) e.rest = undefined;
+    if (e.notes === undefined) e.notes = '';
+    if (e.order === undefined) {
+      // Trouver la position du dernier exercice
+      const idx = d.exercises.indexOf(e);
+      e.order = idx;
+    }
+    // S'assurer que retirer les anciens champs optionnels si non prêts
+    if (e.cardio !== undefined && e.sets === undefined && e.reps === undefined &&
+        e.weight === undefined && e.rest === undefined) {
+      // Exercice ancien : convertir si nécessaire
+      if (e.cardio && e.min !== undefined && e.km !== undefined) {
+        // Format cardio : { id, name, cardio, min, km }
+        // Convertir en format générique
+      }
+    }
+  });
+});
+
 const dayIds = new Set(DB.programme.map(d => d.id));
 
 

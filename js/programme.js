@@ -839,6 +839,29 @@ function deleteExercise(id){
   } else doDelete(true);
 }
 
+/* ── PARAMÈTRES D'EXERCICE DANS UNE JOURNÉE ── */
+function getExerciseParams(ex){
+  return {
+    sets: ex.sets ?? null,
+    reps: ex.reps ?? null,
+    weight: ex.weight ?? null,
+    rest: ex.rest ?? null,
+    notes: ex.notes ?? ''
+  };
+}
+
+function setExerciseParams(ex, data){
+  if (data.sets !== undefined) ex.sets = data.sets;
+  if (data.reps !== undefined) ex.reps = data.reps;
+  if (data.weight !== undefined) ex.weight = data.weight;
+  if (data.rest !== undefined) ex.rest = data.rest;
+  if (data.notes !== undefined) ex.notes = data.notes;
+  save();
+  renderDayExercises();
+  renderProgramme();
+  renderSeance();
+}
+
 function deleteCurrentDay(){
   if (!detailDayId) return;
   deleteDay(detailDayId);
@@ -856,3 +879,176 @@ Object.assign(window, {
   renderProgramsList, openProgrammeEditor, saveProgrammeEditor, editProgrammeName,
   renderProgramView, renderProgramSelector, saveNewDayInProgram
 });
+
+function initExerciseDrag(){
+  document.querySelectorAll('.ex-block').forEach(block => {
+    block.draggable = true;
+    block.addEventListener('dragstart', e => {
+      const exId = block.dataset.exId;
+      if (!exId) return;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', exId);
+      block.style.opacity = '0.5';
+      dragExId = exId;
+    });
+    block.addEventListener('dragend', e => {
+      block.style.opacity = '1';
+      dragExId = null;
+    });
+  });
+
+  document.querySelectorAll('.ex-block').forEach(block => {
+    block.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      block.classList.add('drag-over');
+    });
+    block.addEventListener('dragleave', e => {
+      if (e.target.closest('.ex-block')) block.classList.remove('drag-over');
+    });
+    block.addEventListener('drop', e => {
+      e.preventDefault();
+      block.classList.remove('drag-over');
+      const srcId = e.dataTransfer.getData('text/plain');
+      const exId = block.dataset.exId;
+      if (!srcId || srcId === exId) return;
+      const d = DB.programme.find(x => x.id === detailDayId);
+      if (!d || !srcId) return;
+      const srcIdx = d.exercises.findIndex(e => e.id === srcId);
+      const tgtIdx = d.exercises.findIndex(e => e.id === exId);
+      if (srcIdx < 0 || tgtIdx < 0) return;
+      const ex = d.exercises.splice(srcIdx, 1)[0];
+      d.exercises.splice(tgtIdx, 0, ex);
+      d.exercises.forEach((e, i) => { e.order = i; });
+      save();
+      renderDayExercises();
+      renderProgramme();
+      renderSeance();
+    });
+  });
+}
+
+function getExerciseParams(ex){
+  return {
+    sets: ex.sets ?? null,
+    reps: ex.reps ?? null,
+    weight: ex.weight ?? null,
+    rest: ex.rest ?? null,
+    notes: ex.notes ?? ''
+  };
+}
+
+function setExerciseParams(ex, data){
+  if (data.sets !== undefined) ex.sets = data.sets;
+  if (data.reps !== undefined) ex.reps = data.reps;
+  if (data.weight !== undefined) ex.weight = data.weight;
+  if (data.rest !== undefined) ex.rest = data.rest;
+  if (data.notes !== undefined) ex.notes = data.notes;
+  save();
+  renderDayExercises();
+  renderProgramme();
+  renderSeance();
+}
+
+function exerciseParamsLine(ex){
+  const p = getExerciseParams(ex);
+  const parts = [];
+  if (p.sets !== null && p.sets > 0) parts.push(p.sets + '×');
+  if (p.reps !== null && p.reps !== undefined) parts.push(p.reps);
+  if (p.weight !== null && p.weight !== undefined) parts.push(p.weight + ' kg');
+  if (p.rest !== null && p.rest !== undefined) parts.push(p.rest + 's repos');
+  if (p.notes) parts.push('· ' + p.notes);
+  return parts.join(' · ') || 'Paramètres non définis';
+}
+
+function addDayExercise(dayId, name, setParams = {}){
+  const d = DB.programme.find(x => x.id === dayId);
+  if (!d) return null;
+  if (d.exercises.some(e => e.name.toLowerCase().trim() === name.toLowerCase().trim())){
+    toast('Cet exercice existe déjà dans cette journée.');
+    return null;
+  }
+  const exercise = {
+    id: uid(),
+    name: name,
+    sets: setParams.sets ?? null,
+    reps: setParams.reps ?? null,
+    weight: setParams.weight ?? null,
+    rest: setParams.rest ?? null,
+    notes: setParams.notes ?? '',
+    order: d.exercises.length
+  };
+  d.exercises.push(exercise);
+  d.exercises.sort((a, b) => (a.order || 0) - (b.order || 0));
+  save();
+  renderDayExercises();
+  renderProgramme();
+  renderSeance();
+  return exercise;
+}
+
+function deleteDayExercise(dayId, exId){
+  const d = DB.programme.find(x => x.id === dayId);
+  if (!d) return;
+  const idx = d.exercises.findIndex(e => e.id === exId);
+  if (idx < 0) return;
+  d.exercises.splice(idx, 1);
+  d.exercises.forEach((e, i) => { e.order = i; });
+  save();
+  renderDayExercises();
+  renderProgramme();
+  renderSeance();
+}
+
+/* ── MODÈLES DE ROUTINES ── */
+function saveDayTemplate(dayId, templateName){
+  const d = DB.programme.find(x => x.id === dayId);
+  if (!d) return;
+  const templates = DB.customTemplates || [];
+  const t = {
+    id: uid(),
+    name: templateName,
+    dayId: d.id,
+    dayName: d.name,
+    exercises: d.exercises.map(e => getExerciseState(e)),
+    createdAt: new Date().toISOString()
+  };
+  templates.push(t);
+  localStorage.setItem('liftr_dayTemplates', JSON.stringify(templates));
+  toast('Modèle enregistré');
+}
+
+function loadDayTemplates(){
+  try {
+    const s = localStorage.getItem('liftr_dayTemplates');
+    return s ? JSON.parse(s) : [];
+  } catch { return []; }
+}
+
+function deleteDayTemplate(id){
+  const templates = DB.customTemplates || [];
+  DB.customTemplates = templates.filter(t => t.id !== id);
+  localStorage.setItem('liftr_dayTemplates', JSON.stringify(DB.customTemplates));
+  toast('Modèle supprimé');
+}
+
+function importDayFromTemplate(template){
+  const d = DB.programme.find(x => x.id === template.dayId);
+  if (!d) return;
+  d.name = template.dayName;
+  d.exercises = template.exercises.map(e => ({
+    id: e.id,
+    name: e.name,
+    order: e.order,
+    sets: e.sets,
+    reps: e.reps,
+    weight: e.weight,
+    rest: e.rest,
+    notes: e.notes
+  }));
+  save();
+  renderDayExercises();
+  renderProgramme();
+  renderSeance();
+  toast('Routine importée');
+}
