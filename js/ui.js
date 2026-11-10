@@ -221,7 +221,7 @@ function showTab(name){
     b.classList.toggle('active', on);
     b.setAttribute('aria-current', on ? 'true' : 'false');
   });
-  if (name === 'programme') renderProgramme();
+  if (name === 'programme'){ renderProgramme(); if (typeof window.renderProgramsList === 'function') window.renderProgramsList(); }
   if (name === 'seance') renderSeance();
   if (name === 'library' && typeof window.renderLibraryScreen === 'function') window.renderLibraryScreen();
   if (name === 'calendrier') renderCalendar();
@@ -240,6 +240,7 @@ function renderAll(){
   const n = (DB.programme || []).length;
   $('progCount').textContent = n + ' day' + (n !== 1 ? 's' : '') + ' in your program';
   if ($('shareCardCount')) $('shareCardCount').textContent = n + ' day' + (n !== 1 ? 's' : '');
+  if (typeof window.renderProgramsList === 'function') window.renderProgramsList();
   renderProgramme(); renderSeance(); renderCalendar(); renderStats();
   showTab(currentTab);
 }

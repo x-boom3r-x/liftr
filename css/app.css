@@ -2766,3 +2766,52 @@ html{background:var(--bg)}
   .micro-grid{grid-template-columns:1fr}
   .ring-center b{font-size:2.2rem}
 }
+/* ==================================================================
+   Phase 2 : Programmes
+   ================================================================== */
+.program-item{
+  border:1px solid var(--surface2);
+  border-radius:12px;
+  padding:14px 16px;
+  margin:10px 0;
+  background:var(--surface1);
+  cursor:pointer;
+  transition:all .15s;
+}
+.program-item:hover{
+  border-color:var(--accent);
+  background:var(--surface2);
+}
+.program-item.active{
+  border-color:var(--accent);
+  background:rgba(255,107,53,.08);
+}
+.program-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:6px;
+}
+.program-name{
+  font-weight:600;
+  font-size:1.05rem;
+  color:var(--text);
+  cursor:pointer;
+}
+.program-name:hover{
+  color:var(--accent);
+}
+.program-desc{
+  font-size:0.9rem;
+  color:var(--text-muted);
+  margin-bottom:6px;
+}
+.program-meta{
+  font-size:0.8rem;
+  color:var(--text-muted);
+  margin-bottom:8px;
+}
+.program-actions{
+  display:flex;
+  gap:8px;
+}

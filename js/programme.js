@@ -32,6 +32,7 @@ loadCatalogue();
 let detailDayId = null;
 let newDayType = 'PUSH';
 let detailDayType = 'PUSH';
+let activeProgramId = null; // ID du programme actuellement sélectionné
 
 /* Cohérence des données liées */
 function exoNameSet(day){
@@ -83,14 +84,23 @@ function lastDoneOf(dayId){
   });
   return last;
 }
+/* Retourne les journées du programme actif (ou tous les jours si pas de programme actif) */
+function getActiveProgrammeDays(){
+  const active = getActiveProgramme();
+  if (!active) return DB.programme.filter(d => !d.programId);
+  return DB.programme.filter(d => d.programId === active.id);
+}
+
 /* séance la moins récemment faite (ou jamais faite) */
 function suggestDay(){
-  if (!DB.programme.length) return null;
-  return DB.programme.slice().sort((a, b) => {
+  const days = getActiveProgrammeDays();
+  if (!days.length) return null;
+  return days.slice().sort((a, b) => {
     const la = lastDoneOf(a.id) || '', lb = lastDoneOf(b.id) || '';
     return la < lb ? -1 : la > lb ? 1 : 0;
   })[0];
 }
+
 function todayCardEmpty(){
   return '<div class="today-empty">' +
     '<span class="te-ico" aria-hidden="true">🏋️</span>' +
@@ -99,16 +109,18 @@ function todayCardEmpty(){
     '<button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>' +
   '</div>';
 }
+
 function renderTodayCard(){
   const el = $('todayCard');
   if (!el) return;
-  if (!DB.programme.length){ el.innerHTML = todayCardEmpty(); return; }
+  const days = getActiveProgrammeDays();
+  if (!days.length){ el.innerHTML = todayCardEmpty(); return; }
 
   const iso = todayISO();
   const entry = (typeof window.planEntry === 'function') ? planEntry(iso) : null;
   const status = (typeof window.planStatus === 'function') ? planStatus(iso) : 'none';
   const planned = (entry && entry.dayId)
-    ? DB.programme.find(d => d.id === entry.dayId) : null;
+    ? days.find(d => d.id === entry.dayId) : null;
 
   /* 1. session en cours */
   if (DB.active){
@@ -185,15 +197,17 @@ function renderTodayCard(){
 }
 
 function renderProgramme(){
+  const activeProg = getActiveProgramme();
   const el = $('daysList');
-  $('progCount').textContent = DB.programme.length + ' day' + (DB.programme.length !== 1 ? 's' : '') + ' in your program';
+  const days = activeProg ? DB.programme.filter(d => d.programId === activeProg.id) : DB.programme.filter(d => !d.programId);
+  $('progCount').textContent = days.length + ' day' + (days.length !== 1 ? 's' : '') + ' in your program';
   renderTodayCard();
-  if (!DB.programme.length){
+  if (!days.length){
     el.innerHTML = '<div class="empty"><div class="empty-icon">🗓️</div>' +
       '<div class="empty-text">No day created yet.<br>Start by adding a session (PUSH, PULL, LEGS…)</div></div>';
     return;
   }
-  el.innerHTML = DB.programme.map((d, i) => {
+  el.innerHTML = days.map((d, i) => {
     const past = DB.history.filter(h => h.dayId === d.id).length;
     return '<div class="card tap" onclick="openDayDetail(\'' + d.id + '\')">' +
       '<div class="card-header">' +
@@ -215,13 +229,17 @@ function renderProgramme(){
   }).join('');
 }
 
-function openNewDay(){
+function openNewDay(programId){
   newDayType = 'PUSH';
   $('dayNameInput').value = '';
   renderTypePicker('dayTypePicker', newDayType, t => { newDayType = t; });
+  const progSel = $('dayProgramSelector');
+  if (progSel) renderProgramSelector('dayProgramSelector', programId || activeProgramId);
   openModal('newDayModal');
   setTimeout(() => $('dayNameInput').focus(), 120);
 }
+
+window.openNewDay = openNewDay;
 
 /* H : partager le programme — ouvre le composer du Feed pré-rempli
    (attachement program, CTA « Import this program » côté réception) */
@@ -231,8 +249,250 @@ function shareProgramme(){
   return (typeof window.openShareComposer === 'function') && window.openShareComposer(att);
 }
 
-function renderTypePicker(elId, current, onPick){
+/* ==================================================================
+   GESTION DES PROGRAMMES (Phase 2)
+   ================================================================== */
+
+/* Retourne le programme actuellement actif (ou le premier s'il n'y en a qu'un seul) */
+function getActiveProgramme(){
+  if (activeProgramId){
+    const p = DB.programmes.find(x => x.id === activeProgramId);
+    if (p) return p;
+  }
+  return DB.programmes.length ? DB.programmes[0] : null;
+}
+
+/* Définit le programme actif et persiste le choix */
+function setActiveProgramme(id){
+  const p = DB.programmes.find(x => x.id === id);
+  if (!p) return;
+  DB.programmes.forEach(x => { x.active = (x.id === id); });
+  activeProgramId = id;
+  save();
+  renderProgramme();
+  renderProgramsList();
+}
+
+/* Crée un nouveau programme */
+function createProgramme(name, description){
+  if (!name || !name.trim()) return null;
+  const p = {
+    id: uid(),
+    name: name.trim(),
+    description: (description || '').trim(),
+    active: false,
+    createdAt: new Date().toISOString().slice(0, 10),
+    updatedAt: new Date().toISOString().slice(0, 10)
+  };
+  DB.programmes.push(p);
+  setActiveProgramme(p.id);
+  return p;
+}
+
+/* Renomme un programme */
+function renameProgramme(id, name){
+  const p = DB.programmes.find(x => x.id === id);
+  if (!p || !name || !name.trim() || p.name === name.trim()) return false;
+  p.name = name.trim();
+  p.updatedAt = new Date().toISOString().slice(0, 10);
+  save();
+  renderProgramsList();
+  renderProgramme();
+  return true;
+}
+
+/* Met à jour la description d'un programme */
+function updateProgrammeDescription(id, description){
+  const p = DB.programmes.find(x => x.id === id);
+  if (!p) return false;
+  p.description = (description || '').trim();
+  p.updatedAt = new Date().toISOString().slice(0, 10);
+  save();
+  renderProgramsList();
+  return true;
+}
+
+/* Duplique un programme avec ses journées et exercices */
+function duplicateProgramme(id){
+  const src = DB.programmes.find(x => x.id === id);
+  if (!src) return null;
+  const newProg = {
+    id: uid(),
+    name: src.name + ' (copie)',
+    description: src.description,
+    active: false,
+    createdAt: new Date().toISOString().slice(0, 10),
+    updatedAt: new Date().toISOString().slice(0, 10)
+  };
+  DB.programmes.push(newProg);
+  const dayMap = new Map();
+  DB.programme.filter(d => d.programId === id).forEach(d => {
+    const newDay = {
+      id: uid(),
+      programId: newProg.id,
+      name: d.name,
+      type: d.type,
+      exercises: d.exercises.map(e => ({ id: uid(), name: e.name, cardio: e.cardio }))
+    };
+    DB.programme.push(newDay);
+    dayMap.set(d.id, newDay.id);
+  });
+  save();
+  renderProgramsList();
+  renderProgramme();
+  return newProg;
+}
+
+/* Supprime un programme avec confirmation */
+function deleteProgramme(id){
+  const p = DB.programmes.find(x => x.id === id);
+  if (!p) return;
+
+  const days = DB.programme.filter(d => d.programId === id);
+  const totalSets = days.reduce((n, d) => n + d.exercises.reduce((m, e) => m + e.sets.length, 0), 0);
+
+  if (DB.programmes.length <= 1){
+    toast('Impossible de supprimer le dernier programme.');
+    return;
+  }
+
+  askConfirm('Supprimer le programme ?',
+    '"' + p.name + '" et ses ' + days.length + ' journée(s) seront supprimés.' +
+    (totalSets ? ' · ' + totalSets + ' série(s) au total.' : '') +
+    '\n\nLes séances passées liées à ces journées seront conservées dans l\'historique.',
+    'Supprimer', 'Annuler').then(res => {
+    if (!res.ok) return;
+    DB.programme.filter(d => d.programId === id).forEach(d => { d.programId = null; });
+    DB.programmes = DB.programmes.filter(x => x.id !== id);
+    if (activeProgramId === id){
+      const remaining = DB.programmes[0];
+      if (remaining) setActiveProgramme(remaining.id);
+      else { activeProgramId = null; renderProgramme(); renderProgramsList(); }
+    } else {
+      save();
+      renderProgramsList();
+      renderProgramme();
+    }
+  });
+}
   $(elId).innerHTML = TYPES.map(t =>
+/* Rend la liste des programmes (puces de sélection) */
+function renderProgramsList(){
+  const el = $('programsList');
+  if (!el) return;
+  if (!DB.programmes.length){
+    el.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">Aucun programme. Créez-en un pour commencer.</div></div>';
+    return;
+  }
+  el.innerHTML = DB.programmes.map(p => {
+    const days = DB.programme.filter(d => d.programId === p.id).length;
+    const isActive = p.id === activeProgramId;
+    return '<div class="program-item' + (isActive ? ' active' : '') + '" onclick="setActiveProgramme(\'' + p.id + '\')">' +
+      '<div class="program-header">' +
+      '<span class="program-name" onclick="event.stopPropagation();editProgrammeName(\'' + p.id + '\')">' + esc(p.name) + '</span>' +
+      (isActive ? '<span class="chip chip-type">Actif</span>' : '') +
+      '</div>' +
+      (p.description ? '<div class="program-desc">' + esc(p.description) + '</div>' : '') +
+      '<div class="program-meta">' + days + ' journée' + (days !== 1 ? 's' : '') +
+      ' · créé le ' + esc(p.createdAt) + '</div>' +
+      '<div class="program-actions" style="margin-top:8px">' +
+      '<span class="icon-btn" onclick="event.stopPropagation();duplicateProgramme(\'' + p.id + '\')" title="Dupliquer">' + icon('copy') + '</span>' +
+      '<span class="icon-btn danger" onclick="event.stopPropagation();deleteProgramme(\'' + p.id + '\')" title="Supprimer">' + icon('trash') + '</span>' +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+/* Ouvre le formulaire de création/modification de programme */
+function openProgrammeEditor(id){
+  const p = id ? DB.programmes.find(x => x.id === id) : null;
+  $('progNameInput').value = p ? p.name : '';
+  $('progDescInput').value = p ? (p.description || '') : '';
+  $('progEditorId').value = p ? p.id : '';
+  $('progEditorTitle').textContent = p ? 'Modifier le programme' : 'Nouveau programme';
+  openModal('programmeEditorModal');
+}
+
+/* Sauvegarde depuis l'éditeur de programme */
+function saveProgrammeEditor(){
+  const id = $('progEditorId').value;
+  const name = $('progNameInput').value.trim();
+  const desc = $('progDescInput').value.trim();
+  if (!name) { $('progNameInput').focus(); return; }
+  if (id){
+    renameProgramme(id, name);
+    updateProgrammeDescription(id, desc);
+  } else {
+    createProgramme(name, desc);
+  }
+  closeModal('programmeEditorModal');
+}
+
+/* Ouvre l'édition du nom d'un programme en ligne */
+function editProgrammeName(id){
+  const p = DB.programmes.find(x => x.id === id);
+  if (!p) return;
+  const v = prompt('Nom du programme :', p.name);
+  if (v && v.trim() && v.trim() !== p.name) renameProgramme(id, v.trim());
+}
+
+/* Rend la vue détaillée d'un programme avec ses journées */
+function renderProgramView(programId){
+  const p = DB.programmes.find(x => x.id === programId);
+  if (!p) return;
+  const days = DB.programme.filter(d => d.programId === programId);
+  const el = $('programView');
+  if (!el) return;
+  el.innerHTML = '<div class="section-head">' +
+    '<div>' +
+    '<div class="section-title">' + esc(p.name) + '</div>' +
+    '<div class="section-hint">' + (p.description || 'Aucune description') + ' · ' + days + ' journée' + (days !== 1 ? 's' : '') + '</div>' +
+    '</div>' +
+    '<button class="btn btn-primary btn-sm" onclick="openProgrammeEditor(\'' + p.id + '\')">Modifier</button>' +
+    '<button class="btn btn-sm" onclick="openNewDay(\'' + p.id + '\')">+ Nouvelle journée</button>' +
+    '</div>' +
+    '<div id="programDaysList"></div>';
+  const daysEl = $('programDaysList');
+  if (!daysEl) return;
+  if (!days.length){
+    daysEl.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">Aucune journée. Ajoutez-en une pour commencer.</div></div>';
+    return;
+  }
+  daysEl.innerHTML = days.map(d => {
+    const past = DB.history.filter(h => h.dayId === d.id).length;
+    return '<div class="card tap" onclick="openDayDetail(\'' + d.id + '\')">' +
+      '<div class="card-header">' +
+      '<div style="min-width:0">' +
+      '<div class="card-title">' + esc(d.name) + '</div>' +
+      '<div class="card-sub">' + d.exercises.length + ' exercice' + (d.exercises.length !== 1 ? 's' : '') +
+      (past ? ' · ' + past + ' séance(s) passée(s)' : '') + '</div>' +
+      '</div>' + typeChip(d.type) +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+/* Rend le sélecteur de programme pour openNewDay */
+function renderProgramSelector(elId, selectedId){
+  const el = $(elId);
+  if (!el) return;
+  el.innerHTML = DB.programmes.map(p => {
+    const isSelected = p.id === selectedId;
+    return '<option value="' + p.id + '"' + (isSelected ? ' selected' : '') + '>' + esc(p.name) + '</option>';
+  }).join('');
+}
+
+/* Crée une journée dans un programme spécifique */
+function saveNewDayInProgram(programId){
+  const name = $('dayNameInput').value.trim();
+  if (!name) { $('dayNameInput').focus(); return; }
+  const type = newDayType;
+  DB.programme.push({ id: uid(), programId: programId || null, name: name, type: type, exercises: [] });
+  save();
+  closeModal('newDayModal');
+  renderProgramme();
+  renderProgramsList();
+}
     '<button class="type-opt' + (t === current ? ' on' : '') + '" data-t="' + t + '">' + t + '</button>'
   ).join('');
   $(elId).querySelectorAll('.type-opt').forEach(b => b.onclick = () => {
@@ -244,10 +504,16 @@ function renderTypePicker(elId, current, onPick){
 function saveNewDay(){
   const name = $('dayNameInput').value.trim();
   if (!name) { $('dayNameInput').focus(); return; }
-  DB.programme.push({ id: uid(), name: name, type: newDayType, exercises: [] });
-  save();
-  closeModal('newDayModal');
-  renderAll();
+  const progSel = $('dayProgramSelector');
+  const programId = progSel ? progSel.value : activeProgramId;
+  if (programId){
+    saveNewDayInProgram(programId);
+  } else {
+    DB.programme.push({ id: uid(), name: name, type: newDayType, exercises: [] });
+    save();
+    closeModal('newDayModal');
+    renderAll();
+  }
 }
 
 function renamePrompt(id){
@@ -584,5 +850,9 @@ Object.assign(window, {
   openNewDay, renderTypePicker, saveNewDay, renamePrompt, applyDayName, deleteDay,
   openDayDetail, renameDay, renderDayExercises, exerciseHistoryLine, libEntries,
   renderLibrary, onLibSearch, toggleLibExercise, libAddToDay, addExercise, renameExercise,
-  deleteExercise, deleteCurrentDay, toggleCardio, shareProgramme
+  deleteExercise, deleteCurrentDay, toggleCardio, shareProgramme,
+  getActiveProgramme, setActiveProgramme, createProgramme, renameProgramme,
+  updateProgrammeDescription, duplicateProgramme, deleteProgramme,
+  renderProgramsList, openProgrammeEditor, saveProgrammeEditor, editProgrammeName,
+  renderProgramView, renderProgramSelector, saveNewDayInProgram
 });

@@ -15,7 +15,8 @@ function openSessionDetail(hid){
   $('daySheetSub').textContent = fmtLong(h.date) + ' · ' + (h.totalSets || 0) + ' ' + unit +
     ((h.totalSets || 0) !== 1 ? 's' : '') + ' · ' + fmtVolume(h.volume || 0) + ' volume' + ct;
 
-  const day = h.dayId ? DB.programme.find(d => d.id === h.dayId) : null;
+  const activeDays = window.getActiveProgrammeDays();
+  const day = h.dayId ? activeDays.find(d => d.id === h.dayId) : null;
   let html = day
     ? '<button class="btn btn-sm btn-block" style="margin-bottom:14px" onclick="gotoDay(\'' + day.id + '\')">Open "' + esc(day.name) + '" in the Program →</button>'
     : '<div class="hint" style="margin-bottom:14px">This session no longer exists in the Program. Its history stays in stats.</div>';
@@ -363,7 +364,8 @@ function prRowsHtml(){
   const rows = Object.entries(DB.prs || {}).map(([key, pr]) => ({ key: key, name: pr.name || key, weight: +pr.weight || 0, reps: +pr.reps || 0, assisted: +pr.assisted || 0, date: pr.date }));
   if (!rows.length) return '';
   rows.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
-  const inProgramme = new Set((DB.programme || []).flatMap(d => d.exercises.map(e => String(e.name).toLowerCase().trim())));
+  const activeDays = window.getActiveProgrammeDays();
+  const inProgramme = new Set((activeDays || []).flatMap(d => d.exercises.map(e => String(e.name).toLowerCase().trim())));
 
   return rows.map(pr => {
     const logs = (DB.prLog || []).filter(l => l.key === pr.key && l.date === pr.date);
@@ -968,7 +970,7 @@ function renderStats(){
   history.forEach(h => {
     const k = h.dayId || ('~' + h.dayName);
     if (!byDay[k]) byDay[k] = { name: h.dayName, dayId: h.dayId, n: 0, sets: 0, vol: 0, km: 0,
-      live: !!h.dayId && DB.programme.some(d => d.id === h.dayId) };
+      live: !!h.dayId && window.getActiveProgrammeDays().some(d => d.id === h.dayId) };
     byDay[k].n++; byDay[k].sets += h.totalSets || 0; byDay[k].vol += h.volume || 0;
     byDay[k].km += h.cardioKm || 0;
   });

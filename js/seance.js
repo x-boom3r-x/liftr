@@ -37,10 +37,11 @@ function renderSeance(){
   } else banner.innerHTML = '';
 
   const el = $('seanceDays');
-  const days = DB.programme.filter(d => (d.type || '').toUpperCase() !== 'REST');
-  if (!days.length){
+  const days = window.getActiveProgrammeDays();
+  if (!days || !days.length){
+    const emptyText = 'Create a session first in the Program tab.';
     el.innerHTML = '<div class="empty"><div class="empty-icon">' + iconS('flex') + '</div>' +
-      '<div class="empty-text">Create a session first in the Program tab.</div></div>';
+      '<div class="empty-text">' + emptyText + '</div></div>';
     return;
   }
   el.innerHTML = days.map(d => {
@@ -63,7 +64,7 @@ function renderSeance(){
 }
 
 function startSession(dayId){
-  const d = DB.programme.find(x => x.id === dayId);
+  const d = window.getActiveProgrammeDays().find(x => x.id === dayId);
   if (!d || !d.exercises.length) return;
   if (DB.active && !confirm('A session is already in progress. Replace it?')) return;
   DB.active = {

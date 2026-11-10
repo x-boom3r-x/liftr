@@ -7,7 +7,18 @@
 function storeKey(){ return 'at_v2_' + currentUser; }
 
 function defaultDB(){
-  return { programme: [], history: [], progressions: [], weeks: {}, prs: {}, prLog: [], custom: [], weightLog: [], active: null };
+  return {
+    programmes: [],        // [{ id, name, description, active, createdAt, updatedAt }]
+    programme: [],         // jours : { id, programId?, name, type, exercises: [] }
+    history: [],           // sessions passées
+    progressions: [],      // progression des charges
+    weeks: {},             // stats hebdomadaires
+    prs: {},               // records personnels
+    prLog: [],             // log des records
+    custom: [],             // exercices personnalisés
+    weightLog: [],          // journal des poids
+    active: null            // session active
+  };
 }
 
 /* Ecriture : localStorage en miroir (immédiat) + IndexedDB (coalescé) */
@@ -72,8 +83,48 @@ function normalizeDB(){
       if (!e.name) e.name = 'Exercise';
     });
   });
+  /* Garantir la cohérence des programmes (sans perte de données) */
+if (!Array.isArray(DB.programmes)) DB.programmes = [];
+DB.programmes.forEach(p => {
+  if (typeof p.active !== "boolean") p.active = false;
+  if (!p.createdAt) p.createdAt = new Date().toISOString().slice(0, 10);
+  if (!p.updatedAt) p.updatedAt = p.createdAt;
+});
 
-  const dayIds = new Set(DB.programme.map(d => d.id));
+/* Un seul programme actif au maximum */
+const activeProgrammes = DB.programmes.filter(p => p.active === true);
+if (activeProgrammes.length > 1) {
+  activeProgrammes.sort((a, b) => (a.createdAt || "") < (b.createdAt || "") ? 1 : -1);
+  activeProgrammes.slice(1).forEach(p => { p.active = false; });
+}
+
+/* Assigner programId aux jours sans programme (programId = null si aucun programme) */
+const activeProgramme = DB.programmes.find(p => p.active === true);
+DB.programme.forEach(d => {
+  if (!d.programId) {
+    d.programId = activeProgramme ? activeProgramme.id : null;
+  }
+});
+
+/* Si des jours existent mais aucun programme, créer un programme par défaut */
+if (DB.programme.length > 0 && DB.programmes.length === 0) {
+  DB.programmes.push({
+    id: uid(),
+    name: "Programme par défaut",
+    description: "",
+    active: true,
+    createdAt: new Date().toISOString().slice(0, 10),
+    updatedAt: new Date().toISOString().slice(0, 10)
+  });
+  DB.programme.forEach(d => { if (!d.programId) d.programId = DB.programmes[0].id; });
+}
+
+/* Les programmes orphelins (sans journée) sont CONSERVÉS, non supprimés */
+
+const dayIds = new Set(DB.programme.map(d => d.id));
+
+
+
   DB.history.forEach(h => {
     if (!h.id) h.id = uid();
     if (!h.date) h.date = todayISO();

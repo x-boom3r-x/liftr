@@ -75,7 +75,8 @@ function renderWeekCard(){
   const daySessions = sessionsOn(selectedDate);
   $('daySessions').innerHTML = daySessions.length
     ? daySessions.map(h => {
-        const exists = h.dayId && DB.programme.some(d => d.id === h.dayId);
+        const activeDays = window.getActiveProgrammeDays();
+  const exists = h.dayId && activeDays.some(d => d.id === h.dayId);
         return '<div class="hist-item" style="cursor:pointer" onclick="openSessionDetail(\'' + h.id + '\')">' +
           '<div class="hist-top"><div><div class="card-title">' + esc(h.dayName) + '</div>' +
           '<div class="card-sub">' + fmtShort(h.date) + (exists ? ' · active session' : ' · deleted session') + '</div></div>' +
@@ -97,7 +98,9 @@ function renderWeekCard(){
       ).join('')
     : '<div class="empty" style="padding:22px"><div class="empty-text">Nothing logged for this day.<br>Add your progression right below.</div></div>';
 
-  const names = [...new Set(DB.programme.flatMap(d => d.exercises.map(e => e.name)).concat(DB.custom || []))];
+  const activeDays = window.getActiveProgrammeDays();
+  const names = [...new Set((activeDays || []).flatMap(d => d.exercises.map(e => e.name)).concat(DB.custom || []))];
+  console.log(names);
   $('exDatalist').innerHTML = names.map(n => '<option value="' + esc(n) + '">').join('');
 }
 

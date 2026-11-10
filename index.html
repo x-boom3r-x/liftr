@@ -114,6 +114,17 @@
       <div id="todayCard"></div>
       <div id="daysList"></div>
 
+      <div class="card" style="margin-top:14px">
+        <div class="section-head" style="padding:0">
+          <div>
+            <div class="section-title">Programmes</div>
+            <div class="section-hint" id="programsCount"></div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openProgrammeEditor()">+ Nouveau programme</button>
+        </div>
+        <div id="programsList"></div>
+      </div>
+
       <div class="card share-card">
         <div class="card-header">
           <div>
@@ -759,9 +770,35 @@
       <label class="label">Type</label>
       <div class="type-picker" id="dayTypePicker"></div>
     </div>
+    <div class="field">
+      <label class="label">Programme</label>
+      <select class="input" id="dayProgramSelector"></select>
+    </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('newDayModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveNewDay()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Programme editor -->
+<div class="overlay" id="programmeEditorModal" onclick="if(event.target===this)closeModal('programmeEditorModal')">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-title" id="progEditorTitle">Nouveau programme</div>
+    <div class="modal-sub">Créez ou modifiez un programme d'entraînement</div>
+    <div class="field">
+      <label class="label">Nom du programme</label>
+      <input class="input" id="progNameInput" placeholder="Ex: Force, Hypertrophie, Endurance…" maxlength="60">
+    </div>
+    <div class="field">
+      <label class="label">Description (optionnel)</label>
+      <input class="input" id="progDescInput" placeholder="Objectifs, fréquence, focus musculaire…" maxlength="200">
+    </div>
+    <input type="hidden" id="progEditorId">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('programmeEditorModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveProgrammeEditor()">Enregistrer</button>
     </div>
   </div>
 </div>
