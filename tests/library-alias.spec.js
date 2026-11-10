@@ -73,13 +73,16 @@ test.describe('Classification cardio et volume musculation', () => {
   test('exercice cardio (jumping jacks) n\u2019est pas classé comme volume musculation', async ({ page }) => {
     await seed(page, {
       programme: [{ id: 'd1', name: 'Cardio', type: 'CARDIO', exercises: [{ id: 'e1', name: 'jumping jacks', cardio: true }] }],
-      history: []
+      history: [{
+        id: 'h-cardio', date: today(), dayId: 'd1', dayName: 'Cardio',
+        exercises: [{ name: 'jumping jacks', sets: [{ cardio: true, min: 5, km: 0.5, weight: 0, reps: 20 }] }]
+      }]
     }, 'Mouataz');
-    await page.goto('/index.html');
-    await switchProfile(page, 'Mouataz');
-    await page.click('button[data-tab="seance"]');
-    // Vérifie que l\u2019exercice a bien cardio=true
-    const exName = await page.locator('.lib-item').first().textContent();
-    expect(exName).toContain('jumping jacks');
+    const result = await page.evaluate(() => ({
+      cardio: DB.programme.find(d => d.id === 'd1').exercises[0].cardio,
+      muscleScores: muscleScores(30)
+    }));
+    expect(result.cardio).toBe(true);
+    expect(Object.values(result.muscleScores)).toEqual([]);
   });
 });

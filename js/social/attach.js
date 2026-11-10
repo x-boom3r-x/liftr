@@ -212,7 +212,8 @@ export function sessionAttachment(id){
 }
 
 export function programAttachment(){
-  const days = (window.DB && DB.programme) || [];
+  const days = (typeof window.getActiveProgrammeDays === 'function')
+    ? getActiveProgrammeDays() : ((window.DB && DB.programme) || []);
   if (!days.length) return null;
   const name = days.length <= 3
     ? days.map(d => d.name).join(' ')

@@ -879,6 +879,18 @@
       <div class="type-picker" id="detailTypePicker"></div>
     </div>
 
+    <div class="field">
+      <label class="label" for="copyDayTargetProgram">Copier cette journée vers</label>
+      <div class="row">
+        <select class="input" id="copyDayTargetProgram"></select>
+        <button type="button" class="btn btn-sm" onclick="copyCurrentDayToProgram()">Copier</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button type="button" class="btn btn-sm" onclick="saveCurrentDayTemplate()">Enregistrer comme modèle</button>
+        <button type="button" class="btn btn-sm" onclick="openDayTemplates()">Mes modèles</button>
+      </div>
+    </div>
+
     <div class="label">Exercises</div>
     <div id="dayExercises"></div>
 
@@ -900,6 +912,19 @@
     <div class="modal-actions">
       <button class="btn btn-red" onclick="deleteCurrentDay()">Delete session</button>
       <button class="btn" onclick="closeModal('dayDetailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day templates -->
+<div class="overlay" id="dayTemplatesModal" onclick="if(event.target===this)closeModal('dayTemplatesModal')">
+  <div class="modal">
+    <div class="grabber"></div>
+    <div class="modal-title">Modèles de journée</div>
+    <div class="modal-sub">Les modèles sont propres à ce profil. Les utiliser crée une nouvelle journée.</div>
+    <div id="dayTemplatesList"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" onclick="closeModal('dayTemplatesModal')">Fermer</button>
     </div>
   </div>
 </div>

@@ -91,6 +91,8 @@ async function renderLibraryScreen(){
     return;
   }
   let list = buildList(exes);
+  if (libScreenFilter === 'Custom') list = list.filter(ex => ex.category === 'custom');
+  else if (libScreenFilter !== 'All') list = list.filter(ex => ex.bodyPart === libScreenFilter);
 
   if (libScreenSort === 'recent') list = list.sort((a,b) => (b._lastUsed||0) - (a._lastUsed||0));
   else if (libScreenSort === 'used') list = list.sort((a,b) => (b.usageCount||0) - (a.usageCount||0));
@@ -129,6 +131,9 @@ async function renderLibraryScreen(){
   const sub = $('libMapSub');
   if (sub) sub.textContent = libScreenFilter === 'All' ? 'Tout le catalogue : ' + list.length + ' exercices' : 'Filtre : ' + libScreenFilter;
   const range = $('libMapRange');
+  const programDays = (typeof window.getActiveProgrammeDays === 'function')
+    ? getActiveProgrammeDays().length : (DB.programme || []).length;
+  const hist = (DB.history || []).length;
   if (range) range.textContent = hist ? '30 D' : 'NEW';
 
   const grid = $('libScreenGrid');
@@ -155,7 +160,7 @@ async function renderLibraryScreen(){
   }
 
   const hint = $('libScreenHint');
-  if (hint) hint.textContent = list.length + ' exercise' + (list.length !== 1 ? 's' : '') + ' · ' + days + ' session' + (days !== 1 ? 's' : '') + ' in your program';
+  if (hint) hint.textContent = list.length + ' exercise' + (list.length !== 1 ? 's' : '') + ' · ' + programDays + ' session' + (programDays !== 1 ? 's' : '') + ' in your program';
 }
 
 function normalizeForAlias(s){
@@ -168,6 +173,13 @@ function onLibScreenSearch(v){
   libScreenQuery = alias !== null ? alias : v;
   libScreenFilter = libScreenQuery.trim() ? 'All' : libScreenFilter;
   renderLibraryScreen();
+}
+
+function bmPick(muscle){
+  if (!muscle) return;
+  libScreenFilter = libScreenFilter === muscle ? 'All' : muscle;
+  if (currentTab !== 'library') showTab('library');
+  else renderLibraryScreen();
 }
 
 function libScreenPick(name){

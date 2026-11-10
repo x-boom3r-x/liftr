@@ -71,7 +71,18 @@ export function catalogueReady() {
   return Array.isArray(catalogue);
 }
 
-async function loadCatalogue() {
+const EXERCISE_GROUP_LABELS = {
+  'lower legs': 'Legs', 'upper legs': 'Legs',
+  'lower arms': 'Arms', 'upper arms': 'Arms',
+  waist: 'Core', 'full body': 'Full body', cardio: 'Cardio'
+};
+
+export function exerciseGroupLabel(bodyPart) {
+  const value = String(bodyPart || '').toLowerCase();
+  return EXERCISE_GROUP_LABELS[value] || value.replace(/\b\w/g, c => c.toUpperCase()) || 'Autre';
+}
+
+export async function loadCatalogue() {
   if (catalogue) return catalogue;
   try {
     const resp = await fetch(CATALOGUE_URL, { cache: 'force-cache' });

@@ -12,7 +12,8 @@ import {
   makeCustomExercise,
   getCatalogue,
   catalogueReady,
-  loadCatalogue
+  loadCatalogue,
+  exerciseGroupLabel
 } from './gym/exercises.js';
 import {
   policyOff,
@@ -33,6 +34,8 @@ let detailDayId = null;
 let newDayType = 'PUSH';
 let detailDayType = 'PUSH';
 let activeProgramId = null; // ID du programme actuellement sélectionné
+let dragExId = null;
+let selectedDayExerciseIds = new Set();
 
 /* Cohérence des données liées */
 function exoNameSet(day){
@@ -88,7 +91,11 @@ function lastDoneOf(dayId){
 function getActiveProgrammeDays(){
   const active = getActiveProgramme();
   if (!active) return DB.programme.filter(d => !d.programId);
-  return DB.programme.filter(d => d.programId === active.id);
+  return DB.programme
+    .map((day, index) => ({ day, index }))
+    .filter(x => x.day.programId === active.id)
+    .sort((a, b) => (+a.day.order || 0) - (+b.day.order || 0) || a.index - b.index)
+    .map(x => x.day);
 }
 
 /* séance la moins récemment faite (ou jamais faite) */
@@ -197,11 +204,13 @@ function renderTodayCard(){
 }
 
 function renderProgramme(){
-  const activeProg = getActiveProgramme();
   const el = $('daysList');
-  const days = activeProg ? DB.programme.filter(d => d.programId === activeProg.id) : DB.programme.filter(d => !d.programId);
+  const activeProg = getActiveProgramme();
+  const days = getActiveProgrammeDays();
+  if (activeProg) activeProgramId = activeProg.id;
   $('progCount').textContent = days.length + ' day' + (days.length !== 1 ? 's' : '') + ' in your program';
   renderTodayCard();
+  renderProgramsList();
   if (!days.length){
     el.innerHTML = '<div class="empty"><div class="empty-icon">🗓️</div>' +
       '<div class="empty-text">No day created yet.<br>Start by adding a session (PUSH, PULL, LEGS…)</div></div>';
@@ -209,7 +218,8 @@ function renderProgramme(){
   }
   el.innerHTML = days.map((d, i) => {
     const past = DB.history.filter(h => h.dayId === d.id).length;
-    return '<div class="card tap" onclick="openDayDetail(\'' + d.id + '\')">' +
+    const id = esc(d.id);
+    return '<div class="card tap programme-day" data-day-id="' + id + '" onclick="openDayDetail(\'' + id + '\')">' +
       '<div class="card-header">' +
         '<div style="min-width:0">' +
           '<div class="card-title">' + esc(d.name) + '</div>' +
@@ -219,6 +229,9 @@ function renderProgramme(){
           '</div>' +
         '</div>' +
         '<div class="card-actions">' + typeChip(d.type) +
+          '<button type="button" class="icon-btn day-drag-handle" draggable="true" onclick="event.stopPropagation()" aria-label="Réordonner ' + esc(d.name) + '" title="Réordonner">↕</button>' +
+          '<button type="button" class="icon-btn" onclick="event.stopPropagation();moveProgrammeDay(\'' + id + '\',-1)" aria-label="Monter ' + esc(d.name) + '" title="Monter"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+          '<button type="button" class="icon-btn" onclick="event.stopPropagation();moveProgrammeDay(\'' + id + '\',1)" aria-label="Descendre ' + esc(d.name) + '" title="Descendre"' + (i === days.length - 1 ? ' disabled' : '') + '>↓</button>' +
           '<span class="icon-btn" onclick="event.stopPropagation();shareProgramme()" ' +
           'title="Share program" aria-label="Share program">' + icon('share') + '</span>' +
           '<span class="icon-btn" onclick="event.stopPropagation();renamePrompt(\'' + d.id + '\')" title="Rename">' + icon('pencil') + '</span>' +
@@ -227,6 +240,7 @@ function renderProgramme(){
       '</div>' +
     '</div>';
   }).join('');
+  initProgrammeDayDrag();
 }
 
 function openNewDay(programId){
@@ -259,7 +273,9 @@ function getActiveProgramme(){
     const p = DB.programmes.find(x => x.id === activeProgramId);
     if (p) return p;
   }
-  return DB.programmes.length ? DB.programmes[0] : null;
+  const active = DB.programmes.find(x => x.active) || DB.programmes[0] || null;
+  if (active) activeProgramId = active.id;
+  return active;
 }
 
 /* Définit le programme actif et persiste le choix */
@@ -270,6 +286,7 @@ function setActiveProgramme(id){
   activeProgramId = id;
   save();
   renderProgramme();
+  renderSeance();
   renderProgramsList();
 }
 
@@ -325,18 +342,26 @@ function duplicateProgramme(id){
     updatedAt: new Date().toISOString().slice(0, 10)
   };
   DB.programmes.push(newProg);
-  const dayMap = new Map();
-  DB.programme.filter(d => d.programId === id).forEach(d => {
+  const groupMap = new Map();
+  getProgramDays(id).forEach(d => {
     const newDay = {
       id: uid(),
       programId: newProg.id,
       name: d.name,
       type: d.type,
-      exercises: d.exercises.map(e => ({ id: uid(), name: e.name, cardio: e.cardio }))
+      order: d.order,
+      exercises: d.exercises.map((e, index) => {
+        const copy = Object.assign({}, e, { id: uid(), order: index });
+        if (e.groupId){
+          if (!groupMap.has(e.groupId)) groupMap.set(e.groupId, uid());
+          copy.groupId = groupMap.get(e.groupId);
+        }
+        return copy;
+      })
     };
     DB.programme.push(newDay);
-    dayMap.set(d.id, newDay.id);
   });
+  newProg.updatedAt = new Date().toISOString().slice(0, 10);
   save();
   renderProgramsList();
   renderProgramme();
@@ -348,11 +373,16 @@ function deleteProgramme(id){
   const p = DB.programmes.find(x => x.id === id);
   if (!p) return;
 
-  const days = DB.programme.filter(d => d.programId === id);
-  const totalSets = days.reduce((n, d) => n + d.exercises.reduce((m, e) => m + e.sets.length, 0), 0);
+  const days = getProgramDays(id);
+  const dayIds = new Set(days.map(d => d.id));
+  const totalSets = days.reduce((n, d) => n + d.exercises.reduce((m, e) => m + (Number(e.sets) || 0), 0), 0);
 
   if (DB.programmes.length <= 1){
     toast('Impossible de supprimer le dernier programme.');
+    return;
+  }
+  if (DB.active && dayIds.has(DB.active.dayId)){
+    toast('Terminez ou quittez la séance avant de supprimer ce programme.');
     return;
   }
 
@@ -362,24 +392,34 @@ function deleteProgramme(id){
     '\n\nLes séances passées liées à ces journées seront conservées dans l\'historique.',
     'Supprimer', 'Annuler').then(res => {
     if (!res.ok) return;
-    DB.programme.filter(d => d.programId === id).forEach(d => { d.programId = null; });
+    DB.history.forEach(h => { if (dayIds.has(h.dayId)) h.dayId = null; });
+    DB.programme = DB.programme.filter(d => d.programId !== id);
     DB.programmes = DB.programmes.filter(x => x.id !== id);
     if (activeProgramId === id){
-      const remaining = DB.programmes[0];
+      activeProgramId = null;
+      const remaining = DB.programmes.find(x => x.active) || DB.programmes[0];
       if (remaining) setActiveProgramme(remaining.id);
-      else { activeProgramId = null; renderProgramme(); renderProgramsList(); }
-    } else {
-      save();
-      renderProgramsList();
-      renderProgramme();
     }
+    DB.programmes.forEach(x => { x.active = x.id === activeProgramId; });
+    save();
+    renderAll();
   });
 }
+function renderTypePicker(elId, current, onPick){
   $(elId).innerHTML = TYPES.map(t =>
+    '<button class="type-opt' + (t === current ? ' on' : '') + '" data-t="' + t + '">' + t + '</button>'
+  ).join('');
+  $(elId).querySelectorAll('.type-opt').forEach(b => b.onclick = () => {
+    onPick(b.dataset.t);
+    $(elId).querySelectorAll('.type-opt').forEach(x => x.classList.toggle('on', x.dataset.t === b.dataset.t));
+  });
+}
+
 /* Rend la liste des programmes (puces de sélection) */
 function renderProgramsList(){
   const el = $('programsList');
   if (!el) return;
+  if (!activeProgramId) getActiveProgramme();
   if (!DB.programmes.length){
     el.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">Aucun programme. Créez-en un pour commencer.</div></div>';
     return;
@@ -440,13 +480,13 @@ function editProgrammeName(id){
 function renderProgramView(programId){
   const p = DB.programmes.find(x => x.id === programId);
   if (!p) return;
-  const days = DB.programme.filter(d => d.programId === programId);
+  const days = getProgramDays(programId);
   const el = $('programView');
   if (!el) return;
   el.innerHTML = '<div class="section-head">' +
     '<div>' +
     '<div class="section-title">' + esc(p.name) + '</div>' +
-    '<div class="section-hint">' + (p.description || 'Aucune description') + ' · ' + days + ' journée' + (days !== 1 ? 's' : '') + '</div>' +
+    '<div class="section-hint">' + esc(p.description || 'Aucune description') + ' · ' + days.length + ' journée' + (days.length !== 1 ? 's' : '') + '</div>' +
     '</div>' +
     '<button class="btn btn-primary btn-sm" onclick="openProgrammeEditor(\'' + p.id + '\')">Modifier</button>' +
     '<button class="btn btn-sm" onclick="openNewDay(\'' + p.id + '\')">+ Nouvelle journée</button>' +
@@ -487,20 +527,12 @@ function saveNewDayInProgram(programId){
   const name = $('dayNameInput').value.trim();
   if (!name) { $('dayNameInput').focus(); return; }
   const type = newDayType;
-  DB.programme.push({ id: uid(), programId: programId || null, name: name, type: type, exercises: [] });
+  DB.programme.push({ id: uid(), programId: programId || null, name: name, type: type, order: getProgramDays(programId).length, exercises: [] });
   save();
   closeModal('newDayModal');
   renderProgramme();
   renderProgramsList();
 }
-    '<button class="type-opt' + (t === current ? ' on' : '') + '" data-t="' + t + '">' + t + '</button>'
-  ).join('');
-  $(elId).querySelectorAll('.type-opt').forEach(b => b.onclick = () => {
-    onPick(b.dataset.t);
-    $(elId).querySelectorAll('.type-opt').forEach(x => x.classList.toggle('on', x.dataset.t === b.dataset.t));
-  });
-}
-
 function saveNewDay(){
   const name = $('dayNameInput').value.trim();
   if (!name) { $('dayNameInput').focus(); return; }
@@ -566,6 +598,7 @@ function deleteDay(id){
     }
 
     DB.programme = DB.programme.filter(x => x.id !== id);
+    renumberProgramDays(d.programId);
     if (DB.active && DB.active.dayId === id) DB.active = null;
     if (detailDayId === id){ detailDayId = null; closeModal('dayDetailModal'); }
     save(); renderAll();
@@ -576,11 +609,16 @@ function openDayDetail(id){
   const d = DB.programme.find(x => x.id === id);
   if (!d) return;
   detailDayId = id;
+  selectedDayExerciseIds.clear();
   detailDayType = d.type;
   $('dayTitleInput').value = d.name;
+  const copyTarget = $('copyDayTargetProgram');
+  if (copyTarget){
+    copyTarget.innerHTML = DB.programmes.map(p => '<option value="' + esc(p.id) + '"' + (p.id === d.programId ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('');
+  }
   renderTypePicker('detailTypePicker', detailDayType, t => { detailDayType = t; d.type = t; save(); renderProgramme(); });
   renderDayExercises();
-  libFilter = 'Toutes'; libQuery = '';
+  libFilter = 'All'; libQuery = '';
   const s = $('libSearch'); if (s) s.value = '';
   renderLibrary();
   openModal('dayDetailModal');
@@ -598,23 +636,55 @@ function renderDayExercises(){
   const d = DB.programme.find(x => x.id === detailDayId);
   const el = $('dayExercises');
   if (!d) return;
-  if (!d.exercises.length){
-    el.innerHTML = '<div class="empty" style="padding:24px"><div class="empty-text">No exercises. Add some below.</div></div>';
-    return;
-  }
-  el.innerHTML = d.exercises.map((e, i) =>
-    '<div class="ex-block">' +
-      '<div class="ex-name"><span>' + (i+1) + '. ' + esc(e.name) +
+  const ids = new Set(d.exercises.map(e => e.id));
+  selectedDayExerciseIds = new Set([...selectedDayExerciseIds].filter(id => ids.has(id)));
+  const moveOptions = DB.programme.filter(day => day.id !== d.id).map(day => {
+    const prog = DB.programmes.find(p => p.id === day.programId);
+    return '<option value="' + esc(day.id) + '">' + esc((prog ? prog.name + ' · ' : '') + day.name) + '</option>';
+  }).join('');
+  const blocks = d.exercises.map((e, i) => {
+    const id = esc(e.id);
+    const groupMembers = e.groupId ? d.exercises.filter(x => x.groupId === e.groupId) : [];
+    const groupType = e.groupType === 'circuit' ? 'circuit' : 'superset';
+    const p = getExerciseParams(e);
+    return '<div class="ex-block" data-ex-id="' + id + '">' +
+      '<div class="ex-name"><span class="ex-heading">' + (i+1) + '. ' + esc(e.name) +
         (e.cardio ? ' <span class="chip chip-cardio">CARDIO</span>' : '') + '</span>' +
         '<span class="card-actions">' +
-          '<span class="icon-btn' + (e.cardio ? ' on' : '') + '" onclick="toggleCardio(\'' + e.id + '\')" title="Cardio exercise (time / distance)">' + (e.cardio ? icon('run') : icon('flex')) + '</span>' +
-          '<span class="icon-btn" onclick="renameExercise(\'' + e.id + '\')" title="Rename">' + icon('pencil') + '</span>' +
-          '<span class="icon-btn danger" onclick="deleteExercise(\'' + e.id + '\')" title="Delete">' + icon('trash') + '</span>' +
+          '<button type="button" class="icon-btn ex-drag-handle" draggable="true" data-ex-id="' + id + '" aria-label="Réordonner ' + esc(e.name) + '" title="Réordonner">↕</button>' +
+          '<button type="button" class="icon-btn" onclick="event.stopPropagation();moveDayExerciseOrder(\'' + id + '\',-1)" aria-label="Monter ' + esc(e.name) + '" title="Monter"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+          '<button type="button" class="icon-btn" onclick="event.stopPropagation();moveDayExerciseOrder(\'' + id + '\',1)" aria-label="Descendre ' + esc(e.name) + '" title="Descendre"' + (i === d.exercises.length - 1 ? ' disabled' : '') + '>↓</button>' +
+          '<button type="button" class="icon-btn' + (e.cardio ? ' on' : '') + '" onclick="event.stopPropagation();toggleCardio(\'' + id + '\')" title="Cardio exercise (time / distance)" aria-label="Basculer cardio">' + (e.cardio ? icon('run') : icon('flex')) + '</button>' +
+          '<button type="button" class="icon-btn" onclick="event.stopPropagation();duplicateDayExercise(\'' + id + '\')" title="Dupliquer" aria-label="Dupliquer ' + esc(e.name) + '">' + icon('copy') + '</button>' +
+          '<button type="button" class="icon-btn" onclick="event.stopPropagation();renameExercise(\'' + id + '\')" title="Rename" aria-label="Renommer">' + icon('pencil') + '</button>' +
+          '<button type="button" class="icon-btn danger" onclick="event.stopPropagation();deleteExercise(\'' + id + '\')" title="Delete" aria-label="Supprimer">' + icon('trash') + '</button>' +
         '</span>' +
       '</div>' +
-      '<div class="card-sub">' + exerciseHistoryLine(e.name, e.cardio) + '</div>' +
-    '</div>'
-  ).join('');
+      '<div class="card-sub">' + exerciseHistoryLine(e.name, e.cardio) + ' · ' + esc(exerciseParamsLine(e)) + '</div>' +
+      (groupMembers.length > 1
+        ? '<div class="ex-group-controls"><span class="chip chip-type">' + (groupType === 'circuit' ? 'Circuit' : 'Superset') + '</span>' +
+          '<label class="sr-only" for="group-type-' + id + '">Type de groupe</label>' +
+          '<select class="input ex-group-type" id="group-type-' + id + '" onchange="setExerciseGroupType(\'' + esc(e.groupId) + '\',this.value)">' +
+            '<option value="superset"' + (groupType === 'superset' ? ' selected' : '') + '>Superset</option>' +
+            '<option value="circuit"' + (groupType === 'circuit' ? ' selected' : '') + '>Circuit</option>' +
+          '</select><button type="button" class="btn btn-sm" onclick="dissolveExerciseGroup(\'' + esc(e.groupId) + '\')">Dissoudre</button></div>'
+        : '') +
+      '<details class="ex-params"><summary>Objectifs et notes</summary>' +
+        '<div class="ex-params-grid">' +
+          '<label>Séries<input class="input" id="param-sets-' + id + '" type="number" min="1" step="1" inputmode="numeric" value="' + (p.sets == null ? '' : esc(p.sets)) + '"></label>' +
+          '<label>Répétitions<input class="input" id="param-reps-' + id + '" maxlength="20" value="' + (p.reps == null ? '' : esc(p.reps)) + '"></label>' +
+          '<label>Charge (kg)<input class="input" id="param-weight-' + id + '" type="number" min="0" step="0.1" inputmode="decimal" value="' + (p.weight == null ? '' : esc(p.weight)) + '"></label>' +
+          '<label>Repos (s)<input class="input" id="param-rest-' + id + '" type="number" min="0" step="1" inputmode="numeric" value="' + (p.rest == null ? '' : esc(p.rest)) + '"></label>' +
+        '</div><label class="ex-notes-label">Notes<textarea class="textarea" id="param-notes-' + id + '" rows="2" maxlength="500">' + esc(p.notes) + '</textarea></label>' +
+        '<button type="button" class="btn btn-sm" onclick="saveExerciseParams(\'' + id + '\')">Enregistrer les objectifs</button>' +
+      '</details>' +
+      (moveOptions ? '<label class="ex-move-label">Déplacer vers<select class="input" aria-label="Déplacer ' + esc(e.name) + ' vers une journée" onchange="moveDayExercise(\'' + id + '\',this.value);this.value=\'\'"><option value="">Choisir une journée…</option>' + moveOptions + '</select></label>' : '') +
+      '<label class="ex-select-label"><input type="checkbox" class="ex-select" value="' + id + '"' + (selectedDayExerciseIds.has(e.id) ? ' checked' : '') + ' onchange="setDayExerciseSelected(\'' + id + '\',this.checked)"> Sélectionner pour grouper</label>' +
+    '</div>';
+  }).join('');
+  el.innerHTML = renderExerciseGroupToolbar() + (blocks || '<div class="empty" style="padding:24px"><div class="empty-text">No exercises. Add some below.</div></div>');
+  initExerciseDrag();
+  updateGroupSelectionUI();
 }
 
 /* basculer un exercice entre musculation (poids/reps) et cardio (durée/distance) */
@@ -655,15 +725,16 @@ let libQuery = '';
 function libEntries(){
   const seen = new Set(), out = [];
   const push = (name, group, custom) => {
-    const k = String(name).toLowerCase().trim();
+    const rawName = String(name).trim();
+    const k = rawName.toLowerCase();
     if (!k || seen.has(k)) return;
     seen.add(k);
-    out.push({ name: name, group: group, custom: !!custom });
+    out.push({ name: rawName, group: group, custom: !!custom });
   };
   /* Privilégie le catalogue openGym quand il est chargé, sinon fallback LIB legacy. */
   const cat = getCatalogue();
   if (cat.length){
-    cat.forEach(ex => push(ex.name, (ex.bodyPart || 'Autre').replace(/\b\w/g, c => c.toUpperCase()), ex.category === 'custom'));
+    cat.forEach(ex => push(ex.name, exerciseGroupLabel(ex.bodyPart), ex.category === 'custom'));
   } else {
     Object.keys(LIB).forEach(g => LIB[g].forEach(n => push(n, g, false)));
   }
@@ -678,7 +749,7 @@ function renderLibrary(){
   const counts = {};
   all.forEach(e => counts[e.group] = (counts[e.group] || 0) + 1);
 
-  const catGroups = [...new Set((getCatalogue() || []).map(e => e.bodyPart).filter(Boolean))].sort();
+  const catGroups = [...new Set(all.filter(e => !e.custom).map(e => e.group).filter(Boolean))].sort();
   const groups = ['All'].concat(catGroups, counts['Custom'] ? ['Custom'] : []);
   $('libChips').innerHTML = groups.map(g => {
     const n = g === 'All' ? all.length : (counts[g] || 0);
@@ -720,7 +791,9 @@ function toggleLibExercise(name){
   if (!d) return;
   const i = d.exercises.findIndex(e => e.name.toLowerCase() === name.toLowerCase());
   if (i >= 0) d.exercises.splice(i, 1);
-  else d.exercises.push({ id: uid(), name: name, cardio: isCardioName(name) || undefined });
+  else d.exercises.push({ id: uid(), name: name, cardio: isCardioName(name) || undefined, order: d.exercises.length });
+  normalizeExerciseGroups(d);
+  renumberExercises(d);
   save();
   renderDayExercises(); renderProgramme(); renderSeance(); renderLibrary();
 }
@@ -734,9 +807,11 @@ function libAddToDay(dayId, name){
     d.exercises.splice(i, 1);
     toast('Removed from "' + d.name + '"');
   } else {
-    d.exercises.push({ id: uid(), name: name, cardio: isCardioName(name) || undefined });
+    d.exercises.push({ id: uid(), name: name, cardio: isCardioName(name) || undefined, order: d.exercises.length });
     toast('Added to "' + d.name + '"');
   }
+  normalizeExerciseGroups(d);
+  renumberExercises(d);
   save();
   renderDayExercises(); renderProgramme(); renderSeance(); renderLibrary();
 }
@@ -750,13 +825,14 @@ function addExercise(){
   if (!d.exercises.some(e => e.name.toLowerCase() === name.toLowerCase())){
     const cardioChk = $('exCardioChk');
     const isCardio = (cardioChk && cardioChk.checked) || isCardioName(name);
-    d.exercises.push({ id: uid(), name: name, cardio: isCardio || undefined });
+    d.exercises.push({ id: uid(), name: name, cardio: isCardio || undefined, order: d.exercises.length });
     const known = libEntries().some(e => e.name.toLowerCase() === name.toLowerCase());
     if (!known){
       if (!DB.custom) DB.custom = [];
       if (!DB.custom.some(n => n.toLowerCase() === name.toLowerCase())) DB.custom.push(name);
     }
   }
+  renumberExercises(d);
   save();
   input.value = '';
   if ($('exCardioChk')) $('exCardioChk').checked = false;
@@ -824,6 +900,8 @@ function deleteExercise(id){
 
   const doDelete = cleanup => {
     d.exercises = d.exercises.filter(x => x.id !== id);
+    normalizeExerciseGroups(d);
+    renumberExercises(d);
     if (!shared && cleanup) dropExoRecords(ex.name);
     save();
     renderDayExercises(); renderProgramme(); renderSeance(); renderLibrary();
@@ -837,29 +915,6 @@ function deleteExercise(id){
       'Delete', 'Also delete its records and progressions')
       .then(res => { if (res.ok) doDelete(res.check); });
   } else doDelete(true);
-}
-
-/* ── PARAMÈTRES D'EXERCICE DANS UNE JOURNÉE ── */
-function getExerciseParams(ex){
-  return {
-    sets: ex.sets ?? null,
-    reps: ex.reps ?? null,
-    weight: ex.weight ?? null,
-    rest: ex.rest ?? null,
-    notes: ex.notes ?? ''
-  };
-}
-
-function setExerciseParams(ex, data){
-  if (data.sets !== undefined) ex.sets = data.sets;
-  if (data.reps !== undefined) ex.reps = data.reps;
-  if (data.weight !== undefined) ex.weight = data.weight;
-  if (data.rest !== undefined) ex.rest = data.rest;
-  if (data.notes !== undefined) ex.notes = data.notes;
-  save();
-  renderDayExercises();
-  renderProgramme();
-  renderSeance();
 }
 
 function deleteCurrentDay(){
@@ -877,178 +932,495 @@ Object.assign(window, {
   getActiveProgramme, setActiveProgramme, createProgramme, renameProgramme,
   updateProgrammeDescription, duplicateProgramme, deleteProgramme,
   renderProgramsList, openProgrammeEditor, saveProgrammeEditor, editProgrammeName,
-  renderProgramView, renderProgramSelector, saveNewDayInProgram
+  renderProgramView, renderProgramSelector, saveNewDayInProgram,
+  getActiveProgrammeDays,
+  getExerciseParams, setExerciseParams, exerciseParamsLine, saveExerciseParams,
+  addDayExercise, deleteDayExercise, duplicateDayExercise, moveDayExercise,
+  copyProgrammeDay, copyCurrentDayToProgram, moveProgrammeDayBefore,
+  moveDayExerciseOrder, moveProgrammeDay, reorderDayExercises, groupSelectedExercises,
+  setDayExerciseSelected, setExerciseGroupType, dissolveExerciseGroup,
+  saveDayTemplate, saveCurrentDayTemplate, loadDayTemplates, deleteDayTemplate, importDayFromTemplate,
+  importDayTemplateById, openDayTemplates, renderDayTemplates
 });
 
 function initExerciseDrag(){
-  document.querySelectorAll('.ex-block').forEach(block => {
-    block.draggable = true;
-    block.addEventListener('dragstart', e => {
-      const exId = block.dataset.exId;
-      if (!exId) return;
+  const root = $('dayExercises');
+  if (!root) return;
+  root.querySelectorAll('.ex-drag-handle').forEach(handle => {
+    handle.addEventListener('dragstart', e => {
+      dragExId = handle.dataset.exId;
+      if (!dragExId || !e.dataTransfer) return;
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', exId);
-      block.style.opacity = '0.5';
-      dragExId = exId;
+      e.dataTransfer.setData('text/plain', dragExId);
+      handle.closest('.ex-block').classList.add('dragging');
     });
-    block.addEventListener('dragend', e => {
-      block.style.opacity = '1';
+    handle.addEventListener('dragend', () => {
+      const block = handle.closest('.ex-block');
+      if (block) block.classList.remove('dragging', 'drag-over');
       dragExId = null;
     });
   });
+  root.ondragover = e => {
+    const block = e.target.closest('.ex-block');
+    if (!block) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    block.classList.add('drag-over');
+  };
+  root.ondragleave = e => {
+    const block = e.target.closest('.ex-block');
+    if (block && !block.contains(e.relatedTarget)) block.classList.remove('drag-over');
+  };
+  root.ondrop = e => {
+    const target = e.target.closest('.ex-block');
+    if (!target) return;
+    e.preventDefault();
+    const sourceId = e.dataTransfer && e.dataTransfer.getData('text/plain') || dragExId;
+    if (sourceId && sourceId !== target.dataset.exId) reorderDayExercises(detailDayId, sourceId, target.dataset.exId);
+    root.querySelectorAll('.ex-block').forEach(block => block.classList.remove('drag-over', 'dragging'));
+    dragExId = null;
+  };
+}
 
-  document.querySelectorAll('.ex-block').forEach(block => {
-    block.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      block.classList.add('drag-over');
+function initProgrammeDayDrag(){
+  const root = $('daysList');
+  if (!root) return;
+  root.querySelectorAll('.day-drag-handle').forEach(handle => {
+    handle.addEventListener('dragstart', e => {
+      const card = handle.closest('.programme-day');
+      if (!card || !e.dataTransfer) return;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.dayId);
+      card.classList.add('dragging');
     });
-    block.addEventListener('dragleave', e => {
-      if (e.target.closest('.ex-block')) block.classList.remove('drag-over');
-    });
-    block.addEventListener('drop', e => {
-      e.preventDefault();
-      block.classList.remove('drag-over');
-      const srcId = e.dataTransfer.getData('text/plain');
-      const exId = block.dataset.exId;
-      if (!srcId || srcId === exId) return;
-      const d = DB.programme.find(x => x.id === detailDayId);
-      if (!d || !srcId) return;
-      const srcIdx = d.exercises.findIndex(e => e.id === srcId);
-      const tgtIdx = d.exercises.findIndex(e => e.id === exId);
-      if (srcIdx < 0 || tgtIdx < 0) return;
-      const ex = d.exercises.splice(srcIdx, 1)[0];
-      d.exercises.splice(tgtIdx, 0, ex);
-      d.exercises.forEach((e, i) => { e.order = i; });
-      save();
-      renderDayExercises();
-      renderProgramme();
-      renderSeance();
+    handle.addEventListener('dragend', () => {
+      root.querySelectorAll('.programme-day').forEach(card => card.classList.remove('dragging', 'drag-over'));
     });
   });
+  root.ondragover = e => {
+    const card = e.target.closest('.programme-day');
+    if (!card) return;
+    e.preventDefault();
+    card.classList.add('drag-over');
+  };
+  root.ondragleave = e => {
+    const card = e.target.closest('.programme-day');
+    if (card && !card.contains(e.relatedTarget)) card.classList.remove('drag-over');
+  };
+  root.ondrop = e => {
+    const card = e.target.closest('.programme-day');
+    if (!card) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const sourceId = e.dataTransfer && e.dataTransfer.getData('text/plain');
+    if (sourceId && sourceId !== card.dataset.dayId) moveProgrammeDayBefore(sourceId, card.dataset.dayId);
+    root.querySelectorAll('.programme-day').forEach(item => item.classList.remove('dragging', 'drag-over'));
+  };
 }
 
 function getExerciseParams(ex){
   return {
-    sets: ex.sets ?? null,
-    reps: ex.reps ?? null,
-    weight: ex.weight ?? null,
-    rest: ex.rest ?? null,
-    notes: ex.notes ?? ''
+    sets: ex && ex.sets != null ? ex.sets : null,
+    reps: ex && ex.reps != null ? ex.reps : null,
+    weight: ex && ex.weight != null ? ex.weight : null,
+    rest: ex && ex.rest != null ? ex.rest : null,
+    notes: ex && ex.notes ? ex.notes : ''
   };
 }
 
 function setExerciseParams(ex, data){
-  if (data.sets !== undefined) ex.sets = data.sets;
-  if (data.reps !== undefined) ex.reps = data.reps;
-  if (data.weight !== undefined) ex.weight = data.weight;
-  if (data.rest !== undefined) ex.rest = data.rest;
-  if (data.notes !== undefined) ex.notes = data.notes;
+  if (!ex || !data) return false;
+  ['sets', 'reps', 'weight', 'rest', 'notes'].forEach(key => {
+    if (!Object.prototype.hasOwnProperty.call(data, key)) return;
+    let value = data[key];
+    if (value === '') value = null;
+    if (['sets', 'weight', 'rest'].includes(key) && value != null){
+      value = Number(value);
+      if (!Number.isFinite(value) || value < 0) return;
+      if (key === 'sets') value = Math.max(1, Math.round(value));
+      if (key === 'rest') value = Math.round(value);
+    }
+    if (key === 'reps' && value != null) value = String(value).trim() || null;
+    if (key === 'notes' && value != null) value = String(value).slice(0, 500);
+    ex[key] = value;
+  });
   save();
   renderDayExercises();
   renderProgramme();
   renderSeance();
+  return true;
 }
 
 function exerciseParamsLine(ex){
   const p = getExerciseParams(ex);
   const parts = [];
-  if (p.sets !== null && p.sets > 0) parts.push(p.sets + '×');
-  if (p.reps !== null && p.reps !== undefined) parts.push(p.reps);
-  if (p.weight !== null && p.weight !== undefined) parts.push(p.weight + ' kg');
-  if (p.rest !== null && p.rest !== undefined) parts.push(p.rest + 's repos');
-  if (p.notes) parts.push('· ' + p.notes);
-  return parts.join(' · ') || 'Paramètres non définis';
+  if (p.sets != null) parts.push(p.sets + ' séries');
+  if (p.reps != null) parts.push(p.reps + ' reps');
+  if (p.weight != null) parts.push(p.weight + ' kg');
+  if (p.rest != null) parts.push(p.rest + ' s repos');
+  return parts.join(' · ') || 'Objectifs non définis';
+}
+
+function optionalNumberInput(id, min, integer){
+  const input = $(id);
+  if (!input) return null;
+  const raw = input.value.trim();
+  if (!raw) return null;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < min || (integer && !Number.isInteger(value))) return NaN;
+  return value;
+}
+
+function saveExerciseParams(exId){
+  const d = DB.programme.find(x => x.id === detailDayId);
+  const ex = d && d.exercises.find(x => x.id === exId);
+  if (!ex) return false;
+  const sets = optionalNumberInput('param-sets-' + exId, 1, true);
+  const weight = optionalNumberInput('param-weight-' + exId, 0, false);
+  const rest = optionalNumberInput('param-rest-' + exId, 0, true);
+  if ([sets, weight, rest].some(Number.isNaN)){
+    toast('Vérifiez les séries, la charge et le temps de repos.');
+    return false;
+  }
+  return setExerciseParams(ex, {
+    sets, reps: $('param-reps-' + exId).value.trim() || null,
+    weight, rest, notes: $('param-notes-' + exId).value
+  });
+}
+
+function getExerciseState(ex){
+  return {
+    name: ex.name,
+    cardio: !!ex.cardio,
+    order: Number.isFinite(+ex.order) ? +ex.order : 0,
+    sets: ex.sets ?? null,
+    reps: ex.reps ?? null,
+    weight: ex.weight ?? null,
+    rest: ex.rest ?? null,
+    notes: ex.notes || '',
+    groupId: ex.groupId || null,
+    groupType: ex.groupType || null
+  };
 }
 
 function addDayExercise(dayId, name, setParams = {}){
   const d = DB.programme.find(x => x.id === dayId);
-  if (!d) return null;
+  if (!d || !name || typeof name !== 'string') return null;
   if (d.exercises.some(e => e.name.toLowerCase().trim() === name.toLowerCase().trim())){
     toast('Cet exercice existe déjà dans cette journée.');
     return null;
   }
-  const exercise = {
-    id: uid(),
-    name: name,
-    sets: setParams.sets ?? null,
-    reps: setParams.reps ?? null,
-    weight: setParams.weight ?? null,
-    rest: setParams.rest ?? null,
-    notes: setParams.notes ?? '',
-    order: d.exercises.length
-  };
+  const exercise = Object.assign({
+    id: uid(), name: name.trim(), cardio: isCardioName(name), order: d.exercises.length,
+    sets: null, reps: null, weight: null, rest: null, notes: ''
+  }, setParams);
+  exercise.id = uid();
+  exercise.name = name.trim();
   d.exercises.push(exercise);
-  d.exercises.sort((a, b) => (a.order || 0) - (b.order || 0));
+  renumberExercises(d);
   save();
-  renderDayExercises();
-  renderProgramme();
-  renderSeance();
+  renderDayExercises(); renderProgramme(); renderSeance();
   return exercise;
 }
 
 function deleteDayExercise(dayId, exId){
   const d = DB.programme.find(x => x.id === dayId);
-  if (!d) return;
+  if (!d) return false;
   const idx = d.exercises.findIndex(e => e.id === exId);
-  if (idx < 0) return;
-  d.exercises.splice(idx, 1);
-  d.exercises.forEach((e, i) => { e.order = i; });
+  if (idx < 0) return false;
+  const removed = d.exercises.splice(idx, 1)[0];
+  if (removed && removed.groupId) normalizeExerciseGroups(d);
+  renumberExercises(d);
   save();
-  renderDayExercises();
-  renderProgramme();
-  renderSeance();
+  renderDayExercises(); renderProgramme(); renderSeance();
+  return true;
 }
 
-/* ── MODÈLES DE ROUTINES ── */
-function saveDayTemplate(dayId, templateName){
-  const d = DB.programme.find(x => x.id === dayId);
-  if (!d) return;
-  const templates = DB.customTemplates || [];
-  const t = {
-    id: uid(),
-    name: templateName,
-    dayId: d.id,
-    dayName: d.name,
-    exercises: d.exercises.map(e => getExerciseState(e)),
-    createdAt: new Date().toISOString()
-  };
-  templates.push(t);
-  localStorage.setItem('liftr_dayTemplates', JSON.stringify(templates));
-  toast('Modèle enregistré');
+function renumberExercises(day){
+  day.exercises.forEach((exercise, index) => { exercise.order = index; });
 }
+
+function getProgramDays(programId){
+  return DB.programme
+    .map((day, index) => ({ day, index }))
+    .filter(x => x.day.programId === programId)
+    .sort((a, b) => (+a.day.order || 0) - (+b.day.order || 0) || a.index - b.index)
+    .map(x => x.day);
+}
+
+function renumberProgramDays(programId){
+  getProgramDays(programId).forEach((day, index) => { day.order = index; });
+}
+
+function moveProgrammeDay(dayId, delta){
+  const day = DB.programme.find(x => x.id === dayId);
+  if (!day) return false;
+  const days = getProgramDays(day.programId);
+  const index = days.findIndex(x => x.id === dayId);
+  const target = index + Number(delta);
+  if (index < 0 || target < 0 || target >= days.length) return false;
+  [days[index].order, days[target].order] = [days[target].order, days[index].order];
+  renumberProgramDays(day.programId);
+  save(); renderProgramme();
+  return true;
+}
+
+function moveProgrammeDayBefore(sourceId, targetId){
+  const source = DB.programme.find(x => x.id === sourceId);
+  const target = DB.programme.find(x => x.id === targetId);
+  if (!source || !target || source.programId !== target.programId) return false;
+  const days = getProgramDays(source.programId).filter(x => x.id !== sourceId);
+  const targetIndex = days.findIndex(x => x.id === targetId);
+  if (targetIndex < 0) return false;
+  days.splice(targetIndex, 0, source);
+  days.forEach((day, index) => { day.order = index; });
+  save(); renderProgramme();
+  return true;
+}
+
+function reorderDayExercises(dayId, sourceId, targetId){
+  const d = DB.programme.find(x => x.id === dayId);
+  if (!d) return false;
+  const from = d.exercises.findIndex(x => x.id === sourceId);
+  const to = d.exercises.findIndex(x => x.id === targetId);
+  if (from < 0 || to < 0 || from === to) return false;
+  const [exercise] = d.exercises.splice(from, 1);
+  d.exercises.splice(to, 0, exercise);
+  renumberExercises(d);
+  save(); renderDayExercises(); renderProgramme(); renderSeance();
+  return true;
+}
+
+function moveDayExerciseOrder(exId, delta){
+  const d = DB.programme.find(x => x.id === detailDayId);
+  if (!d) return false;
+  const from = d.exercises.findIndex(x => x.id === exId);
+  const to = from + Number(delta);
+  if (from < 0 || to < 0 || to >= d.exercises.length) return false;
+  [d.exercises[from], d.exercises[to]] = [d.exercises[to], d.exercises[from]];
+  renumberExercises(d);
+  save(); renderDayExercises(); renderProgramme(); renderSeance();
+  return true;
+}
+
+function duplicateDayExercise(exId){
+  const d = DB.programme.find(x => x.id === detailDayId);
+  const index = d && d.exercises.findIndex(x => x.id === exId);
+  if (!d || index < 0) return null;
+  const copy = Object.assign({}, d.exercises[index], { id: uid() });
+  d.exercises.splice(index + 1, 0, copy);
+  renumberExercises(d);
+  save(); renderDayExercises(); renderProgramme(); renderSeance();
+  return copy;
+}
+
+function copyProgrammeDay(dayId, targetProgramId){
+  const source = DB.programme.find(x => x.id === dayId);
+  const target = DB.programmes.find(x => x.id === targetProgramId);
+  if (!source || !target) return null;
+  const groupMap = new Map();
+  const sameProgram = source.programId === targetProgramId;
+  const copy = {
+    id: uid(), programId: targetProgramId,
+    name: source.name + (sameProgram ? ' (copie)' : ''), type: source.type,
+    order: getProgramDays(targetProgramId).length,
+    exercises: source.exercises.map((exercise, index) => {
+      const next = Object.assign({}, exercise, { id: uid(), order: index });
+      if (exercise.groupId){
+        if (!groupMap.has(exercise.groupId)) groupMap.set(exercise.groupId, uid());
+        next.groupId = groupMap.get(exercise.groupId);
+      }
+      return next;
+    })
+  };
+  DB.programme.push(copy);
+  save(); renderProgramme(); renderSeance(); renderProgramsList();
+  return copy;
+}
+
+function copyCurrentDayToProgram(){
+  const target = $('copyDayTargetProgram');
+  if (!target || !detailDayId) return null;
+  const copy = copyProgrammeDay(detailDayId, target.value);
+  if (copy) toast('Journée copiée avec ses objectifs.');
+  return copy;
+}
+
+function moveDayExercise(exId, targetDayId){
+  const source = DB.programme.find(x => x.id === detailDayId);
+  const target = DB.programme.find(x => x.id === targetDayId);
+  if (!source || !target || source.id === target.id) return false;
+  const index = source.exercises.findIndex(x => x.id === exId);
+  if (index < 0) return false;
+  if (target.exercises.some(x => x.name.toLowerCase().trim() === source.exercises[index].name.toLowerCase().trim())){
+    toast('Cet exercice existe déjà dans la journée cible.');
+    return false;
+  }
+  const [exercise] = source.exercises.splice(index, 1);
+  delete exercise.groupId;
+  delete exercise.groupType;
+  target.exercises.push(exercise);
+  normalizeExerciseGroups(source);
+  renumberExercises(source); renumberExercises(target);
+  renumberProgramDays(source.programId); renumberProgramDays(target.programId);
+  save(); renderDayExercises(); renderProgramme(); renderSeance(); renderProgramsList();
+  toast('Exercice déplacé');
+  return true;
+}
+
+function normalizeExerciseGroups(day){
+  const groups = new Map();
+  day.exercises.forEach(ex => {
+    if (!ex.groupId) return;
+    if (!groups.has(ex.groupId)) groups.set(ex.groupId, []);
+    groups.get(ex.groupId).push(ex);
+  });
+  groups.forEach(members => {
+    if (members.length < 2){
+      members.forEach(ex => { delete ex.groupId; delete ex.groupType; });
+      return;
+    }
+    const type = members.some(ex => ex.groupType === 'circuit') ? 'circuit' : 'superset';
+    members.forEach(ex => { ex.groupType = type; });
+  });
+}
+
+function renderExerciseGroupToolbar(){
+  const selected = selectedDayExerciseIds.size;
+  return '<div class="exercise-group-toolbar">' +
+    '<span id="groupSelectionCount" aria-live="polite">' + selected + ' sélectionné(s)</span>' +
+    '<label class="sr-only" for="exerciseGroupType">Type de groupe</label>' +
+    '<select class="input" id="exerciseGroupType"><option value="superset">Superset</option><option value="circuit">Circuit</option></select>' +
+    '<button type="button" class="btn btn-sm" id="groupSelectedBtn" onclick="groupSelectedExercises()"' + (selected < 2 ? ' disabled' : '') + '>Grouper</button>' +
+  '</div>';
+}
+
+function updateGroupSelectionUI(){
+  const count = $('groupSelectionCount');
+  const button = $('groupSelectedBtn');
+  if (count) count.textContent = selectedDayExerciseIds.size + ' sélectionné(s)';
+  if (button) button.disabled = selectedDayExerciseIds.size < 2;
+}
+
+function setDayExerciseSelected(exId, checked){
+  if (checked) selectedDayExerciseIds.add(exId);
+  else selectedDayExerciseIds.delete(exId);
+  updateGroupSelectionUI();
+}
+
+function groupSelectedExercises(){
+  const d = DB.programme.find(x => x.id === detailDayId);
+  const members = d ? d.exercises.filter(ex => selectedDayExerciseIds.has(ex.id)) : [];
+  if (!d || members.length < 2){ toast('Sélectionnez au moins deux exercices.'); return false; }
+  const groupId = uid();
+  const type = $('exerciseGroupType').value === 'circuit' ? 'circuit' : 'superset';
+  members.forEach(ex => { ex.groupId = groupId; ex.groupType = type; });
+  selectedDayExerciseIds.clear();
+  save(); renderDayExercises(); renderProgramme();
+  return true;
+}
+
+function setExerciseGroupType(groupId, type){
+  const d = DB.programme.find(x => x.id === detailDayId);
+  if (!d || !groupId) return false;
+  const value = type === 'circuit' ? 'circuit' : 'superset';
+  d.exercises.filter(ex => ex.groupId === groupId).forEach(ex => { ex.groupType = value; });
+  save(); renderDayExercises();
+  return true;
+}
+
+function dissolveExerciseGroup(groupId){
+  const d = DB.programme.find(x => x.id === detailDayId);
+  if (!d || !groupId) return false;
+  d.exercises.filter(ex => ex.groupId === groupId).forEach(ex => { delete ex.groupId; delete ex.groupType; });
+  save(); renderDayExercises();
+  return true;
+}
+
+/* Les modèles sont propres au profil. L'ancienne clé globale est lue une fois
+   pour conserver les modèles créés par les premières versions. */
+function dayTemplateKey(){ return 'liftr_dayTemplates_' + (currentUser || 'guest'); }
 
 function loadDayTemplates(){
   try {
-    const s = localStorage.getItem('liftr_dayTemplates');
-    return s ? JSON.parse(s) : [];
+    const scoped = localStorage.getItem(dayTemplateKey());
+    if (scoped) return JSON.parse(scoped).filter(t => t && t.id && Array.isArray(t.exercises));
+    const legacy = localStorage.getItem('liftr_dayTemplates');
+    const templates = legacy ? JSON.parse(legacy) : [];
+    return Array.isArray(templates) ? templates.filter(t => t && t.id && Array.isArray(t.exercises)) : [];
   } catch { return []; }
 }
 
+function saveDayTemplate(dayId, templateName){
+  const day = DB.programme.find(x => x.id === dayId);
+  if (!day) return null;
+  const name = String(templateName || prompt('Nom du modèle :', day.name) || '').trim();
+  if (!name) return null;
+  const templates = loadDayTemplates();
+  const template = {
+    id: uid(), name, dayName: day.name, type: day.type || 'PUSH',
+    exercises: day.exercises.map(getExerciseState),
+    createdAt: new Date().toISOString()
+  };
+  templates.push(template);
+  localStorage.setItem(dayTemplateKey(), JSON.stringify(templates));
+  toast('Modèle enregistré');
+  return template;
+}
+
+function saveCurrentDayTemplate(){
+  return detailDayId ? saveDayTemplate(detailDayId) : null;
+}
+
 function deleteDayTemplate(id){
-  const templates = DB.customTemplates || [];
-  DB.customTemplates = templates.filter(t => t.id !== id);
-  localStorage.setItem('liftr_dayTemplates', JSON.stringify(DB.customTemplates));
+  const templates = loadDayTemplates().filter(t => t.id !== id);
+  localStorage.setItem(dayTemplateKey(), JSON.stringify(templates));
+  renderDayTemplates();
   toast('Modèle supprimé');
 }
 
-function importDayFromTemplate(template){
-  const d = DB.programme.find(x => x.id === template.dayId);
-  if (!d) return;
-  d.name = template.dayName;
-  d.exercises = template.exercises.map(e => ({
-    id: e.id,
-    name: e.name,
-    order: e.order,
-    sets: e.sets,
-    reps: e.reps,
-    weight: e.weight,
-    rest: e.rest,
-    notes: e.notes
-  }));
-  save();
-  renderDayExercises();
-  renderProgramme();
-  renderSeance();
-  toast('Routine importée');
+function importDayFromTemplate(template, targetProgramId){
+  if (!template || !Array.isArray(template.exercises)) return null;
+  const programId = targetProgramId || (getActiveProgramme() || {}).id;
+  if (!programId || !DB.programmes.some(p => p.id === programId)) return null;
+  const groupMap = new Map();
+  const day = {
+    id: uid(), programId, name: String(template.dayName || template.name || 'Journée').slice(0, 40),
+    type: TYPES.includes(String(template.type || '').toUpperCase()) ? String(template.type).toUpperCase() : 'PUSH',
+    order: getProgramDays(programId).length,
+    exercises: template.exercises.map((e, index) => {
+      const copy = Object.assign({}, e, { id: uid(), order: index });
+      if (e.groupId){
+        if (!groupMap.has(e.groupId)) groupMap.set(e.groupId, uid());
+        copy.groupId = groupMap.get(e.groupId);
+      }
+      return copy;
+    })
+  };
+  DB.programme.push(day);
+  save(); renderProgramme(); renderSeance(); renderProgramsList();
+  toast('Routine importée comme nouvelle journée');
+  return day;
+}
+
+function renderDayTemplates(){
+  const el = $('dayTemplatesList');
+  if (!el) return;
+  const templates = loadDayTemplates();
+  el.innerHTML = templates.length ? templates.map(t =>
+    '<div class="template-item"><div><div class="card-title">' + esc(t.name) + '</div>' +
+    '<div class="card-sub">' + t.exercises.length + ' exercice(s)' + (t.createdAt ? ' · ' + esc(new Date(t.createdAt).toLocaleDateString()) : '') + '</div></div>' +
+    '<div class="card-actions"><button type="button" class="btn btn-primary btn-sm" onclick="importDayTemplateById(\'' + esc(t.id) + '\')">Utiliser</button>' +
+    '<button type="button" class="icon-btn danger" aria-label="Supprimer le modèle" onclick="deleteDayTemplate(\'' + esc(t.id) + '\')">' + icon('trash') + '</button></div></div>'
+  ).join('') : '<div class="empty"><div class="empty-text">Aucun modèle enregistré.</div></div>';
+}
+
+function openDayTemplates(){ renderDayTemplates(); openModal('dayTemplatesModal'); }
+
+function importDayTemplateById(id){
+  const template = loadDayTemplates().find(t => t.id === id);
+  if (!template) return false;
+  const day = importDayFromTemplate(template);
+  if (day) closeModal('dayTemplatesModal');
+  return !!day;
 }

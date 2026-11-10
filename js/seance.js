@@ -338,7 +338,7 @@ function renderAddEx(){
   const all = libEntries();
   const counts = {};
   all.forEach(e => counts[e.group] = (counts[e.group] || 0) + 1);
-  const catGroups = [...new Set((getCatalogue() || []).map(e => e.bodyPart).filter(Boolean))].sort();
+  const catGroups = [...new Set(all.filter(e => !e.custom).map(e => e.group).filter(Boolean))].sort();
   const groups = ['All'].concat(catGroups, counts['Custom'] ? ['Custom'] : []);
 
   $('addExChips').innerHTML = groups.map(g => {

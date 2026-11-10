@@ -6,12 +6,18 @@
 let pendingImport = null;
 let importMode = 'replace';
 
+function activeProgramDaysForShare(){
+  return (typeof window.getActiveProgrammeDays === 'function')
+    ? getActiveProgrammeDays() : (DB.programme || []);
+}
+
 /* ---------- partage de programme ---------- */
 function buildSharePayload(){
+  const days = activeProgramDaysForShare();
   return {
     app: 'liftr', kind: 'programme', v: 1,
     from: currentUser, at: new Date().toISOString(),
-    programme: (DB.programme || []).map(d => ({
+    programme: days.map(d => ({
       id: d.id, name: d.name, type: d.type,
       exercises: (d.exercises || []).map(e => ({ id: e.id, name: e.name }))
     })),
@@ -58,7 +64,7 @@ function parseShare(text){
 
 let sharePayloadJSON = '';
 function openShare(){
-  const days = DB.programme || [];
+  const days = activeProgramDaysForShare();
   const exos = new Set(days.flatMap(d => d.exercises.map(e => e.name.toLowerCase().trim())));
   $('shareSummary').textContent = currentUser + ' · ' + days.length + ' day' + (days.length !== 1 ? 's' : '') +
     ' · ' + exos.size + ' exercise' + (exos.size !== 1 ? 's' : '');
@@ -145,7 +151,7 @@ function previewImport(forceMerge){
 
   const exos = new Set();
   p.programme.forEach(d => d.exercises.forEach(e => exos.add(e.name.toLowerCase())));
-  const localN = (DB.programme || []).length;
+  const localN = activeProgramDaysForShare().length;
   /* un import depuis un post partagé (H) n'écrase jamais en silence :
      le mode par défaut est l'ajout ; le remplacement reste possible
      mais doit être choisi explicitement dans le picker. */
@@ -180,22 +186,43 @@ function applyImport(){
   const p = pendingImport;
   if (!p) return;
 
+  const activeProgram = (typeof window.getActiveProgramme === 'function')
+    ? getActiveProgramme() : (DB.programmes || []).find(x => x.active) || (DB.programmes || [])[0];
+  const programId = activeProgram ? activeProgram.id : null;
+  const localDays = programId
+    ? DB.programme.filter(d => d.programId === programId)
+    : DB.programme.filter(d => !d.programId);
+  const importedDayIds = new Set();
+
   if (importMode === 'replace'){
-    const keep = new Set(p.programme.map(d => d.id));
-    DB.history.forEach(h => { if (h.dayId && !keep.has(h.dayId)) h.dayId = null; });
-    DB.programme = p.programme;
+    const replacedIds = new Set(localDays.map(d => d.id));
+    DB.history.forEach(h => { if (replacedIds.has(h.dayId)) h.dayId = null; });
+    DB.programme = DB.programme.filter(d => !replacedIds.has(d.id));
+    p.programme.forEach((d, index) => {
+      const day = {
+        id: uid(), programId, name: d.name, type: d.type, order: index,
+        exercises: d.exercises.map((e, exerciseIndex) => ({
+          id: uid(), name: e.name, order: exerciseIndex,
+          sets: null, reps: null, weight: null, rest: null, notes: ''
+        }))
+      };
+      importedDayIds.add(day.id);
+      DB.programme.push(day);
+    });
   } else {
-    const byName = new Set(DB.programme.map(d => d.name.toLowerCase().trim()));
-    p.programme.forEach(d => {
+    const byName = new Set(localDays.map(d => d.name.toLowerCase().trim()));
+    p.programme.forEach((d, index) => {
       if (byName.has(d.name.toLowerCase().trim())) return;
-      let id = d.id;
-      if (DB.programme.some(x => x.id === id) || DB.history.some(h => h.dayId === id)) id = uid();
-      const exIds = {};
-      d.exercises.forEach(e => { exIds[e.id] = uid(); });
-      DB.programme.push({
-        id: id, name: d.name, type: d.type,
-        exercises: d.exercises.map(e => ({ id: exIds[e.id], name: e.name }))
-      });
+      const day = {
+        id: uid(), programId, name: d.name, type: d.type,
+        order: localDays.length + index,
+        exercises: d.exercises.map((e, exerciseIndex) => ({
+          id: uid(), name: e.name, order: exerciseIndex,
+          sets: null, reps: null, weight: null, rest: null, notes: ''
+        }))
+      };
+      importedDayIds.add(day.id);
+      DB.programme.push(day);
       byName.add(d.name.toLowerCase().trim());
     });
   }
@@ -210,12 +237,12 @@ function applyImport(){
 
   /* re-lie les séances passées au jour partagé qui porte le même nom */
   const nameToId = {};
-  DB.programme.forEach(d => { nameToId[d.name.toLowerCase().trim()] = d.id; });
+  DB.programme.filter(d => d.programId === programId).forEach(d => { nameToId[d.name.toLowerCase().trim()] = d.id; });
   DB.history.forEach(h => {
     if (!h.dayId && h.dayName && nameToId[String(h.dayName).toLowerCase().trim()]) h.dayId = nameToId[String(h.dayName).toLowerCase().trim()];
   });
 
-  const n = DB.programme.length;
+  const n = importedDayIds.size;
   pendingImport = null;
   save();
   renderAll();

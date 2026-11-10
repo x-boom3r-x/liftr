@@ -66,7 +66,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await seed(page, { programme: [dayA] });
     await startSession(page);
     await openAddEx(page);
-    await pickLibraryItem(page, 'Barbell squat');
+    await pickLibraryItem(page, 'barbell squat');
     await closeAddEx(page);
 
     const st = await page.evaluate(() => ({
@@ -75,10 +75,10 @@ test.describe('Ajouter un exercice pendant la séance', () => {
       name: DB.active.exercises[1].name,
       sets: DB.active.exercises[1].sets.length
     }));
-    expect(st).toEqual({ n: 2, extra: true, name: 'Barbell squat', sets: 0 });
+    expect(st).toEqual({ n: 2, extra: true, name: 'barbell squat', sets: 0 });
 
     const block = page.locator('#activeExercises .ex-block').nth(1);
-    await expect(block).toContainText('Barbell squat');
+    await expect(block).toContainText('barbell squat');
     await expect(block.locator('.chip-extra')).toHaveText('New');
     await expect(block.locator('.ex-del')).toBeVisible();
     expect((await dbState(page)).programme).toBe(1);
@@ -117,7 +117,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await startSession(page);
     await openAddEx(page);
 
-    await page.locator('.lib-chip:has-text("Legs")').click();
+    await page.locator('#addExChips .lib-chip').filter({ hasText: 'Legs' }).click();
     const names = await page.locator('#addExGrid .lib-item').allTextContents();
     expect(names.length).toBeGreaterThan(0);
     expect(names.every(n => n.includes('Legs'))).toBe(true);
@@ -157,7 +157,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await addSetTo(page, 0);
 
     await openAddEx(page);
-    await pickLibraryItem(page, 'Barbell squat');
+    await pickLibraryItem(page, 'barbell squat');
     await closeAddEx(page);
     await addSetTo(page, 1);
 
@@ -176,7 +176,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await seed(page, { programme: [dayA] });
     await startSession(page);
     await openAddEx(page);
-    await pickLibraryItem(page, 'Barbell squat');
+    await pickLibraryItem(page, 'barbell squat');
     await closeAddEx(page);
     await addSetTo(page, 1);
 
@@ -191,9 +191,9 @@ test.describe('Ajouter un exercice pendant la séance', () => {
       added: DB.history[0].added,
       active: DB.active
     }));
-    expect(st.prog).toEqual(['Bench press', 'Barbell squat']);
+    expect(st.prog).toEqual(['Bench press', 'barbell squat']);
     expect(st.missing).toEqual(['Bench press']);
-    expect(st.added).toEqual([{ name: 'Barbell squat', action: 'added' }]);
+    expect(st.added).toEqual([{ name: 'barbell squat', action: 'added' }]);
     expect(st.active).toBeNull();
   });
 
@@ -202,12 +202,12 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await seed(page, { programme: [dayA] });
     await startSession(page);
     await openAddEx(page);
-    await pickLibraryItem(page, 'Barbell squat');
+    await pickLibraryItem(page, 'barbell squat');
     await closeAddEx(page);
     await addSetTo(page, 1);
 
     await page.locator('.recap-sel').selectOption('replace:e1');
-    await expect(page.locator('.recap-miss .recap-tag')).toContainText('replaced by Barbell squat');
+    await expect(page.locator('.recap-miss .recap-tag')).toContainText('replaced by barbell squat');
 
     await finishSession(page);
 
@@ -216,9 +216,9 @@ test.describe('Ajouter un exercice pendant la séance', () => {
       missing: DB.history[0].missing,
       added: DB.history[0].added
     }));
-    expect(st.prog).toEqual(['Barbell squat']);
+    expect(st.prog).toEqual(['barbell squat']);
     expect(st.missing).toEqual(['Bench press']);
-    expect(st.added).toEqual([{ name: 'Barbell squat', action: 'replaced', replaces: 'Bench press' }]);
+    expect(st.added).toEqual([{ name: 'barbell squat', action: 'replaced', replaces: 'Bench press' }]);
   });
 
   test('sans choix : le programme ne bouge pas et l’exercice reste hors programme', async ({ page }) => {
@@ -226,7 +226,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await seed(page, { programme: [dayA] });
     await startSession(page);
     await openAddEx(page);
-    await pickLibraryItem(page, 'Barbell squat');
+    await pickLibraryItem(page, 'barbell squat');
     await closeAddEx(page);
     await addSetTo(page, 1);
 
@@ -239,7 +239,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     }));
     expect(st.prog).toEqual(['Bench press']);
     expect(st.missing).toEqual(['Bench press']);
-    expect(st.added).toEqual([{ name: 'Barbell squat', action: 'kept' }]);
+    expect(st.added).toEqual([{ name: 'barbell squat', action: 'kept' }]);
   });
 
   test('les écarts sont affichés dans le détail de la séance (Stats)', async ({ page }) => {
@@ -247,7 +247,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await seed(page, { programme: [dayA] });
     await startSession(page);
     await openAddEx(page);
-    await pickLibraryItem(page, 'Barbell squat');
+    await pickLibraryItem(page, 'barbell squat');
     await closeAddEx(page);
     await addSetTo(page, 1);
     await page.locator('.recap-sel').selectOption('add');
@@ -259,7 +259,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
 
     await expect(page.locator('#daySheetContent .hist-diff')).toBeVisible();
     await expect(page.locator('.diff-line.miss')).toContainText('Bench press: not done');
-    await expect(page.locator('.diff-line.add')).toContainText('Barbell squat · added to the program');
+    await expect(page.locator('.diff-line.add')).toContainText('barbell squat · added to the program');
   });
 
   test('deux exercices ajoutés, deux choix, aucune erreur console', async ({ page }) => {
@@ -272,9 +272,9 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await startSession(page);
 
     await openAddEx(page);
-    await pickLibraryItem(page, 'Barbell squat');
+    await pickLibraryItem(page, 'barbell squat');
     await page.locator('#addExSearch').fill('hip');
-    await pickLibraryItem(page, 'Barbell hip thrust');
+    await pickLibraryItem(page, 'barbell hip thrust');
     await closeAddEx(page);
 
     await addSetTo(page, 1);
@@ -287,7 +287,7 @@ test.describe('Ajouter un exercice pendant la séance', () => {
     await finishSession(page);
 
     const prog = await page.evaluate(() => DB.programme[0].exercises.map(e => e.name));
-    expect(prog).toEqual(['Bench press', 'Barbell squat', 'Barbell hip thrust']);
+    expect(prog).toEqual(['Bench press', 'barbell squat', 'barbell hip thrust']);
     expect(errs).toEqual([]);
   });
 });

@@ -63,8 +63,11 @@ document.addEventListener('visibilitychange', () => {
 /* Repare les donnees incompletes (entrees sans id = suppression impossible) */
 function normalizeDB(){
   if (!Array.isArray(DB.programme)) DB.programme = [];
+  DB.programme = DB.programme.filter(d => d && typeof d === 'object');
   if (!Array.isArray(DB.history)) DB.history = [];
+  DB.history = DB.history.filter(h => h && typeof h === 'object');
   if (!Array.isArray(DB.progressions)) DB.progressions = [];
+  DB.progressions = DB.progressions.filter(p => p && typeof p === 'object');
   if (!DB.weeks || typeof DB.weeks !== 'object') DB.weeks = {};
   if (!DB.prs || typeof DB.prs !== 'object') DB.prs = {};
   if (!Array.isArray(DB.prLog)) DB.prLog = [];
@@ -77,129 +80,91 @@ function normalizeDB(){
   DB.programme.forEach(d => {
     if (!d.id) d.id = uid();
     if (!d.name) d.name = 'Session';
+    if (d.programId != null && d.programId !== '') d.programId = String(d.programId);
+    else d.programId = null;
     if (!Array.isArray(d.exercises)) d.exercises = [];
-    d.exercises.forEach(e => {
+    d.exercises = d.exercises.filter(e => e && typeof e === 'object');
+    d.exercises.forEach((e, index) => {
+      if (!e || typeof e !== 'object') return;
       if (!e.id) e.id = uid();
       if (!e.name) e.name = 'Exercise';
+      if (e.notes == null) e.notes = '';
+      if (e.order == null || !Number.isFinite(+e.order)) e.order = index;
+    });
+    d.exercises.sort((a, b) => (+a.order || 0) - (+b.order || 0));
+    d.exercises.forEach((e, index) => { if (e && typeof e === 'object') e.order = index; });
+    const groups = new Map();
+    d.exercises.forEach(e => {
+      if (!e || !e.groupId) return;
+      if (!groups.has(e.groupId)) groups.set(e.groupId, []);
+      groups.get(e.groupId).push(e);
+    });
+    groups.forEach(members => {
+      if (members.length < 2){
+        members.forEach(e => { delete e.groupId; delete e.groupType; });
+      } else {
+        const type = members.some(e => e.groupType === 'circuit') ? 'circuit' : 'superset';
+        members.forEach(e => { e.groupType = type; });
+      }
     });
   });
-  /* Garantir la cohérence des programmes (sans perte de données) */
-if (!Array.isArray(DB.programmes)) DB.programmes = [];
-DB.programmes.forEach(p => {
-  if (typeof p.active !== "boolean") p.active = false;
-  if (!p.createdAt) p.createdAt = new Date().toISOString().slice(0, 10);
-  if (!p.updatedAt) p.updatedAt = p.createdAt;
-});
 
-/* Un seul programme actif au maximum */
-const activeProgrammes = DB.programmes.filter(p => p.active === true);
-if (activeProgrammes.length > 1) {
-  activeProgrammes.sort((a, b) => (a.createdAt || "") < (b.createdAt || "") ? 1 : -1);
-  activeProgrammes.slice(1).forEach(p => { p.active = false; });
-}
-
-/* Assigner programId aux jours sans programme (programId = null si aucun programme) */
-const activeProgramme = DB.programmes.find(p => p.active === true);
-DB.programme.forEach(d => {
-  if (!d.programId) {
-    d.programId = activeProgramme ? activeProgramme.id : null;
-  }
-});
-
-/* Si des jours existent mais aucun programme, créer un programme par défaut */
-if (DB.programme.length > 0 && DB.programmes.length === 0) {
-  DB.programmes.push({
-    id: uid(),
-    name: "Programme par défaut",
-    description: "",
-    active: true,
-    createdAt: new Date().toISOString().slice(0, 10),
-    updatedAt: new Date().toISOString().slice(0, 10)
+  /* Conserver les programmes existants et réparer les références sans
+     rattacher une journée orpheline à un programme arbitraire. */
+  if (!Array.isArray(DB.programmes)) DB.programmes = [];
+  DB.programmes = DB.programmes.filter(p => p && typeof p === 'object');
+  const today = todayISO();
+  const usedProgramIds = new Set();
+  DB.programmes.forEach(p => {
+    if (p.id == null || p.id === '' || usedProgramIds.has(String(p.id))) p.id = uid();
+    p.id = String(p.id);
+    usedProgramIds.add(p.id);
+    if (typeof p.name !== 'string' || !p.name.trim()) p.name = 'Programme';
+    if (typeof p.description !== 'string') p.description = '';
+    if (typeof p.active !== 'boolean') p.active = false;
+    if (!p.createdAt) p.createdAt = today;
+    if (!p.updatedAt) p.updatedAt = p.createdAt;
   });
-  DB.programme.forEach(d => { if (!d.programId) d.programId = DB.programmes[0].id; });
-}
 
-/* Les programmes orphelins (sans journée) sont CONSERVÉS, non supprimés */
-
-/* Garantir la cohérence des programmes (sans perte de données) */
-if (!Array.isArray(DB.programmes)) DB.programmes = [];
-DB.programmes.forEach(p => {
-  if (typeof p.active !== "boolean") p.active = false;
-  if (!p.createdAt) p.createdAt = new Date().toISOString().slice(0, 10);
-  if (!p.updatedAt) p.updatedAt = p.createdAt;
-});
-
-/* Un seul programme actif au maximum */
-const activeProgrammes = DB.programmes.filter(p => p.active === true);
-if (activeProgrammes.length > 1) {
-  activeProgrammes.sort((a, b) => (a.createdAt || "") < (b.createdAt || "") ? 1 : -1);
-  activeProgrammes.slice(1).forEach(p => { p.active = false; });
-}
-
-/* Assigner programId aux jours sans programme (programId = null si aucun programme) */
-const activeProgramme = DB.programmes.find(p => p.active === true);
-DB.programme.forEach(d => {
-  if (!d.programId) {
-    d.programId = activeProgramme ? activeProgramme.id : null;
+  if (!DB.programmes.length){
+    DB.programmes.push({
+      id: uid(), name: 'Programme par défaut', description: '', active: true,
+      createdAt: today, updatedAt: today
+    });
   }
-});
 
-/* Si des jours existent mais aucun programme, créer un programme par défaut */
-if (DB.programme.length > 0 && DB.programmes.length === 0) {
-  DB.programmes.push({
-    id: uid(),
-    name: "Programme par défaut",
-    description: "",
-    active: true,
-    createdAt: new Date().toISOString().slice(0, 10),
-    updatedAt: new Date().toISOString().slice(0, 10)
-  });
-  DB.programme.forEach(d => { if (!d.programId) d.programId = DB.programmes[0].id; });
-}
+  /* Garder un seul programme actif avant de rattacher les journées legacy. */
+  const activeProgrammes = DB.programmes.filter(p => p.active === true);
+  const activeProgramme = activeProgrammes.length
+    ? activeProgrammes.slice().sort((a, b) => String(a.updatedAt).localeCompare(String(b.updatedAt))).pop()
+    : DB.programmes[0];
+  DB.programmes.forEach(p => { p.active = p.id === activeProgramme.id; });
 
-/* Les programmes orphelins (sans journée) sont CONSERVÉS, non supprimés */
-
-const dayIds = new Set(DB.programme.map(d => d.id));
-
-/* ── PARAMÈTRES D'EXERCICE ── */
-/* Structure expandie pour la Phase 2.2 : */
-/* Exemple :
-{ id, name, order, sets, reps, weight, rest, notes }
-- order: position dans la journée (0 = premier)
-- sets: nombre de séries (e.g. 4)
-- reps: plage de répétitions (e.g. "8-12" ou 8)
-- weight: charge cible (kg)
-- rest: temps de repos (secondes)
-- notes: notes personnelles
-*/
-DB.programme.forEach(d => {
-  if (!d.exercises) d.exercises = [];
-  d.exercises.forEach(e => {
-    if (e.sets === undefined) e.sets = undefined;
-    if (e.reps === undefined) e.reps = undefined;
-    if (e.weight === undefined) e.weight = undefined;
-    if (e.rest === undefined) e.rest = undefined;
-    if (e.notes === undefined) e.notes = '';
-    if (e.order === undefined) {
-      // Trouver la position du dernier exercice
-      const idx = d.exercises.indexOf(e);
-      e.order = idx;
-    }
-    // S'assurer que retirer les anciens champs optionnels si non prêts
-    if (e.cardio !== undefined && e.sets === undefined && e.reps === undefined &&
-        e.weight === undefined && e.rest === undefined) {
-      // Exercice ancien : convertir si nécessaire
-      if (e.cardio && e.min !== undefined && e.km !== undefined) {
-        // Format cardio : { id, name, cardio, min, km }
-        // Convertir en format générique
-      }
+  /* Un jour qui référence un programme absent reste accessible dans un
+     programme de récupération portant le même identifiant. */
+  const knownProgramIds = new Set(DB.programmes.map(p => p.id));
+  DB.programme.forEach(d => {
+    if (!d.programId){
+      const active = DB.programmes.find(p => p.active) || DB.programmes[0];
+      d.programId = active.id;
+    } else if (!knownProgramIds.has(d.programId)){
+      const orphanId = d.programId;
+      DB.programmes.push({
+        id: orphanId, name: 'Programme récupéré', description: '', active: false,
+        createdAt: today, updatedAt: today
+      });
+      knownProgramIds.add(orphanId);
     }
   });
-});
 
-const dayIds = new Set(DB.programme.map(d => d.id));
+  const dayOrder = new Map();
+  DB.programme.forEach(d => {
+    const position = dayOrder.get(d.programId) || 0;
+    if (d.order == null || !Number.isFinite(+d.order)) d.order = position;
+    dayOrder.set(d.programId, position + 1);
+  });
 
-
+  const dayIds = new Set(DB.programme.map(d => d.id));
 
   DB.history.forEach(h => {
     if (!h.id) h.id = uid();
