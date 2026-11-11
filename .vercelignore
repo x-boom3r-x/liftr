@@ -8,3 +8,13 @@ playwright.config.js
 vendor/openGym
 vendor/openGym-source
 third_party
+
+# Local reference clones and browser captures are not part of the deployed app.
+/.opengym-ref/**
+/.opengym-ref-v2/**
+/.playwright-mcp/**
+/.freebuff/**
+/dossier/**
+/third_party/**
+/vendor/openGym/**
+/vendor/openGym-source/**
