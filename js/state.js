@@ -6,7 +6,7 @@
 window.DB = null;
 window.currentUser = null;
 window.currentTab = 'programme';
-window.currentRoot = 'today';         /* racine active : today | feed | gym | nutrition | profil */
+window.currentRoot = 'gym';           /* racine active : gym | feed | nutrition | profil */
 window.calCursor = new Date();
 window.selectedDate = null;
 window.pendingShare = null;

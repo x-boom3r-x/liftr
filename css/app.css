@@ -2970,7 +2970,6 @@ html{background:var(--bg)}
 @media(max-width:400px){
   .tabbar-inner{gap:1px}
   .tab{padding-left:2px;padding-right:2px;font-size:.58rem}
-  .tabbar .plus{width:40px;height:40px;margin-left:1px;margin-right:1px}
   .today-macros{grid-template-columns:repeat(2,minmax(0,1fr))}
   .today-kcal-row{align-items:flex-start;flex-direction:column;gap:2px}
 }
@@ -3077,15 +3076,11 @@ body::after{
   box-shadow:0 -10px 28px rgba(0,0,0,.22);
   backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);
 }
-.tabbar-inner{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;gap:4px;max-width:640px}
+.tabbar-inner{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:8px;max-width:640px}
 .tabbar .tab{width:100%;min-width:0;flex:none;padding:6px 2px;color:var(--text3);font-size:.65rem;font-weight:650}
 .tabbar .tab svg,.tabbar .tab svg.i{width:20px;height:20px;stroke-width:1.8}
 .tabbar .tab.active{background:var(--primary-dim);color:var(--primary-text)}
 .tabbar .tab[aria-current="true"]{color:var(--primary-text)}
-.tabbar .plus{grid-column:3;justify-self:center;align-self:center;width:46px;height:46px;margin:0;border-radius:15px;background:var(--primary);color:#080D18;box-shadow:0 7px 20px rgba(19,116,252,.24)}
-.tabbar .plus svg.i{width:23px;height:23px;stroke-width:2.1}
-.tabbar .plus:active{transform:scale(.94)}
-.tabbar .plus-label{display:none}
 .subnav{
   position:sticky;top:0;z-index:15;display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;gap:4px;margin:0 0 12px;padding:4px;
   border:1px solid var(--border);border-radius:14px;background:var(--surface);
@@ -3146,6 +3141,19 @@ body::after{
 .socialnav~.feed-actions{margin-top:0}
 .profile-btn:active,.header-profile:active{transform:scale(.97)}
 :focus-visible{outline-color:var(--primary-text)}
+.nutri-progress-details{margin-top:20px;border-top:1px solid var(--border)}
+.nutri-progress-details summary{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:8px 2px;color:var(--text);font-size:.9rem;font-weight:700;cursor:pointer;list-style:none}
+.nutri-progress-details summary::-webkit-details-marker{display:none}
+.nutri-progress-details summary::after{content:"+";color:var(--primary-text);font-size:1.15rem}
+.nutri-progress-details[open] summary::after{content:"−"}
+.nutri-progress-details #nutriWeek{padding:0 0 12px}
+.gym-danger-details{margin-top:18px;border-top:1px solid var(--border);color:var(--text2)}
+.gym-danger-details summary{min-height:46px;padding:12px 2px;color:var(--text3);font-size:.82rem;font-weight:650;cursor:pointer;list-style:none}
+.gym-danger-details summary::-webkit-details-marker{display:none}
+.gym-danger-details summary::after{content:"+";float:right;color:var(--text3);font-size:1rem}
+.gym-danger-details[open] summary::after{content:"−"}
+.gym-danger-content{padding:0 2px 14px}
+.gym-danger-content p{margin:0 0 10px;font-size:.78rem;line-height:1.5}
 
 @media(min-width:900px){
   #mainApp{display:grid;height:100dvh;grid-template-columns:218px minmax(0,1fr);grid-template-rows:70px minmax(0,1fr)}
@@ -3155,9 +3163,6 @@ body::after{
   .tabbar-inner{display:flex;flex-direction:column;align-items:stretch;gap:7px}
   .tabbar .tab{flex:0 0 46px;flex-direction:row;justify-content:flex-start;gap:12px;padding:0 12px;border-radius:12px;font-size:.8rem}
   .tabbar .tab.active{background:var(--primary-dim);color:var(--primary-text)}
-  .tabbar .plus{display:flex;flex:0 0 46px;grid-column:auto;justify-self:stretch;justify-content:flex-start;gap:12px;width:100%;height:46px;margin:5px 0 9px;padding:0 12px;border-radius:12px;background:var(--surface2);color:var(--text)}
-  .tabbar .plus-label{display:inline;font-size:.8rem;font-weight:700}
-  .tabbar .plus svg.i{width:20px;height:20px}
   .app>.panel{max-width:1220px;margin:0 auto;padding-top:0}
   #rootSubnav:not(.hidden) ~ .panel:not(.hidden){padding-top:4px}
   .nutri-form-backdrop{align-items:center;padding:24px}

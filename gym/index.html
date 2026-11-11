@@ -49,17 +49,17 @@
     }
     window.addEventListener('error', function (e) {
       var t = e && e.target;
-      if (t && t.tagName === 'SCRIPT') return fail('openGym could not start on this browser.', 'Could not load ' + (t.src || 'a script'));
+      if (t && t.tagName === 'SCRIPT') return fail('LIFTR could not start on this browser.', 'Could not load ' + (t.src || 'a script'));
       if (!e || !e.message) return;
       last = e.message + (e.filename ? ' at ' + e.filename.split('/').pop() + ':' + e.lineno : '');
-      if (/SyntaxError|Unexpected|Invalid regular expression/i.test(e.message)) fail('openGym could not start on this browser.', last);
+      if (/SyntaxError|Unexpected|Invalid regular expression/i.test(e.message)) fail('LIFTR could not start on this browser.', last);
     }, true);
     window.addEventListener('unhandledrejection', function (e) {
       var r = e && e.reason;
       if (r) last = String((r && r.message) || r);
     });
     setTimeout(function () {
-      fail(last ? 'openGym could not start on this browser.' : 'openGym is taking too long to start.', last);
+      fail(last ? 'LIFTR could not start on this browser.' : 'LIFTR is taking too long to start.', last);
     }, 10000);
   })();
 </script>
@@ -74,47 +74,47 @@
      proxy (Authelia, Cloudflare Access, Teleport…) that fetch is a login redirect and the Home Screen
      icon comes out generic. iOS 26 reads the icon from the manifest, so this is where it shows. -->
 <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-  <script type="module" crossorigin src="/gym/assets/index-c5nkP2WR.js"></script>
+<link rel="apple-touch-icon" href="/nouveau%20logo.jpeg">
+<link rel="icon" type="image/png" href="/nouveau%20logo.jpeg">
+  <script type="module" crossorigin src="/gym/assets/index-CVhupqv3.js"></script>
   <link rel="modulepreload" crossorigin href="/gym/assets/rolldown-runtime-XKyaHtl9.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/exercises-moOmImMV.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/history-JxEzmh-q.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/exercises-BC-JO1l2.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/history-1v4vNF1K.js">
   <link rel="modulepreload" crossorigin href="/gym/assets/preload-helper-CPla4fz8.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/rotation-BH4nYrcT.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/mobile-CxK3aYa8.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/capacitor-fetch-C6UhiV4D.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/api-z0lYcLGp.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/sync-merge-BH5xH138.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/ex-unit-DKe6jqVz.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/health-connect-CnII-CVH.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/health-sync-BPgr3-k3.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/rotation-C4sCXTNQ.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/mobile-CNC2Ypyu.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/capacitor-fetch-ZqVRv6f0.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/api-IRru6Q2C.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/sync-merge-Cy9-WshM.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/ex-unit-DQnUseHk.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/health-connect-C-QYDBee.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/health-sync-XMI3_-9I.js">
   <link rel="modulepreload" crossorigin href="/gym/assets/media-refs-CjgGBvJX.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/media-store-fs-BYFbFbXl.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/media-store-Babecn9r.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/backfill-DlmHEBGI.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/workout-date-DRvFnVCP.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/coach-device-B3EniRJQ.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/useStore-C_pl0xWL.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/supersetFlow-2q9bnAWJ.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/useUI-DBwE2GRY.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/media-store-fs-eui1FaAd.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/media-store-CaweaRG8.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/backfill-IGb02Eno.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/workout-date-CGRlWU93.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/coach-device-DlB4u7lY.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/useStore-BpKJXSQ7.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/supersetFlow-8agS1vgs.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/useUI-BJRlVHUR.js">
   <link rel="modulepreload" crossorigin href="/gym/assets/jsx-runtime-LKYXHABd.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/ui-DII5zqzT.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/seasonal-CWBDv6Q1.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/session-merge-CuD75iQ1.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/exercise-history-9sPVoQUR.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/equipment-Dzkz1fHK.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/measurements-CuI1YJRH.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/media-limits-DvPvlB37.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/media-prefetch-C06EHr7P.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/ui-Bjd_YjuC.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/seasonal-BDHlgmoO.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/session-merge-DXlN7JpY.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/exercise-history-DD-VSt5t.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/equipment-D3-Dumhn.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/measurements-vAm7Ri4Q.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/media-limits-DyNWDfO_.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/media-prefetch-CrQLXMhb.js">
   <link rel="modulepreload" crossorigin href="/gym/assets/platform-now-CIGTrnA-.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/DateField-CspCptI5.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/set-videos-BLbH14AC.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/DurationWheel-fLVWHeK7.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/plan-share-DGVwAoKE.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/ShareCard-B9BlmMVK.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/sheets-8sPwb2jx.js">
-  <link rel="modulepreload" crossorigin href="/gym/assets/coach-api-Ba4HcxPG.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/DateField-D2SN6Dtx.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/set-videos-qnlxZ6Qi.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/DurationWheel-DQ1epGS6.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/plan-share-Dr5GKxxu.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/ShareCard-BzDpGgqu.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/sheets-CC0Xplca.js">
+  <link rel="modulepreload" crossorigin href="/gym/assets/coach-api-BQjJWbqC.js">
   <link rel="stylesheet" crossorigin href="/gym/assets/index-DG7O3Hwv.css">
 </head>
 <body>

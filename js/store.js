@@ -319,8 +319,7 @@ async function setUser(name){
   $('headerUser').textContent = name;
   selectedDate = todayISO();
   calCursor = new Date();
-  /* Chantier F : onglet racine initial (Feed si connecté+online, sinon Gym),
-     mémorisé en localStorage ; un éventuel ?tab= explicite prime. */
+  /* La dernière vue reste mémorisée. Social s’ouvre uniquement quand le réseau est disponible. */
   const wantTab = new URLSearchParams(location.search).get('tab');
   const validTabs = window.ALL_TABS || ['programme','seance','calendrier','stats','feed'];
   currentTab = (wantTab && validTabs.includes(wantTab)) ? wantTab : pickInitialTab();

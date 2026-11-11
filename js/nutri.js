@@ -304,6 +304,13 @@ function renderNutrition(tab){
   if (tab === 'nutri-week') renderNutriWeek();
 }
 
+function openNutriTransfer(){
+  openActionSheet('Diary backup & restore', [
+    { label: 'Export diary file', fn: exportNutriOpenTracker },
+    { label: 'Import diary file', fn: openNutriOpenTrackerImport }
+  ]);
+}
+
 /* ---- J3 : resolution foodId -> aliment, totaux recalcules ----
    Un repas stocke {foodId, qty, unit} (jamais les totaux) : tout est
    recalcule a l'affichage via nutrition.js, donc corrigible si la
@@ -1813,7 +1820,7 @@ function ontLocalDate(date){
   return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
 }
 function parseOpenTrackerIntakes(payload){
-  if (!Array.isArray(payload) || !payload.length) throw new Error('Choose a non-empty OpenNutriTracker user_intake.json file.');
+  if (!Array.isArray(payload) || !payload.length) throw new Error('Choose a non-empty nutrition diary JSON file.');
   if (payload.length > 50000) throw new Error('This diary contains more than 50,000 entries; split it into smaller files.');
   const rows = [], seen = new Set(), derived = Object.create(null);
   let duplicateIds = 0;
@@ -1906,14 +1913,14 @@ function importNutriOpenTracker(input){
   reader.onload = () => {
     let parsed;
     try { parsed = parseOpenTrackerIntakes(JSON.parse(String(reader.result || ''))); }
-    catch (e){ toast(e && e.message ? e.message : 'Invalid OpenNutriTracker JSON file.'); input.value = ''; return; }
+    catch (e){ toast(e && e.message ? e.message : 'Invalid nutrition diary file.'); input.value = ''; return; }
     const n = nutriDB();
     const existing = new Set();
     n.meals.forEach(m => (m.items || []).forEach(it => { if (it && it.ontId) existing.add(String(it.ontId)); }));
     const updates = parsed.rows.filter(row => existing.has(row.id)).length;
     const additions = parsed.rows.length - updates;
     input.value = '';
-    askConfirm('Import OpenNutriTracker diary?',
+    askConfirm('Import nutrition diary?',
       parsed.rows.length + ' food entr' + (parsed.rows.length === 1 ? 'y' : 'ies') + ' found · ' + additions + ' new · ' + updates + ' matching ID(s) updated' +
       (parsed.duplicateIds ? ' · ' + parsed.duplicateIds + ' duplicate ID row(s) ignored' : '') +
       '. Existing matching entries will be replaced. Other LIFTR meals and profile data stay as they are. Entries with no usable serving weight remain visible but their nutrients cannot be calculated.',
@@ -1927,7 +1934,7 @@ function importNutriOpenTracker(input){
         const groupId = 'ont-meal-' + row.date + '-' + row.type;
         let meal = current.meals.find(m => m.id === groupId);
         if (!meal){
-          meal = { id: groupId, date: row.date, type: row.type, name: mealTypeLabel(row.type) + ' · OpenNutriTracker', items: [], importSource: 'opennutritracker' };
+          meal = { id: groupId, date: row.date, type: row.type, name: mealTypeLabel(row.type), items: [], importSource: 'opennutritracker' };
           current.meals.push(meal);
         }
         const meta = row.food;
@@ -1948,7 +1955,7 @@ function importNutriOpenTracker(input){
       save();
       renderNutrition(currentTab);
       if (typeof window.renderToday === 'function') window.renderToday();
-      toast('OpenNutriTracker diary merged · ' + additions + ' new · ' + updates + ' updated');
+      toast('Diary updated · ' + additions + ' new · ' + updates + ' updated');
     });
   };
   reader.onerror = () => { input.value = ''; toast('Could not read this JSON file.'); };
@@ -2113,15 +2120,6 @@ function renderNutriGoal(){
     '<div class="section-hint">Fiber ≈ 14 g / 1 000 kcal. Water ≈ 35 ml / kg (editable).</div>' +
     '</div>';
 
-  html += '<div class="card nutri-form nutri-transfer-card">' +
-    '<div class="nutri-meal-name" style="margin-bottom:6px">OpenNutriTracker data</div>' +
-    '<div class="section-hint">Move your food diary with the official user_intake.json format. Imports merge by entry ID; other LIFTR data stays on this device. ZIP bundles are not supported yet.</div>' +
-    '<input id="nutriOpenTrackerFile" class="hidden" type="file" accept=".json,application/json" onchange="importNutriOpenTracker(this)">' +
-    '<div class="nutri-transfer-actions">' +
-    '<button class="btn" type="button" onclick="exportNutriOpenTracker()">Export diary</button>' +
-    '<button class="btn btn-primary" type="button" onclick="openNutriOpenTrackerImport()">Import diary</button>' +
-    '</div></div>';
-
   /* objectif manuel (avancé) : conservé tel quel — repli si ni plan ni Custom */
   const g = nutriDB().goal;
   html += '<div class="card nutri-form" style="margin-top:12px">' +
@@ -2139,6 +2137,7 @@ function renderNutriGoal(){
     '<div class="section-hint">Targets are private and stored on this device.</div>';
 
   box.innerHTML = html;
+  renderNutriWeek();
 }
 
 function saveNutriProfile(){
@@ -2245,6 +2244,6 @@ Object.assign(window, {
   addWater, logWater, saveWaterGoal,
   useRecipe, deleteRecipe,
   logRemoteFood, addFoodWithBarcode,
-  setNutriWeekRange,
+  setNutriWeekRange, openNutriTransfer,
   openNutriOpenTrackerImport, importNutriOpenTracker, exportNutriOpenTracker
 });

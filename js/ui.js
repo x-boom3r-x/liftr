@@ -107,7 +107,7 @@ if (_tabbarEl){
    Les boutons de sous-nav portent data-tab="<onglet concret>" : les
    selecteurs de tests (button[data-tab=seance]…) restent valides. */
 const TAB_ROOTS = {
-  today: 'today',
+  today: 'gym',
   feed: 'feed',
   programme: 'gym', seance: 'gym', library: 'gym', calendrier: 'gym', stats: 'gym',
   profil: 'profil',
@@ -116,23 +116,18 @@ const TAB_ROOTS = {
   'nutri-week': 'nutrition'
 };
 const ROOT_DEFAULT = {
-  today: 'today',
   feed: 'feed',
-  gym: 'programme',
+  gym: 'today',
   nutrition: 'nutri-today',
   profil: 'profil'
 };
 const ALL_TABS = ['today','programme','seance','library','calendrier','stats','feed',
   'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week','profil'];
 const SUBNAV = {
-  gym: [['programme','Plan'],['seance','Train'],['more','More']],
-  nutrition: [['nutri-today','Today'],['nutri-meals','Diary'],['more','More']]
+  gym: [['today','Today'],['programme','Plan'],['seance','Workout'],['stats','Progress']],
+  nutrition: [['nutri-today','Today'],['nutri-meals','Diary'],['nutri-foods','Foods'],['nutri-goal','Goals']]
 };
-const MORE_TABS = {
-  gym: [['library','Exercise library'],['calendrier','Training calendar'],['stats','Progress']],
-  nutrition: [['nutri-foods','Foods'],['nutri-goal','Daily goals'],['nutri-week','Weekly summary']]
-};
-const lastSub = { today: 'today', gym: 'programme', nutrition: 'nutri-today', profil: 'profil' };
+const lastSub = { gym: 'today', nutrition: 'nutri-today', profil: 'profil' };
 
 function rootOf(tab){ return TAB_ROOTS[tab] || 'gym'; }
 
@@ -145,28 +140,29 @@ function feedGateOk(){
 /* Premier lancement → tableau de bord local. On restaure la dernière vue
    sociale uniquement si le réseau est disponible. */
 function pickInitialTab(){
-  const memo = localStorage.getItem('at_tab');
-  if (memo && ALL_TABS.includes(memo) && (rootOf(memo) !== 'feed' || feedGateOk())) return memo;
+  let memo = localStorage.getItem('at_tab');
+  if (memo === 'nutri-week') memo = 'nutri-goal';
+  if (memo && ALL_TABS.includes(memo)){
+    const root = rootOf(memo);
+    if (root === 'feed') return feedGateOk() ? memo : 'today';
+    if (root === 'gym' || root === 'nutrition') return memo;
+  }
   return 'today';
 }
 
-function openGymSection(sub){
-  let route = ({ programme:'/plan', seance:'/home', library:'/library', calendrier:'/stats', stats:'/stats' })[sub] || '/home';
-  try {
-    const gym = JSON.parse(localStorage.getItem('gym_state_v1') || 'null');
-    if (gym && gym.active) route = '/workout';
-  } catch(e){}
-  location.assign('/gym/#' + route);
-}
-
-function showLegacyGym(){ showTab('programme'); }
-
 function showRoot(root, sub){
-  const wantRoot = ROOT_DEFAULT[root] ? root : 'gym';
-  if (wantRoot === 'gym') { openGymSection(sub); return; }
+  const aliasRoot = root === 'today' ? 'gym' : root;
+  const wantRoot = ROOT_DEFAULT[aliasRoot] ? aliasRoot : 'gym';
+  if (wantRoot === 'gym'){
+    const tab = sub && ALL_TABS.includes(sub) && rootOf(sub) === 'gym'
+      ? sub
+      : lastSub.gym || ROOT_DEFAULT.gym;
+    showTab(tab);
+    return;
+  }
   if (wantRoot === 'feed' && !feedGateOk()){
-    toast('Sign in and go online to use the Feed.');
-    showTab('today');                        /* les fonctions locales restent accessibles */
+    toast('Sign in and go online to use Social.');
+    showTab('today');
     return;
   }
   const tab = sub && ALL_TABS.includes(sub) && rootOf(sub) === wantRoot
@@ -194,27 +190,18 @@ function renderSubnavs(root){
   const items = SUBNAV[root];
   if (!items){ nav.classList.add('hidden'); nav.innerHTML = ''; return; }
   nav.classList.remove('hidden');
-  const moreTabs = (MORE_TABS[root] || []).map(x => x[0]);
   nav.innerHTML = items.map(([t, l]) => {
-    const isMore = t === 'more';
-    const active = isMore ? moreTabs.includes(currentTab) : t === currentTab;
-    const attrs = isMore ? ' data-sub="more" aria-haspopup="dialog" aria-controls="actionSheet" onclick="openSectionMore(' + JSON.stringify(root) + ')"' :
-      ' data-tab="' + t + '" data-sub="' + t + '" onclick="showTab(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')"';
+    const active = t === currentTab;
+    const attrs = ' data-tab="' + t + '" data-sub="' + t + '" onclick="showTab(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')"';
     return '<button type="button" class="subnav-item' + (active ? ' active' : '') + '"' + attrs +
       (active ? ' aria-current="page"' : '') + '>' + l + '</button>';
   }).join('');
 }
 
-function openSectionMore(root){
-  const links = MORE_TABS[root] || [];
-  if (!links.length) return;
-  openActionSheet(root === 'gym' ? 'More in Gym' : 'More in Nutrition',
-    links.map(([tab, label]) => ({ label, fn: () => showRoot(root, tab) })));
-}
-
 function showTab(name){
   if (typeof window.stopMusic === 'function') window.stopMusic();
-  if (!ALL_TABS.includes(name)) name = 'programme';
+  if (name === 'nutri-week') name = 'nutri-goal';
+  if (!ALL_TABS.includes(name)) name = 'today';
   if (name === 'feed' && !feedGateOk()) name = 'today';
   if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
     window.saveFeedScroll();
@@ -235,8 +222,6 @@ function showTab(name){
   });
   const profileShortcut = document.querySelector('.header-profile');
   if (profileShortcut) profileShortcut.setAttribute('aria-current', currentRoot === 'profil' ? 'page' : 'false');
-  const quickAction = document.querySelector('.tabbar .plus');
-  if (quickAction) quickAction.setAttribute('aria-label', currentRoot === 'feed' ? 'Create a social post' : 'Quick actions');
   if (name === 'today'){ renderProgramme(); if (typeof window.renderToday === 'function') window.renderToday(); }
   if (name === 'programme'){ renderProgramme(); if (typeof window.renderProgramsList === 'function') window.renderProgramsList(); }
   if (name === 'seance') renderSeance();
@@ -375,20 +360,20 @@ function renderProfilScreen(){
   });
   rows.push({
     t: 'Backup & restore',
-    s: 'Program, sessions, records — one .json file',
+    s: 'Save or restore this profile in one file.',
     btn: '<button class="btn btn-sm" onclick="exportBackup()">Export</button>' +
-         '<button class="btn btn-sm" style="margin-left:6px" onclick="openImport()">Import</button>'
+         '<button class="btn btn-sm" style="margin-left:6px" onclick="$(\'backupFile\').click()">Restore</button>'
   });
   rows.push({
-    t: 'Previous LIFTR training',
-    s: 'Your earlier program, sessions and records remain on this device.',
-    btn: '<button class="btn btn-sm" onclick="showLegacyGym()">Open archive</button>'
+    t: 'Training progress',
+    s: 'Review your sessions, records and trends.',
+    btn: '<button class="btn btn-sm" onclick="showTab(\'stats\')">View progress</button>'
   });
   rows.push({
-    t: 'Source code & licences',
-    s: 'LIFTR and openGym · AGPL-3.0',
-    btn: '<a class="btn btn-sm" href="https://github.com/x-boom3r-x/liftr/tree/phase1-openGym-integration" target="_blank" rel="noopener noreferrer">LIFTR source</a>' +
-         '<a class="btn btn-sm" style="margin-left:6px" href="https://github.com/DuarteSantos8/openGym/tree/8fb98b16861a2728652302a7e6e30c50548493a0" target="_blank" rel="noopener noreferrer">openGym source</a>'
+    t: 'Licences & acknowledgements',
+    s: 'Open-source software, code and media credits.',
+    btn: '<a class="btn btn-sm" href="/NOTICE.md">Read notices</a>' +
+         '<a class="btn btn-sm" style="margin-left:6px" href="/LICENSE">License text</a>'
   });
   if (typeof window.socialAvailable === 'function' && socialAvailable()){
     rows.push({
@@ -432,18 +417,6 @@ function renderProfilScreen(){
     ' · ' + days + ' day' + (days !== 1 ? 's' : '') + ' in your program';
 }
 
-/* Bouton + central de la nav : on ramène d'abord au fil (le composer vit
-   dans #tab-feed, caché ailleurs), puis on ouvre la feuille de création. */
-function navPublish(){
-  if (!feedGateOk()){
-    toast('Sign in and go online to publish.');
-    showRoot('feed');
-    return;
-  }
-  showRoot('feed');
-  if (typeof window.openPostTypeSheet === 'function') window.openPostTypeSheet();
-}
-
 function openSocialNavigation(){
   return openActionSheet('Social sections', [
     { label: 'Home feed', fn: () => window.setSView && window.setSView('home') },
@@ -454,23 +427,9 @@ function openSocialNavigation(){
   ]);
 }
 
-function openQuickActions(){
-  if (currentRoot === 'feed'){
-    if (typeof window.openPostTypeSheet === 'function') return window.openPostTypeSheet();
-  }
-  let gymActive = false;
-  try { const gym = JSON.parse(localStorage.getItem('gym_state_v1') || 'null'); gymActive = !!(gym && gym.active); } catch(e){}
-  const actions = [
-    { label: gymActive ? 'Resume workout' : 'Start workout', fn: () => openGymSection('seance') },
-    { label: 'Ajouter un repas', fn: () => { if (typeof window.addMeal === 'function') window.addMeal(); else showRoot('nutrition', 'nutri-meals'); } },
-    { label: 'Ajouter 250 ml d’eau', fn: () => { showRoot('nutrition', 'nutri-today'); if (typeof window.addWater === 'function') window.addWater(250); } }
-  ];
-  return openActionSheet('Ajouter rapidement', actions);
-}
-
 Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet,
-  pickInitialTab, navPublish, openQuickActions, openSocialNavigation, openSectionMore, renderProfilScreen, showLegacyGym, ALL_TABS
+  pickInitialTab, openSocialNavigation, renderProfilScreen, ALL_TABS
 });

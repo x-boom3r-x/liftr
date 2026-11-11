@@ -151,11 +151,10 @@
           </section>
 
           <section class="today-panel today-shortcuts" aria-labelledby="todayShortcutsTitle">
-            <div class="today-overline">QUICK ACCESS</div>
-            <h2 id="todayShortcutsTitle">Your tools</h2>
-            <button type="button" onclick="showRoot('gym','seance')"><span>Training session</span><span aria-hidden="true">→</span></button>
-            <button type="button" onclick="addMeal()"><span>Log a meal</span><span aria-hidden="true">→</span></button>
-            <button type="button" onclick="showRoot('nutrition','nutri-foods')"><span>Find a food</span><span aria-hidden="true">→</span></button>
+            <h2 id="todayShortcutsTitle">Training tools</h2>
+            <button type="button" onclick="showTab('seance')"><span>Start a free workout</span><span aria-hidden="true">→</span></button>
+            <button type="button" onclick="showTab('library')"><span>Exercise library</span><span aria-hidden="true">→</span></button>
+            <button type="button" onclick="showTab('programme')"><span>Edit your plan</span><span aria-hidden="true">→</span></button>
           </section>
         </aside>
       </div>
@@ -168,7 +167,10 @@
           <div class="section-title">My program</div>
           <div class="section-hint" id="progCount"></div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>
+        <div class="section-head-acts">
+          <button class="btn btn-sm" onclick="showTab('library')">Exercises</button>
+          <button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>
+        </div>
       </div>
       <div id="daysList"></div>
 
@@ -197,38 +199,23 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top:14px">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Full backup</div>
-            <div class="card-sub">Your whole profile in one file: program, sessions, records, notes.</div>
-          </div>
+      <details class="gym-danger-details">
+        <summary>Reset training data</summary>
+        <div class="gym-danger-content">
+          <p>This erases this profile’s program, sessions and progress. Your other profiles stay untouched.</p>
+          <button class="btn btn-red btn-sm" onclick="resetProfileData()">Erase training data</button>
         </div>
-        <div class="row" style="margin-top:12px">
-          <button class="btn btn-sm" onclick="exportBackup()">Export (.json)</button>
-          <button class="btn btn-primary btn-sm" onclick="$('backupFile').click()">Restore</button>
-        </div>
-        <input type="file" id="backupFile" accept="application/json,.json" class="hidden" onchange="importBackup(this)">
-      </div>
-
-      <div class="card" style="border-color:rgba(255,69,58,.28)">
-        <div class="card-header">
-          <div>
-            <div class="card-title" style="color:#FF6A62">Clean this profile</div>
-            <div class="card-sub">Deletes the program, past sessions, stats, records and progressions.</div>
-          </div>
-        </div>
-        <button class="btn btn-red btn-sm btn-block" style="margin-top:12px" onclick="resetProfileData()">Delete everything</button>
-      </div>
+      </details>
     </section>
 
     <!-- ---------- SESSION ---------- -->
     <section id="tab-seance" class="panel hidden">
       <div class="section-head">
         <div>
-          <div class="section-title">Session</div>
-          <div class="section-hint">Pick a day and start the session</div>
+          <div class="section-title">Workout</div>
+          <div class="section-hint">Choose a planned day or start freely</div>
         </div>
+        <button class="btn btn-sm" onclick="showTab('programme')">Edit plan</button>
       </div>
       <div id="sessionBanner"></div>
       <div id="seanceDays"></div>
@@ -239,8 +226,9 @@
       <div class="section-head">
         <div>
           <div class="section-title">Calendar</div>
-          <div class="section-hint">Fill in your progress every week</div>
+          <div class="section-hint">Your training days and weekly plan</div>
         </div>
+        <button class="btn btn-sm" onclick="showTab('stats')">Progress</button>
       </div>
 
       <div class="cal-card">
@@ -348,12 +336,13 @@
           <div class="section-title">Progression</div>
           <div class="section-hint" id="statsRange"></div>
         </div>
+        <button class="btn btn-sm" onclick="showTab('calendrier')">Calendar</button>
       </div>
       <div id="statsContent"></div>
       <button class="btn btn-block btn-ghost" style="margin-top:18px" onclick="openExport()">⬇ Export CSV</button>
     </section>
 
-    <!-- ---------- NUTRITION (sous-nav : Today / Meals / Foods / Goal) ---------- -->
+    <!-- ---------- NUTRITION ---------- -->
     <section id="tab-nutri-today" class="panel hidden">
       <div class="section-head">
         <div>
@@ -370,9 +359,13 @@
           <div class="section-title">Meals</div>
           <div class="section-hint" id="nutriMealsHint">What you ate today</div>
         </div>
-        <button class="btn btn-sm btn-primary" onclick="addMeal()">+ Meal</button>
+        <div class="section-head-acts">
+          <button class="btn btn-sm" onclick="openNutriTransfer()">Transfer</button>
+          <button class="btn btn-sm btn-primary" onclick="addMeal()">+ Meal</button>
+        </div>
       </div>
       <div id="nutriMeals"></div>
+      <input id="nutriOpenTrackerFile" class="hidden" type="file" accept=".json,application/json" onchange="importNutriOpenTracker(this)">
     </section>
 
     <section id="tab-nutri-foods" class="panel hidden">
@@ -397,21 +390,15 @@
     <section id="tab-nutri-goal" class="panel hidden">
       <div class="section-head">
         <div>
-          <div class="section-title">Goal</div>
-          <div class="section-hint">Daily targets</div>
+          <div class="section-title">Goals</div>
+          <div class="section-hint">Daily targets and nutrition trends</div>
         </div>
       </div>
       <div id="nutriGoal"></div>
-    </section>
-
-    <section id="tab-nutri-week" class="panel hidden">
-      <div class="section-head">
-        <div>
-          <div class="section-title">Week</div>
-          <div class="section-hint">Last 7 days vs your target</div>
-        </div>
-      </div>
-      <div id="nutriWeek"></div>
+      <details class="nutri-progress-details">
+        <summary>Weekly progress</summary>
+        <div id="nutriWeek"></div>
+      </details>
     </section>
 
     <!-- ---------- FEED / SOCIAL ---------- -->
@@ -604,30 +591,23 @@
         </div>
       </div>
       <div id="profilContent"></div>
+      <input type="file" id="backupFile" accept="application/json,.json" class="hidden" onchange="importBackup(this)">
     </section>
 
   </main>
 
-  <nav class="tabbar" id="tb" aria-label="Navigation principale">
+  <nav class="tabbar" id="tb" aria-label="Main navigation">
     <div class="tabbar-inner">
-      <button class="tab active" id="tabTodayBtn" data-tab="today" aria-current="true" onclick="showRoot('today')" aria-label="Today">
-        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
-        <span class="tab-lbl">Today</span>
-      </button>
-      <button class="tab" data-tab="gym" aria-current="false" onclick="showRoot('gym')" aria-label="Gym">
+      <button class="tab active" data-tab="gym" aria-current="true" onclick="showRoot('gym')" aria-label="Gym">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>
         <span class="tab-lbl">Gym</span>
-      </button>
-      <button class="plus" aria-label="Quick actions" onclick="openQuickActions()">
-        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        <span class="plus-label">Quick add</span>
       </button>
       <button class="tab" data-tab="nutrition" aria-current="false" onclick="showRoot('nutrition')" aria-label="Nutrition">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.3 3.9-5 6.9-5 9.8a5 5 0 0 0 10 0c0-2.9-1.7-5.9-5-9.8z"/></svg>
         <span class="tab-lbl">Nutrition</span>
       </button>
       <button class="tab" id="tabFeedBtn" data-tab="feed" aria-current="false" onclick="showRoot('feed')" aria-label="Social">
-        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 2.8-5 6.5-5s5.9 1.6 6.5 5M16 5.5a3.5 3.5 0 0 1 0 6.8M17 15c2.4.5 3.8 2 4.4 5"/></svg>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 2.8-5 6.5-5s5.9 1.6 6.5 5M16 5.5a3.5 3.5 0 0 0 0 6.8M17 15c2.4.5 3.8 2 4.4 5"/></svg>
         <span class="tab-lbl">Social</span>
       </button>
     </div>
