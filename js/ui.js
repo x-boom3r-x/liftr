@@ -125,8 +125,8 @@ const ROOT_DEFAULT = {
 const ALL_TABS = ['today','programme','seance','library','calendrier','stats','feed',
   'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week','profil'];
 const SUBNAV = {
-  gym: [['programme','Plan'],['seance','Train'],['library','Exercises'],['calendrier','Calendar'],['stats','Progress']],
-  nutrition: [['nutri-today','Today'],['nutri-meals','Diary'],['nutri-foods','Foods'],['nutri-goal','Goals'],['nutri-week','Trends']]
+  gym: [['programme','Plan'],['seance','Train'],['more','More']],
+  nutrition: [['nutri-today','Today'],['nutri-meals','Diary'],['more','More']]
 };
 const MORE_TABS = {
   gym: [['library','Exercise library'],['calendrier','Training calendar'],['stats','Progress']],
@@ -209,7 +209,7 @@ function openSectionMore(root){
   const links = MORE_TABS[root] || [];
   if (!links.length) return;
   openActionSheet(root === 'gym' ? 'More in Gym' : 'More in Nutrition',
-    links.map(([tab, label]) => ({ label, fn: () => showTab(tab) })));
+    links.map(([tab, label]) => ({ label, fn: () => showRoot(root, tab) })));
 }
 
 function showTab(name){
