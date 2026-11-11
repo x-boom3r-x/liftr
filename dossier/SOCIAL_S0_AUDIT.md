@@ -1,0 +1,64 @@
+# LIFTR Social — audit S0 et plan de reprise
+
+Date de l'audit : 11 novembre 2026. Périmètre : inspection du dépôt local et des sources externes demandées. Aucun changement fonctionnel du social n'est fait dans cette étape. Ce rapport distingue les preuves locales des éléments qui demandent une vérification sur le service Supabase effectivement déployé.
+
+Mise à jour de reprise : l'application revient maintenant sur le tableau local Today si Feed est fermé ou si le réseau disparaît. Cette règle de navigation ne change pas les fonctionnalités ni les données du Social. La revue S0 des dépôts de référence et la vérification du Supabase déployé restent incomplètes.
+
+## Résumé exécutif
+
+Le social LIFTR est déjà une fonctionnalité applicative substantielle, et non une simple maquette : il contient des écrans HTML/CSS natifs, des modules JavaScript, un client Supabase réel, des migrations PostgreSQL/RLS, du stockage média, des souscriptions temps réel et des tests navigateur. Cela prouve qu'une base multi-compte est implémentée dans le code. Cela ne prouve pas, à lui seul, que toutes les migrations/policies sont appliquées au projet distant ni que les échanges entre deux vrais comptes fonctionnent de bout en bout.
+
+Le périmètre confirmé comprend le fil et les posts, commentaires, réactions, sondages, abonnements et comptes privés, profil, recherche, stories, notes, notifications, messagerie directe, médias, reels et musique. L'interface est intégrée à l'application LIFTR existante, dans ses onglets, et respecte son HTML/CSS/JavaScript natif. Les fichiers de l'audit montrent un thème sombre existant; les couleurs de marque et les écrans doivent être vérifiés visuellement pendant les étapes suivantes.
+
+Les principales limites constatées à ce stade sont : pas de modules évidents dédiés aux communautés, événements, appels vocaux/vidéo ni défis sociaux; les abonnements de présence temps réel observés concernent les nouveaux posts et notifications, pas une couverture live uniforme de toutes les fonctions; et l'état distant du backend reste non vérifié. Les règles de sécurité doivent être rejouées et testées avec deux comptes indépendants avant de considérer la confidentialité multiutilisateur comme validée.
+
+## Méthode et preuves locales consultées
+
+- Navigation, panneaux et chargement des scripts dans `index.html` et `js/app.js`.
+- Modules sous `js/social/`: `auth.js`, `client.js`, `config.js`, `feed.js`, `comments.js`, `people.js`, `privacy.js`, `profile.js`, `search.js`, `stories.js`, `notes.js`, `notifications.js`, `inbox.js`, `reels.js`, `music.js`, `realtime.js`, `editor.js`, `attach.js`, `account.js`, `gate.js`, `timeline.js`, `rings.js`, `shell.js` et modules associés.
+- Configuration client et session dans `js/social/config.js` et `js/social/client.js`. L'application utilise un endpoint Supabase configuré et une clé publishable/anon publique, jamais prévue pour remplacer les politiques RLS. La session est persistée et renouvelée automatiquement. `withMissingColumn` / `withMissingFields` réessaient en retirant des colonnes inconnues : utile lors d'une migration progressive, mais susceptible de masquer une dérive de schéma si les colonnes retirées ne sont pas signalées et corrigées.
+- Migrations locales `supabase/migrations/00000000000000_init_social.sql` à `...00000000000008_social_l5.sql` (les suffixes locaux présents sont 00, 01, 02, 03, 04, 06, 07, 08). Elles créent tables, triggers, politiques RLS, conversations/messages et politiques de visibilité des profils privés. La migration L5 conditionne les posts, commentaires, notes et stories d'un compte privé à un abonnement accepté. Les messages sont limités aux membres d'une conversation. Ces règles sont prometteuses dans le dépôt; leur état réellement déployé n'est pas vérifié par l'inspection locale.
+- Suite navigateur `tests/social-*.spec.js`, dont tests d'authentification, flux, profils, vie privée, messagerie, notifications, stories, reels, navigation, gestes et temps réel. Plusieurs scénarios utilisent des réponses Supabase simulées : ils vérifient l'interface et le comportement client, pas les permissions d'un backend distant réel.
+
+## État par fonctionnalité
+
+| Domaine | État prouvé dans le dépôt | À démontrer avant validation complète |
+|---|---|---|
+| Authentification et profil | Connexion e-mail/Google intégrée au client Supabase; session et profil gérés dans les modules sociaux. | Flux réel sur le projet de production, récupération de compte, fermeture de session sur plusieurs appareils et suppression complète vérifiée à distance. |
+| Fil, posts, commentaires, réactions, sondages | Modules de rendu/écriture et migrations/tests présents. | Publication/lecture entre deux comptes réels, pagination, limites et politiques des médias associées. |
+| Abonnements et comptes privés | Demandes d'abonnement et filtres UI; policies SQL dédiées à la visibilité privée et aux demandes acceptées. | Tester lecture directe de l'API/DB comme compte non autorisé, avant et après acceptation, et vérifier que les abonnements en attente n'exposent aucun objet ou média. |
+| Stories et notes | Création, expiration, consultation, vues et anneaux présents; policies et storage décrits dans les migrations. | Vérifier le stockage réellement configuré, les règles d'accès aux objets, l'expiration côté serveur et le comportement multi-compte. |
+| Messagerie directe | Inbox et conversation 1:1 dans `inbox.js`; tables et RLS pour conversations/messages; présence par actualisation/polling côté client. | Tester deux comptes réels, lectures concurrentes, blocage/filtrage et limites d'envoi. Le temps réel des messages n'est pas établi par les souscriptions actuellement observées. |
+| Notifications / temps réel | Module notifications et souscriptions Postgres observées pour notifications et nouveaux posts; nouvelle pastille dans le fil. | Test multi-session du backend, reconnexion réseau, notifications mobiles/push et couverture des changements story/inbox. |
+| Reels et musique | Modules locaux et tests d'interface présents. | Valider stockage, lecture mobile, droits des médias/musicaux, règles d'accès et éventuelles API tierces. |
+| Communautés, événements, appels, défis | Aucun module métier évident n'a été repéré dans `js/social/` ou les migrations consultées. | À considérer comme fonctionnalités absentes à planifier, pas comme déjà acquises. |
+| Modération et sécurité des personnes | Certaines règles de visibilité existent; un parcours complet de signalement, blocage et appel n'a pas été confirmé. | Auditer les parcours de blocage, signalement, modération, limitation anti-spam et suppression, côté interface et serveur. |
+
+## Sources externes examinées et portée de réutilisation
+
+Cette étape utilise les projets comme références de conception et de contrôles. Elle n'importe aucun code, média ou jeu de données tiers. La consultation des références est encore partielle : il ne faut pas lire le tableau ci-dessous comme une revue intégrale des cinq codebases. Les lignes distinguent précisément le code effectivement lu des pistes à ouvrir avant toute implémentation inspirée de ces projets.
+
+| Source | Éléments consultés | Licence / conséquence |
+|---|---|---|
+| [Euron Open Social](https://github.com/euron-sde-team/euron-open-social-network) | README consulté : il décrit les contrôles centraux et identifie `apps/api/src/repositories/visibility.ts`, `apps/api/src/domain/dm-eligibility.ts`, `moderation-decision.ts` et les suites d'intégration/E2E. Les fichiers sources eux-mêmes n'ont pas encore été ouverts. | MIT annoncé sur GitHub. Avant d'adapter ses règles à LIFTR, lire ces fonctions et les tests d'autorisation associés; le README seul ne suffit pas à valider le comportement du code. |
+| [OPENBOOK](https://github.com/PromoAI07/OPENBOOK) | README et arborescence consultés; le fichier [relations.js](https://github.com/PromoAI07/OPENBOOK/blob/main/relations.js) a été lu. `isBlocked` rend le blocage bidirectionnel; `block` enlève relations/follows ensemble; `mute` masque un seul côté dans le feed; `canSeeSocialGraph` vérifie blocage et visibilité. Un fichier de test associé à ces fonctions n'a pas encore été étudié. | AGPL-3.0-or-later annoncée par le dépôt. Toute reprise substantielle demande une analyse AGPL avant distribution ou mise à disposition réseau; aucune copie effectuée. |
+| [Mastodon](https://github.com/mastodon/mastodon) et [documentation REST/API](https://docs.joinmastodon.org/api/) | La licence, la documentation REST (comptes, blocages, rapports, statuts, médias, notifications, timelines, streaming) et le contrôleur [StatusesController](https://github.com/mastodon/mastodon/blob/main/app/controllers/api/v1/statuses_controller.rb) ont été consultés. Le contrôleur met en place autorisations OAuth par portée, authentification pour écrire et limites de débit sur les statuts. Les tests du contrôleur ne sont pas encore audités. | AGPL-3.0. Référence de modèle API et de contrôles; pas une dépendance directe choisie pour LIFTR. Examiner les tests et les fichiers précis avant d'adapter un mécanisme. |
+| [Semaphore Chat](https://github.com/semaphore-chat/semaphore-chat) et [documentation](https://docs.semaphorechat.app/) | README consulté : architecture annoncée NestJS, PostgreSQL/Prisma, Socket.IO/Redis, LiveKit; le projet documente suites backend/frontend et appels. L'implémentation backend, événements socket, modèles Prisma et tests n'ont pas encore été ouverts. | Le dépôt indique deux voies : AGPLv3 par défaut et licence commerciale optionnelle. Aucun code ou média copié; relire LICENSE, LICENSE_COM et FAQ avant toute reprise. |
+| [Capacitor Transitions](https://github.com/Cap-go/capacitor-transitions) et [documentation](https://capgo.app/docs/plugins/transitions/) | README, page de documentation et LICENSE MIT consultés. Le code natif du plugin, sa démo, les contraintes iOS/Android et les tests ne sont pas encore examinés. | MIT. Concerne les transitions dans une application Capacitor; LIFTR est actuellement une application web native et le plugin n'a pas été ajouté. N'envisager son usage qu'après confirmation d'une cible Capacitor et examen des fichiers concernés. |
+
+## Plan proposé après S0
+
+1. **S1 — Cartographie précise** : relier chaque écran/action à son module JS, sa table/RPC/storage et ses tests, puis classer chaque résultat comme purement visuel, local, backend simulé ou service multi-compte réel.
+2. **S2 — Vérification du schéma** : comparer toutes les migrations locales à l'état du projet distant, établir une migration à migration, sans déduire l'état déployé de `withMissingFields`.
+3. **S3 — Sécurité de base** : tests RLS avec deux comptes distincts pour comptes privés, abonnements en attente, conversations, objets média, suppressions et données expirées; ajouter tests SQL/API d'intégration reproductibles.
+4. **S4 — Parcours sociaux** : corriger les écarts prouvés dans fil, profil, recherche, commentaires, réactions et navigation en conservant les conventions visuelles de LIFTR.
+5. **S5 — Stories, notes et médias** : vérifier politiques Storage, métadonnées, expiration et expérience réseau/mobile.
+6. **S6 — Messagerie et présence** : décider si la boîte actuelle doit devenir temps réel; définir demandes, blocage, accusés de lecture, pagination et états hors ligne avant implémentation.
+7. **S7 — Modération et confidentialité** : définir signalement, blocage, masquage, limites d'abus, suppression/export du compte et traitement des demandes.
+8. **S8 — Reels, musique et provenance** : vérifier droits, sources/API, accès aux médias, performance et UX mobile; ne pas réutiliser de média référent.
+9. **S9 — Nouvelles fonctions** : seulement après validation du socle, prioriser communautés, événements, défis ou appels avec architecture et coûts d'exploitation identifiés.
+10. **S10 — Validation finale** : tests navigateur ciblés desktop/mobile, tests backend multi-compte, vérification des licences et rapport des éléments réellement validés.
+
+### État du passage de S0 à S1
+
+Ce document constitue le diagnostic initial; le backend en ligne et certaines références source/tests restent à vérifier. S0 est commencé mais la revue des codebases de référence n'est pas complète. La prochaine tranche doit terminer les fichiers/tests ciblés ci-dessus et faire l'inventaire écran → module → tables/policies → tests, sans refonte massive. Aucune modification fonctionnelle sociale n'a été faite.

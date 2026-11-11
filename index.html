@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="84">
+<html lang="en" data-build="87">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0B0B0D">
 <title>Liftr</title>
-<meta name="description" content="Liftr — a two-person lifting tracker, 100% offline: program, sessions, weekly progress and personal records.">
+<meta name="description" content="LIFTR — offline-first training and nutrition tracking, with an optional connected social feed.">
 <link rel="icon" href="logo.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
@@ -102,6 +102,62 @@
 
   <main class="app">
 
+    <!-- ---------- LOCAL TODAY DASHBOARD ---------- -->
+    <section id="tab-today" class="panel hidden">
+      <div class="today-heading">
+        <div>
+          <div class="today-kicker" id="todayDate">TODAY</div>
+          <h1 class="today-title">Today, <span id="todayName">athlete</span></h1>
+          <p class="today-intro">Your training and nutrition, ready on this device.</p>
+        </div>
+        <span class="local-status"><span aria-hidden="true"></span> On device</span>
+      </div>
+
+      <div class="today-dashboard-grid">
+        <div class="today-dashboard-main">
+          <section class="today-panel today-workout-panel" aria-labelledby="todayWorkoutTitle">
+            <div class="today-panel-head">
+              <div>
+                <div class="today-overline">TRAINING</div>
+                <h2 id="todayWorkoutTitle">Your session</h2>
+                <p class="today-session-hint" id="todaySessionCount"></p>
+              </div>
+              <button class="text-link" type="button" onclick="showRoot('gym','programme')">View plan <span aria-hidden="true">↗</span></button>
+            </div>
+            <div id="todayCard"></div>
+          </section>
+
+          <section class="today-panel nutrition-overview" aria-labelledby="todayNutritionTitle">
+            <div class="today-panel-head">
+              <div>
+                <div class="today-overline">NUTRITION</div>
+                <h2 id="todayNutritionTitle">Today’s intake</h2>
+              </div>
+              <button class="text-link" type="button" onclick="showRoot('nutrition','nutri-today')">Open diary <span aria-hidden="true">↗</span></button>
+            </div>
+            <div id="todayNutritionSummary"></div>
+          </section>
+        </div>
+
+        <aside class="today-dashboard-side">
+          <section class="today-panel today-water-panel" aria-labelledby="todayWaterTitle">
+            <div class="today-overline">HYDRATION</div>
+            <h2 id="todayWaterTitle">Water</h2>
+            <div id="todayWaterSummary"></div>
+            <button class="btn btn-secondary btn-block" type="button" onclick="addWater(250)">+ 250 ml</button>
+          </section>
+
+          <section class="today-panel today-shortcuts" aria-labelledby="todayShortcutsTitle">
+            <div class="today-overline">QUICK ACCESS</div>
+            <h2 id="todayShortcutsTitle">Your tools</h2>
+            <button type="button" onclick="showRoot('gym','seance')"><span>Training session</span><span aria-hidden="true">→</span></button>
+            <button type="button" onclick="addMeal()"><span>Log a meal</span><span aria-hidden="true">→</span></button>
+            <button type="button" onclick="showRoot('nutrition','nutri-foods')"><span>Find a food</span><span aria-hidden="true">→</span></button>
+          </section>
+        </aside>
+      </div>
+    </section>
+
     <!-- ---------- PROGRAM ---------- -->
     <section id="tab-programme" class="panel">
       <div class="section-head">
@@ -111,7 +167,6 @@
         </div>
         <button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>
       </div>
-      <div id="todayCard"></div>
       <div id="daysList"></div>
 
       <div class="card" style="margin-top:14px">
@@ -565,20 +620,25 @@
 
   <nav class="tabbar" id="tb" aria-label="Navigation principale">
     <div class="tabbar-inner">
-      <button class="tab active" id="tabFeedBtn" data-tab="feed" aria-current="true" onclick="showRoot('feed')" aria-label="Accueil">
+      <button class="tab active" id="tabTodayBtn" data-tab="today" aria-current="true" onclick="showRoot('today')" aria-label="Today">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
-        <span class="tab-lbl">Accueil</span>
+        <span class="tab-lbl">Today</span>
       </button>
       <button class="tab" data-tab="gym" aria-current="false" onclick="showRoot('gym')" aria-label="Muscu">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>
         <span class="tab-lbl">Muscu</span>
       </button>
-      <button class="plus" aria-label="Publier" onclick="navPublish()">
+      <button class="plus" aria-label="Quick actions" onclick="openQuickActions()">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="plus-label">Quick add</span>
       </button>
       <button class="tab" data-tab="nutrition" aria-current="false" onclick="showRoot('nutrition')" aria-label="Nutrition">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3.3 3.9-5 6.9-5 9.8a5 5 0 0 0 10 0c0-2.9-1.7-5.9-5-9.8z"/></svg>
         <span class="tab-lbl">Nutrition</span>
+      </button>
+      <button class="tab" id="tabFeedBtn" data-tab="feed" aria-current="false" onclick="showRoot('feed')" aria-label="Social">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 2.8-5 6.5-5s5.9 1.6 6.5 5M16 5.5a3.5 3.5 0 0 1 0 6.8M17 15c2.4.5 3.8 2 4.4 5"/></svg>
+        <span class="tab-lbl">Social</span>
       </button>
       <button class="tab" data-tab="profil" aria-current="false" onclick="showRoot('profil')" aria-label="Profil">
         <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
@@ -978,6 +1038,7 @@
     <div class="modal-sub">Assisted reps count when the movement is helped (partner, machine).</div>
 
     <div class="set-context" id="setContext" hidden></div>
+    <div class="planned-set-prefill" id="plannedSetPrefill" hidden>Prefilled from the programmed target. Saved values are your actual results.</div>
 
     <div id="strengthFields">
       <div class="field">
@@ -1011,7 +1072,49 @@
       <div class="hint">Example: 8 clean reps + 2 assisted → <b>8+2A</b></div>
     </div>
 
+    <div class="field set-effort-field" id="strengthEffortField">
+      <label class="label" for="effortInput">Effort (optional)</label>
+      <div class="effort-entry">
+        <select class="input" id="effortScale" aria-label="Effort scale" onchange="setEffortScale()">
+          <option value="rir">RIR · reps left</option>
+          <option value="rpe">RPE · effort out of 10</option>
+        </select>
+        <div class="stepper effort-number">
+          <button type="button" onclick="stepEffort(-1)" aria-label="Lower effort rating">−</button>
+          <input id="effortInput" type="number" inputmode="decimal" step="0.5" min="0" max="10" placeholder="—" aria-label="Effort rating">
+          <button type="button" onclick="stepEffort(1)" aria-label="Raise effort rating">+</button>
+        </div>
+      </div>
+      <div class="hint">Leave blank when you did not rate the set.</div>
     </div>
+
+    <label class="set-flag" id="failureFlagRow">
+      <input id="failureInput" type="checkbox" onchange="syncSetFlags()">
+      <span><b>Taken to failure</b><small>No more clean reps were possible.</small></span>
+    </label>
+
+    </div>
+      <div id="timeFields" hidden>
+        <div class="field" id="holdSecondsField">
+          <label class="label" for="holdSecondsInput">Hold target (seconds)</label>
+          <div class="stepper">
+            <button type="button" onclick="stepHoldSec(-5)" aria-label="Less hold time">−</button>
+            <input id="holdSecondsInput" type="number" inputmode="numeric" step="1" min="1" max="86400" value="30">
+            <span class="unit">sec</span>
+            <button type="button" onclick="stepHoldSec(5)" aria-label="More hold time">+</button>
+          </div>
+          <div class="hint">The timer saves the seconds actually held. You can also save a duration manually.</div>
+        </div>
+        <div class="timed-hold-controls" id="holdTimerControls" hidden>
+          <strong id="holdCountdown" role="status" aria-live="polite">30 s remaining</strong>
+          <span id="holdElapsed">Held 0 s</span>
+        </div>
+        <div class="modal-actions timed-hold-actions">
+          <button type="button" class="btn btn-primary" id="startHoldBtn" onclick="startTimedHold()">Start hold timer</button>
+          <button type="button" class="btn btn-primary" id="finishHoldBtn" onclick="finishTimedHold(false)" hidden>Finish early</button>
+          <button type="button" class="btn" id="cancelHoldBtn" onclick="cancelTimedHold()" hidden>Cancel hold</button>
+        </div>
+      </div>
       <div id="cardioFields" hidden>
         <div class="field">
           <label class="label">Duration (min)</label>
@@ -1032,10 +1135,18 @@
           </div>
           <div class="hint">Running, cycling, rowing… enter the distance covered.</div>
         </div>
+        <div class="field set-effort-field">
+          <label class="label" for="cardioRpeInput">Effort (optional · RPE)</label>
+          <input class="input" id="cardioRpeInput" type="number" inputmode="decimal" step="0.5" min="6" max="10" placeholder="—">
+        </div>
       </div>
+      <label class="set-flag" id="warmupFlagRow">
+        <input id="warmupInput" type="checkbox" onchange="syncSetFlags()">
+        <span><b>Warm-up set</b><small>Kept in history, excluded from working volume and records.</small></span>
+      </label>
       <div class="modal-actions">
       <button class="btn" onclick="closeModal('addSetModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSet()">Save set</button>
+      <button class="btn btn-primary" id="saveSetBtn" onclick="saveSet()">Save set</button>
     </div>
   </div>
 </div>

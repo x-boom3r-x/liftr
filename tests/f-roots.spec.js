@@ -1,29 +1,29 @@
-/* Chantier F — 4 onglets racine : Accueil | Muscu | Nutrition | Profil,
-   plus un bouton + central (Publier).
-   Règles : premier lancement connecté+online → Feed ; hors-ligne/déconnecté
-   → Gym (bouton Feed toujours visible, racine bascule) ; sous-nav déplacée ;
+/* Navigation racine local-first : Today | Muscu | Nutrition | Social | Profil,
+   plus un bouton + central d'actions rapides.
+   Règles : premier lancement → Today ; hors-ligne/déconnecté, Social
+   retourne vers Today ; sous-nav déplacée ;
    mémoire du dernier sous-onglet manuel ; module Nutrition local. */
 const { test, expect } = require('@playwright/test');
 const { seed } = require('./helpers');
 const { withSocial, signedIn, ME, consoleWatch, mockApi } = require('./social-mock');
 
-test.describe('Chantier F : 4 onglets racine', () => {
+test.describe('Navigation local-first : 5 racines', () => {
 
-  test('la tabbar a exactement 4 boutons racine (Feed, Gym, Nutrition, Profil) + le +', async ({ page }) => {
+  test('la tabbar a 5 racines locales/sociales + actions rapides', async ({ page }) => {
     await seed(page, {}, 'Mouataz');
     const tabs = await page.evaluate(() =>
       [...document.querySelectorAll('.tabbar .tab')].map(b => b.dataset.tab));
-    expect(tabs).toEqual(['feed', 'gym', 'nutrition', 'profil']);
-    /* pas de 5e bouton caché : les anciens onglets ne sont plus dans la barre */
+    expect(tabs).toEqual(['today', 'gym', 'nutrition', 'feed', 'profil']);
+    /* Les sous-sections restent dans leur navigation secondaire. */
     expect(await page.evaluate(() =>
       document.querySelectorAll('.tabbar .tab[data-tab="seance"], .tabbar .tab[data-tab="stats"], .tabbar .tab[data-tab="calendrier"], .tabbar .tab[data-tab="programme"], .tabbar .tab[data-tab="library"]').length)).toBe(0);
-    /* le bouton + est bien présent, centré, et n'est PAS un .tab (pas de data-tab) */
+    /* Le bouton d'actions est bien présent et ne sélectionne aucune racine. */
     const plus = await page.evaluate(() => {
       const el = document.querySelector('.tabbar .plus');
       return el ? { label: el.getAttribute('aria-label'), tab: el.dataset.tab, mid: innerWidth / 2 } : null;
     });
     expect(plus, 'le bouton + existe dans la tabbar').toBeTruthy();
-    expect(plus.label).toBe('Publier');
+    expect(plus.label).toBe('Quick actions');
     expect(plus.tab, 'le + ne porte aucun data-tab (jamais actif)').toBeUndefined();
   });
 
@@ -38,48 +38,51 @@ test.describe('Chantier F : 4 onglets racine', () => {
     await expect(page.locator('#rootSubnav')).toBeHidden();
   });
 
-  test('bouton + : ramène au Feed et ouvre la feuille de création', async ({ page }) => {
+  test('bouton + : ouvre les actions locales et sociales', async ({ page }) => {
     await withSocial(page);
     await seed(page, {}, 'Mouataz');
     mockApi(page, {});
     await signedIn(page);
     await page.evaluate(() => showTab('programme'));
     await page.locator('.tabbar .plus').click();
-    await expect(page.locator('#tab-feed')).toBeVisible();
     await expect(page.locator('#actionSheet')).toBeVisible();
+    await expect(page.locator('#asList')).toContainText('Ajouter un repas');
+    await expect(page.locator('#asList')).toContainText('Publier sur le Social');
   });
 
-  test('bouton + déconnecté : toast d\'aide, pas de feuille', async ({ page }) => {
+  test('bouton + hors ligne : permet toujours les actions locales', async ({ page }) => {
     await seed(page, {}, 'Mouataz');
     await page.locator('.tabbar .plus').click();
-    await expect(page.locator('#toast')).toContainText('Sign in and go online');
-    await expect(page.locator('#actionSheet')).toBeHidden();
+    await expect(page.locator('#actionSheet')).toBeVisible();
+    await expect(page.locator('#asList')).toContainText('Ajouter 250 ml d’eau');
   });
 
-  test('déconnecté : atterrissage Gym, bouton Feed visible, clic → toast + Gym', async ({ page }) => {
+  test('premier lancement : atterrit sur Today; Social reste visible mais séparé', async ({ page }) => {
     await seed(page, {}, 'Mouataz');
-    expect(await page.evaluate(() => currentTab)).toBe('programme');
-    await expect(page.locator('.tabbar .tab[data-tab="gym"]')).toHaveClass(/active/);
+    await page.evaluate(() => { localStorage.removeItem('at_tab'); setUser('Mouataz'); });
+    expect(await page.evaluate(() => currentTab)).toBe('today');
+    await expect(page.locator('#tab-today')).toBeVisible();
+    await expect(page.locator('.tabbar .tab[data-tab="today"]')).toHaveClass(/active/);
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
 
     await page.locator('#tabFeedBtn').click();
     await expect(page.locator('#toast')).toContainText('Sign in and go online');
-    expect(await page.evaluate(() => currentTab)).toBe('programme');
+    expect(await page.evaluate(() => currentTab)).toBe('today');
   });
 
-  test('connecté+online : premier lancement atterrit sur Feed', async ({ page }) => {
+  test('connecté+online : le premier lancement reste sur le tableau de bord local', async ({ page }) => {
     await withSocial(page);
     await seed(page, {}, 'Mouataz');
     mockApi(page, {});
     await signedIn(page);
     /* simule un premier lancement de session : la mémoire est vidée */
     await page.evaluate(() => { localStorage.removeItem('at_tab'); setUser('Mouataz'); });
-    expect(await page.evaluate(() => currentTab)).toBe('feed');
-    await expect(page.locator('#tab-feed')).toBeVisible();
-    await expect(page.locator('.tabbar .tab[data-tab="feed"]')).toHaveClass(/active/);
+    expect(await page.evaluate(() => currentTab)).toBe('today');
+    await expect(page.locator('#tab-today')).toBeVisible();
+    await expect(page.locator('.tabbar .tab[data-tab="today"]')).toHaveClass(/active/);
   });
 
-  test('hors-ligne : Feed bascule sur Gym avec toast, bouton toujours visible', async ({ page, context }) => {
+  test('hors-ligne : Social revient sur Today et garde les données locales disponibles', async ({ page, context }) => {
     await withSocial(page);
     await seed(page, {}, 'Mouataz');
     mockApi(page, {});
@@ -90,7 +93,7 @@ test.describe('Chantier F : 4 onglets racine', () => {
     await context.setOffline(true);
     await page.evaluate(() => { window.dispatchEvent(new Event('offline')); updateSocialGate(); });
     await expect(page.locator('#tab-feed')).toBeHidden();
-    expect(await page.evaluate(() => currentTab)).toBe('programme');
+    expect(await page.evaluate(() => currentTab)).toBe('today');
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
 
     await context.setOffline(false);

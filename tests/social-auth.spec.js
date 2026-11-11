@@ -90,12 +90,12 @@ test.describe('Social : socle dormant', () => {
     expect(page.url()).toBe(url);
   });
 
-  test('showTab("feed") alors que le social est fermé retombe sur Programme', async ({ page }) => {
+  test('showTab("feed") alors que le social est fermé revient sur Today', async ({ page }) => {
     await seed(page, {});
     await page.evaluate(() => showTab('feed'));
 
-    expect(await page.evaluate(() => currentTab)).toBe('programme');
-    await expect(page.locator('#tab-programme')).toBeVisible();
+    expect(await page.evaluate(() => currentTab)).toBe('today');
+    await expect(page.locator('#tab-today')).toBeVisible();
     await expect(page.locator('#tab-feed')).toBeHidden();
   });
 });
@@ -125,6 +125,8 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
     await seed(page, {});
     await signedIn(page);
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
+    await page.locator('#tabFeedBtn').click();
+    await expect(page.locator('#tab-feed')).toBeVisible();
 
     await context.setOffline(true);
     await page.evaluate(() => {
@@ -132,11 +134,10 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
       updateSocialGate();
     });
 
-    /* Chantier F : hors-ligne le bouton Feed reste visible mais la racine
-       bascule sur Gym (l'app reste 100 % utilisable). */
+    /* Social se ferme; la racine locale reste Today. */
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
     expect(await page.evaluate(() => socialAvailable())).toBe(false);
-    expect(await page.evaluate(() => currentTab)).toBe('programme');
+    expect(await page.evaluate(() => currentTab)).toBe('today');
   });
 
   test('déconnexion : le panneau Feed se ferme, le bouton reste', async ({ page }) => {
@@ -153,7 +154,7 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
     await page.waitForFunction(() => window.socialUser === null);
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
     await expect(page.locator('#tab-feed')).toBeHidden();
-    expect(await page.evaluate(() => currentTab)).toBe('programme');
+    expect(await page.evaluate(() => currentTab)).toBe('today');
   });
 
   test('signInGoogle ouvre bien l’autorisation Supabase avec provider=google', async ({ page }) => {
@@ -203,8 +204,8 @@ test.describe('Social : portes d’entrée (config injectée)', () => {
 
     await expect(page.locator('#tabFeedBtn')).toBeVisible();
     await expect(page.locator('#signInBtn')).toBeHidden();
-    /* F : session restaurée + en ligne → premier lancement sur Feed */
-    expect(await page.evaluate(() => currentTab)).toBe('feed');
+    /* L'onglet local mémorisé avant OAuth est restauré après la session. */
+    expect(await page.evaluate(() => currentTab)).toBe('programme');
   });
 });
 

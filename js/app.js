@@ -4,7 +4,7 @@
 
 /* Build partage avec index.html (data-build) et sw.js (liftr-vXX) :
    on le bump a chaque deploiement (test handlers.spec.js l'impose). */
-window.__LIFTR_BUILD__ = '84';
+window.__LIFTR_BUILD__ = '87';
 
 import './gestures.js';
 import './state.js';
@@ -13,6 +13,7 @@ import './exercise-demo.js';   /* après data.js : exoKey/LIB sur window */
 import './idb.js';
 import './store.js';
 import './ui.js';
+import './today.js';
 import './programme.js';
 import './library.js';   /* écran Library (sous-onglet Muscu, build 84) */
 import './suggest.js';

@@ -15,17 +15,8 @@ import {
   loadCatalogue,
   exerciseGroupLabel
 } from './gym/exercises.js';
-import {
-  policyOff,
-  policyLinear,
-  policyGreyskull,
-  policyDouble,
-  policyTriple,
-  policyTime,
-  getPolicy,
-  suggestNextWeight
-} from './gym/progression.js';
 import { computePlateCombination } from './gym/plates.js';
+import { repSequenceOf } from './gym/progression.js';
 
 /* Démarre le chargement du catalogue openGym dès l'import du module. */
 loadCatalogue();
@@ -672,9 +663,19 @@ function renderDayExercises(){
       '<details class="ex-params"><summary>Objectifs et notes</summary>' +
         '<div class="ex-params-grid">' +
           '<label>Séries<input class="input" id="param-sets-' + id + '" type="number" min="1" step="1" inputmode="numeric" value="' + (p.sets == null ? '' : esc(p.sets)) + '"></label>' +
-          '<label>Répétitions<input class="input" id="param-reps-' + id + '" maxlength="20" value="' + (p.reps == null ? '' : esc(p.reps)) + '"></label>' +
+          '<label>Plafond séries<input class="input" id="param-setsMax-' + id + '" type="number" min="1" max="10" step="1" inputmode="numeric" value="' + (p.setsMax == null ? '' : esc(p.setsMax)) + '" aria-label="Nombre maximum de séries pour la progression triple"></label>' +
+          '<label>Répétitions<input class="input" id="param-reps-' + id + '" maxlength="40" value="' + (p.reps == null ? '' : esc(p.reps)) + '" placeholder="8–12 ou 12,10,8"></label>' +
           '<label>Charge (kg)<input class="input" id="param-weight-' + id + '" type="number" min="0" step="0.1" inputmode="decimal" value="' + (p.weight == null ? '' : esc(p.weight)) + '"></label>' +
           '<label>Repos (s)<input class="input" id="param-rest-' + id + '" type="number" min="0" step="1" inputmode="numeric" value="' + (p.rest == null ? '' : esc(p.rest)) + '"></label>' +
+          '<label>Durée de maintien (s)<input class="input" id="param-seconds-' + id + '" type="number" min="1" max="86400" step="1" inputmode="numeric" value="' + (p.seconds == null ? '' : esc(p.seconds)) + '"></label>' +
+          '<label>Progression<select class="input" id="param-progression-' + id + '">' +
+            '<option value="double"' + (p.progression === 'double' ? ' selected' : '') + '>Double</option>' +
+            '<option value="triple"' + (p.progression === 'triple' ? ' selected' : '') + '>Triple</option>' +
+            '<option value="linear"' + (p.progression === 'linear' ? ' selected' : '') + '>Linéaire</option>' +
+            '<option value="greyskull"' + (p.progression === 'greyskull' ? ' selected' : '') + '>Greyskull</option>' +
+            '<option value="time"' + (p.progression === 'time' ? ' selected' : '') + '>Temps</option>' +
+            '<option value="off"' + (p.progression === 'off' ? ' selected' : '') + '>Manuelle</option>' +
+          '</select></label>' +
         '</div><label class="ex-notes-label">Notes<textarea class="textarea" id="param-notes-' + id + '" rows="2" maxlength="500">' + esc(p.notes) + '</textarea></label>' +
         '<button type="button" class="btn btn-sm" onclick="saveExerciseParams(\'' + id + '\')">Enregistrer les objectifs</button>' +
       '</details>' +
@@ -1024,23 +1025,38 @@ function getExerciseParams(ex){
     reps: ex && ex.reps != null ? ex.reps : null,
     weight: ex && ex.weight != null ? ex.weight : null,
     rest: ex && ex.rest != null ? ex.rest : null,
+    seconds: ex && ex.seconds != null ? ex.seconds : null,
+    setsMax: ex && ex.setsMax != null ? ex.setsMax : null,
+    progression: ex && ['double', 'triple', 'linear', 'greyskull', 'time', 'off'].includes(ex.progression)
+      ? ex.progression : (ex && Number(ex.seconds) > 0 ? 'time' : 'double'),
     notes: ex && ex.notes ? ex.notes : ''
   };
 }
 
 function setExerciseParams(ex, data){
   if (!ex || !data) return false;
-  ['sets', 'reps', 'weight', 'rest', 'notes'].forEach(key => {
+  ['sets', 'setsMax', 'reps', 'weight', 'rest', 'seconds', 'progression', 'notes'].forEach(key => {
     if (!Object.prototype.hasOwnProperty.call(data, key)) return;
     let value = data[key];
     if (value === '') value = null;
-    if (['sets', 'weight', 'rest'].includes(key) && value != null){
+    if (['sets', 'setsMax', 'weight', 'rest', 'seconds'].includes(key) && value != null){
       value = Number(value);
       if (!Number.isFinite(value) || value < 0) return;
-      if (key === 'sets') value = Math.max(1, Math.round(value));
-      if (key === 'rest') value = Math.round(value);
+      if (key === 'sets' || key === 'setsMax') value = Math.max(1, Math.round(value));
+      if (key === 'setsMax' && (value > 10 || value < Math.max(1, Math.round(Number(ex.sets) || 1)))) return;
+      if (key === 'rest' || key === 'seconds') value = Math.round(value);
+      if (key === 'seconds' && value > 86400) return;
     }
-    if (key === 'reps' && value != null) value = String(value).trim() || null;
+    if (key === 'reps' && value != null){
+      value = String(value).trim() || null;
+      const sequence = repSequenceOf(value);
+      if (sequence.length) ex.sets = sequence.length;
+    }
+    if (key === 'progression'){
+      if (!['double', 'triple', 'linear', 'greyskull', 'time', 'off'].includes(value)) return;
+      if (Number(ex.seconds) > 0 && value !== 'off') value = 'time';
+      else if (!(Number(ex.seconds) > 0) && value === 'time') value = 'double';
+    }
     if (key === 'notes' && value != null) value = String(value).slice(0, 500);
     ex[key] = value;
   });
@@ -1054,10 +1070,12 @@ function setExerciseParams(ex, data){
 function exerciseParamsLine(ex){
   const p = getExerciseParams(ex);
   const parts = [];
-  if (p.sets != null) parts.push(p.sets + ' séries');
+  if (p.sets != null) parts.push((p.progression === 'triple' && p.setsMax ? p.sets + '–' + p.setsMax : p.sets) + ' séries');
   if (p.reps != null) parts.push(p.reps + ' reps');
   if (p.weight != null) parts.push(p.weight + ' kg');
   if (p.rest != null) parts.push(p.rest + ' s repos');
+  if (p.seconds != null) parts.push(p.seconds + ' s maintien');
+  parts.push({ double: 'double', triple: 'triple', linear: 'linéaire', greyskull: 'Greyskull', time: 'temps', off: 'manuelle' }[p.progression]);
   return parts.join(' · ') || 'Objectifs non définis';
 }
 
@@ -1076,15 +1094,18 @@ function saveExerciseParams(exId){
   const ex = d && d.exercises.find(x => x.id === exId);
   if (!ex) return false;
   const sets = optionalNumberInput('param-sets-' + exId, 1, true);
+  const setsMax = optionalNumberInput('param-setsMax-' + exId, 1, true);
   const weight = optionalNumberInput('param-weight-' + exId, 0, false);
   const rest = optionalNumberInput('param-rest-' + exId, 0, true);
-  if ([sets, weight, rest].some(Number.isNaN)){
-    toast('Vérifiez les séries, la charge et le temps de repos.');
+  const seconds = optionalNumberInput('param-seconds-' + exId, 1, true);
+  if ([sets, setsMax, weight, rest, seconds].some(Number.isNaN) || seconds > 86400 || (setsMax != null && (setsMax > 10 || sets != null && setsMax < sets))){
+    toast('Vérifiez les séries, la charge, le repos et la durée.');
     return false;
   }
   return setExerciseParams(ex, {
-    sets, reps: $('param-reps-' + exId).value.trim() || null,
-    weight, rest, notes: $('param-notes-' + exId).value
+    sets, setsMax, reps: $('param-reps-' + exId).value.trim() || null,
+    weight, rest, seconds, progression: $('param-progression-' + exId).value,
+    notes: $('param-notes-' + exId).value
   });
 }
 
@@ -1094,9 +1115,12 @@ function getExerciseState(ex){
     cardio: !!ex.cardio,
     order: Number.isFinite(+ex.order) ? +ex.order : 0,
     sets: ex.sets ?? null,
+    setsMax: ex.setsMax ?? null,
     reps: ex.reps ?? null,
     weight: ex.weight ?? null,
     rest: ex.rest ?? null,
+    seconds: ex.seconds ?? null,
+    progression: ex.progression || (Number(ex.seconds) > 0 ? 'time' : 'double'),
     notes: ex.notes || '',
     groupId: ex.groupId || null,
     groupType: ex.groupType || null
@@ -1112,7 +1136,7 @@ function addDayExercise(dayId, name, setParams = {}){
   }
   const exercise = Object.assign({
     id: uid(), name: name.trim(), cardio: isCardioName(name), order: d.exercises.length,
-    sets: null, reps: null, weight: null, rest: null, notes: ''
+    sets: null, reps: null, weight: null, rest: null, seconds: null, notes: ''
   }, setParams);
   exercise.id = uid();
   exercise.name = name.trim();

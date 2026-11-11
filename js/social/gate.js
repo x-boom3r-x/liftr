@@ -8,9 +8,8 @@ export function socialAvailable(){
   return !!(SOCIAL_ENABLED && window.socialUser && navigator.onLine);
 }
 
-/* Chantier F : le bouton Feed est TOUJOURS visible (1er des 3 racines).
-   Déconnecté/hors-ligne, showRoot('feed') bascule sur Gym avec un toast ;
-   le panneau Feed reste fermé et l'invite de connexion remonte. */
+/* Social est toujours accessible depuis la navigation; déconnecté/hors-ligne,
+   le retour se fait vers Today, le tableau de bord local. */
 export function updateSocialGate(){
   const signed = !!(SOCIAL_ENABLED && window.socialUser);
   const on = signed && navigator.onLine;
@@ -29,6 +28,6 @@ export function updateSocialGate(){
 
   if (!on && window.DB && window.currentUser && window.currentTab === 'feed' &&
       typeof window.showTab === 'function'){
-    window.showTab('programme');
+    window.showTab('today');
   }
 }

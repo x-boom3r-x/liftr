@@ -1,6 +1,7 @@
 /* ==================================================================
    LIFTR - suggestions : e1RM, derniere performance, proposition de charge
    ================================================================== */
+import { recommendNextSet } from './gym/progression.js';
 
 /* e1RM (Epley) : charge x (1 + reps/30) */
 function e1rmOf(s){
@@ -16,14 +17,27 @@ function fmtKg(v){
 }
 
 /* Derniere performance connue d'un exercice (l'historique est du plus recent au plus ancien) */
-function lastPerf(name){
+function lastPerf(name, mode){
   const k = String(name || '').toLowerCase().trim();
   if (!k) return null;
   for (const h of DB.history){
     const ex = (h.exercises || []).find(e => String(e.name).toLowerCase().trim() === k);
-    if (ex && (ex.sets || []).length){
-      const best = ex.sets.reduce((a, b) => volumeOf(b) > volumeOf(a) ? b : a);
-      return { date: h.date, sets: ex.sets, best: best, dayName: h.dayName };
+    if (!ex) continue;
+    const planned = (h.plannedExercises || []).find(item =>
+        String(item.name || '').toLowerCase().trim() === k
+      );
+    const plan = planned ? planned.planned : null;
+    const timed = plan && plan.mode === 'time' || (ex.sets || []).some(s => s && s.timed);
+    if (mode === 'time' && !timed) continue;
+    if (mode && mode !== 'time' && timed) continue;
+    const valid = (ex.sets || []).some(s => timed
+      ? s && s.timed && !isWarmupSet(s) && Number(s.sec) > 0
+      : s && !isWarmupSet(s) && !s.cardio && !s.timed && +s.weight > 0 && +s.reps > 0);
+    if (valid){
+      const best = timed
+        ? ex.sets.filter(s => s && s.timed && !isWarmupSet(s)).reduce((a, b) => Number(b.sec) > Number(a.sec) ? b : a)
+        : ex.sets.reduce((a, b) => volumeOf(b) > volumeOf(a) ? b : a);
+      return { date: h.date, sets: ex.sets, best: best, timed, dayName: h.dayName, planned: plan };
     }
   }
   return null;
@@ -42,24 +56,13 @@ function bestE1rm(name){
   return best;
 }
 
-function round25(v){ return Math.round(v / 2.5) * 2.5; }
-
-/* Double progression : 8 reps ou plus -> +2,5 kg, sinon on garde la charge et on monte en reps */
-function suggestFor(name, cardio){
+/* La suggestion lit les séries de travail complètes et la cible du programme lorsqu'elle existe. */
+function suggestFor(name, cardio, planned){
   if (cardio || isCardioName(name)) return null;
-  const p = lastPerf(name);
+  const p = lastPerf(name, planned && planned.mode);
   if (!p) return null;
-  const last = p.sets[p.sets.length - 1];
-  const w = +last.weight || 0;
-  const r = (+last.reps || 0) + (+last.assisted || 0);
-  if (!w || r < 1) return null;
-
-  if (r >= 8){
-    const nw = round25(w + 2.5);
-    return { weight: nw, reps: 8, reason: nw !== w ? '+2.5 kg (8+ reps)' : 'same weight x 8' };
-  }
-  const nr = Math.min(r + 1, 12);
-  return { weight: w, reps: nr, reason: r < 5 ? 'same weight, +1 rep' : 'hold the weight, ' + nr + ' reps' };
+  const currentPlan = planned || p.planned || null;
+  return recommendNextSet({ sets: p.sets, planned: currentPlan, previousPlan: p.planned });
 }
 
 /* --- cardio : dernière sortie + record de distance --- */
@@ -87,7 +90,7 @@ function cardioBestKm(name){
 }
 
 /* Ligne resume sous l'exercice pendant la seance active */
-function activeHistLine(name, cardio){
+function activeHistLine(name, cardio, planned){
   if (cardio || isCardioName(name)){
     const p = cardioHistory(name);
     const best = cardioBestKm(name);
@@ -97,15 +100,16 @@ function activeHistLine(name, cardio){
     if (best) bits.push('Record ' + fmtNum(best) + ' km');
     return '<div class="ex-ctx">' + bits.join(' · ') + '</div>';
   }
-  const p = lastPerf(name);
+  const p = lastPerf(name, planned && planned.mode);
   const pr = DB.prs[String(name || '').toLowerCase().trim()];
   if (!p && !pr) return '';
   const bits = [];
   if (p){
-    bits.push('Last time: ' + p.sets.map(s =>
-      fmtKg(s.weight) + '\u00d7' + s.reps + (s.assisted ? '+' + s.assisted + 'A' : '')
-    ).join(', ') + ' · ' + fmtShort(p.date));
+    bits.push('Last time: ' + (p.timed
+      ? p.sets.filter(s => s && s.timed).map(s => fmtNum(s.sec) + ' s').join(', ')
+      : p.sets.map(s => fmtKg(s.weight) + '\u00d7' + s.reps + (s.assisted ? '+' + s.assisted + 'A' : '')).join(', ')) + ' · ' + fmtShort(p.date));
   }
+  if (p && p.timed) return '<div class="ex-ctx">' + bits.join(' · ') + '</div>';
   if (pr) bits.push('PR ' + fmtKg(pr.weight) + '\u00d7' + pr.reps);
   const e = bestE1rm(name);
   if (e) bits.push('e1RM ~' + fmtKg(e) + ' kg');
@@ -130,17 +134,32 @@ function renderSetContext(name, cardio){
     return;
   }
 
-  const perf = lastPerf(name);
+  const currentEx = DB.active && DB.active.exercises.find(ex =>
+    String(ex.name).toLowerCase().trim() === String(name).toLowerCase().trim()
+  );
+  const perf = lastPerf(name, currentEx && currentEx.planned && currentEx.planned.mode);
   const pr = DB.prs[String(name || '').toLowerCase().trim()];
-  const sug = suggestFor(name, false);
+  const sug = suggestFor(name, false, currentEx && currentEx.planned);
+  const timed = !!(currentEx && currentEx.planned && currentEx.planned.mode === 'time') || !!(perf && perf.timed);
 
   if (!perf && !pr){ el.hidden = true; el.innerHTML = ''; return; }
 
   let html = '';
   if (perf){
     html += '<div class="ctx-row"><b>Last time</b> · ' + fmtShort(perf.date) + ' — ' +
-      perf.sets.map(s => fmtKg(s.weight) + '\u00d7' + s.reps + (s.assisted ? '+' + s.assisted + 'A' : '')).join(', ') +
+      (perf.timed
+        ? perf.sets.filter(s => s && s.timed).map(s => fmtNum(s.sec) + ' s hold').join(', ')
+        : perf.sets.map(s => fmtKg(s.weight) + '\u00d7' + s.reps + (s.assisted ? '+' + s.assisted + 'A' : '')).join(', ')) +
       '</div>';
+  }
+  if (timed){
+    if (sug){
+      html += '<button class="ctx-sug" onclick="applySuggestion()">Suggested: ' +
+        fmtNum(sug.sec) + ' s <span>' + sug.reason + '</span></button>';
+    }
+    el.innerHTML = html;
+    el.hidden = !html;
+    return;
   }
   if (pr){
     html += '<div class="ctx-row"><b>Record</b> — ' + fmtKg(pr.weight) + ' kg \u00d7 ' + pr.reps +
@@ -148,7 +167,8 @@ function renderSetContext(name, cardio){
   }
   if (sug){
     html += '<button class="ctx-sug" onclick="applySuggestion()">Suggested: ' +
-      fmtKg(sug.weight) + ' kg \u00d7 ' + sug.reps + ' <span>' + sug.reason + '</span></button>';
+      fmtKg(sug.weight) + ' kg \u00d7 ' + sug.reps + (sug.sets ? ' · ' + sug.sets + ' sets' : '') +
+      ' <span>' + sug.reason + '</span></button>';
   }
   el.innerHTML = html;
   el.hidden = false;

@@ -161,3 +161,12 @@ test('service worker : ASSETS precache tous les modules sociaux', () => {
   expect(onDisk.length, 'dossier js/social vide ?').toBeGreaterThan(0);
   expect(onDisk.filter(f => !listed.includes(f))).toEqual([]);
 });
+
+test('service worker : ASSETS précache tous les modules Gym locaux', () => {
+  const sw = fs.readFileSync('sw.js', 'utf8');
+  const listed = (sw.match(/'\.\/js\/gym\/[^']+'/g) || []).map(s => s.replace(/'/g, ''));
+  const onDisk = fs.readdirSync('js/gym')
+    .filter(f => f.endsWith('.js'))
+    .map(f => './js/gym/' + f);
+  expect(onDisk.filter(f => !listed.includes(f))).toEqual([]);
+});

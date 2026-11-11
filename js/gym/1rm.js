@@ -66,6 +66,7 @@ export function estimate1rmFromHistory(exerciseName, method = 'average') {
       (h.exercises || []).forEach(ex => {
         if ((ex.name || '').toLowerCase() === exerciseName.toLowerCase()) {
           (ex.sets || []).forEach(s => {
+            if (s && (s.warmup === true || s.phase === 'warmup')) return;
             const w = s.weight;
             const r = s.reps;
             if (!isNaN(w) && !isNaN(r) && r > 0) {

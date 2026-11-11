@@ -110,9 +110,10 @@ function pinTabbar(){}
 const _tabbarEl = document.querySelector('.tabbar');
 if (_tabbarEl){
   const _setTabbarH = () =>
-    document.documentElement.style.setProperty('--tabbar-h', _tabbarEl.offsetHeight + 'px');
+    document.documentElement.style.setProperty('--tabbar-h', window.innerWidth >= 900 ? '0px' : _tabbarEl.offsetHeight + 'px');
   if (window.ResizeObserver) new ResizeObserver(_setTabbarH).observe(_tabbarEl);
   window.addEventListener('orientationchange', _setTabbarH);
+  window.addEventListener('resize', _setTabbarH);
   _setTabbarH();
 }
 
@@ -121,6 +122,7 @@ if (_tabbarEl){
    Les boutons de sous-nav portent data-tab="<onglet concret>" : les
    selecteurs de tests (button[data-tab=seance]…) restent valides. */
 const TAB_ROOTS = {
+  today: 'today',
   feed: 'feed',
   programme: 'gym', seance: 'gym', library: 'gym', calendrier: 'gym', stats: 'gym',
   profil: 'profil',
@@ -129,42 +131,41 @@ const TAB_ROOTS = {
   'nutri-week': 'nutrition'
 };
 const ROOT_DEFAULT = {
+  today: 'today',
   feed: 'feed',
   gym: 'programme',
   nutrition: 'nutri-today',
   profil: 'profil'
 };
-const ALL_TABS = ['programme','seance','library','calendrier','stats','feed',
+const ALL_TABS = ['today','programme','seance','library','calendrier','stats','feed',
   'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week','profil'];
 const SUBNAV = {
   gym: [['programme','Plan'],['seance','Session'],['library','Library'],['calendrier','Calendar'],['stats','Progression']],
   nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['nutri-foods','Foods'],['nutri-goal','Goal'],['nutri-week','Week']]
 };
-const lastSub = { gym: 'programme', nutrition: 'nutri-today', profil: 'profil' };
+const lastSub = { today: 'today', gym: 'programme', nutrition: 'nutri-today', profil: 'profil' };
 
 function rootOf(tab){ return TAB_ROOTS[tab] || 'gym'; }
 
-/* Feed = 1er bouton, jamais caché. Déconnecté/hors-ligne : on reste sur le
-   bouton mais la racine bascule sur Gym (l'app reste 100 % utilisable). */
+/* Le tableau de bord local est l'accueil fiable; Social reste une racine
+   distincte qui demande une connexion réseau. */
 function feedGateOk(){
   return typeof window.socialAvailable === 'function' ? window.socialAvailable() : true;
 }
 
-/* Premier lancement connecté+en ligne → Feed ; sinon le dernier onglet
-   manuel mémorisé (hors racine Feed) ; sinon Gym. */
+/* Premier lancement → tableau de bord local. On restaure la dernière vue
+   sociale uniquement si le réseau est disponible. */
 function pickInitialTab(){
-  const on = feedGateOk();
   const memo = localStorage.getItem('at_tab');
-  if (on) return 'feed';
-  if (memo && ALL_TABS.includes(memo) && rootOf(memo) !== 'feed') return memo;
-  return 'programme';
+  if (memo && ALL_TABS.includes(memo) && (rootOf(memo) !== 'feed' || feedGateOk())) return memo;
+  return 'today';
 }
 
 function showRoot(root, sub){
   const wantRoot = ROOT_DEFAULT[root] ? root : 'gym';
   if (wantRoot === 'feed' && !feedGateOk()){
     toast('Sign in and go online to use the Feed.');
-    showTab('programme');                    /* hors-ligne / déconnecté → Gym */
+    showTab('today');                        /* les fonctions locales restent accessibles */
     return;
   }
   const tab = sub && ALL_TABS.includes(sub) && rootOf(sub) === wantRoot
@@ -203,7 +204,7 @@ function renderSubnavs(root){
 function showTab(name){
   if (typeof window.stopMusic === 'function') window.stopMusic();
   if (!ALL_TABS.includes(name)) name = 'programme';
-  if (name === 'feed' && !feedGateOk()) name = 'programme';
+  if (name === 'feed' && !feedGateOk()) name = 'today';
   if (currentTab === 'feed' && name !== 'feed' && typeof window.saveFeedScroll === 'function'){
     window.saveFeedScroll();
   }
@@ -221,6 +222,7 @@ function showTab(name){
     b.classList.toggle('active', on);
     b.setAttribute('aria-current', on ? 'true' : 'false');
   });
+  if (name === 'today'){ renderProgramme(); if (typeof window.renderToday === 'function') window.renderToday(); }
   if (name === 'programme'){ renderProgramme(); if (typeof window.renderProgramsList === 'function') window.renderProgramsList(); }
   if (name === 'seance') renderSeance();
   if (name === 'library' && typeof window.renderLibraryScreen === 'function') window.renderLibraryScreen();
@@ -416,9 +418,19 @@ function navPublish(){
   if (typeof window.openPostTypeSheet === 'function') window.openPostTypeSheet();
 }
 
+function openQuickActions(){
+  const actions = [
+    { label: DB && DB.active ? 'Reprendre la séance en cours' : 'Choisir une séance', fn: () => showRoot('gym', 'seance') },
+    { label: 'Ajouter un repas', fn: () => { if (typeof window.addMeal === 'function') window.addMeal(); else showRoot('nutrition', 'nutri-meals'); } },
+    { label: 'Ajouter 250 ml d’eau', fn: () => { showRoot('nutrition', 'nutri-today'); if (typeof window.addWater === 'function') window.addWater(250); } },
+    { label: 'Publier sur le Social', fn: () => navPublish() }
+  ];
+  return openActionSheet('Ajouter rapidement', actions);
+}
+
 Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet,
-  pickInitialTab, navPublish, renderProfilScreen, ALL_TABS
+  pickInitialTab, navPublish, openQuickActions, renderProfilScreen, ALL_TABS
 });

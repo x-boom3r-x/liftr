@@ -6,6 +6,26 @@ import { getCatalogue } from './gym/exercises.js';
 
 
 /* ---------- détail d'une séance passée (Stats / Calendrier) ---------- */
+function historyPlannedGoal(ex){
+  const p = ex && ex.planned;
+  if (!p) return '<div class="history-no-target">No target set</div>';
+  const values = [];
+  if (p.sets != null && p.sets !== '') values.push(esc(p.sets) + ' sets');
+  if (p.mode === 'time'){
+    if (p.sec != null && p.sec !== '') values.push(esc(p.sec) + ' s hold');
+  } else if (Array.isArray(p.pyramid) && p.pyramid.length){
+    values.push(esc(p.pyramid.map(value => value === 'max' ? 'Max' : value).join(' · ')) + ' reps · pyramid');
+  } else if (p.reps != null && p.reps !== '') values.push(esc(p.reps) + ' reps');
+  if (p.mode !== 'time' && p.weight != null && p.weight !== '') values.push(fmtNum(p.weight) + ' kg');
+  if (p.rest != null && p.rest !== '') values.push(esc(p.rest) + ' s rest');
+  const group = p.groupId
+    ? '<span class="planned-group">' + (p.groupType === 'circuit' ? 'Circuit' : 'Superset') +
+      (p.groupIndex && p.groupCount ? ' · ' + p.groupIndex + '/' + p.groupCount : '') + '</span>'
+    : '';
+  return (values.length ? '<div class="planned-goal-values">' + values.join(' · ') + '</div>' : '') +
+    group + (p.notes ? '<div class="planned-goal-notes">' + esc(p.notes) + '</div>' : '');
+}
+
 function openSessionDetail(hid){
   const h = DB.history.find(x => x.id === hid);
   if (!h){ toast('This session no longer exists'); return; }
@@ -17,10 +37,15 @@ function openSessionDetail(hid){
 
   const activeDays = window.getActiveProgrammeDays();
   const day = h.dayId ? activeDays.find(d => d.id === h.dayId) : null;
-  let html = day
-    ? '<button class="btn btn-sm btn-block" style="margin-bottom:14px" onclick="gotoDay(\'' + day.id + '\')">Open "' + esc(day.name) + '" in the Program →</button>'
-    : '<div class="hint" style="margin-bottom:14px">This session no longer exists in the Program. Its history stays in stats.</div>';
+  let html = h.sourceType === 'free'
+    ? '<div class="hint" style="margin-bottom:14px">Free session · no programmed objectives.</div>'
+    : (day
+      ? '<button class="btn btn-sm btn-block" style="margin-bottom:14px" onclick="gotoDay(\'' + day.id + '\')">Open "' + esc(day.name) + '" in the Program →</button>'
+      : (h.sourceType === 'program'
+        ? '<div class="hint" style="margin-bottom:14px">Original session from ' + esc(h.programName || 'the program') + ' · ' + esc(h.dayName) + '. Its saved targets and results stay in stats.</div>'
+        : '<div class="hint" style="margin-bottom:14px">This session no longer exists in the Program. Its history stays in stats.</div>'));
 
+  html += '<div class="history-section-title">Results recorded</div>';
   html += (h.exercises || []).map(e =>
     '<div class="ex-block"><div class="ex-name">' + esc(e.name) +
     '<span class="chip chip-type">' + (e.sets || []).length + '×</span></div>' +
@@ -30,6 +55,14 @@ function openSessionDetail(hid){
       : '<div class="ex-empty">No sets</div>') +
     '</div>'
   ).join('') || '<div class="hint">No exercise logged.</div>';
+
+  const planned = Array.isArray(h.plannedExercises) ? h.plannedExercises : [];
+  if (planned.length){
+    html += '<div class="history-section-title">Programmed objectives</div>' + planned.map(e =>
+      '<div class="history-planned-ex"><div class="history-planned-name">' + esc(e.name) + '</div>' +
+      historyPlannedGoal(e) + '</div>'
+    ).join('');
+  }
 
   const missing = (h.missing || []).filter(Boolean);
   const added = (h.added || []).filter(a => a && a.name);
@@ -125,7 +158,7 @@ function statsExList(){
   const map = new Map();
   (DB.history || []).forEach(h => (h.exercises || []).forEach(ex => {
     if (ex.cardio) return;
-    const sets = (ex.sets || []).filter(s => !s.cardio);
+    const sets = (ex.sets || []).filter(s => !s.cardio && !s.timed && isWorkingSet(s));
     if (!sets.length) return;
     const key = String(ex.name).toLowerCase().trim();
     const cur = map.get(key) || { key: key, name: ex.name, last: '', vol: 0 };
@@ -154,7 +187,7 @@ function exSeriesWin(key, from, to){
     if (ago < from || ago >= to) return;
     const ex = (h.exercises || []).find(e => !e.cardio && String(e.name).toLowerCase().trim() === key);
     if (!ex) return;
-    const sets = (ex.sets || []).filter(s => !s.cardio);
+    const sets = (ex.sets || []).filter(s => !s.cardio && !s.timed && isWorkingSet(s));
     if (!sets.length) return;
     let e1 = 0, w = 0, r = 0, vol = 0, best = sets[0];
     sets.forEach(s => {
@@ -969,10 +1002,10 @@ function renderStats(){
   const byDay = {};
   history.forEach(h => {
     const k = h.dayId || ('~' + h.dayName);
-    if (!byDay[k]) byDay[k] = { name: h.dayName, dayId: h.dayId, n: 0, sets: 0, vol: 0, km: 0,
+    if (!byDay[k]) byDay[k] = { name: h.dayName, dayId: h.dayId, n: 0, sets: 0, vol: 0, km: 0, holdSec: 0,
       live: !!h.dayId && window.getActiveProgrammeDays().some(d => d.id === h.dayId) };
     byDay[k].n++; byDay[k].sets += h.totalSets || 0; byDay[k].vol += h.volume || 0;
-    byDay[k].km += h.cardioKm || 0;
+    byDay[k].km += h.cardioKm || 0; byDay[k].holdSec += h.holdSec || 0;
   });
   const rows = Object.values(byDay).sort((a, b) => b.n - a.n);
   if (rows.length){
@@ -984,7 +1017,7 @@ function renderStats(){
           '<div class="card-sub">' + r.n + ' session' + (r.n !== 1 ? 's' : '') + ' · ' + r.sets + ' line' + (r.sets !== 1 ? 's' : '') + (r.live ? ' · click to open' : '') + '</div>' +
         '</div>' +
         '<div style="text-align:right;font-weight:750;font-size:.9rem;color:var(--blue)">' +
-          (r.vol ? fmtVolume(r.vol) : (r.km ? fmtNum(r.km) + ' km' : '0')) +
+          (r.vol ? fmtVolume(r.vol) : (r.km ? fmtNum(r.km) + ' km' : r.holdSec ? fmtNum(r.holdSec) + ' s' : '0')) +
           (r.vol && r.km ? '<div class="card-sub">' + fmtNum(r.km) + ' km</div>' : '') + '</div>' +
       '</div></div>'
     ).join('');
@@ -997,7 +1030,7 @@ function renderStats(){
         '<div class="hist-top"><div><div class="card-title">' + esc(h.dayName) + '</div>' +
         '<div class="card-sub">' + fmtShort(h.date) + ' · view details →</div></div>' +
         '<div class="hist-right"><div style="text-align:right"><div style="font-weight:750;font-size:.9rem">' + (h.totalSets || 0) + ' line' + ((h.totalSets || 0) !== 1 ? 's' : '') + '</div>' +
-        '<div class="card-sub">' + (h.volume ? fmtVolume(h.volume) : (h.cardioKm ? fmtNum(h.cardioKm) + ' km' : '—')) + '</div></div>' + histDelBtn(h) + '</div></div>' +
+        '<div class="card-sub">' + (h.volume ? fmtVolume(h.volume) : (h.cardioKm ? fmtNum(h.cardioKm) + ' km' : (h.holdSec ? fmtNum(h.holdSec) + ' s hold' : '—'))) + '</div></div>' + histDelBtn(h) + '</div></div>' +
         (h.exercises || []).map(e =>
           '<div class="hist-ex"><b>' + esc(e.name) + '</b> — ' +
           e.sets.map(setShort).join(', ') +

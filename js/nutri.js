@@ -106,6 +106,7 @@ function addWater(delta){
   n.water[date] = next;
   save();
   renderNutrition(currentTab);
+  if (typeof window.renderToday === 'function') window.renderToday();
 }
 function logWater(ml){ addWater(+ml || 0); }
 

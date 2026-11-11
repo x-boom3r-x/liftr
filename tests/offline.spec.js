@@ -18,6 +18,7 @@ test.describe('Hors-ligne (service worker)', () => {
       return (await cache.keys()).map(r => r.url);
     });
     expect(cached.some(u => u.includes('index.html'))).toBeTruthy();
+    expect(cached.some(u => u.includes('/js/today.js'))).toBeTruthy();
 
     await context.setOffline(true);
     await page.reload();

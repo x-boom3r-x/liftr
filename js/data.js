@@ -123,18 +123,56 @@ function weekStartOf(d){
 const fmtVolume = v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1000 ? (v/1000).toFixed(1)+'k' : String(v);
 
 function setLine(s){
-  if (s.cardio) return cardioLine(s);
-  const base = s.weight + ' kg × ' + s.reps;
-  return s.assisted > 0 ? base + '<span class="ass">+' + s.assisted + 'A</span>' : base;
+  let base;
+  if (s.cardio) base = cardioLine(s);
+  else if (s.timed) base = esc(fmtNum(s.sec)) + ' s hold';
+  else {
+    base = s.weight + ' kg × ' + s.reps;
+    if (s.assisted > 0) base += '<span class="ass">+' + s.assisted + 'A</span>';
+  }
+  const meta = [];
+  if (isWarmupSet(s)) meta.push('<span class="set-meta set-warmup">WARM-UP</span>');
+  if (s.failure && !isWarmupSet(s)) meta.push('<span class="set-meta set-failure">FAILURE</span>');
+  if (s.max && !isWarmupSet(s)) meta.push('<span class="set-meta set-max">MAX</span>');
+  if (s.rir != null) meta.push('<span class="set-meta">RIR ' + esc(fmtNum(s.rir)) + '</span>');
+  else if (s.rpe != null) meta.push('<span class="set-meta">RPE ' + esc(fmtNum(s.rpe)) + '</span>');
+  (Array.isArray(s.drops) ? s.drops : []).forEach((drop, i) => {
+    meta.push('<span class="set-meta set-drop">DROP ' + (i + 1) + ' · ' + esc(fmtNum(drop.weight)) + ' kg × ' + esc(fmtNum(drop.reps)) + '</span>');
+  });
+  (s.restPause && Array.isArray(s.restPause.clusters) ? s.restPause.clusters : []).forEach((cluster, i) => {
+    meta.push('<span class="set-meta set-burst">RP ' + (i + 1) + ' · +' + esc(fmtNum(cluster.reps)) + ' reps · ' + esc(fmtNum(cluster.restSec)) + ' s</span>');
+  });
+  return base + meta.join('');
 }
 /* variante texte simple (listes, exports) */
 function setShort(s){
-  if (s.cardio) return fmtNum(s.min) + ' min' + (s.km ? ' · ' + fmtNum(s.km) + ' km' : '');
-  return s.weight + 'kg×' + s.reps + (s.assisted ? '+' + s.assisted + 'A' : '');
+  let base = s.cardio
+    ? fmtNum(s.min) + ' min' + (s.km ? ' · ' + fmtNum(s.km) + ' km' : '')
+    : s.timed ? fmtNum(s.sec) + ' s hold'
+    : s.weight + 'kg×' + s.reps + (s.assisted ? '+' + s.assisted + 'A' : '');
+  if (isWarmupSet(s)) base += ' [warm-up]';
+  else if (s.failure) base += ' [failure]';
+  if (s.max && !isWarmupSet(s)) base += ' [max reps]';
+  if (s.rir != null) base += ' [RIR ' + fmtNum(s.rir) + ']';
+  else if (s.rpe != null) base += ' [RPE ' + fmtNum(s.rpe) + ']';
+  (Array.isArray(s.drops) ? s.drops : []).forEach((drop, i) => {
+    base += ' [drop ' + (i + 1) + ': ' + fmtNum(drop.weight) + 'kg×' + fmtNum(drop.reps) + ']';
+  });
+  (s.restPause && Array.isArray(s.restPause.clusters) ? s.restPause.clusters : []).forEach((cluster, i) => {
+    base += ' [rest-pause ' + (i + 1) + ': +' + fmtNum(cluster.reps) + ' reps / ' + fmtNum(cluster.restSec) + 's]';
+  });
+  return base;
 }
+function isWarmupSet(s){ return !!(s && (s.warmup === true || s.phase === 'warmup')); }
+function isWorkingSet(s){ return !isWarmupSet(s); }
 function volumeOf(s){
-  if (s.cardio) return 0;
-  return s.weight * (s.reps + s.assisted);
+  if (s.cardio || s.timed || isWarmupSet(s)) return 0;
+  const base = s.weight * (s.reps + s.assisted);
+  const drops = (Array.isArray(s.drops) ? s.drops : []).reduce((n, drop) =>
+    n + (Number(drop.weight) || 0) * (Number(drop.reps) || 0), 0);
+  const bursts = (s.restPause && Array.isArray(s.restPause.clusters) ? s.restPause.clusters : []).reduce((n, cluster) =>
+    n + (Number(s.weight) || 0) * (Number(cluster.reps) || 0), 0);
+  return base + drops + bursts;
 }
 
 /* --- cardio : durée (min) + distance (km) --- */
@@ -171,6 +209,6 @@ function cardioTotals(exercises){
 
 Object.assign(window, {
   TYPES, LIB, EXO_ALIASES, exoKey, uid, $, esc, pad, isoOf, todayISO, parseISO, fmtLong, fmtShort,
-  weekKeyOf, weekStartOf, fmtVolume, setLine, setShort, volumeOf,
+  weekKeyOf, weekStartOf, fmtVolume, setLine, setShort, isWarmupSet, isWorkingSet, volumeOf,
   isCardioName, cardioLine, fmtNum, cardioTotals
 });
