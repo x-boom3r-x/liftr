@@ -5,26 +5,14 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0B0F0D",
-  "theme_color": "#0B0F0D",
+  "background_color": "#080D18",
+  "theme_color": "#080D18",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "logo.png",
+      "src": "nouveau%20logo.jpeg",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any"
     }
   ],
@@ -32,22 +20,22 @@
     {
       "name": "Program",
       "url": "./index.html?tab=programme",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "nouveau%20logo.jpeg", "sizes": "any", "type": "image/jpeg" }]
     },
     {
       "name": "New session",
       "url": "./index.html?tab=seance",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "nouveau%20logo.jpeg", "sizes": "any", "type": "image/jpeg" }]
     },
     {
       "name": "Calendar",
       "url": "./index.html?tab=calendrier",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "nouveau%20logo.jpeg", "sizes": "any", "type": "image/jpeg" }]
     },
     {
       "name": "Progress",
       "url": "./index.html?tab=stats",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "nouveau%20logo.jpeg", "sizes": "any", "type": "image/jpeg" }]
     }
   ]
 }

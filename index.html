@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" data-build="88">
+<html lang="en" data-build="91">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0B0F0D">
+<meta name="theme-color" content="#080D18">
 <title>Liftr</title>
 <meta name="description" content="LIFTR — offline-first training and nutrition tracking, with an optional connected social feed.">
-<link rel="icon" href="logo.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="nouveau%20logo.jpeg" type="image/jpeg">
+<link rel="apple-touch-icon" href="nouveau%20logo.jpeg">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
 <script>
@@ -63,7 +63,7 @@
 
 <!-- ================= WELCOME ================= -->
 <div id="welcomeScreen" class="welcome">
-  <div class="welcome-logo"><img src="logo.png" alt="Liftr"></div>
+  <div class="welcome-logo"><img src="nouveau%20logo.jpeg" alt="Liftr"></div>
   <h1>Liftr</h1>
   <div class="tag">Two-person lifting tracker, 100% offline.</div>
   <p>Program, sessions, weekly progress and personal records. Everything stays on your device.</p>
@@ -85,7 +85,7 @@
 <div id="mainApp" class="hidden">
   <header class="header">
     <div class="header-brand">
-      <div class="logo"><img src="logo.png" alt=""></div>
+      <div class="logo"><img src="nouveau%20logo.jpeg" alt=""></div>
       <div>
         <div class="header-title">Liftr</div>
         <div class="header-sub" id="headerUser">—</div>
@@ -421,10 +421,10 @@
           onclick="feedBack()" aria-label="Back">
           <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
         </button>
-        <div class="feed-top-title" onclick="setSView('home')" role="button" tabindex="0" aria-label="Home">
-          <div class="section-title" id="socialTitle">Home</div>
-          <div class="section-hint" id="socialHint">What your crew lifted today.</div>
-        </div>
+        <button type="button" class="feed-top-title" onclick="openSocialNavigation()" aria-haspopup="dialog" aria-label="Choose a Social section">
+          <span class="section-title" id="socialTitle">Home</span>
+          <span class="section-hint" id="socialHint">What your crew lifted today.</span>
+        </button>
         <button type="button" class="icon-btn feed-explore" id="exploreBtn" onclick="setSView('timeline')"
           aria-label="Explore timeline">
           <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>

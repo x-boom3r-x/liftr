@@ -53,7 +53,7 @@ function _bmShape(s, cls, fill){
 function _bmFill(score){
   if (!(score > 0)) return 'var(--surface3)';
   const a = (0.16 + 0.7 * Math.min(1, score)).toFixed(3);
-  return 'rgba(255,107,53,' + a + ')';
+  return 'rgba(105,177,255,' + a + ')';
 }
 
 /* Volume (kg × reps) par groupe LIB sur N jours, normalisé 0..1.
@@ -120,7 +120,7 @@ function bodyMapHtml(opts){
     '</div>' +
     (hasData
       ? '<div class="bm-legend"><span>Less</span>' +
-          '<i style="background:linear-gradient(90deg,var(--surface3),rgba(255,107,53,.86))"></i>' +
+          '<i style="background:linear-gradient(90deg,var(--surface3),rgba(105,177,255,.86))"></i>' +
           '<span>More volume · last ' + (o.days || 30) + ' days</span></div>'
       : '<div class="bm-empty">No sessions logged in the last ' + (o.days || 30) +
         ' days yet — finish a session and the map lights up.</div>');

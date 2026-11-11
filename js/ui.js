@@ -85,23 +85,8 @@ window.addEventListener('offline', checkNet);
    tabbar (position:fixed;bottom:0) remonte. Chaque onglet garde la position du
    navigateur (le Feed continue de gérer/restaurer son propre scroll). */
 
-/* Colle la tabbar sur le bas RÉEL de l'écran. Quand iOS réduit la HAUTEUR du
-   viewport (barre du navigateur qui réapparaît, clavier), `bottom:0` fixe ne
-   suffit plus : la barre remonte et laisse un trou en dessous. On la recale sur
-   le bas du visualViewport.
-
-   On utilise UNIQUEMENT `vv.height - innerHeight` et JAMAIS `vv.offsetTop` :
-   pendant un rebond de scroll iOS (ou un zoom), offsetTop devient temporairement
-   négatif alors que la hauteur visible est inchangée → l'ancienne formule
-   appliquait un translateY parasite et la barre restait bloquée trop haut
-   ("la barre remonte un peu"). Un viewport réduit = hauteur plus petite. */
-/* pinTabbar : OBSOLÈTE (build 72). La tabbar est un enfant flex RELATIF de
-   #mainApp, lequel est ancré top:0;bottom:0 sur toute la hauteur écran
-   (viewport-fit=cover) : la barre est donc toujours collée au bas
-   physique, sans JavaScript. Les anciens correctifs — translateY puis
-   hauteur = visualViewport.height — étaient des hacks qui laissaient un
-   espace noir sur Safari iOS (dvh ≠ bas écran). On garde la fonction
-   (exportée) comme no-op pour compatibilité. */
+/* The fixed shell is anchored with CSS top:0/bottom:0. Avoid a second JS height
+   measurement: visualViewport includes Safari chrome and keyboard offsets differently. */
 function pinTabbar(){}
 
 /* --tabbar-h : hauteur RÉELLE de la barre, mesurée (fab / toast s'y calent,
@@ -140,8 +125,8 @@ const ROOT_DEFAULT = {
 const ALL_TABS = ['today','programme','seance','library','calendrier','stats','feed',
   'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week','profil'];
 const SUBNAV = {
-  gym: [['programme','Plan'],['seance','Session'],['more','More']],
-  nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['more','More']]
+  gym: [['programme','Plan'],['seance','Train'],['library','Exercises'],['calendrier','Calendar'],['stats','Progress']],
+  nutrition: [['nutri-today','Today'],['nutri-meals','Diary'],['nutri-foods','Foods'],['nutri-goal','Goals'],['nutri-week','Trends']]
 };
 const MORE_TABS = {
   gym: [['library','Exercise library'],['calendrier','Training calendar'],['stats','Progress']],
@@ -436,6 +421,16 @@ function navPublish(){
   if (typeof window.openPostTypeSheet === 'function') window.openPostTypeSheet();
 }
 
+function openSocialNavigation(){
+  return openActionSheet('Social sections', [
+    { label: 'Home feed', fn: () => window.setSView && window.setSView('home') },
+    { label: 'Search people', fn: () => window.setSView && window.setSView('search') },
+    { label: 'Reels', fn: () => window.setSView && window.setSView('reels') },
+    { label: 'Messages', fn: () => window.setSView && window.setSView('inbox') },
+    { label: 'My profile', fn: () => window.showMyProfile && window.showMyProfile() }
+  ]);
+}
+
 function openQuickActions(){
   if (currentRoot === 'feed'){
     if (typeof window.openPostTypeSheet === 'function') return window.openPostTypeSheet();
@@ -452,5 +447,5 @@ Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet,
-  pickInitialTab, navPublish, openQuickActions, openSectionMore, renderProfilScreen, ALL_TABS
+  pickInitialTab, navPublish, openQuickActions, openSocialNavigation, openSectionMore, renderProfilScreen, ALL_TABS
 });

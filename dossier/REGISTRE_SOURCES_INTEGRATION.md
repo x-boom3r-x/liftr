@@ -100,3 +100,22 @@ Les premières consultations des références et le diagnostic local sont consig
 - [Capacitor Transitions](https://github.com/Cap-go/capacitor-transitions), [LICENSE](https://github.com/Cap-go/capacitor-transitions/blob/main/LICENSE) et [documentation](https://capgo.app/docs/plugins/transitions/) — licence MIT vérifiée; code natif, démo et tests non audités, plugin non ajouté à l'application web actuelle.
 
 Toute future reprise de ces références doit examiner les fichiers précis, leurs tests, leurs licences, leurs dépendances et leurs notices. La consultation d'un README ou d'une fiche projet ne suffit pas à autoriser une copie de code.
+
+## Mise à jour interface mobile — 11 novembre 2026
+
+Cette tranche corrige l’interface existante sans remplacer ses données ni migrer le socle :
+
+- [css/app.css](../css/app.css) : palette bleu cobalt sur fond nuit, centrage du bouton d’action global, shell mobile borné au viewport, racine sans défilement parasite et remplissage de la safe-area basse.
+- [nouveau logo.jpeg](../nouveau%20logo.jpeg) : nouveau logo fourni dans le dossier LIFTR, utilisé dans l’interface, le manifeste et le cache hors ligne; aucun média Gym visual n’est repris.
+- [js/ui.js](../js/ui.js) et [index.html](../index.html) : Social garde la navigation globale unique; ses destinations s’ouvrent depuis le titre de la section.
+- [js/nutri.js](../js/nutri.js) : formulaires aliment/repas présentés dans une feuille modale défilante, focus restauré à la fermeture, saisies préservées lors des rendus et recherche d’ingrédients qui ne remplace plus le champ à chaque frappe.
+- La vérification manuelle en émulation mobile Chrome à 390 × 844 px donne un shell, une tabbar et un document de même hauteur, sans scroll de page. L’écran Safari/iOS réel n’était pas disponible pour cette vérification.
+
+### Compatibilité des références et décision d’architecture
+
+- [Astryx — dépôt et README](https://github.com/meta/astryx) est sous MIT et construit sur React 19+ avec StyleX. Cette tranche reprend des principes de tokens de thème, de hiérarchie et de composants accessibles; aucun paquet Astryx ni extrait de son code n’est ajouté. Le projet LIFTR actuel est en JavaScript/HTML/CSS natif; une migration React n’est pas nécessaire pour les corrections d’interface livrées ici.
+- [openGym — documentation](https://github.com/DuarteSantos8/openGym/tree/main/docs) et [code source](https://github.com/DuarteSantos8/openGym/tree/main/frontend) décrivent une application web React. Son code est [AGPL-3.0](https://github.com/DuarteSantos8/openGym/blob/main/LICENSE). Les médias Gym visual sont exclus de cette licence et ne sont pas repris sans autorisation distincte ([NOTICE](https://github.com/DuarteSantos8/openGym/blob/main/NOTICE.md)). Cette tranche ne copie aucun composant openGym.
+- [OpenNutriTracker — README](https://github.com/simonoppowa/OpenNutriTracker/blob/main/README.md) décrit une application Flutter/Dart, avec des données locales chiffrées et des consultations alimentaires distantes facultatives. Sa [FAQ](https://github.com/simonoppowa/OpenNutriTracker/wiki/FAQ) précise qu’il n’existe pas de version web/desktop. Il ne peut donc pas être embarqué tel quel dans la PWA; ses fonctions web doivent être portées et reliées au stockage local LIFTR. Son code est [GPL-3.0](https://github.com/simonoppowa/OpenNutriTracker/blob/main/LICENSE).
+- Les limites de viewport et safe-area côté WebKit sont documentées dans les tickets [301108](https://bugs.webkit.org/show_bug.cgi?id=301108) et [292603](https://bugs.webkit.org/show_bug.cgi?id=292603). Les règles CSS réduisent le scroll racine et peignent la zone sûre; elles ne constituent pas une validation sur un appareil Apple.
+
+La parité fonctionnelle complète avec openGym et OpenNutriTracker reste à faire : ce correctif règle les problèmes de navigation et d’éditeur nutrition et ne déclare pas les deux intégrations terminées. Le tableau d’état plus haut reste la référence des fonctions présentes, partielles et manquantes. Le catalogue openGym déjà importé et les médias locaux non documentés gardent leurs points de provenance/licence à résoudre avant une republication de données ou d’images.
