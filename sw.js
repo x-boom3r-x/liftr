@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v92';
+const CACHE_NAME = 'liftr-v93';
 
 const ASSETS = [
   './',
@@ -79,6 +79,9 @@ const ASSETS = [
   './js/social/account.js',
   './js/social/index.js',
   './manifest.json',
+  './gym/',
+  './gym/index.html',
+  './gym/precache.json',
   './logo.png',
   './nouveau%20logo.jpeg',
   './icon-192.png',
@@ -86,9 +89,24 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(ASSETS);
+    try {
+      const response = await fetch('./gym/precache.json', { cache: 'reload' });
+      if (response.ok) {
+        const files = await response.json();
+        const gymPath = new URL('./gym/', self.registration.scope).pathname;
+        const urls = Array.isArray(files) ? files.filter(path => {
+          try {
+            const url = new URL(path, self.registration.scope);
+            return url.origin === self.location.origin && url.pathname.startsWith(gymPath);
+          } catch(e) { return false; }
+        }) : [];
+        if (urls.length) await cache.addAll(urls);
+      }
+    } catch(e){}
+  })());
   self.skipWaiting();
 });
 

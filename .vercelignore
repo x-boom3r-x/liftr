@@ -5,3 +5,6 @@ tests
 playwright.config.js
 .gitignore
 *.log
+vendor/openGym
+vendor/openGym-source
+third_party

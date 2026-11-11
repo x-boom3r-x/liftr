@@ -9,7 +9,9 @@
     "test:desktop": "playwright test --project=desktop",
     "test:mobile": "playwright test --project=mobile",
     "vendor": "node scripts/vendor.js",
-    "foods": "node scripts/build-foods.mjs"
+    "foods": "node scripts/build-foods.mjs",
+    "gym:install": "npm ci --prefix vendor/openGym/frontend",
+    "gym:build": "node scripts/build-opengym.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

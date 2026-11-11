@@ -1,4 +1,6 @@
 .opengym-ref-v2/
+/third_party/
+/vendor/openGym-source/
 node_modules/
 test-results/
 playwright-report/

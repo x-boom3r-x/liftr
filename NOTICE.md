@@ -15,7 +15,11 @@ The upstream textSource tag has these meanings:
 - opengym (4,308 records): community catalogue material covered by openGym's AGPL-3.0.
 - exercisedb (1,324 records): the exercise names, muscle groups and instructions retain MIT-licensed provenance from ExerciseDB v1 by AscendAPI, received through hasaneyldrm/exercises-dataset (https://github.com/hasaneyldrm/exercises-dataset). The descriptions in those records were written for openGym and are covered by AGPL-3.0. The MIT license below applies to the ExerciseDB-derived portions only; it does not relicense the descriptions or the combined catalogue.
 
-The openGym NOTICE (https://github.com/DuarteSantos8/openGym/blob/8fb98b16861a2728652302a7e6e30c50548493a0/NOTICE.md) identifies exercise stills and animations licensed from Gym visual as outside the openGym AGPL. LIFTR does not copy or distribute those assets. No openGym frontend component or body-map artwork has been copied in this tranche.
+The openGym NOTICE (https://github.com/DuarteSantos8/openGym/blob/8fb98b16861a2728652302a7e6e30c50548493a0/NOTICE.md) identifies exercise stills and animations licensed from Gym visual as outside the openGym AGPL. LIFTR does not copy or distribute those assets or openGym's body-map artwork.
+
+## openGym React frontend
+
+LIFTR includes the openGym frontend from the official repository at commit [8fb98b16861a2728652302a7e6e30c50548493a0](https://github.com/DuarteSantos8/openGym/tree/8fb98b16861a2728652302a7e6e30c50548493a0), kept as the `vendor/openGym` Git submodule. Its source and upstream notices are available there. The `/gym/` bundle is generated with `scripts/opengym.vite.config.mjs`; that build-time adapter adds LIFTR branding and blue accent, disables demo sample records, and builds the upstream app in local guest mode. The openGym source files are not edited. Exercise images and animations are not included in the bundle.
 
 ### ExerciseDB MIT notice
 

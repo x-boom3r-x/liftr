@@ -150,8 +150,20 @@ function pickInitialTab(){
   return 'today';
 }
 
+function openGymSection(sub){
+  let route = ({ programme:'/plan', seance:'/home', library:'/library', calendrier:'/stats', stats:'/stats' })[sub] || '/home';
+  try {
+    const gym = JSON.parse(localStorage.getItem('gym_state_v1') || 'null');
+    if (gym && gym.active) route = '/workout';
+  } catch(e){}
+  location.assign('/gym/#' + route);
+}
+
+function showLegacyGym(){ showTab('programme'); }
+
 function showRoot(root, sub){
   const wantRoot = ROOT_DEFAULT[root] ? root : 'gym';
+  if (wantRoot === 'gym') { openGymSection(sub); return; }
   if (wantRoot === 'feed' && !feedGateOk()){
     toast('Sign in and go online to use the Feed.');
     showTab('today');                        /* les fonctions locales restent accessibles */
@@ -368,9 +380,15 @@ function renderProfilScreen(){
          '<button class="btn btn-sm" style="margin-left:6px" onclick="openImport()">Import</button>'
   });
   rows.push({
+    t: 'Previous LIFTR training',
+    s: 'Your earlier program, sessions and records remain on this device.',
+    btn: '<button class="btn btn-sm" onclick="showLegacyGym()">Open archive</button>'
+  });
+  rows.push({
     t: 'Source code & licences',
-    s: 'LIFTR and the exercise catalogue · AGPL-3.0',
-    btn: '<a class="btn btn-sm" href="https://github.com/x-boom3r-x/liftr/tree/phase1-openGym-integration" target="_blank" rel="noopener noreferrer">View source & licences</a>'
+    s: 'LIFTR and openGym · AGPL-3.0',
+    btn: '<a class="btn btn-sm" href="https://github.com/x-boom3r-x/liftr/tree/phase1-openGym-integration" target="_blank" rel="noopener noreferrer">LIFTR source</a>' +
+         '<a class="btn btn-sm" style="margin-left:6px" href="https://github.com/DuarteSantos8/openGym/tree/8fb98b16861a2728652302a7e6e30c50548493a0" target="_blank" rel="noopener noreferrer">openGym source</a>'
   });
   if (typeof window.socialAvailable === 'function' && socialAvailable()){
     rows.push({
@@ -440,8 +458,10 @@ function openQuickActions(){
   if (currentRoot === 'feed'){
     if (typeof window.openPostTypeSheet === 'function') return window.openPostTypeSheet();
   }
+  let gymActive = false;
+  try { const gym = JSON.parse(localStorage.getItem('gym_state_v1') || 'null'); gymActive = !!(gym && gym.active); } catch(e){}
   const actions = [
-    { label: DB && DB.active ? 'Reprendre la séance en cours' : 'Choisir une séance', fn: () => showRoot('gym', 'seance') },
+    { label: gymActive ? 'Resume workout' : 'Start workout', fn: () => openGymSection('seance') },
     { label: 'Ajouter un repas', fn: () => { if (typeof window.addMeal === 'function') window.addMeal(); else showRoot('nutrition', 'nutri-meals'); } },
     { label: 'Ajouter 250 ml d’eau', fn: () => { showRoot('nutrition', 'nutri-today'); if (typeof window.addWater === 'function') window.addWater(250); } }
   ];
@@ -452,5 +472,5 @@ Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet,
-  pickInitialTab, navPublish, openQuickActions, openSocialNavigation, openSectionMore, renderProfilScreen, ALL_TABS
+  pickInitialTab, navPublish, openQuickActions, openSocialNavigation, openSectionMore, renderProfilScreen, showLegacyGym, ALL_TABS
 });

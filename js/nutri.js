@@ -456,7 +456,7 @@ function nutriRingCard(date, g, t, plan){
     '</div>' +
     '<div class="ring-wrap"><svg viewBox="0 0 120 120" class="ring-svg" aria-hidden="true">' +
     '<defs><linearGradient id="calRingGrad" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0" stop-color="#A0BBFF"/><stop offset="1" stop-color="#4C83F7"/></linearGradient></defs>' +
+    '<stop offset="0" stop-color="#A0BBFF"/><stop offset="1" stop-color="#61A3FF"/></linearGradient></defs>' +
     '<circle class="ring-bg" cx="60" cy="60" r="52"/>' +
     '<circle class="ring-fg' + (over ? ' over' : '') + '" cx="60" cy="60" r="52"' +
     ' style="stroke-dasharray:' + C.toFixed(1) + ';stroke-dashoffset:' + off.toFixed(1) + '"/></svg>' +
@@ -509,7 +509,7 @@ function nutriChartHtml(days, goalK){
   return '<div class="card"><div class="section-hint">Calories vs goal</div><div class="chart">' +
     '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Calories over time">' +
     '<defs><linearGradient id="calAreaGrad" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0" stop-color="rgba(76,131,247,.35)"/><stop offset="1" stop-color="rgba(76,131,247,0)"/></linearGradient></defs>' +
+    '<stop offset="0" stop-color="rgba(19,116,252,.35)"/><stop offset="1" stop-color="rgba(19,116,252,0)"/></linearGradient></defs>' +
     goalLine + '<path class="chart-area" d="' + area + '"/>' +
     '<polyline class="chart-line" points="' + line + '" vector-effect="non-scaling-stroke"/>' + dots +
     '</svg>' + (goalK ? '<div class="section-hint" style="margin-top:2px">Dashed line = goal ' + Math.round(goalK) + ' kcal</div>' : '') + '</div></div>';
@@ -517,9 +517,9 @@ function nutriChartHtml(days, goalK){
 function foodThumbHtml(f){
   const name = f.name || '?';
   const ch = name.trim().charAt(0).toUpperCase() || '?';
-  const grads = ['linear-gradient(135deg,#A0BBFF,#4C83F7)', 'linear-gradient(135deg,#4DA3FF,#0A84FF)',
+  const grads = ['linear-gradient(135deg,#A0BBFF,#61A3FF)', 'linear-gradient(135deg,#4DA3FF,#0A84FF)',
     'linear-gradient(135deg,#30D158,#0F9D4E)', 'linear-gradient(135deg,#BF5AF2,#8A5CFF)',
-    'linear-gradient(135deg,#FFD60A,#A0BBFF)', 'linear-gradient(135deg,#FF453A,#4C83F7)'];
+    'linear-gradient(135deg,#FFD60A,#A0BBFF)', 'linear-gradient(135deg,#FF453A,#61A3FF)'];
   let h = 0; for (let i = 0; i < name.length; i++) h = (h + name.charCodeAt(i)) % grads.length;
   return '<span class="fthumb" style="background:' + grads[h] + '" aria-hidden="true">' + esc(ch) + '</span>';
 }
