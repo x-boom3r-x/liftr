@@ -367,6 +367,11 @@ function renderProfilScreen(){
     btn: '<button class="btn btn-sm" onclick="exportBackup()">Export</button>' +
          '<button class="btn btn-sm" style="margin-left:6px" onclick="openImport()">Import</button>'
   });
+  rows.push({
+    t: 'Source code & licences',
+    s: 'LIFTR and the exercise catalogue · AGPL-3.0',
+    btn: '<a class="btn btn-sm" href="https://github.com/x-boom3r-x/liftr/tree/phase1-openGym-integration" target="_blank" rel="noopener noreferrer">View source & licences</a>'
+  });
   if (typeof window.socialAvailable === 'function' && socialAvailable()){
     rows.push({
       t: 'The Feed',

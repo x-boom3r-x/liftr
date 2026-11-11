@@ -2,14 +2,14 @@
 """
 Build LIFTR's data/exercises-catalogue.json from openGym's catalogue/exercises/.
 
-Usage:
-    python3 tools/build-catalogue.py            (writes data/exercises-catalogue.json)
-    python3 tools/build-catalogue.py --check    (reads existing data/exercises-catalogue.json and
-                                                  verifies count/integrity, prints a report)
+Usage from the repository root:
+    python3 liftr-patch/tools/build-catalogue.py         (writes catalogue and provenance sidecar)
+    python3 liftr-patch/tools/build-catalogue.py --check (verifies catalogue and provenance)
 """
 import argparse
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 # Where openGym's real exercise records live (reachable checkout of
@@ -20,6 +20,8 @@ OPENGYM = Path(".opengym-ref-v2") / "catalogue/exercises"
 # the translation/variant entries (no name / variantOf / femaleVariant) are
 # deliberately not added as catalogue rows so nothing is duplicated or lost.
 CATALOGUE_URL = "https://github.com/DuarteSantos8/openGym/tree/8fb98b16861a2728652302a7e6e30c50548493a0/catalogue/exercises"
+PROVENANCE_PATH = Path("data/exercises-catalogue-provenance.json")
+SOURCE_TAGS = {"exercisedb", "opengym"}
 
 FIELDS = [
     "id",
@@ -89,9 +91,15 @@ def main():
         # 1. Read every main record (files with a `name` field) in id order.
         ids = sorted(p.stem for p in OPENGYM.glob("*.json") if (read_json(p).get("name")))
         records = []
+        provenance_records = {}
         seen = set()
         for ex_id in ids:
             rec = read_json(OPENGYM / f"{ex_id}.json")
+            source_tag = rec.get("textSource")
+            if source_tag not in SOURCE_TAGS:
+                sys.stderr.write(f"Unknown or missing textSource for exercise {ex_id}: {source_tag!r}\n")
+                sys.exit(1)
+            provenance_records[ex_id] = source_tag
             # Unique ids only; a duplicate id means the file is a variant
             # record already carried by another main record.
             if ex_id in seen:
@@ -118,16 +126,53 @@ def main():
             json.dumps(catalogue, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
         )
         print(f"Wrote {catalogue_path} with {len(records)} records.")
+
+        # Keep openGym's per-record source tags in a sidecar so the shipped
+        # catalogue payload and its existing consumers remain unchanged.
+        # NOTICE.md explains the field-level licence boundaries.
+        provenance = {
+            "source": "openGym",
+            "sourceCommit": "8fb98b16861a2728652302a7e6e30c50548493a0",
+            "sourceUrl": CATALOGUE_URL,
+            "tagField": "textSource",
+            "records": {rec["id"]: provenance_records[rec["id"]] for rec in records},
+            "counts": dict(Counter(provenance_records.values())),
+        }
+        PROVENANCE_PATH.write_text(
+            json.dumps(provenance, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+        )
+        print(f"Wrote {PROVENANCE_PATH} with {len(provenance_records)} source tags.")
     else:
         # --- integrity check against the same expected shape -----------
         if not catalogue_path.exists():
             sys.stderr.write("data/exercises-catalogue.json does not exist yet.\n")
             sys.exit(1)
         data = json.loads(catalogue_path.read_text(encoding="utf-8"))
+        if not PROVENANCE_PATH.exists():
+            sys.stderr.write(f"{PROVENANCE_PATH} does not exist yet.\n")
+            sys.exit(1)
+        provenance = json.loads(PROVENANCE_PATH.read_text(encoding="utf-8"))
         n = data.get("count")
         records = data.get("records", [])
         ids = [r.get("id") for r in records]
         dup = len(ids) - len(set(ids))
+
+        source_tags = provenance.get("records", {})
+        source_counts = dict(Counter(source_tags.values()))
+        unknown_tags = sorted(set(source_tags.values()) - SOURCE_TAGS)
+        missing_provenance_ids = sorted(set(ids) - set(source_tags))
+        extra_provenance_ids = sorted(set(source_tags) - set(ids))
+        provenance_ok = (
+            provenance.get("source") == "openGym"
+            and provenance.get("sourceCommit") == "8fb98b16861a2728652302a7e6e30c50548493a0"
+            and provenance.get("sourceUrl") == CATALOGUE_URL
+            and provenance.get("tagField") == "textSource"
+            and not missing_provenance_ids
+            and not extra_provenance_ids
+            and not unknown_tags
+            and source_counts == {"exercisedb": 1324, "opengym": 4308}
+            and provenance.get("counts") == source_counts
+        )
 
         missing_fields = []
         for i, r in enumerate(records):
@@ -142,6 +187,7 @@ def main():
             and not missing_fields
             and data.get("source")
             and data.get("size") == "openGym"
+            and provenance_ok
         )
         print(f"catalogue.count          = {n}")
         print(f"records array len        = {len(records)}")
@@ -150,6 +196,10 @@ def main():
         print(f"records missing fields   = {len(missing_fields)} {missing_fields[:5]}")
         print(f"source field present     = {bool(data.get('source'))}")
         print(f"size field == 'openGym'  = {data.get('size') == 'openGym'}")
+        print(f"source tags              = {source_counts}")
+        print(f"missing provenance ids   = {len(missing_provenance_ids)}")
+        print(f"extra provenance ids     = {len(extra_provenance_ids)}")
+        print(f"provenance sidecar valid = {provenance_ok}")
         print("INTEGRITY CHECK: " + ("PASS" if ok else "FAIL"))
         sys.exit(0 if ok else 1)
 
