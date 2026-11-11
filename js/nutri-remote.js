@@ -6,7 +6,8 @@
    donnée personnelle envoyée — seule la requête de recherche ou le
    code-barres quitte l'appareil.
    - Normalisation vers le modèle LIFTR per-100 g.
-   - Fibres / sucres / sodium : null quand inconnu (jamais 0 trompeur).
+   - Les 24 nutriments canoniques sont normalisés en unités par 100 g ;
+     une valeur absente reste null (jamais 0 trompeur).
    - Cache local 90 j (DB.nutri.remoteCache) pour les recherches
      répétées et le mode hors ligne.
    Aucun code GPL n'est copié : les API et le modèle per-100 g sont
@@ -74,13 +75,33 @@ function num(v){
 }
 function r1(v){ return v === null ? null : Math.round(v * 10) / 10; }
 
+function unitKey(unit){
+  const value = String(unit || '').trim().toLowerCase().replace(/[μµ]/g, 'u');
+  if (['g', 'gram', 'grams'].indexOf(value) >= 0) return 'g';
+  if (['mg', 'milligram', 'milligrams'].indexOf(value) >= 0) return 'mg';
+  if (['ug', 'microgram', 'micrograms'].indexOf(value) >= 0) return 'ug';
+  return value;
+}
+function convertUnit(value, from, to){
+  if (value === null) return null;
+  const a = unitKey(from), b = unitKey(to);
+  if (!a || a === b) return value;
+  const scale = { g: 1, mg: 1e-3, ug: 1e-6 };
+  if (scale[a] == null || scale[b] == null) return value;
+  return value * scale[a] / scale[b];
+}
+function offValue(n, key, targetUnit, fallbackUnit){
+  const value = num(n[key + '_100g']);
+  return value === null ? null : convertUnit(value, n[key + '_unit'] || fallbackUnit, targetUnit);
+}
+
 /* ---- Open Food Facts -> modèle LIFTR (per 100 g) ---- */
 export function offToFood(p){
   if (!p) return null;
   const n = p.nutriments || {};
-  const kcal = num(n['energy-kcal_100g']);
+  const kcalKj = num(n['energy-kj_100g']);
+  const kcal = num(n['energy-kcal_100g']) ?? (kcalKj === null ? null : kcalKj / 4.184);
   if (kcal === null) return null;   /* produit sans kcal exploitable */
-  const sodiumG = num(n.sodium_100g);
   const food = {
     id: 'off:' + (p.code || ''),
     name: (p.product_name || p.product_name_en || p.generic_name || 'Product').trim().slice(0, 70),
@@ -88,9 +109,26 @@ export function offToFood(p){
     protein: r1(num(n.proteins_100g)),
     carbs: r1(num(n.carbohydrates_100g)),
     fat: r1(num(n.fat_100g)),
-    fiber: r1(num(n.fiber_100g)),
-    sugar: r1(num(n.sugars_100g)),
-    sodium_mg: sodiumG === null ? null : Math.round(sodiumG * 1000),
+    fiber: r1(offValue(n, 'fiber', 'g', 'g')),
+    sugar: r1(offValue(n, 'sugars', 'g', 'g')),
+    saturated_fat: r1(offValue(n, 'saturated-fat', 'g', 'g')),
+    monounsaturated_fat: r1(offValue(n, 'monounsaturated-fat', 'g', 'g')),
+    polyunsaturated_fat: r1(offValue(n, 'polyunsaturated-fat', 'g', 'g')),
+    trans_fat: r1(offValue(n, 'trans-fat', 'g', 'g')),
+    cholesterol_mg: r1(offValue(n, 'cholesterol', 'mg', 'mg')),
+    sodium_mg: r1(offValue(n, 'sodium', 'mg', 'g')),
+    potassium_mg: r1(offValue(n, 'potassium', 'mg', 'mg')),
+    magnesium_mg: r1(offValue(n, 'magnesium', 'mg', 'mg')),
+    calcium_mg: r1(offValue(n, 'calcium', 'mg', 'mg')),
+    iron_mg: r1(offValue(n, 'iron', 'mg', 'mg')),
+    zinc_mg: r1(offValue(n, 'zinc', 'mg', 'mg')),
+    phosphorus_mg: r1(offValue(n, 'phosphorus', 'mg', 'mg')),
+    vitamin_a_ug: r1(offValue(n, 'vitamin-a', 'ug', 'ug')),
+    vitamin_c_mg: r1(offValue(n, 'vitamin-c', 'mg', 'mg')),
+    vitamin_d_ug: r1(offValue(n, 'vitamin-d', 'ug', 'ug')),
+    vitamin_b6_mg: r1(offValue(n, 'vitamin-b6', 'mg', 'mg')),
+    vitamin_b12_ug: r1(offValue(n, 'vitamin-b12', 'ug', 'ug')),
+    niacin_mg: r1(offValue(n, 'niacin', 'mg', 'mg')),
     source: 'off',
     barcode: p.code || '',
     brands: (p.brands || '').split(',')[0].trim() || undefined,
@@ -98,16 +136,18 @@ export function offToFood(p){
   };
   /* portion standard : serving_size en grammes si disponible */
   const sg = servingGrams(p);
-  if (sg > 0) food.portions = [{ label: p.serving_size ? '1 serving' : '1 unit', grams: sg }];
+  if (sg > 0){
+    food.gramsPerUnit = { piece: sg };
+    food.portions = [{ label: p.serving_size ? '1 serving' : '1 unit', grams: sg }];
+  }
   return food;
 }
 function servingGrams(p){
-  const n = p.nutriments || {};
-  /* OFF expose serving_quantity (ml/g) ; on convertit en grammes */
+  /* OFF calcule serving_quantity en grammes ; serving_size reste une
+     chaîne libre et ne doit pas servir à deviner une conversion ml → g. */
   const q = num(p.serving_quantity);
   if (q && q > 0) return Math.round(q);
-  const g = num(n['serving_weight_100g']);
-  return g ? Math.round(g) : 0;
+  return 0;
 }
 
 /* ---- USDA FoodData Central -> modèle LIFTR (per 100 g) ---- */
@@ -120,6 +160,43 @@ const USDA_BY_KEY = {
   sugar: ['Total Sugars', 'Sugars, total'],
   sodium_mg: ['Sodium, Na']
 };
+const USDA_EXTENDED = {
+  saturated_fat: { ids: ['606'], names: ['Fatty acids, total saturated'], unit: 'g' },
+  monounsaturated_fat: { ids: ['645'], names: ['Fatty acids, total monounsaturated'], unit: 'g' },
+  polyunsaturated_fat: { ids: ['646'], names: ['Fatty acids, total polyunsaturated'], unit: 'g' },
+  trans_fat: { ids: ['605'], names: ['Fatty acids, total trans'], unit: 'g' },
+  cholesterol_mg: { ids: ['601'], names: ['Cholesterol'], unit: 'mg' },
+  potassium_mg: { ids: ['306'], names: ['Potassium, K'], unit: 'mg' },
+  magnesium_mg: { ids: ['304'], names: ['Magnesium, Mg'], unit: 'mg' },
+  calcium_mg: { ids: ['301'], names: ['Calcium, Ca'], unit: 'mg' },
+  iron_mg: { ids: ['303'], names: ['Iron, Fe'], unit: 'mg' },
+  zinc_mg: { ids: ['309'], names: ['Zinc, Zn'], unit: 'mg' },
+  phosphorus_mg: { ids: ['305'], names: ['Phosphorus, P'], unit: 'mg' },
+  vitamin_a_ug: { ids: ['320'], names: ['Vitamin A, RAE'], unit: 'ug' },
+  vitamin_c_mg: { ids: ['401'], names: ['Vitamin C, total ascorbic acid'], unit: 'mg' },
+  vitamin_d_ug: { ids: ['328'], names: ['Vitamin D (D2 + D3)'], unit: 'ug' },
+  vitamin_b6_mg: { ids: ['415'], names: ['Vitamin B-6'], unit: 'mg' },
+  vitamin_b12_ug: { ids: ['418'], names: ['Vitamin B-12'], unit: 'ug' },
+  niacin_mg: { ids: ['406'], names: ['Niacin'], unit: 'mg' }
+};
+const USDA_TARGET_UNITS = {
+  saturated_fat: 'g', monounsaturated_fat: 'g', polyunsaturated_fat: 'g', trans_fat: 'g',
+  cholesterol_mg: 'mg', sodium_mg: 'mg', potassium_mg: 'mg', magnesium_mg: 'mg',
+  calcium_mg: 'mg', iron_mg: 'mg', zinc_mg: 'mg', phosphorus_mg: 'mg',
+  vitamin_a_ug: 'ug', vitamin_c_mg: 'mg', vitamin_d_ug: 'ug', vitamin_b6_mg: 'mg',
+  vitamin_b12_ug: 'ug', niacin_mg: 'mg'
+};
+function usdaExtended(list, field){
+  const spec = USDA_EXTENDED[field];
+  if (!spec) return null;
+  const hit = list.find(x => {
+    const id = String(x.nutrientNumber || x.number || x.nutrientId || (x.nutrient && x.nutrient.number) || '');
+    const name = String(x.nutrientName || (x.nutrient && x.nutrient.name) || '').toLowerCase();
+    return (spec.ids.indexOf(id) >= 0 || spec.names.some(n => n.toLowerCase() === name)) && x.value !== undefined;
+  });
+  if (!hit) return null;
+  return convertUnit(num(hit.value), hit.unitName || hit.unit || spec.unit, USDA_TARGET_UNITS[field]);
+}
 export function usdaToFood(f){
   if (!f) return null;
   const list = f.foodNutrients || [];
@@ -138,7 +215,7 @@ export function usdaToFood(f){
   };
   const kcal = pick(USDA_BY_KEY.kcal);
   if (kcal === null) return null;
-  return {
+  const food = {
     id: 'usda:' + (f.fdcId || ''),
     name: (f.description || 'Food').trim().slice(0, 70),
     kcal: Math.round(kcal),
@@ -151,6 +228,8 @@ export function usdaToFood(f){
     source: 'usda',
     category: f.dataType || undefined
   };
+  for (const field of Object.keys(USDA_EXTENDED)) food[field] = r1(usdaExtended(list, field));
+  return food;
 }
 
 /* ---- appels distants sûrs (timeout + repli silencieux) ---- */

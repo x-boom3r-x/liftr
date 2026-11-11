@@ -140,18 +140,82 @@ export function toGrams(food, qty, unit = 'g') {
   return qty * per;
 }
 
-const ZERO = () => ({ kcal: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0, sodium_mg: 0 });
-const FIELDS = Object.keys(ZERO());
+/* Canonical nutrient shape follows OpenNutriTracker's documented 24-field
+   food model. Optional values stay null when the source did not provide them;
+   a missing nutrient is never presented as a measured zero. */
+export const NUTRIENT_FIELDS = [
+  'kcal', 'carbs', 'fat', 'protein', 'sugar', 'saturated_fat', 'fiber',
+  'monounsaturated_fat', 'polyunsaturated_fat', 'trans_fat',
+  'cholesterol_mg', 'sodium_mg', 'potassium_mg', 'magnesium_mg',
+  'calcium_mg', 'iron_mg', 'zinc_mg', 'phosphorus_mg', 'vitamin_a_ug',
+  'vitamin_c_mg', 'vitamin_d_ug', 'vitamin_b6_mg', 'vitamin_b12_ug',
+  'niacin_mg'
+];
+
+export const TRACKED_MICRONUTRIENTS = [
+  { field: 'fiber', label: 'Fiber', unit: 'g' },
+  { field: 'sodium_mg', label: 'Sodium', unit: 'mg' },
+  { field: 'saturated_fat', label: 'Saturated fat', unit: 'g' },
+  { field: 'sugar', label: 'Sugar', unit: 'g' },
+  { field: 'calcium_mg', label: 'Calcium', unit: 'mg' },
+  { field: 'iron_mg', label: 'Iron', unit: 'mg' },
+  { field: 'potassium_mg', label: 'Potassium', unit: 'mg' },
+  { field: 'vitamin_d_ug', label: 'Vitamin D', unit: 'µg' },
+  { field: 'vitamin_b12_ug', label: 'Vitamin B12', unit: 'µg' },
+  { field: 'magnesium_mg', label: 'Magnesium', unit: 'mg' }
+];
+
+export const OPTIONAL_NUTRIENT_META = [
+  { field: 'fiber', label: 'Fiber', unit: 'g' },
+  { field: 'sugar', label: 'Sugar', unit: 'g' },
+  { field: 'saturated_fat', label: 'Saturated fat', unit: 'g' },
+  { field: 'monounsaturated_fat', label: 'Monounsaturated fat', unit: 'g' },
+  { field: 'polyunsaturated_fat', label: 'Polyunsaturated fat', unit: 'g' },
+  { field: 'trans_fat', label: 'Trans fat', unit: 'g' },
+  { field: 'cholesterol_mg', label: 'Cholesterol', unit: 'mg' },
+  { field: 'sodium_mg', label: 'Sodium', unit: 'mg' },
+  { field: 'potassium_mg', label: 'Potassium', unit: 'mg' },
+  { field: 'magnesium_mg', label: 'Magnesium', unit: 'mg' },
+  { field: 'calcium_mg', label: 'Calcium', unit: 'mg' },
+  { field: 'iron_mg', label: 'Iron', unit: 'mg' },
+  { field: 'zinc_mg', label: 'Zinc', unit: 'mg' },
+  { field: 'phosphorus_mg', label: 'Phosphorus', unit: 'mg' },
+  { field: 'vitamin_a_ug', label: 'Vitamin A', unit: 'µg' },
+  { field: 'vitamin_c_mg', label: 'Vitamin C', unit: 'mg' },
+  { field: 'vitamin_d_ug', label: 'Vitamin D', unit: 'µg' },
+  { field: 'vitamin_b6_mg', label: 'Vitamin B6', unit: 'mg' },
+  { field: 'vitamin_b12_ug', label: 'Vitamin B12', unit: 'µg' },
+  { field: 'niacin_mg', label: 'Niacin (B3)', unit: 'mg' }
+];
+
+const OPTIONAL_FIELDS = new Set(OPTIONAL_NUTRIENT_META.map(x => x.field));
+const ZERO = () => Object.fromEntries(NUTRIENT_FIELDS.map(field =>
+  [field, OPTIONAL_FIELDS.has(field) ? null : 0]));
+const FOOD_ALIASES = {
+  protein: 'p', carbs: 'c', fat: 'f', sodium_mg: 'sodium'
+};
 
 export function nutrientsFor(food, qty, unit = 'g') {
   const k = toGrams(food, qty, unit) / 100, out = ZERO();
-  for (const f of FIELDS) out[f] = (food[f] || 0) * k;
+  for (const field of NUTRIENT_FIELDS){
+    const raw = food[field] != null ? food[field] : food[FOOD_ALIASES[field]];
+    if (raw == null || raw === ''){
+      out[field] = OPTIONAL_FIELDS.has(field) ? null : 0;
+      continue;
+    }
+    const value = +raw;
+    out[field] = Number.isFinite(value) ? value * k : (OPTIONAL_FIELDS.has(field) ? null : 0);
+  }
   return out;
 }
 
 export function sumNutrients(list) {
   const out = ZERO();
-  for (const n of list) for (const f of FIELDS) out[f] += n[f] || 0;
+  for (const n of list) for (const field of NUTRIENT_FIELDS){
+    const value = n && n[field];
+    if (value == null || !Number.isFinite(+value)) continue;
+    out[field] = out[field] == null ? +value : out[field] + +value;
+  }
   return out;
 }
 
@@ -167,7 +231,8 @@ export function dayTotals(meals) { return sumNutrients(meals.map(m => mealTotals
 export function recipeToFood({ id, name, items, cookedWeightG }) {
   const { lines, total } = mealTotals({ items });
   const w = cookedWeightG || lines.reduce((s, l) => s + l.grams, 0);
-  const per100 = {}; for (const f of FIELDS) per100[f] = (total[f] / w) * 100;
+  const per100 = {}; for (const field of NUTRIENT_FIELDS)
+    per100[field] = total[field] == null ? null : (total[field] / w) * 100;
   return { id, name, ...per100, gramsPerUnit: { piece: w } };
 }
 

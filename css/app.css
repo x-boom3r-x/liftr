@@ -3179,3 +3179,24 @@ body::after{
   .panel{animation:none}
   .tabbar .plus,.header-profile,.panel *{scroll-behavior:auto}
 }
+
+/* OpenNutriTracker-style nutrient coverage, adapted to LIFTR's dark blue UI. */
+.nutri-micronutrients{margin:12px 0;padding:0 14px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.nutri-micronutrients>summary,.food-extra-nutrients>summary,.fd-micros>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;cursor:pointer;list-style:none;font-size:.86rem;font-weight:730;color:var(--text)}
+.nutri-micronutrients>summary::-webkit-details-marker,.food-extra-nutrients>summary::-webkit-details-marker,.fd-micros>summary::-webkit-details-marker{display:none}
+.nutri-micronutrients>summary::after,.food-extra-nutrients>summary::after,.fd-micros>summary::after{content:"+";color:var(--primary-text);font-size:1.1rem;font-weight:500}
+.nutri-micronutrients[open]>summary::after,.food-extra-nutrients[open]>summary::after,.fd-micros[open]>summary::after{content:"−"}
+.nutri-micronutrients>summary span{color:var(--text3);font-size:.7rem;font-weight:550}
+.nutri-micronutrients[open]>summary{border-bottom:1px solid var(--border)}
+.nutri-micro-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px;margin:0;padding:4px 0}
+.nutri-micro-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:9px 0;border-bottom:1px solid var(--border)}
+.nutri-micro-row dt{color:var(--text2);font-size:.77rem}
+.nutri-micro-row dd{margin:0;text-align:right;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.nutri-micro-row dd small{display:block;color:var(--text3);font-size:.62rem;font-weight:550}
+.nutri-micronutrients>p,.food-extra-nutrients>.section-hint,.fd-micros>.section-hint{margin:9px 0 12px;color:var(--text3);font-size:.68rem;line-height:1.45}
+.food-extra-nutrients{margin:8px 0 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.food-extra-nutrients>summary{min-height:42px;color:var(--text2);font-size:.75rem}
+.food-extra-nutrients .food-macros{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.fd-micros>summary{min-height:42px;margin-top:4px;padding:0 2px;color:var(--text2);font-size:.75rem}
+.fd-micros .micro-grid{margin:0 0 8px}
+@media(min-width:760px){.nutri-micro-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}

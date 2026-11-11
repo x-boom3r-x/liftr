@@ -9,7 +9,8 @@
 import { buildPlan, macroTargets, projectWeight, adaptiveAdjustment,
   UNITS, nutrientsFor, sumNutrients, recipeToFood, atwaterCheck,
   progress, weekSummary, MACRO_PRESETS, targetsFromPercent, targetsFromPerKg,
-  waterGoalMl, fiberTargetG } from './nutrition.js';
+  waterGoalMl, fiberTargetG, NUTRIENT_FIELDS, TRACKED_MICRONUTRIENTS,
+  OPTIONAL_NUTRIENT_META } from './nutrition.js';
 import { loadFoods, searchFoods, getFood as getDbFood, allFoods, norm } from './foods.js';
 import { searchRemote, importRemoteFood, isBarcodeFormat } from './nutri-remote.js';
 import { icon, iconS } from './icons.js';
@@ -34,6 +35,33 @@ function nutriDB(){
     if (f && f.fat === undefined && f.f !== undefined) f.fat = +f.f || 0;
   });
   return n;
+}
+
+/* Keep the nutrient values that were used when a food was logged. This is
+   the diary snapshot model used by OpenNutriTracker: later database edits or
+   deleting a custom food must not rewrite an old meal. */
+function nutrientSnapshot(food){
+  if (!food) return null;
+  const snapshot = {
+    id: food.id || '', name: food.name || 'Food', source: food.source || 'custom',
+    barcode: food.barcode || '', brands: food.brands || ''
+  };
+  /* Portion-based diary lines must remain reproducible after a food is
+     renamed, removed, or its reference data changes. */
+  if (food.gramsPerUnit && typeof food.gramsPerUnit === 'object')
+    snapshot.gramsPerUnit = Object.assign({}, food.gramsPerUnit);
+  if (Number.isFinite(+food.density) && +food.density > 0) snapshot.density = +food.density;
+  if (Array.isArray(food.portions)) snapshot.portions = food.portions.map(p => Object.assign({}, p));
+  NUTRIENT_FIELDS.forEach(field => {
+    const aliases = { protein: 'p', carbs: 'c', fat: 'f', sodium_mg: 'sodium' };
+    const value = food[field] != null ? food[field] : food[aliases[field]];
+    if (value != null && value !== '' && Number.isFinite(+value)) snapshot[field] = +value;
+  });
+  return snapshot;
+}
+function foodItem(food, qty, unit){
+  return { foodId: food.id, qty: +qty || 0, unit: unit || 'g', name: food.name,
+    snapshot: nutrientSnapshot(food), snapshotVersion: 1 };
 }
 
 let nutriForm = null;   /* 'meal' | 'food' | null */
@@ -296,7 +324,14 @@ function findNutriFood(id){
     const r = nutriRemoteState.foods.find(f => f && f.id === id);
     if (r) return r;
   }
-  return (window.LiftrFoods && LiftrFoods.get(id)) || null;
+  const local = (window.LiftrFoods && LiftrFoods.get(id)) || null;
+  if (local) return local;
+  /* A removed food can still be resolved from its immutable diary snapshot. */
+  for (const meal of n.meals){
+    const item = (meal.items || []).find(x => x && x.foodId === id && x.snapshot);
+    if (item) return item.snapshot;
+  }
+  return null;
 }
 /* Un aliment distant (off:/usda:) est persiste dans n.foods la premiere
    fois qu'on l'utilise : il reste resolvable hors ligne ensuite. */
@@ -328,14 +363,14 @@ function mealsNeedFoods(meals){
 }
 function nutriItemN(it){
   if (it.foodId){
-    const f = findNutriFood(it.foodId);
+    const f = it.snapshot || findNutriFood(it.foodId);
     if (!f) return null;
     try { return nutrientsFor(f, +it.qty || 0, it.unit || 'g'); }
     catch (e){ return null; }
   }
   /* legacy : totaux stockes a l'ecriture (ancien modele) */
   return { kcal: +it.kcal || 0, protein: +it.p || 0, carbs: +it.c || 0,
-    fat: +it.f || 0, fiber: 0, sugar: 0, sodium_mg: 0 };
+    fat: +it.f || 0, fiber: null, sugar: null, sodium_mg: null };
 }
 function nutriMealTotal(m){
   const items = m.items || [];
@@ -346,7 +381,7 @@ function nutriMealTotal(m){
 }
 function nutriItemName(it){
   if (it.foodId){
-    const f = findNutriFood(it.foodId);
+    const f = it.snapshot || findNutriFood(it.foodId);
     if (f) return f.name;
   }
   return it.name || 'Item';
@@ -356,6 +391,25 @@ function nutriQtyLabel(it){
   if (it.foodId == null) return '';
   const q = Math.round((+it.qty || 0) * 10) / 10;
   return q + ' ' + (it.unit || 'g');
+}
+function nutrientPanelHtml(items, title){
+  if (!items || !items.length) return '';
+  const rows = TRACKED_MICRONUTRIENTS.map(meta => {
+    let total = 0, known = 0;
+    items.forEach(item => {
+      const nutrients = nutriItemN(item);
+      const value = nutrients && nutrients[meta.field];
+      if (value != null && Number.isFinite(+value)){ total += +value; known++; }
+    });
+    const shown = known === 0 ? '—' :
+      (known < items.length ? '≥ ' : '') + (Math.round(total * 10) / 10) + ' ' + esc(meta.unit);
+    const coverage = known > 0 && known < items.length
+      ? '<small>' + known + '/' + items.length + ' foods</small>' : '';
+    return '<div class="nutri-micro-row"><dt>' + esc(meta.label) + '</dt><dd>' + shown + coverage + '</dd></div>';
+  }).join('');
+  return '<details class="nutri-micronutrients"><summary>' + esc(title) +
+    '<span>Values from your food data</span></summary><dl class="nutri-micro-grid">' + rows +
+    '</dl><p>— means no value was provided. A ≥ total is partial because some logged foods lack that nutrient.</p></details>';
 }
 
 /* ---- Today : totaux du jour vs objectif (kcal-card + pbar) ---- */
@@ -548,12 +602,14 @@ function renderNutriToday(){
       nutriMacroCard('p', 'Protein', t.p, g.p) + '</div>';
   }
   const water = nutriWaterCardHtml(date);
+  const nutrientItems = meals.flatMap(m => m.items || []);
+  const nutrients = nutrientPanelHtml(nutrientItems, 'Nutrients');
   const stack = meals.length
     ? '<div class="section-hint fx-head" style="margin-top:16px">Today\'s meals<span class="fx-n">' + meals.length + '</span></div>' +
       '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, false)).join('') + '</div>'
     : '<div class="empty" style="margin-top:14px">Nothing logged yet — tap <b>+ Add meal</b> to record what you ate.</div>';
   const bar = '<div class="nutri-add-bar"><button class="btn btn-primary" onclick="addMeal()">+ Add meal</button></div>';
-  box.innerHTML = nutriChipsHtml(date) + ring + mcards + water + stack + bar;
+  box.innerHTML = nutriChipsHtml(date) + ring + mcards + water + nutrients + stack + bar;
 }
 
 /* ---- Meals : liste du jour + builder (foodId + qty, totaux live) ---- */
@@ -622,7 +678,7 @@ function updateItemPreview(){
   const d = nutriDraft;
   const box = $('itemPreview');
   if (!d || !d.pick || !box) return;
-  const f = findNutriFood(d.pick.foodId);
+  const f = d.pick.snapshot || findNutriFood(d.pick.foodId);
   if (!f) return;
   const q = +d.pick.qty;
   if (!(q > 0)){ box.textContent = 'Enter a quantity'; return; }
@@ -637,8 +693,17 @@ function addDraftItem(){
   if (!d || !d.pick) return;
   const qty = +d.pick.qty;
   if (!(qty > 0)){ toast('Enter a quantity'); return; }
-  const item = { foodId: d.pick.foodId, qty: qty, unit: d.pick.unit || 'g', name: d.pick.name };
-  if (d.pick.from >= 0) d.items[d.pick.from] = item;
+  const food = findNutriFood(d.pick.foodId);
+  if (!food) return;
+  const item = foodItem(food, qty, d.pick.unit || 'g');
+  if (d.pick.from >= 0){
+    const previous = d.items[d.pick.from];
+    if (previous && previous.foodId === item.foodId && previous.snapshot){
+      item.snapshot = previous.snapshot;
+      item.snapshotVersion = previous.snapshotVersion || 1;
+    }
+    d.items[d.pick.from] = item;
+  }
   else d.items.push(item);
   d.pick = null;
   renderNutriMeals();
@@ -650,7 +715,7 @@ function editDraftItem(i){
   if (!it.foodId){ toast('Legacy line: remove it and re-add the food'); return; }
   if (!findNutriFood(it.foodId)) return;
   d.pick = { foodId: it.foodId, name: nutriItemName(it), qty: String(+it.qty || 100),
-    unit: it.unit || 'g', from: i };
+    unit: it.unit || 'g', from: i, snapshot: it.snapshot || null };
   renderNutriMeals();
 }
 function removeDraftItem(i){
@@ -928,7 +993,7 @@ function editMealItem(id, idx){
   const it = nutriDraft.items[idx];
   if (it && it.foodId && findNutriFood(it.foodId)){
     nutriDraft.pick = { foodId: it.foodId, name: nutriItemName(it),
-      qty: String(+it.qty || 100), unit: it.unit || 'g', from: idx };
+      qty: String(+it.qty || 100), unit: it.unit || 'g', from: idx, snapshot: it.snapshot || null };
   }
   showTab('nutri-meals');
   revealNutriForm();
@@ -964,7 +1029,7 @@ function saveMealDraft(){
   const dd = nutriDraft;
   const name = (dd.name || '').trim() || 'Meal';
   const items = dd.items.map(it => it.foodId
-    ? { foodId: it.foodId, qty: +it.qty || 0, unit: it.unit || 'g', name: it.name }
+    ? Object.assign({}, it, { qty: +it.qty || 0, unit: it.unit || 'g', name: it.name || nutriItemName(it) })
     : Object.assign({}, it));
   let m = dd.id ? n.meals.find(x => x.id === dd.id) : null;
   if (m){ m.name = name; m.type = dd.type; m.items = items; }
@@ -995,7 +1060,7 @@ function saveMealAsRecipe(id){
   const m = n.meals.find(x => x.id === id);
   if (!m) return;
   const items = (m.items || []).map(it => {
-    const f = it.foodId ? findNutriFood(it.foodId) : null;
+    const f = it.foodId ? (it.snapshot || findNutriFood(it.foodId)) : null;
     return f ? { food: f, qty: +it.qty || 0, unit: it.unit || 'g' } : null;
   }).filter(Boolean);
   if (!items.length){ toast('Add foods first — recipes need food items'); return; }
@@ -1060,6 +1125,11 @@ function deleteRecipe(id){
 function foodFormHtml(){
   const d = nutriFoodDraft || {};
   const bc = d.barcode || _pendingBarcode || '';
+  const optionalInputs = OPTIONAL_NUTRIENT_META.filter(x => x.field !== 'fiber' && x.field !== 'sugar')
+    .map(x => '<div><label class="label" for="foodMore_' + x.field + '">' + esc(x.label) + ' (' + esc(x.unit) + ')</label>' +
+      '<input class="input" id="foodMore_' + x.field + '" type="number" inputmode="decimal" min="0" step="any" placeholder="—"' +
+      ' value="' + (d[x.field] == null ? '' : esc(d[x.field])) + '" oninput="nutriFoodInput(' + esc(JSON.stringify(x.field)) + ',this.value)"></div>')
+    .join('');
   return '<div class="nutri-form-backdrop" role="presentation" onclick="if(event.target===this)cancelNutriForm()">' +
     '<div class="card nutri-form food-form" role="dialog" aria-modal="true" aria-labelledby="foodFormTitle">' +
     '<div class="nutri-sheet-head"><div><div class="nutri-sheet-title" id="foodFormTitle">Add a food</div>' +
@@ -1084,6 +1154,9 @@ function foodFormHtml(){
     '<div><label class="label" for="foodSugar">Sugar (g)</label>' +
     '<input class="input" id="foodSugar" type="number" inputmode="decimal" min="0" step="any" placeholder="—" value="' + esc(d.sugar || '') + '" oninput="nutriFoodInput(\'sugar\',this.value)"></div>' +
     '</div>' +
+    '<details class="food-extra-nutrients"><summary>Other nutrients · optional</summary>' +
+    '<div class="food-macros">' + optionalInputs + '</div>' +
+    '<div class="section-hint">Use values per 100 g from the product label. Leave unknown values blank.</div></details>' +
     '<label class="label" for="foodBarcode">Barcode (optional)</label>' +
     '<input class="input" id="foodBarcode" inputmode="numeric" placeholder="Scan or type" value="' + esc(bc) + '" oninput="nutriFoodInput(\'barcode\',this.value)">' +
     '<div class="composer-actions">' +
@@ -1172,7 +1245,7 @@ function logRemoteFood(id, grams, unit){
     snack = { id: uid(), date: nutriDate(), type: 'snack', name: 'Snacks', items: [] };
     n.meals.push(snack);
   }
-  snack.items.push({ foodId: f.id, qty: q, unit: u, name: f.name });
+  snack.items.push(foodItem(f, q, u));
   touchNutriRecent([f.id]);
   save();
   if (currentTab === 'nutri-foods') renderNutriFoods();
@@ -1192,47 +1265,39 @@ function addFoodWithBarcode(code){
   revealNutriForm();
 }
 
-/* ---- fiche aliment (nutrition + micros) ---- */
-const DRI = { kcal: 2000, protein: 50, carbs: 300, fat: 70, fiber: 25, sugar: 50, sodium_mg: 2000 };
-function nutriDriBar(val, goal){
-  const pr = progress(val, goal);
-  return '<div class="pbar ' + pr.status + '" role="progressbar" aria-valuemin="0"' +
-    ' aria-valuemax="' + Math.round(goal) + '" aria-valuenow="' + Math.round(val) + '">' +
-    '<i style="width:' + pr.pct + '%"></i></div>';
-}
+/* ---- fiche aliment : afficher les valeurs fournies, sans transformer une
+   donnée absente en zéro ni comparer 100 g d'aliment à une cible journalière. ---- */
 function microTile(l, v, u){
-  return '<div class="micro"><div class="mv">' + (Math.round(v * 10) / 10) + '<small> ' + u + '</small></div>' +
-    '<div class="ml">' + l + '</div></div>';
+  const value = v == null || !Number.isFinite(+v) ? '—' : (Math.round(+v * 10) / 10) + '<small> ' + esc(u) + '</small>';
+  return '<div class="micro"><div class="mv">' + value + '</div>' +
+    '<div class="ml">' + esc(l) + '</div></div>';
 }
 function foodDetailHtml(f){
   const n = nutriDB();
   const custom = n.foods.some(x => x && x.id === f.id);
   const fav = (n.favs || []).indexOf(f.id) >= 0;
   const kcal = +f.kcal || 0, p = +f.protein || +f.p || 0, c = +f.carbs || +f.c || 0, fat = +f.fat || +f.f || 0;
-  const fib = +f.fiber || 0, sug = +f.sugar || 0, sod = +f.sodium_mg || +f.sodium || 0;
   const src = f.source === 'off' ? 'Open Food Facts' : f.source === 'usda' ? 'USDA'
     : custom ? 'Your food' : (f.state || 'Food database');
-  const nutriRow = (label, val, goal, unitLbl, big) =>
+  const nutriRow = (label, val, unitLbl, big) =>
     '<div class="fd-row' + (big ? ' big' : '') + '"><span class="fdk">' + label + '</span>' +
-    (goal ? nutriDriBar(val, goal) : '') +
     '<b>' + (Math.round(val * 10) / 10) + (unitLbl ? ' ' + unitLbl : '') + '</b></div>';
+  const more = OPTIONAL_NUTRIENT_META.map(x => {
+    const value = f[x.field] != null ? f[x.field] : (x.field === 'sodium_mg' ? f.sodium : undefined);
+    return microTile(x.label, value, x.unit);
+  }).join('');
   return '<div class="fdetail">' +
     '<div class="fd-name">' + esc(f.name) + '</div>' +
     '<div class="fd-src">' + esc(src) + (f.barcode ? ' · ' + esc(f.barcode) : '') + '</div>' +
     '<div class="fd-per">Per 100 g</div>' +
     '<div class="fd-nutri">' +
-    nutriRow('Calories', kcal, DRI.kcal, 'kcal', true) +
-    nutriRow('Protein', p, DRI.protein, 'g') +
-    nutriRow('Carbs', c, DRI.carbs, 'g') +
-    nutriRow('Fat', fat, DRI.fat, 'g') +
-    (fib > 0 ? nutriRow('Fiber', fib, DRI.fiber, 'g') : '') +
-    (sug > 0 ? nutriRow('Sugar', sug, DRI.sugar, 'g') : '') +
-    (sod > 0 ? nutriRow('Sodium', sod, DRI.sodium_mg, 'mg') : '') +
+    nutriRow('Calories', kcal, 'kcal', true) +
+    nutriRow('Protein', p, 'g') +
+    nutriRow('Carbs', c, 'g') +
+    nutriRow('Fat', fat, 'g') +
     '</div>' +
-    '<div class="fd-micros"><div class="micro-grid">' +
-    microTile('Fiber', fib, 'g') + microTile('Sugar', sug, 'g') +
-    microTile('Sodium', sod, 'mg') + microTile('Energy', Math.round(kcal), 'kcal') +
-    '</div></div>' +
+    '<details class="fd-micros"><summary>More nutrients</summary><div class="micro-grid">' + more +
+    '</div><div class="section-hint">— means the source did not provide a value.</div></details>' +
     (f.barcode ? '<div class="fd-barcode">Barcode: ' + esc(f.barcode) + '</div>' : '') +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="toggleNutriFav(' + esc(JSON.stringify(f.id)) + ')"' +
@@ -1376,8 +1441,12 @@ function submitFood(){
     carbs: rd('carbs', 'foodC'),
     fat: rd('fat', 'foodF')
   };
-  const fib = rd('fiber', 'foodFiber'); if (fib > 0) f.fiber = fib;
-  const sug = rd('sugar', 'foodSugar'); if (sug > 0) f.sugar = sug;
+  OPTIONAL_NUTRIENT_META.forEach(x => {
+    const id = x.field === 'fiber' ? 'foodFiber' : x.field === 'sugar' ? 'foodSugar' : 'foodMore_' + x.field;
+    const el = $(id);
+    const raw = draft[x.field] !== undefined ? draft[x.field] : (el && el.value);
+    if (raw !== '' && raw != null && Number.isFinite(+raw) && +raw >= 0) f[x.field] = +raw;
+  });
   const bc = String(draft.barcode || ($('foodBarcode') && $('foodBarcode').value) || _pendingBarcode || '').trim();
   if (isBarcodeFormat(bc)){ f.barcode = bc; f.source = 'custom'; }
   const chk = atwaterCheck(f);
@@ -1432,7 +1501,7 @@ function logFood(id){
     snack = { id: uid(), date: todayISO(), type: 'snack', name: 'Snacks', items: [] };
     n.meals.push(snack);
   }
-  snack.items.push({ foodId: f.id, qty: qty, unit: unit, name: f.name });
+  snack.items.push(foodItem(f, qty, unit));
   touchNutriRecent([f.id]);
   save();
   renderNutriFoods();
@@ -1496,6 +1565,10 @@ function renderNutriWeek(){
     avgRow('Fat', avg('fat'), goal.f) +
     avgRow('Protein', avg('protein'), goal.p) +
     '</div>';
+
+  const periodDates = new Set(days.map(d => d.date));
+  const periodItems = n.meals.filter(m => periodDates.has(m.date)).flatMap(m => m.items || []);
+  html += nutrientPanelHtml(periodItems, 'Nutrients · ' + R + '-day total');
 
   /* hydratation moyenne sur la fenetre */
   const wGoal = nutriWaterGoal();
