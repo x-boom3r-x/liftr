@@ -127,7 +127,7 @@ export function projectWeight({ weightKg, tdee: t, kcalPerDay, weeks }) {
 
 /* ---------- 3. aliments, ingrédients, repas ---------- */
 
-export const UNITS = ['g', 'ml', 'piece', 'tbsp', 'tsp', 'cup'];
+export const UNITS = ['g', 'ml', 'piece', 'serving', 'tbsp', 'tsp', 'cup'];
 const DEFAULT_GRAMS = { tbsp: 15, tsp: 5, cup: 240 };
 
 /** Quantité -> grammes. Lance une erreur explicite plutôt que de deviner. */

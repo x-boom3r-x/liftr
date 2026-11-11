@@ -3199,4 +3199,6 @@ body::after{
 .food-extra-nutrients .food-macros{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .fd-micros>summary{min-height:42px;margin-top:4px;padding:0 2px;color:var(--text2);font-size:.75rem}
 .fd-micros .micro-grid{margin:0 0 8px}
+.nutri-transfer-card .nutri-transfer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.nutri-transfer-card .nutri-transfer-actions .btn{min-height:44px;padding:8px 10px;font-size:.78rem}
 @media(min-width:760px){.nutri-micro-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}

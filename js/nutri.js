@@ -7,7 +7,7 @@
    per-100 g, semaine) — totaux TOUJOURS recalculés à l'affichage.
    ================================================================== */
 import { buildPlan, macroTargets, projectWeight, adaptiveAdjustment,
-  UNITS, nutrientsFor, sumNutrients, recipeToFood, atwaterCheck,
+  UNITS, nutrientsFor, toGrams, sumNutrients, recipeToFood, atwaterCheck,
   progress, weekSummary, MACRO_PRESETS, targetsFromPercent, targetsFromPerKg,
   waterGoalMl, fiberTargetG, NUTRIENT_FIELDS, TRACKED_MICRONUTRIENTS,
   OPTIONAL_NUTRIENT_META } from './nutrition.js';
@@ -386,7 +386,7 @@ function nutriItemName(it){
   }
   return it.name || 'Item';
 }
-function nutriItemKcal(it){ const x = nutriItemN(it); return x ? x.kcal : 0; }
+function nutriItemKcal(it){ const x = nutriItemN(it); return x ? x.kcal : null; }
 function nutriQtyLabel(it){
   if (it.foodId == null) return '';
   const q = Math.round((+it.qty || 0) * 10) / 10;
@@ -450,7 +450,7 @@ function nutriMealCard(m, editable){
     const qty = nutriQtyLabel(it);
     return '<div class="ing-row"><span class="ing-n">' + esc(nutriItemName(it)) + '</span>' +
       '<span class="ing-g">' + esc(qty) + '</span>' +
-      '<span class="ing-k">' + Math.round(nutriItemKcal(it)) + ' kcal</span>' + acts + '</div>';
+      '<span class="ing-k">' + (nutriItemKcal(it) == null ? '—' : Math.round(nutriItemKcal(it))) + ' kcal</span>' + acts + '</div>';
   }).join('');
   const miss = mt.missing
     ? '<div class="ing-row"><span class="ing-n">…</span><span class="ing-g"></span><span class="ing-k">…</span></div>'
@@ -633,7 +633,8 @@ function draftFromMeal(m){
 }
 function allowedUnits(food){
   const hasPiece = !!(food && food.gramsPerUnit && food.gramsPerUnit.piece != null);
-  return UNITS.filter(u => u !== 'piece' || hasPiece);
+  const hasServing = !!(food && ((food.gramsPerUnit && food.gramsPerUnit.serving != null) || food.ontServingUnknown));
+  return UNITS.filter(u => (u !== 'piece' || hasPiece) && (u !== 'serving' || hasServing));
 }
 function defaultUnit(food){
   if (food && food.unitLabel && allowedUnits(food).indexOf(food.unitLabel) >= 0) return food.unitLabel;
@@ -701,6 +702,19 @@ function addDraftItem(){
     if (previous && previous.foodId === item.foodId && previous.snapshot){
       item.snapshot = previous.snapshot;
       item.snapshotVersion = previous.snapshotVersion || 1;
+    }
+    if (previous && previous.ontId){
+      item.ontId = previous.ontId;
+      item.ontDateTime = previous.ontDateTime || '';
+      item.ontMeal = Object.assign({}, previous.ontMeal || {}, {
+        servingQuantity: null, servingUnit: null, servingSize: null
+      });
+      if (previous.foodId !== item.foodId){
+        const source = item.snapshot && item.snapshot.source;
+        item.ontMeal.code = item.snapshot && item.snapshot.barcode || null;
+        item.ontMeal.brands = item.snapshot && item.snapshot.brands || '';
+        item.ontMeal.source = source === 'usda' ? 'fdc' : source === 'off' || source === 'custom' ? source : 'unknown';
+      }
     }
     d.items[d.pick.from] = item;
   }
@@ -791,7 +805,7 @@ function mealBuilderHtml(){
       d.items.map((it, i) =>
         '<div class="ing-row"><span class="ing-n">' + esc(nutriItemName(it)) + '</span>' +
         '<span class="ing-g">' + esc(nutriQtyLabel(it)) + '</span>' +
-        '<span class="ing-k">' + Math.round(nutriItemKcal(it)) + ' kcal</span>' +
+        '<span class="ing-k">' + (nutriItemKcal(it) == null ? '—' : Math.round(nutriItemKcal(it))) + ' kcal</span>' +
         '<span class="ing-actions">' +
         '<button class="icon-btn" onclick="editDraftItem(' + i + ')" aria-label="Edit ingredient">' + icon('pencil') + '</button>' +
         '<button class="icon-btn" onclick="removeDraftItem(' + i + ')" aria-label="Remove ingredient">' + icon('x') + '</button>' +
@@ -1762,6 +1776,251 @@ function nutriGoalListHtml(p, goal, w){
     rowIco(icon('down'), 'Weekly rate', rate) +
     '</div>';
 }
+
+/* OpenNutriTracker's canonical user_intake.json interchange. The local diary
+   stays authoritative: imports merge by intake id and never replace profile,
+   goals, foods, recipes, water, or unrelated meals. */
+const ONT_NUTRIENT_KEYS = {
+  kcal: 'energyKcal100', carbs: 'carbohydrates100', fat: 'fat100', protein: 'proteins100',
+  sugar: 'sugars100', saturated_fat: 'saturatedFat100', fiber: 'fiber100',
+  monounsaturated_fat: 'monounsaturatedFat100', polyunsaturated_fat: 'polyunsaturatedFat100',
+  trans_fat: 'transFat100', cholesterol_mg: 'cholesterol100', sodium_mg: 'sodium100',
+  potassium_mg: 'potassium100', magnesium_mg: 'magnesium100', calcium_mg: 'calcium100',
+  iron_mg: 'iron100', zinc_mg: 'zinc100', phosphorus_mg: 'phosphorus100',
+  vitamin_a_ug: 'vitaminA100', vitamin_c_mg: 'vitaminC100', vitamin_d_ug: 'vitaminD100',
+  vitamin_b6_mg: 'vitaminB6100', vitamin_b12_ug: 'vitaminB12100', niacin_mg: 'niacin100'
+};
+const ONT_INTAKE_TYPES = new Set(['breakfast', 'lunch', 'dinner', 'snack']);
+const NUTRI_TRANSFER_UNITS = new Set(['g', 'ml', 'piece', 'serving', 'tbsp', 'tsp', 'cup']);
+const ONT_LEGACY_OFF_SCALE = {
+  cholesterol100: 1000, sodium100: 1000, potassium100: 1000, magnesium100: 1000,
+  calcium100: 1000, iron100: 1000, zinc100: 1000, phosphorus100: 1000,
+  vitaminA100: 1000000, vitaminC100: 1000, vitaminD100: 1000000,
+  vitaminB6100: 1000, vitaminB12100: 1000000, niacin100: 1000
+};
+
+function ontDerivedId(parts, occurrence){
+  const value = JSON.stringify(parts);
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++){
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return 'ont-derived-' + (hash >>> 0).toString(16) + '-' + occurrence;
+}
+function ontLocalDate(date){
+  const pad = x => String(x).padStart(2, '0');
+  return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+}
+function parseOpenTrackerIntakes(payload){
+  if (!Array.isArray(payload) || !payload.length) throw new Error('Choose a non-empty OpenNutriTracker user_intake.json file.');
+  if (payload.length > 50000) throw new Error('This diary contains more than 50,000 entries; split it into smaller files.');
+  const rows = [], seen = new Set(), derived = Object.create(null);
+  let duplicateIds = 0;
+  payload.forEach((raw, index) => {
+    const pos = index + 1;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || !raw.meal || typeof raw.meal !== 'object')
+      throw new Error('Entry ' + pos + ' is not a valid food diary entry. Nothing was imported.');
+    const amount = Number(raw.amount);
+    const dateTime = typeof raw.dateTime === 'string' ? raw.dateTime : '';
+    const parsedDate = dateTime ? new Date(dateTime) : null;
+    const type = String(raw.type || '').toLowerCase();
+    const unit = String(raw.unit || '').trim().toLowerCase();
+    const food = raw.meal;
+    const name = String(food.name || '').trim();
+    const nutriments = food.nutriments;
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000 || !parsedDate || !Number.isFinite(parsedDate.getTime()) ||
+        !ONT_INTAKE_TYPES.has(type) || !unit || !name || name.length > 250 || !nutriments || typeof nutriments !== 'object' || Array.isArray(nutriments)){
+      throw new Error('Entry ' + pos + ' has a missing or invalid date, amount, meal type, unit, or food name. Nothing was imported.');
+    }
+    if (String(raw.id || '').length > 256) throw new Error('Entry ' + pos + ' has an invalid identifier. Nothing was imported.');
+    if (food.servingQuantity != null && (!Number.isFinite(Number(food.servingQuantity)) || Number(food.servingQuantity) < 0 || Number(food.servingQuantity) > 1000000))
+      throw new Error('Entry ' + pos + ' has an invalid serving size. Nothing was imported.');
+    for (const key of Object.values(ONT_NUTRIENT_KEYS)){
+      const v = nutriments[key];
+      if (v != null && (v === '' || !Number.isFinite(Number(v)) || Number(v) < 0))
+        throw new Error('Entry ' + pos + ' contains an invalid nutrient value. Nothing was imported.');
+    }
+    const source = String(food.source || 'unknown').toLowerCase();
+    const signature = [dateTime, type, amount, unit, source, String(food.code || ''), name, String(food.brands || '')];
+    let id = String(raw.id || '').trim();
+    if (!id){
+      const sig = JSON.stringify(signature);
+      derived[sig] = (derived[sig] || 0) + 1;
+      id = ontDerivedId(signature, derived[sig]);
+    }
+    if (seen.has(id)){ duplicateIds++; return; }
+    seen.add(id);
+    const servingQuantity = Number(food.servingQuantity);
+    const servingUnit = String(food.servingUnit || '').trim().toLowerCase();
+    let localUnit = unit, localQty = amount, servingUnknown = false;
+    if (unit === 'serving' || unit === 'piece'){
+      if (Number.isFinite(servingQuantity) && servingQuantity > 0 && servingQuantity <= 1000000 && (servingUnit === 'g' || servingUnit === 'ml')){
+        localUnit = servingUnit;
+        localQty = amount * servingQuantity;
+      } else {
+        localUnit = 'serving';
+        servingUnknown = true;
+      }
+    } else if (!NUTRI_TRANSFER_UNITS.has(unit)) {
+      localUnit = 'serving';
+      servingUnknown = true;
+    }
+    if (!Number.isFinite(localQty) || localQty <= 0)
+      throw new Error('Entry ' + pos + ' has an unusable serving size. Nothing was imported.');
+    const sourceLocal = source === 'fdc' ? 'usda' : (source === 'off' ? 'off' : 'custom');
+    const dataVersion = Number(food.dataVersion);
+    const scaleLegacyOff = source === 'off' && (!Number.isFinite(dataVersion) || dataVersion < 1);
+    const snapshot = {
+      id: 'ont:' + id, name: name, source: sourceLocal,
+      barcode: String(food.code || ''), brands: String(food.brands || '')
+    };
+    if (servingUnknown) snapshot.ontServingUnknown = true;
+    Object.keys(ONT_NUTRIENT_KEYS).forEach(field => {
+      const key = ONT_NUTRIENT_KEYS[field], v = nutriments[key];
+      if (v == null || v === '') snapshot[field] = null;
+      else {
+        const scale = scaleLegacyOff ? (ONT_LEGACY_OFF_SCALE[key] || 1) : 1;
+        const converted = Number(v) * scale;
+        if (!Number.isFinite(converted)) throw new Error('Entry ' + pos + ' has a nutrient value outside the supported range. Nothing was imported.');
+        snapshot[field] = converted;
+      }
+    });
+    rows.push({
+      id, date: ontLocalDate(parsedDate), dateTime: dateTime, type: type,
+      qty: localQty, unit: localUnit, originalUnit: unit, originalAmount: amount,
+      food: food, snapshot: snapshot
+    });
+  });
+  return { rows, duplicateIds };
+}
+function openNutriOpenTrackerImport(){
+  const input = $('nutriOpenTrackerFile');
+  if (input) input.click();
+}
+function importNutriOpenTracker(input){
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 25 * 1024 * 1024){ input.value = ''; toast('This file is too large to import here (25 MB maximum).'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try { parsed = parseOpenTrackerIntakes(JSON.parse(String(reader.result || ''))); }
+    catch (e){ toast(e && e.message ? e.message : 'Invalid OpenNutriTracker JSON file.'); input.value = ''; return; }
+    const n = nutriDB();
+    const existing = new Set();
+    n.meals.forEach(m => (m.items || []).forEach(it => { if (it && it.ontId) existing.add(String(it.ontId)); }));
+    const updates = parsed.rows.filter(row => existing.has(row.id)).length;
+    const additions = parsed.rows.length - updates;
+    input.value = '';
+    askConfirm('Import OpenNutriTracker diary?',
+      parsed.rows.length + ' food entr' + (parsed.rows.length === 1 ? 'y' : 'ies') + ' found · ' + additions + ' new · ' + updates + ' matching ID(s) updated' +
+      (parsed.duplicateIds ? ' · ' + parsed.duplicateIds + ' duplicate ID row(s) ignored' : '') +
+      '. Existing matching entries will be replaced. Other LIFTR meals and profile data stay as they are. Entries with no usable serving weight remain visible but their nutrients cannot be calculated.',
+      'Merge diary')
+    .then(result => {
+      if (!result.ok) return;
+      const current = nutriDB();
+      parsed.rows.forEach(row => {
+        current.meals.forEach(m => { m.items = (m.items || []).filter(it => !it || String(it.ontId || '') !== row.id); });
+        current.meals = current.meals.filter(m => !(m.importSource === 'opennutritracker' && !m.items.length));
+        const groupId = 'ont-meal-' + row.date + '-' + row.type;
+        let meal = current.meals.find(m => m.id === groupId);
+        if (!meal){
+          meal = { id: groupId, date: row.date, type: row.type, name: mealTypeLabel(row.type) + ' · OpenNutriTracker', items: [], importSource: 'opennutritracker' };
+          current.meals.push(meal);
+        }
+        const meta = row.food;
+        meal.items.push({
+          foodId: 'ont:' + row.id, qty: row.qty, unit: row.unit, name: row.snapshot.name,
+          snapshot: row.snapshot, snapshotVersion: 1, ontId: row.id,
+          ontAmount: row.originalAmount, ontUnit: row.originalUnit, ontDateTime: row.dateTime,
+          ontMeal: {
+            code: meta.code == null ? null : String(meta.code), brands: meta.brands || '',
+            source: meta.source || 'unknown', mealQuantity: meta.mealQuantity,
+            mealUnit: meta.mealUnit, servingQuantity: meta.servingQuantity,
+            servingUnit: meta.servingUnit, servingSize: meta.servingSize,
+            thumbnailImageUrl: meta.thumbnailImageUrl || null, mainImageUrl: meta.mainImageUrl || null,
+            url: meta.url || null
+          }
+        });
+      });
+      save();
+      renderNutrition(currentTab);
+      if (typeof window.renderToday === 'function') window.renderToday();
+      toast('OpenNutriTracker diary merged · ' + additions + ' new · ' + updates + ' updated');
+    });
+  };
+  reader.onerror = () => { input.value = ''; toast('Could not read this JSON file.'); };
+  reader.readAsText(file);
+}
+function exportNutriOpenTracker(){
+  const n = nutriDB();
+  const output = [], skipped = [];
+  n.meals.forEach((m, mealIndex) => (m.items || []).forEach((it, itemIndex) => {
+    const food = (it && it.snapshot) || (it && it.foodId ? findNutriFood(it.foodId) : null);
+    const qty = Number(it && it.qty);
+    if (!food || !Number.isFinite(qty) || qty <= 0){ skipped.push(it && it.name || 'unknown food'); return; }
+    const sourceMeta = it.ontMeal || {};
+    let unit = String(it.ontUnit || it.unit || 'g').toLowerCase();
+    let amount = Number.isFinite(Number(it.ontAmount)) && it.ontAmount != null ? Number(it.ontAmount) : qty;
+    let servingQuantity = sourceMeta.servingQuantity;
+    let servingUnit = sourceMeta.servingUnit;
+    let servingSize = sourceMeta.servingSize || null;
+    if (!it.ontUnit && unit !== 'g' && unit !== 'ml'){
+      try {
+        const mass = toGrams(food, 1, unit);
+        if (mass > 0){ unit = 'serving'; amount = qty; servingQuantity = mass; servingUnit = 'g'; servingSize = mass + ' g'; }
+        else { unit = 'serving'; amount = qty; }
+      } catch (e){ unit = 'serving'; amount = qty; }
+    }
+    if (!['g', 'ml', 'serving'].includes(unit)){
+      const originalUnit = unit;
+      unit = 'serving';
+      if (!it.ontUnit) amount = qty;
+      if (servingQuantity == null){
+        try {
+          const grams = toGrams(food, 1, originalUnit);
+          if (grams > 0){ servingQuantity = grams; servingUnit = 'g'; servingSize = grams + ' g'; }
+        } catch (e){}
+      }
+    }
+    const nutriments = {};
+    Object.keys(ONT_NUTRIENT_KEYS).forEach(field => {
+      const value = food[field];
+      nutriments[ONT_NUTRIENT_KEYS[field]] = value == null || value === '' || !Number.isFinite(Number(value)) ? null : Number(value);
+    });
+    const source = sourceMeta.source || (food.source === 'usda' ? 'fdc' : food.source === 'off' ? 'off' : food.source === 'custom' ? 'custom' : 'unknown');
+    let dateTime = it.ontDateTime || '';
+    if (!dateTime){
+      const date = String(m.date || todayISO());
+      dateTime = date.slice(0, 10) + 'T12:00:00.000';
+    }
+    output.push({
+      id: String(it.ontId || ('liftr:' + (m.id || mealIndex) + ':' + itemIndex)),
+      unit: unit, amount: amount, type: ONT_INTAKE_TYPES.has(m.type) ? m.type : 'snack', dateTime: dateTime,
+      meal: {
+        code: sourceMeta.code != null ? sourceMeta.code : (food.barcode || null),
+        name: String(food.name || it.name || 'Food'), brands: sourceMeta.brands || food.brands || '',
+        thumbnailImageUrl: sourceMeta.thumbnailImageUrl || null, mainImageUrl: sourceMeta.mainImageUrl || null,
+        url: sourceMeta.url || null,
+        mealQuantity: sourceMeta.mealQuantity != null ? String(sourceMeta.mealQuantity) : '100',
+        mealUnit: sourceMeta.mealUnit || 'g', servingQuantity: servingQuantity == null ? null : Number(servingQuantity),
+        servingUnit: servingUnit || null, servingSize: servingSize,
+        source: source, nutriments: nutriments, dataVersion: 1
+      }
+    });
+  }));
+  if (!output.length){ toast('No nutrition entries could be exported.'); return; }
+  const blob = new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'user_intake.json';
+  document.body.appendChild(link); link.click();
+  setTimeout(() => { URL.revokeObjectURL(link.href); link.remove(); }, 400);
+  toast('Exported ' + output.length + ' diary entr' + (output.length === 1 ? 'y' : 'ies') + (skipped.length ? ' · skipped ' + skipped.length + ' unsupported line(s)' : ''));
+}
+
 function renderNutriGoal(){
   const box = $('nutriGoal');
   if (!box) return;
@@ -1853,6 +2112,15 @@ function renderNutriGoal(){
     '<button class="chip" style="margin-top:8px" onclick="saveWaterGoal()">Save water goal</button>' +
     '<div class="section-hint">Fiber ≈ 14 g / 1 000 kcal. Water ≈ 35 ml / kg (editable).</div>' +
     '</div>';
+
+  html += '<div class="card nutri-form nutri-transfer-card">' +
+    '<div class="nutri-meal-name" style="margin-bottom:6px">OpenNutriTracker data</div>' +
+    '<div class="section-hint">Move your food diary with the official user_intake.json format. Imports merge by entry ID; other LIFTR data stays on this device. ZIP bundles are not supported yet.</div>' +
+    '<input id="nutriOpenTrackerFile" class="hidden" type="file" accept=".json,application/json" onchange="importNutriOpenTracker(this)">' +
+    '<div class="nutri-transfer-actions">' +
+    '<button class="btn" type="button" onclick="exportNutriOpenTracker()">Export diary</button>' +
+    '<button class="btn btn-primary" type="button" onclick="openNutriOpenTrackerImport()">Import diary</button>' +
+    '</div></div>';
 
   /* objectif manuel (avancé) : conservé tel quel — repli si ni plan ni Custom */
   const g = nutriDB().goal;
@@ -1977,5 +2245,6 @@ Object.assign(window, {
   addWater, logWater, saveWaterGoal,
   useRecipe, deleteRecipe,
   logRemoteFood, addFoodWithBarcode,
-  setNutriWeekRange
+  setNutriWeekRange,
+  openNutriOpenTrackerImport, importNutriOpenTracker, exportNutriOpenTracker
 });
