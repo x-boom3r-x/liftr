@@ -226,11 +226,7 @@ button{background:none;border:none;cursor:pointer}
   min-width:16px;height:16px;border-radius:999px;display:grid;place-items:center;padding:0 4px;
 }
 
-/* ---- nav basse (build 84) : 5 boutons + bouton Publier central ----
-   .plus n'est PAS un .tab : pas de data-tab, jamais l'état actif, et il ne
-   décale pas le tabGap mesuré (align-self:center). .tab reste étiré en
-   hauteur : le premier .tab touche le bord bas du contenu de la barre
-   (tests app-shell : tabGap = 8px sans inset, 10px avec 34px). */
+/* ---- Navigation principale : les règles responsive détaillées suivent. ---- */
 .tabbar .plus{
   flex:0 0 auto;align-self:center;
   width:44px;height:44px;border-radius:50%;
@@ -2978,4 +2974,188 @@ html{background:var(--bg)}
 }
 @media(prefers-reduced-motion:reduce){
   .today-progress>span{transition:none}
+}
+
+/* ------------------------------------------------------------------
+   LIFTR interface refresh — Astyx-inspired foundations, adapted to this
+   offline native HTML/CSS app (no runtime library or remote assets).
+   ------------------------------------------------------------------ */
+:root{
+  color-scheme:dark;
+  --bg:#0B0F0D;
+  --surface:#111714;
+  --surface2:#18211C;
+  --surface3:#222D26;
+  --border:#2B3930;
+  --line:#344239;
+  --primary:#C9F17A;
+  --primary-dark:#A9D85A;
+  --primary-dim:rgba(201,241,122,.12);
+  --green:#9CDC82;
+  --green-dim:rgba(156,220,130,.14);
+  --blue:#86BDEB;
+  --blue-dim:rgba(134,189,235,.14);
+  --yellow:#EBCB70;
+  --yellow-dim:rgba(235,203,112,.13);
+  --violet:#C1A5E8;
+  --violet-dim:rgba(193,165,232,.14);
+  --text:#F1F5F0;
+  --text2:#A4B1A7;
+  --text3:#76857A;
+  --glass:linear-gradient(180deg,rgba(24,33,28,.98),rgba(17,23,20,.98));
+  --glass-b:1px solid rgba(196,220,200,.1);
+  --gx1:#D7F29C;--gx2:#A6D983;--gx3:#7DBE9A;--gx4:#8EB9A6;
+  --gx:linear-gradient(125deg,var(--gx1),var(--gx3));
+  --tabbar-pad-b:max(12px,var(--safe-bottom));
+  --tabbar-h:calc(62px + var(--tabbar-pad-b));
+  --radius-card:18px;
+  --radius-control:12px;
+}
+
+/* Dynamic viewport follows Safari's expanding and collapsing browser chrome.
+   The tab bar includes the full home-indicator inset, so the backdrop reaches
+   the bottom edge while its controls remain above the indicator. */
+#mainApp{
+  position:fixed;inset:0 0 auto;height:100vh;height:100dvh;min-height:0;
+  overflow:hidden;background:var(--bg);
+}
+html,body{min-height:100%;background:var(--bg)}
+.header{
+  padding-top:calc(var(--safe-top) + 10px);padding-bottom:10px;
+  background:rgba(11,15,13,.96);border-color:rgba(196,220,200,.09);
+  box-shadow:0 1px 0 rgba(255,255,255,.02);
+}
+.logo{border-radius:11px}
+.header-title{font-size:1rem;font-weight:760;letter-spacing:-.035em}
+.header-sub{font-size:.72rem}
+.header-profile{
+  width:38px;height:38px;flex:none;display:grid;place-items:center;
+  border:1px solid var(--border);border-radius:12px;color:var(--text2);
+  background:var(--surface);transition:background .16s,color .16s,border-color .16s;
+}
+.header-profile svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.header-profile[aria-current="page"]{color:var(--primary);border-color:rgba(201,241,122,.42);background:var(--primary-dim)}
+.header-actions{gap:7px}
+.profile-btn{border-color:var(--border);background:var(--surface);min-height:38px}
+.app{padding-bottom:0}
+.app > .panel{padding-top:16px}
+#rootSubnav:not(.hidden) ~ .panel:not(.hidden){padding-top:4px}
+.panel{animation:fade .18s ease}
+.section-title{font-size:1.28rem;font-weight:740;letter-spacing:-.04em}
+.section-hint{font-size:.78rem;color:var(--text3)}
+.section-head{margin-bottom:18px}
+.card,.today-panel,.nutrition-overview,.today-water-panel,.today-shortcuts,
+.profile-card,.today-dashboard-grid .today-card{
+  border:1px solid var(--border);border-radius:var(--radius-card);box-shadow:none;
+}
+.card{background:var(--surface)}
+.card:active{border-color:#46574A}
+.today-card,.today-dashboard-grid .today-card{
+  background:linear-gradient(135deg,rgba(201,241,122,.09),transparent 66%),var(--surface);
+  border-color:rgba(201,241,122,.22);
+}
+.today-eyebrow,.today-kicker,.today-overline{color:var(--primary)}
+.today-dashboard-grid .today-card .btn-primary{box-shadow:none}
+.btn,.chip,.input,.textarea,select.input{border-radius:var(--radius-control)}
+.btn-primary{background:var(--primary);color:#17200F;box-shadow:none;font-weight:760}
+.btn-primary:hover{background:#D8F89A}
+.btn-primary:active{background:var(--primary-dark)}
+.btn:not(.btn-primary),.chip,.input,.textarea,select.input{
+  border-color:var(--border);background-color:var(--surface2);
+}
+.chip{color:var(--text2)}
+.input,.textarea,select.input{color:var(--text);box-shadow:none}
+.input:focus,.textarea:focus,select.input:focus{border-color:rgba(201,241,122,.55);box-shadow:0 0 0 3px rgba(201,241,122,.1)}
+.empty{border-color:var(--border);background:var(--surface)}
+.tabbar{
+  flex:none;position:relative;inset:auto;transform:none;
+  padding:8px 12px var(--tabbar-pad-b);
+  background:rgba(15,20,17,.98);border-top:1px solid rgba(196,220,200,.12);
+  box-shadow:0 -10px 28px rgba(0,0,0,.22);
+  backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);
+}
+.tabbar-inner{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;gap:4px;max-width:640px}
+.tabbar .tab{width:100%;min-width:0;flex:none;padding:6px 2px;color:var(--text3);font-size:.65rem;font-weight:650}
+.tabbar .tab svg,.tabbar .tab svg.i{width:20px;height:20px;stroke-width:1.8}
+.tabbar .tab.active{background:transparent;color:var(--primary)}
+.tabbar .tab[aria-current="true"]{color:var(--primary)}
+.tabbar .plus{grid-column:3;justify-self:center;align-self:center;width:46px;height:46px;margin:0;border-radius:15px;background:var(--primary);color:#17200F;box-shadow:none}
+.tabbar .plus svg.i{width:23px;height:23px;stroke-width:2.1}
+.tabbar .plus:active{transform:scale(.94)}
+.tabbar .plus-label{display:none}
+.subnav{
+  position:sticky;top:0;z-index:15;gap:4px;margin:0 0 12px;padding:4px;
+  border:1px solid var(--border);border-radius:14px;background:var(--surface);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.subnav-item{min-height:38px;padding:8px 10px;border-radius:10px;color:var(--text3);font-size:.75rem;font-weight:680}
+.subnav-item.active{background:var(--surface3);color:var(--text)}
+#rootSubnav{margin-top:14px}
+.today-heading{margin:4px 0 23px}
+.today-title{font-weight:780;letter-spacing:-.065em}
+.today-dashboard-grid{gap:20px}
+.today-dashboard-main,.today-dashboard-side{gap:16px}
+.today-panel-head h2{font-size:1.1rem;letter-spacing:-.035em}
+.nutrition-overview,.today-water-panel,.today-shortcuts{background:var(--surface);border-color:var(--border)}
+.today-macros>div{background:var(--surface2)}
+.today-progress>span{background:var(--primary)}
+.local-status{border-color:var(--border);background:var(--surface);color:var(--text2)}
+.local-status span{background:var(--primary);box-shadow:none}
+.today-shortcuts button{border-color:var(--border)}
+.today-shortcuts button span:last-child,.text-link:hover{color:var(--primary)}
+
+/* Social navigation belongs to the Social workspace, directly below its
+   title. It scrolls with the section and never stacks over the app tab bar. */
+#tab-feed{padding-bottom:0}
+.socialnav{
+  position:sticky;top:0;left:auto;right:auto;bottom:auto;z-index:18;
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;gap:3px;
+  margin:0 0 14px;padding:4px;border:1px solid var(--border);border-radius:15px;
+  background:var(--surface);backdrop-filter:none;-webkit-backdrop-filter:none;
+}
+.socialnav .snav-item{min-width:0;min-height:48px;flex:none;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:5px 2px;border-radius:11px;color:var(--text3)}
+.socialnav .snav-ico svg{width:19px;height:19px;stroke-width:1.8}
+.socialnav .snav-lbl{font-size:.62rem;font-weight:650}
+.socialnav .snav-item.active{background:var(--surface3);color:var(--primary)}
+.socialnav .snav-item.active .snav-ico{color:var(--primary);filter:none}
+.socialnav .snav-dot{top:3px;right:calc(50% - 15px)}
+.snav-create,#newPostFab{display:none!important}
+.feed-top{margin-bottom:12px}
+.feed-top .section-title{background:none;-webkit-text-fill-color:currentColor;color:var(--text)}
+.feed-actions{margin-bottom:12px}
+.feed-actions .chip{min-height:34px}
+.composer,.post,.person,.dm,.notes,.thread-head{border-color:var(--border)}
+.composer,.post,.person,.dm{background:var(--surface)}
+.socialnav~.feed-actions{margin-top:0}
+.profile-btn:active,.header-profile:active{transform:scale(.97)}
+:focus-visible{outline-color:var(--primary)}
+
+@media(min-width:900px){
+  #mainApp{height:100dvh;grid-template-columns:218px minmax(0,1fr);grid-template-rows:70px minmax(0,1fr)}
+  #mainApp>.header{grid-column:1/-1;grid-row:1}
+  #mainApp>main.app{grid-column:2;grid-row:2;padding:34px clamp(28px,4vw,68px) 48px}
+  #mainApp>.tabbar{grid-column:1;grid-row:2;display:flex;align-items:flex-start;padding:24px 14px;background:var(--surface);border-right:1px solid var(--border);box-shadow:none}
+  .tabbar-inner{display:flex;flex-direction:column;align-items:stretch;gap:7px}
+  .tabbar .tab{flex:0 0 46px;flex-direction:row;justify-content:flex-start;gap:12px;padding:0 12px;border-radius:12px;font-size:.8rem}
+  .tabbar .tab.active{background:var(--primary-dim);color:var(--primary)}
+  .tabbar .plus{display:flex;flex:0 0 46px;grid-column:auto;justify-self:stretch;justify-content:flex-start;gap:12px;width:100%;height:46px;margin:5px 0 9px;padding:0 12px;border-radius:12px;background:var(--surface2);color:var(--text)}
+  .tabbar .plus-label{display:inline;font-size:.8rem;font-weight:700}
+  .tabbar .plus svg.i{width:20px;height:20px}
+  .app>.panel{max-width:1220px;margin:0 auto;padding-top:0}
+  #rootSubnav:not(.hidden) ~ .panel:not(.hidden){padding-top:4px}
+  :root{--tabbar-h:0px}
+}
+@media(max-width:760px){
+  .today-heading{gap:12px}
+  .today-heading .local-status{font-size:.68rem;padding:7px 9px}
+  .today-title{font-size:1.9rem}
+}
+@media(max-width:390px){
+  .tabbar{padding-left:8px;padding-right:8px}
+  .tabbar .tab{font-size:.61rem}
+  .socialnav .snav-lbl{font-size:.57rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .panel{animation:none}
+  .tabbar .plus,.header-profile,.panel *{scroll-behavior:auto}
 }

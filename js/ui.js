@@ -140,8 +140,12 @@ const ROOT_DEFAULT = {
 const ALL_TABS = ['today','programme','seance','library','calendrier','stats','feed',
   'nutri-today','nutri-meals','nutri-foods','nutri-goal','nutri-week','profil'];
 const SUBNAV = {
-  gym: [['programme','Plan'],['seance','Session'],['library','Library'],['calendrier','Calendar'],['stats','Progression']],
-  nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['nutri-foods','Foods'],['nutri-goal','Goal'],['nutri-week','Week']]
+  gym: [['programme','Plan'],['seance','Session'],['more','More']],
+  nutrition: [['nutri-today','Today'],['nutri-meals','Meals'],['more','More']]
+};
+const MORE_TABS = {
+  gym: [['library','Exercise library'],['calendrier','Training calendar'],['stats','Progress']],
+  nutrition: [['nutri-foods','Foods'],['nutri-goal','Daily goals'],['nutri-week','Weekly summary']]
 };
 const lastSub = { today: 'today', gym: 'programme', nutrition: 'nutri-today', profil: 'profil' };
 
@@ -193,12 +197,22 @@ function renderSubnavs(root){
   const items = SUBNAV[root];
   if (!items){ nav.classList.add('hidden'); nav.innerHTML = ''; return; }
   nav.classList.remove('hidden');
-  nav.innerHTML = items.map(([t, l]) =>
-    '<button type="button" class="subnav-item' + (t === currentTab ? ' active' : '') + '"' +
-    ' data-tab="' + t + '" data-sub="' + t + '"' +
-    (t === currentTab ? ' aria-current="page"' : '') +
-    ' onclick="showTab(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')">' + l + '</button>'
-  ).join('');
+  const moreTabs = (MORE_TABS[root] || []).map(x => x[0]);
+  nav.innerHTML = items.map(([t, l]) => {
+    const isMore = t === 'more';
+    const active = isMore ? moreTabs.includes(currentTab) : t === currentTab;
+    const attrs = isMore ? ' data-sub="more" aria-haspopup="dialog" aria-controls="actionSheet" onclick="openSectionMore(' + JSON.stringify(root) + ')"' :
+      ' data-tab="' + t + '" data-sub="' + t + '" onclick="showTab(' + JSON.stringify(t).replace(/"/g, '&quot;') + ')"';
+    return '<button type="button" class="subnav-item' + (active ? ' active' : '') + '"' + attrs +
+      (active ? ' aria-current="page"' : '') + '>' + l + '</button>';
+  }).join('');
+}
+
+function openSectionMore(root){
+  const links = MORE_TABS[root] || [];
+  if (!links.length) return;
+  openActionSheet(root === 'gym' ? 'More in Gym' : 'More in Nutrition',
+    links.map(([tab, label]) => ({ label, fn: () => showTab(tab) })));
 }
 
 function showTab(name){
@@ -222,6 +236,10 @@ function showTab(name){
     b.classList.toggle('active', on);
     b.setAttribute('aria-current', on ? 'true' : 'false');
   });
+  const profileShortcut = document.querySelector('.header-profile');
+  if (profileShortcut) profileShortcut.setAttribute('aria-current', currentRoot === 'profil' ? 'page' : 'false');
+  const quickAction = document.querySelector('.tabbar .plus');
+  if (quickAction) quickAction.setAttribute('aria-label', currentRoot === 'feed' ? 'Create a social post' : 'Quick actions');
   if (name === 'today'){ renderProgramme(); if (typeof window.renderToday === 'function') window.renderToday(); }
   if (name === 'programme'){ renderProgramme(); if (typeof window.renderProgramsList === 'function') window.renderProgramsList(); }
   if (name === 'seance') renderSeance();
@@ -419,11 +437,13 @@ function navPublish(){
 }
 
 function openQuickActions(){
+  if (currentRoot === 'feed'){
+    if (typeof window.openPostTypeSheet === 'function') return window.openPostTypeSheet();
+  }
   const actions = [
     { label: DB && DB.active ? 'Reprendre la séance en cours' : 'Choisir une séance', fn: () => showRoot('gym', 'seance') },
     { label: 'Ajouter un repas', fn: () => { if (typeof window.addMeal === 'function') window.addMeal(); else showRoot('nutrition', 'nutri-meals'); } },
-    { label: 'Ajouter 250 ml d’eau', fn: () => { showRoot('nutrition', 'nutri-today'); if (typeof window.addWater === 'function') window.addWater(250); } },
-    { label: 'Publier sur le Social', fn: () => navPublish() }
+    { label: 'Ajouter 250 ml d’eau', fn: () => { showRoot('nutrition', 'nutri-today'); if (typeof window.addWater === 'function') window.addWater(250); } }
   ];
   return openActionSheet('Ajouter rapidement', actions);
 }
@@ -432,5 +452,5 @@ Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet,
-  pickInitialTab, navPublish, openQuickActions, renderProfilScreen, ALL_TABS
+  pickInitialTab, navPublish, openQuickActions, openSectionMore, renderProfilScreen, ALL_TABS
 });

@@ -35,9 +35,12 @@ export function setSocialHead(title, hint){
 
 function paintNav(){
   document.querySelectorAll('#socialNav .snav-item').forEach(b => {
-    b.classList.toggle('active', b.dataset.view === view ||
-      (view === 'thread' && b.dataset.view === 'inbox'));
+    const active = b.dataset.view === view || (view === 'thread' && b.dataset.view === 'inbox');
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-current', active ? 'page' : 'false');
   });
+  const nav = el('socialNav');
+  if (nav) nav.classList.toggle('hidden', view === 'thread');
   /* bouton ‹ visible sur toutes les sous-vues sauf Home */
   const back = el('feedBackBtn');
   if (back) back.classList.toggle('hidden', view === 'home');
@@ -59,8 +62,6 @@ function showView(name){
     const box = el('view-' + v);
     if (box) box.classList.toggle('hidden', v !== name);
   });
-  const fab = el('newPostFab');
-  if (fab) fab.classList.toggle('hidden', name !== 'home');
 }
 
 function loader(name){
