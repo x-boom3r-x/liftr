@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v109';
+const CACHE_NAME = 'liftr-v110';
 
 const ASSETS = [
   './',
@@ -55,6 +55,8 @@ const ASSETS = [
   './js/share.js',
   './js/export.js',
   './js/vendor/supabase.js',
+  './js/vendor/quagga2.js',
+  './js/vendor/quagga2.LICENSE',
   './js/lib/cropper.js',
   './js/social/config.js',
   './js/social/client.js',

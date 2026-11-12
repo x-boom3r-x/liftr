@@ -172,10 +172,10 @@ test.describe('Chantier Nutrition', () => {
     await page.locator('#tab-nutri-meals button:has-text("+ Meal")').click();
     await page.fill('#mealName', 'Bulk shake');
     await page.fill('#mealFoodSearch', 'Oats');
-    await page.locator('#nutriMeals .food-pick').first().click();
+    await page.locator('#nutriDialogMount .food-pick').first().click();
     await page.fill('#itemQty', '150');
-    await page.locator('#nutriMeals .item-editor button').click();
-    await page.locator('#nutriMeals button:has-text("Save meal")').click();
+    await page.locator('#nutriDialogMount .item-editor button').click();
+    await page.locator('#nutriDialogMount button:has-text("Save meal")').click();
     await expect(page.locator('#toast')).toContainText('Meal saved');
 
     /* sauver en recette : aliment per-100 g + template reutilisable */
@@ -200,6 +200,7 @@ test.describe('Chantier Nutrition', () => {
     expect(await page.evaluate(() => currentTab)).toBe('nutri-meals');
     await expect(page.locator('#mealName')).toHaveValue('Bulk shake');
     await expect(page.locator('#mealDraftTotals')).toContainText('Totals: 570 kcal'); /* 150 g * 380 */
+    await page.getByRole('button', { name: 'Close meal editor' }).click();
 
     /* suppression de la recette */
     await page.locator('#rootSubnav [data-tab="nutri-foods"]').click();
@@ -311,7 +312,62 @@ test.describe('Chantier Nutrition', () => {
 
     /* code-barres -> fiche perso pre-remplie (produit introuvable) */
     await page.evaluate(() => window.addFoodWithBarcode('3017620422003'));
-    await expect(page.locator('#nutriFoods .food-form')).toBeVisible();
+    await expect(page.locator('#nutriDialogMount .food-form')).toBeVisible();
     await expect(page.locator('#foodBarcode')).toHaveValue('3017620422003');
+  });
+
+  test('scanner : cadrage visible, lecture camera -> Open Food Facts -> ajout au repas', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.Quagga = {
+        init(config, done){
+          const video = document.createElement('video');
+          video.setAttribute('width', '640'); video.setAttribute('height', '480');
+          video.style.width = '640px'; video.style.height = '480px';
+          const canvas = document.createElement('canvas');
+          canvas.width = 640; canvas.height = 480;
+          canvas.style.width = '640px'; canvas.style.height = '480px';
+          config.inputStream.target.append(video, canvas);
+          this.target = config.inputStream.target;
+          this.detected = null;
+          this.config = config;
+          done(null);
+        },
+        onDetected(callback){ this.detected = callback; },
+        stop(){},
+        emit(code){ if (this.detected) this.detected({ codeResult: { code } }); }
+      };
+    });
+    await seed(page, { nutri: { goal: GOAL, foods: [], meals: [] } }, 'Mouataz');
+    await openNutri(page, 'nutri-foods');
+    await page.route('**/api/v2/product/3017620422003.json*', route => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ status: 1, product: OFF_NUTELLA })
+    }));
+
+    await page.evaluate(() => window.openScanner());
+    await expect(page.locator('#scanStatus')).toContainText('Point the camera');
+    const frame = await page.locator('#scanRegion').evaluate(el => ({
+      height: el.clientHeight,
+      videoHeight: el.querySelector('video').clientHeight,
+      canvasHeight: el.querySelector('canvas').clientHeight,
+      guide: getComputedStyle(el.querySelector('.scan-guide'), '::before').width
+    }));
+    expect(frame.height).toBeGreaterThan(200);
+    expect(frame.height).toBeLessThan(400);
+    expect(frame.videoHeight).toBe(frame.height);
+    expect(frame.canvasHeight).toBe(frame.height);
+    expect(frame.guide).not.toBe('0px');
+
+    await page.evaluate(() => window.Quagga.emit('3017620422003'));
+    await expect(page.locator('.scan-name')).toHaveText('Nutella');
+    await expect(page.locator('.scan-src')).toContainText('Open Food Facts');
+    await page.locator('#scanQty').fill('30');
+    await page.getByRole('button', { name: 'Add to meal' }).click();
+    await expect(page.locator('#toast')).toContainText('Nutella logged');
+    const logged = await page.evaluate(() => {
+      const meal = DB.nutri.meals.find(m => m.type === 'snack');
+      return meal && meal.items[0] && { id: meal.items[0].foodId, qty: meal.items[0].qty };
+    });
+    expect(logged).toEqual({ id: 'off:3017620422003', qty: 30 });
   });
 });

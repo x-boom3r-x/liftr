@@ -1411,9 +1411,21 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .seg-row{display:flex;gap:6px;margin:2px 0 12px;flex-wrap:wrap}
 /* scanner */
 .scan-modal{max-width:460px}
-.scan-region{position:relative;background:#000;border-radius:14px;overflow:hidden;
-  min-height:180px;display:grid;place-items:center;margin-bottom:10px}
-.scan-region video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-region{position:relative;isolation:isolate;width:100%;height:clamp(220px,43vh,340px);
+  min-height:220px;background:#03070d;border-radius:14px;overflow:hidden;margin-bottom:8px}
+.scan-region video,.scan-region canvas{position:absolute!important;inset:0!important;
+  width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+  object-fit:cover;display:block}
+.scan-region video{z-index:0}
+.scan-region canvas{z-index:1;pointer-events:none}
+.scan-guide{position:absolute;z-index:2;inset:0;pointer-events:none;display:grid;place-items:center}
+.scan-guide::before{content:"";width:88%;height:34%;border:1px solid rgba(225,239,255,.9);border-radius:12px;
+  box-shadow:0 0 0 999px rgba(3,7,13,.18),0 0 22px rgba(19,116,252,.2),inset 0 0 18px rgba(19,116,252,.08)}
+.scan-guide::after{content:"";position:absolute;left:7%;right:7%;top:50%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--primary),#a9d0ff,var(--primary),transparent);
+  box-shadow:0 0 12px rgba(19,116,252,.75);animation:scanSweep 2.2s ease-in-out infinite alternate}
+@keyframes scanSweep{from{transform:translateY(-34px)}to{transform:translateY(34px)}}
+.scan-instruction{font-size:.78rem;color:var(--text2);text-align:center;margin:0 4px 6px}
 .scan-msg{color:var(--text2);font-size:.85rem;text-align:center;padding:6px 4px 10px}
 .scan-found{display:flex;flex-direction:column;gap:6px;padding:4px 2px 8px}
 .scan-name{font-weight:700;font-size:1.02rem}
@@ -1427,6 +1439,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .scan-found .input{margin-bottom:0}
 .scan-preview{font-size:.82rem;color:var(--text2);min-height:1.1em}
 .scan-notfound{display:flex;flex-direction:column;gap:8px;margin:4px 0 8px}
+@media(prefers-reduced-motion:reduce){.scan-guide::after{animation:none}}
 
 /* ---------- bouton flottant "nouveau post" ---------- */
 .fab{

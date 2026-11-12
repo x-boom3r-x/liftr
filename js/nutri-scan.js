@@ -18,6 +18,7 @@ let _scanState = null;        /* { food, code } résultat courant */
 let _scanActive = false;      /* décodage actif (caméra ouverte) */
 let _lookupBusy = false;      /* anti-rebond pendant un lookup */
 let _boundDetect = false;     /* handler onDetected monté une seule fois */
+let _scanEpoch = 0;            /* ignore les ouvertures asynchrones devenues obsolètes */
 
 function scanModal(){ return document.getElementById('scanModal'); }
 function scanRegion(){ return document.getElementById('scanRegion'); }
@@ -42,6 +43,9 @@ function scanSet(html){ const b = document.getElementById('scanBody'); if (b) b.
 async function openScanner(){
   const modal = scanModal();
   if (!modal) return;
+  stopCamera();
+  const epoch = ++_scanEpoch;
+  _lookupBusy = false;
   _scanState = null;
   modal.classList.add('show');
   modal.setAttribute('aria-hidden', 'false');
@@ -61,18 +65,20 @@ async function openScanner(){
     return;
   }
 
-  scanSet('<div class="scan-region" id="scanRegion"></div>' +
+  scanSet('<div class="scan-region" id="scanRegion" aria-label="Live barcode camera"><div class="scan-guide" aria-hidden="true"></div></div>' +
+    '<div class="scan-instruction">Place the barcode inside the frame and hold the phone steady.</div>' +
     '<div class="scan-msg" id="scanStatus">Starting the camera…</div>' +
     '<div class="composer-actions"><button class="chip" onclick="closeScanner()">Cancel</button></div>');
 
   const ok = await lazyLoadQuagga();
+  if (epoch !== _scanEpoch || !modal.classList.contains('show')) return;
   if (!ok){
     scanSet('<div class="scan-msg">Scanner library failed to load. Add the product by name instead.</div>' +
       '<div class="composer-actions"><button class="btn btn-primary" onclick="scanToManual()">Search manually</button>' +
       '<button class="chip" onclick="closeScanner()">Close</button></div>');
     return;
   }
-  startCamera();
+  startCamera(epoch);
 }
 
 function bindDetect(){
@@ -85,7 +91,7 @@ function bindDetect(){
   });
 }
 
-function startCamera(){
+function startCamera(epoch){
   const region = scanRegion();
   const status = document.getElementById('scanStatus');
   if (!region || !window.Quagga) return;
@@ -102,6 +108,10 @@ function startCamera(){
       locate: true,
       frequency: 10
     }, err => {
+      if (epoch !== _scanEpoch || !modalIsOpen()){
+        try { window.Quagga.stop(); } catch (e){}
+        return;
+      }
       if (err){
         const name = (err && (err.name || err.message || err)) || '';
         const denied = /NotAllowed|Permission|denied|SecurityError|Could not start/i.test(String(name));
@@ -109,9 +119,10 @@ function startCamera(){
           ? 'Camera permission denied. Allow camera access, or add the product by name.'
           : 'Could not open the camera on this device.';
         const acts = document.querySelector('#scanBody .composer-actions');
-        if (acts && denied){
+        if (acts){
           acts.insertAdjacentHTML('afterbegin',
-            '<button class="btn btn-primary" onclick="scanToManual()">Search manually</button>');
+            '<button class="btn btn-primary" onclick="scanToManual()">Search by name</button>' +
+            '<button class="chip" onclick="openScanner()">Try camera again</button>');
         }
         return;
       }
@@ -120,8 +131,17 @@ function startCamera(){
       _scanActive = true;
     });
   } catch (e){
-    if (status) status.textContent = 'Could not start the camera.';
+    if (status) status.textContent = 'Could not start the camera. Check camera access or search by name.';
+    const acts = document.querySelector('#scanBody .composer-actions');
+    if (acts) acts.insertAdjacentHTML('afterbegin',
+      '<button class="btn btn-primary" onclick="scanToManual()">Search by name</button>' +
+      '<button class="chip" onclick="openScanner()">Try camera again</button>');
   }
+}
+
+function modalIsOpen(){
+  const modal = scanModal();
+  return !!(modal && modal.classList.contains('show'));
 }
 
 function stopCamera(){
@@ -264,6 +284,7 @@ function scanToManual(){
 }
 
 function closeScanner(){
+  _scanEpoch++;
   stopCamera();
   _scanState = null;
   const modal = scanModal();
