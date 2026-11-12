@@ -1,11 +1,11 @@
 const { test, expect } = require('@playwright/test');
-const { seed, daysAgo } = require('./helpers');
+const { seed, daysAgo, today } = require('./helpers');
 
 const dayA = { id: 'd1', name: 'A', type: 'PUSH', exercises: [{ id: 'e1', name: 'Développé couché' }] };
 
 const EXPECTED = {
   NEW_PR: 120, STRENGTH_PROGRESS: 120, REPS_PROGRESS: 100, VOLUME_PROGRESS: 100,
-  CONSISTENCY: 120, COMEBACK: 80, HARD_SESSION: 90, MILESTONE: 80,
+  CONSISTENCY: 120, COMEBACK: 80, HARD_SESSION: 90, MILESTONE: 80, GOAL_REACHED: 16,
   SETBACK: 70, GENERAL_PROGRESS: 120
 };
 
@@ -17,7 +17,7 @@ const histSession = {
 
 test.describe('Commentaires LIFTR', () => {
 
-  test('base locale : 1000 commentaires distincts, répartition exacte', async ({ page }) => {
+  test('base locale : 1016 commentaires distincts, répartition exacte', async ({ page }) => {
     await seed(page, {});
     const r = await page.evaluate(() => {
       const counts = {};
@@ -36,10 +36,10 @@ test.describe('Commentaires LIFTR', () => {
         noHttp: LIFTR_COMMENTS.every(c => !/https?:\/\//.test(c.comment))
       };
     });
-    expect(r.total).toBe(1000);
+    expect(r.total).toBe(1016);
     expect(r.counts).toEqual(EXPECTED);
-    expect(r.uniqueIds).toBe(1000);
-    expect(r.uniqueTexts).toBe(1000);
+    expect(r.uniqueIds).toBe(1016);
+    expect(r.uniqueTexts).toBe(1016);
     expect(r.valid).toBe(true);
     expect(r.noHttp).toBe(true);
   });
@@ -123,6 +123,30 @@ test.describe('Commentaires LIFTR', () => {
     await expect(notif).not.toHaveClass(/show/);
   });
 
+  test('nouveau record : carte de célébration et animation dédiées', async ({ page }) => {
+    await seed(page, {});
+    await page.evaluate(() => showSessionComment({ id: 'pr-test', exercises: [] }, 1, '1 set · Record broken'));
+    const notif = page.locator('#liftrNotif');
+    await expect(notif).toHaveClass(/is-pr/);
+    await expect(page.locator('#liftrMark')).toHaveText('PERSONAL RECORD');
+    await expect(page.locator('#liftrText')).toHaveAttribute('data-filter', 'NEW_PR');
+    await expect(page.locator('.mark-pr')).toBeVisible();
+    expect(await notif.evaluate(el => getComputedStyle(el).animationName)).toBe('achievementIn');
+  });
+
+  test('objectif d’hydratation atteint : citation unique du jour', async ({ page }) => {
+    const date = today();
+    await seed(page, { nutri: { profile: { waterGoalMl: 500 }, water: { [date]: 250 } } }, 'Mouataz');
+    await page.evaluate(() => addWater(250));
+    const notif = page.locator('#liftrNotif');
+    await expect(notif).toHaveClass(/is-goal/);
+    await expect(page.locator('#liftrMark')).toHaveText("TODAY'S GOAL");
+    await expect(page.locator('#liftrSum')).toContainText('500 / 500 ml');
+    await expect(page.locator('#liftrText')).toHaveAttribute('data-filter', 'GOAL_REACHED');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(await notif.evaluate(el => getComputedStyle(el).animationName)).toBe('none');
+  });
+
   test('onglet Stats : plus de carte LIFTR (notification uniquement)', async ({ page }) => {
     page.on('dialog', d => d.accept());
     await seed(page, { programme: [dayA], history: [histSession] }, 'Mouataz');
@@ -193,7 +217,7 @@ test.describe('Commentaires LIFTR', () => {
         inBase: LIFTR_COMMENTS.some(c => c.comment === txt.textContent)
       };
     });
-    expect(r.total).toBe(1000);
+    expect(r.total).toBe(1016);
     expect(r.shown).toBe(true);
     expect(EXPECTED).toHaveProperty(r.filter);
     expect(r.inBase).toBe(true);
@@ -209,7 +233,7 @@ test.describe('Commentaires LIFTR', () => {
     await page.reload();
     await page.waitForSelector('#mainApp:not(.hidden)');
     for (const t of ['programme', 'seance', 'calendrier', 'stats']){
-      await page.click(`button[data-tab="${t}"]`);
+      await page.evaluate(tab => window.showTab(tab), t);
       await page.waitForTimeout(150);
     }
     expect(errs).toEqual([]);

@@ -29,7 +29,7 @@
      iPhone (safe 34px) => 10px ; sans encoche => 8px */
   --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
   /* hauteur réelle de la tabbar : défaut calculé, affiné en JS (ResizeObserver) */
-  --tabbar-h:calc(61px + var(--tabbar-pad-b));
+  --tabbar-h:calc(54px + var(--tabbar-pad-b));
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -945,6 +945,25 @@ button{background:none;border:none;cursor:pointer}
 .liftr-notif.show{display:block;animation:notifIn .28s ease}
 @keyframes notifIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translateX(-50%)}}
 .liftr-notif-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.liftr-mark-group{display:flex;align-items:center;gap:7px;min-width:0}
+.liftr-mark-icon{display:none;width:20px;height:20px;flex:none;place-items:center}
+.liftr-mark-icon svg{display:none;width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.liftr-notif.is-achievement .liftr-mark-icon{display:grid}
+.liftr-notif.is-pr .liftr-mark-icon .mark-pr,
+.liftr-notif.is-milestone .liftr-mark-icon .mark-goal,
+.liftr-notif.is-goal .liftr-mark-icon .mark-goal{display:block}
+.liftr-notif.is-achievement{overflow:hidden;isolation:isolate}
+.liftr-notif.is-pr{border-color:rgba(235,203,112,.5);background:linear-gradient(135deg,rgba(235,203,112,.12),rgba(19,116,252,.06) 65%)}
+.liftr-notif.is-pr .liftr-mark,.liftr-notif.is-pr .liftr-mark-icon{color:var(--yellow)}
+.liftr-notif.is-milestone{border-color:rgba(97,163,255,.48)}
+.liftr-notif.is-milestone .liftr-mark,.liftr-notif.is-milestone .liftr-mark-icon{color:var(--primary-text)}
+.liftr-notif.is-goal{border-color:rgba(104,213,163,.5);background:linear-gradient(135deg,rgba(104,213,163,.12),rgba(19,116,252,.05) 70%)}
+.liftr-notif.is-goal .liftr-mark,.liftr-notif.is-goal .liftr-mark-icon{color:var(--green)}
+.liftr-notif.is-achievement::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;background:linear-gradient(108deg,transparent 28%,rgba(255,255,255,.12) 48%,transparent 68%);background-size:220% 100%;animation:achievementSweep .9s ease-out both}
+.liftr-notif.is-achievement>*{position:relative;z-index:1}
+.liftr-notif.show.is-achievement{animation:achievementIn .48s cubic-bezier(.16,1,.3,1) both}
+@keyframes achievementIn{from{opacity:0;transform:translate(-50%,12px) scale(.975)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes achievementSweep{from{background-position:150% 0;opacity:.8}to{background-position:-50% 0;opacity:0}}
 .liftr-notif-actions{display:flex;gap:6px;flex:none}
 .liftr-notif-sum{
   font-size:.76rem;color:var(--text2);white-space:pre-line;
@@ -3053,7 +3072,7 @@ html{background:var(--bg)}
   --gx1:#A8C6FF;--gx2:#75A6FF;--gx3:#1374FC;--gx4:#8AAEFF;
   --gx:linear-gradient(125deg,var(--gx1),var(--gx3));
   --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
-  --tabbar-h:calc(62px + var(--tabbar-pad-b));
+  --tabbar-h:calc(54px + var(--tabbar-pad-b));
   --radius-card:18px;
   --radius-control:12px;
 }
@@ -3112,13 +3131,13 @@ body::after{
 .empty{border-color:var(--border);background:var(--surface)}
 .tabbar{
   flex:none;position:relative;inset:auto;transform:none;
-  padding:8px 12px var(--tabbar-pad-b);
+  padding:5px 12px var(--tabbar-pad-b);
   background:rgba(8,14,26,.98);border-top:1px solid rgba(163,197,239,.14);
   box-shadow:0 -10px 28px rgba(0,0,0,.22);
   backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);
 }
 .tabbar-inner{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:8px;max-width:640px}
-.tabbar .tab{width:100%;min-width:0;flex:none;padding:6px 2px;color:var(--text3);font-size:.65rem;font-weight:650}
+.tabbar .tab{width:100%;min-width:0;min-height:44px;flex:none;padding:4px 2px;color:var(--text3);font-size:.65rem;font-weight:650}
 .tabbar .tab svg,.tabbar .tab svg.i{width:20px;height:20px;stroke-width:1.8}
 .tabbar .tab.active{background:var(--primary-dim);color:var(--primary-text)}
 .tabbar .tab[aria-current="true"]{color:var(--primary-text)}
@@ -3246,3 +3265,15 @@ body::after{
 .nutri-transfer-card .nutri-transfer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
 .nutri-transfer-card .nutri-transfer-actions .btn{min-height:44px;padding:8px 10px;font-size:.78rem}
 @media(min-width:760px){.nutri-micro-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Safari/tablet: keep the bottom dock visually compact and anchored to the shell. */
+@media(max-width:899px){
+  #mainApp>.tabbar{width:min(100%,520px);margin:0 auto;padding:5px 10px var(--tabbar-pad-b);border:1px solid rgba(163,197,239,.16);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.24)}
+}
+@media(min-width:900px){
+  #mainApp>.tabbar{width:auto;max-width:none;margin:0;border:0;border-right:1px solid var(--border);border-radius:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .liftr-notif.show.is-achievement{animation:none}
+  .liftr-notif.is-achievement::after{animation:none;display:none}
+}

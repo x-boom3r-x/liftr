@@ -146,11 +146,17 @@ function addWater(delta){
   if (!n) return;
   const date = todayISO();
   const cur = nutriWaterMl(date);
+  const goal = nutriWaterGoal();
   const next = Math.max(0, Math.min(24000, cur + (+delta || 0)));
   n.water[date] = next;
+  const reachedGoal = cur < goal && next >= goal && (!n.achievementHits || n.achievementHits.water !== date);
+  if (reachedGoal) n.achievementHits = Object.assign({}, n.achievementHits || {}, { water: date });
   save();
   renderNutrition(currentTab);
   if (typeof window.renderToday === 'function') window.renderToday();
+  if (reachedGoal && typeof window.showGoalAchievement === 'function'){
+    window.showGoalAchievement('Hydration goal reached · ' + next.toLocaleString() + ' / ' + goal.toLocaleString() + ' ml');
+  }
 }
 function logWater(ml){ addWater(+ml || 0); }
 

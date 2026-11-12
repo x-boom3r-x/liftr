@@ -1,6 +1,6 @@
 /* ==================================================================
    LIFTR - base locale de commentaires
-   1000 textes distincts, écrits un par un, répartis en 10 filtres.
+   1016 textes distincts, écrits un par un, répartis en 11 filtres.
    Aucun fetch, aucun réseau : tout est en modules ES, caché par le SW.
    Format de chaque entrée : { id, filter, comment }
    ================================================================== */
@@ -12,12 +12,13 @@ import CONSISTENCY from './comments/consistency.js';
 import COMEBACK from './comments/comeback.js';
 import HARD_SESSION from './comments/hard-session.js';
 import MILESTONE from './comments/milestone.js';
+import GOAL_REACHED from './comments/goal-reached.js';
 import SETBACK from './comments/setback.js';
 import GENERAL_PROGRESS from './comments/general-progress.js';
 
 const COMMENT_FILTERS = [
   'NEW_PR', 'STRENGTH_PROGRESS', 'REPS_PROGRESS', 'VOLUME_PROGRESS',
-  'CONSISTENCY', 'COMEBACK', 'HARD_SESSION', 'MILESTONE',
+  'CONSISTENCY', 'COMEBACK', 'HARD_SESSION', 'MILESTONE', 'GOAL_REACHED',
   'SETBACK', 'GENERAL_PROGRESS'
 ];
 
@@ -30,6 +31,7 @@ const RAW = {
   COMEBACK: COMEBACK,
   HARD_SESSION: HARD_SESSION,
   MILESTONE: MILESTONE,
+  GOAL_REACHED: GOAL_REACHED,
   SETBACK: SETBACK,
   GENERAL_PROGRESS: GENERAL_PROGRESS
 };

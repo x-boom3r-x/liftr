@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v104';
+const CACHE_NAME = 'liftr-v105';
 
 const ASSETS = [
   './',
@@ -48,6 +48,7 @@ const ASSETS = [
   './js/comments/comeback.js',
   './js/comments/hard-session.js',
   './js/comments/milestone.js',
+  './js/comments/goal-reached.js',
   './js/comments/setback.js',
   './js/comments/general-progress.js',
   './js/install.js',

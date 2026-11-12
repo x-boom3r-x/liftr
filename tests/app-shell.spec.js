@@ -193,8 +193,20 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     expect(avecInset.tabGap, 'avec 34px d\'inset : libellés à 10px du bord (max(8, 34−24))')
       .toBeCloseTo(10, 1);
     expect(avecInset.barH - sansInset.barH,
-      '34px d\'inset n\'ajoutent que 2px à la barre (69 → 71px)')
+      '34px d\'inset n\'ajoutent que 2px à la barre')
       .toBeCloseTo(2, 1);
+  });
+
+  test('Safari/tablette : dock inférieur étroit, centré et collé au bas', async ({ page }) => {
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await page.waitForTimeout(120);
+    const nav = await page.locator('.tabbar').evaluate(el => {
+      const r = el.getBoundingClientRect();
+      return { left: r.left, width: r.width, bottomGap: window.innerHeight - r.bottom };
+    });
+    expect(nav.width).toBeLessThanOrEqual(520);
+    expect(Math.abs(nav.left - (820 - nav.width) / 2)).toBeLessThanOrEqual(1);
+    expect(Math.abs(nav.bottomGap)).toBeLessThanOrEqual(1);
   });
 
   test('--tabbar-h suit la barre réelle, le composeur reste intégré et le toast s\'y cale', async ({ page }) => {

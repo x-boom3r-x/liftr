@@ -207,27 +207,34 @@ function changeLiftrComment(){
 function renderNotif(){
   const sumEl = $('liftrSum');
   const txtEl = $('liftrText');
+  const markEl = $('liftrMark');
+  const filter = _sessionNote ? _sessionNote.filter : '';
+  const labels = { NEW_PR: 'PERSONAL RECORD', MILESTONE: 'TRAINING MILESTONE', GOAL_REACHED: "TODAY'S GOAL" };
   if (sumEl) sumEl.textContent = _notifSummary;
+  if (markEl) markEl.textContent = labels[filter] || 'LIFTR';
   if (txtEl){
-    txtEl.setAttribute('data-filter', _sessionNote ? _sessionNote.filter : '');
+    txtEl.setAttribute('data-filter', filter);
     txtEl.setAttribute('data-id', _sessionNote ? _sessionNote.id : '');
     txtEl.textContent = _sessionNote ? _sessionNote.comment : '';
   }
 }
 
-function showSessionComment(session, prsHit, summary){
-  const filter = detectAfterSession(session, prsHit);
+function presentAchievement(filter, summary, sessionId){
   const c = pickComment(filter);
   _sessionNote = c ? { id: c.id, filter: filter, comment: c.comment } : null;
   _notifSummary = summary || '';
-  _notifSessionId = (session && session.id) ? session.id : null;
+  _notifSessionId = sessionId || null;
   renderNotif();
   const shareBtn = $('liftrShare');
   if (shareBtn) shareBtn.classList.toggle('hidden', !_notifSessionId);
 
   const el = $('liftrNotif');
   if (el){
-    el.classList.remove('show');
+    el.classList.remove('show', 'is-achievement', 'is-pr', 'is-milestone', 'is-goal');
+    const style = filter === 'NEW_PR' ? 'is-pr'
+      : filter === 'MILESTONE' ? 'is-milestone'
+      : filter === 'GOAL_REACHED' ? 'is-goal' : '';
+    if (style) el.classList.add('is-achievement', style);
     void el.offsetWidth; /* relance l'animation d'entrée */
     el.classList.add('show');
   }
@@ -235,7 +242,15 @@ function showSessionComment(session, prsHit, summary){
   _notifTimer = setTimeout(hideSessionComment, NOTIF_MS);
 }
 
+function showSessionComment(session, prsHit, summary){
+  presentAchievement(detectAfterSession(session, prsHit), summary, session && session.id);
+}
+
+function showGoalAchievement(summary){
+  presentAchievement('GOAL_REACHED', summary, null);
+}
+
 Object.assign(window, {
-  pickComment, detectAfterSession, showSessionComment,
+  pickComment, detectAfterSession, showSessionComment, showGoalAchievement,
   changeLiftrComment, hideSessionComment, lastLiftr, isoDiff, shareSession
 });

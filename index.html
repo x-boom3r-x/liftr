@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="104">
+<html lang="en" data-build="105">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1197,7 +1197,13 @@
 <!-- LIFTR notification after each finished session -->
 <div class="liftr-notif" id="liftrNotif" role="status" aria-live="polite">
   <div class="liftr-notif-head">
-    <span class="liftr-mark">LIFTR</span>
+    <span class="liftr-mark-group">
+      <span class="liftr-mark-icon" aria-hidden="true">
+        <svg class="mark-pr" viewBox="0 0 24 24"><path d="M4 17 9 12l3 3 8-9"/><path d="M14 6h6v6"/></svg>
+        <svg class="mark-goal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 9"/></svg>
+      </span>
+      <span class="liftr-mark" id="liftrMark">LIFTR</span>
+    </span>
     <span class="liftr-notif-actions">
       <button class="liftr-refresh hidden" id="liftrShare" onclick="shareSession()" title="Share this session" aria-label="Share this session"><svg class="ico" data-i="share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></button>
       <button class="liftr-refresh" id="liftrChange" onclick="changeLiftrComment()" title="Another comment" aria-label="Another comment">↻</button>

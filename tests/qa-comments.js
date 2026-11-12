@@ -1,6 +1,6 @@
 /* QA de la base de commentaires LIFTR : comptage, unicité, répartition, qualité.
    Usage : node tests/qa-comments.js [--strict]
-   --strict = exige 1000 entrées et la répartition exacte (sinon échec). */
+   --strict = exige 1016 entrées et la répartition exacte (sinon échec). */
 const path = require('path');
 const { pathToFileURL } = require('url');
 
@@ -13,6 +13,7 @@ const FILES = [
   ['COMEBACK', 'comeback.js', 80],
   ['HARD_SESSION', 'hard-session.js', 90],
   ['MILESTONE', 'milestone.js', 80],
+  ['GOAL_REACHED', 'goal-reached.js', 16],
   ['SETBACK', 'setback.js', 70],
   ['GENERAL_PROGRESS', 'general-progress.js', 120]
 ];
@@ -66,8 +67,8 @@ function jaccard(a, b){
   const total = all.length;
   console.log('--- Répartition ---');
   for (const [f, , exp] of FILES) console.log(`  ${f.padEnd(20)} ${counts[f] ?? 0}/${exp}`);
-  console.log(`  TOTAL               ${total}/1000`);
-  if (strict && total !== 1000) errors.push(`total ${total}, attendu 1000`);
+  console.log(`  TOTAL               ${total}/1016`);
+  if (strict && total !== 1016) errors.push(`total ${total}, attendu 1016`);
 
   // IDs (générés comme dans js/comments.js : liftr_0001… dans l'ordre du fichier)
   const ids = new Set();
