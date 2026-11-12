@@ -163,7 +163,7 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     expect(r.docScrollY, 'la fenêtre ne défile pas').toBe(0);
   });
 
-  test('zone safe-area : --tabbar-pad-b = max(8px, safe − 24px)', async ({ page }) => {
+  test('zone safe-area : la barre couvre l’inset et garde les commandes au-dessus', async ({ page }) => {
     await page.evaluate(t => window.showTab(t), 'programme');
     await page.waitForTimeout(150);
     const measure = () => page.evaluate(() => {
@@ -172,29 +172,42 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
       const br = bar.getBoundingClientRect(), tr = tab.getBoundingClientRect();
       return {
         barH: Math.round(br.height * 100) / 100,
-        tabGap: Math.round((window.innerHeight - tr.bottom) * 100) / 100,
+        tabGap: Math.round((visualViewport.height - tr.bottom) * 100) / 100,
         barBottom: Math.round(br.bottom * 100) / 100,
-        innerH: window.innerHeight
+        visualH: visualViewport.height,
+        safe: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0
       };
     });
 
     const sansInset = await measure();                      /* safe-area = 0 → 8px */
-    await page.evaluate(() =>
-      document.documentElement.style.setProperty('--safe-bottom', '34px'));
+    await page.evaluate(() => {
+      document.documentElement.style.setProperty('--safe-bottom', '34px');
+      window.dispatchEvent(new Event('resize'));
+    });
     await page.waitForTimeout(150);
     const avecInset = await measure();                      /* iPhone avec home indicator */
 
     expect(sansInset.barBottom, 'barre collée en bas (sans inset)')
-      .toBeLessThanOrEqual(sansInset.innerH + 0.5);
-    expect(avecInset.barBottom, 'barre toujours collée en bas (avec inset)')
-      .toBeLessThanOrEqual(avecInset.innerH + 0.5);
+      .toBeCloseTo(sansInset.visualH, 0);
+    expect(avecInset.barBottom, 'fond de barre étendu sous l’inset sûr')
+      .toBeCloseTo(avecInset.visualH + 34, 0);
     expect(sansInset.tabGap, 'sans inset : libellés à 8px du bord')
       .toBeCloseTo(8, 1);
-    expect(avecInset.tabGap, 'avec 34px d\'inset : libellés à 10px du bord (max(8, 34−24))')
-      .toBeCloseTo(10, 1);
+    expect(avecInset.tabGap, 'avec inset : commandes arrêtées au bord sûr')
+      .toBeCloseTo(0, 1);
     expect(avecInset.barH - sansInset.barH,
-      '34px d\'inset n\'ajoutent que 2px à la barre')
-      .toBeCloseTo(2, 1);
+      'la barre réserve les 26px d’inset qui dépassent le minimum de 8px')
+      .toBeCloseTo(26, 1);
+  });
+
+  test('la coque suit la hauteur du visual viewport', async ({ page }) => {
+    const dimensions = await page.evaluate(() => {
+      const shell = document.getElementById('mainApp').getBoundingClientRect();
+      return { top: shell.top, height: shell.height, viewportTop: visualViewport.offsetTop,
+        viewportHeight: visualViewport.height };
+    });
+    expect(dimensions.top).toBeCloseTo(dimensions.viewportTop, 0);
+    expect(dimensions.height).toBeCloseTo(dimensions.viewportHeight, 0);
   });
 
   test('Safari/tablette : dock inférieur étroit, centré et collé au bas', async ({ page }) => {

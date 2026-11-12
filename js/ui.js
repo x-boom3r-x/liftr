@@ -102,14 +102,32 @@ window.addEventListener('online', checkNet);
 window.addEventListener('offline', checkNet);
 
 /* ---------------- tabs ---------------- */
-/* Aucun scroll programmaté au changement d'onglet : sur iOS Safari, remonter la
-   page fait réapparaître la barre du navigateur, le viewport rétrécit, et la
-   tabbar (position:fixed;bottom:0) remonte. Chaque onglet garde la position du
-   navigateur (le Feed continue de gérer/restaurer son propre scroll). */
+/* Aucun scroll programmé au changement d'onglet : chaque écran garde sa position,
+   et le Feed continue de gérer/restaurer son propre scroll. */
 
-/* The fixed shell is anchored with CSS top:0/bottom:0. Avoid a second JS height
-   measurement: visualViewport includes Safari chrome and keyboard offsets differently. */
-function pinTabbar(){}
+/* Safari can leave fixed-position elements at the layout viewport edge while its
+   browser chrome changes the visible viewport. Keep the app shell aligned to the
+   viewport WebKit reports, and extend its background through the home-indicator area. */
+function syncAppViewport(){
+  const shell = document.getElementById('mainApp');
+  const viewport = window.visualViewport;
+  if (!shell || !viewport || Math.abs(viewport.scale - 1) > 0.01) return;
+  const safeBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
+  shell.style.top = viewport.offsetTop + 'px';
+  shell.style.left = viewport.offsetLeft + 'px';
+  shell.style.right = 'auto';
+  shell.style.bottom = 'auto';
+  shell.style.width = viewport.width + 'px';
+  shell.style.height = (viewport.height + safeBottom) + 'px';
+}
+function pinTabbar(){ syncAppViewport(); }
+if (window.visualViewport){
+  syncAppViewport();
+  window.visualViewport.addEventListener('resize', syncAppViewport, { passive: true });
+  window.visualViewport.addEventListener('scroll', syncAppViewport, { passive: true });
+}
+window.addEventListener('resize', syncAppViewport, { passive: true });
+window.addEventListener('orientationchange', syncAppViewport, { passive: true });
 
 /* --tabbar-h : hauteur RÉELLE de la barre, mesurée (fab / toast s'y calent,
    plus de 78 / 96 px en dur). ResizeObserver : le padding change avec

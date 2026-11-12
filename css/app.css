@@ -25,9 +25,8 @@
   --safe-bottom:env(safe-area-inset-bottom);
   --line:#334B6B;
   --story-ring:linear-gradient(45deg,#C5D5FF,#1374FC 50%,#6B84E5);
-  /* espace SOUS les libellés de la tabbar. Réglable : -2px = plus bas, +2px = plus haut.
-     iPhone (safe 34px) => 10px ; sans encoche => 8px */
-  --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
+  /* keep labels above the iPhone home indicator */
+  --tabbar-pad-b:max(8px,var(--safe-bottom));
   /* hauteur réelle de la tabbar : défaut calculé, affiné en JS (ResizeObserver) */
   --tabbar-h:calc(54px + var(--tabbar-pad-b));
 }
@@ -2419,24 +2418,8 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
   margin:0;
 }
 
-/* ==================================================================
-   APP SHELL (iPhone) — la tabbar ne dépend plus de position:fixed
-   sur le document. #mainApp occupe exactement l'écran VISIBLE ;
-   le header et la tabbar sont des éléments de flex (jamais déplacés),
-   seul .app défile. Aucun contenu ne peut plus élargir le document
-   ni changer la hauteur du viewport => la barre reste collée en bas
-   sur TOUS les onglets.
-   ================================================================== */
-/* Safari iPhone : height:100dvh laissait un espace NOIR sous la tabbar.
-   100dvh = hauteur du viewport visible, qui S'ARRÊTE au-dessus de la
-   bande de l'indicateur Home (safe-area basse) : la barre — dernier
-   enfant flex — s'arrêtait donc trop haut et le fond du shell (var(--bg))
-   transparaissait en dessous. Ancre HAUT + BAS (top:0;bottom:0) sans
-   hauteur en unité de viewport : avec viewport-fit=cover, le cadre remplit
-   la hauteur ÉCRAN physique (safe-area comprise) et le fond de la barre
-   couvre la zone Home. Pas de white-gap au rétract de la barre d'outils :
-   le document ne défile pas (seul .app scrolle), le layout viewport est
-   stable. */
+/* App shell: only .app scrolls; ui.js tracks Safari's visual viewport so the
+   shell and bottom navigation follow the visible screen as browser chrome moves. */
 #mainApp{
   position:fixed;top:0;right:0;left:0;bottom:0;
   display:flex;flex-direction:column;
@@ -3071,7 +3054,7 @@ html{background:var(--bg)}
   --glass-b:1px solid rgba(163,197,239,.12);
   --gx1:#A8C6FF;--gx2:#75A6FF;--gx3:#1374FC;--gx4:#8AAEFF;
   --gx:linear-gradient(125deg,var(--gx1),var(--gx3));
-  --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
+  --tabbar-pad-b:max(8px,var(--safe-bottom));
   --tabbar-h:calc(54px + var(--tabbar-pad-b));
   --radius-card:18px;
   --radius-control:12px;
