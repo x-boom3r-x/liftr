@@ -121,12 +121,6 @@ async function renderLibraryScreen(){
   if (mapEl){
     const clickable = libScreenFilter !== 'All';
     mapEl.innerHTML = bodyMapHtml({ scores: muscleScores(30), selected: clickable ? libScreenFilter : '', select: true, days: 30 });
-    mapEl.querySelectorAll('.bm-hit').forEach(el => {
-      el.onclick = async () => {
-        libScreenFilter = (libScreenFilter === el.dataset.m) ? 'All' : el.dataset.m;
-        await renderLibraryScreen();
-      };
-    });
   }
   const sub = $('libMapSub');
   if (sub) sub.textContent = libScreenFilter === 'All' ? 'Tout le catalogue : ' + list.length + ' exercices' : 'Filtre : ' + libScreenFilter;
@@ -178,6 +172,14 @@ function onLibScreenSearch(v){
 function bmPick(muscle){
   if (!muscle) return;
   libScreenFilter = libScreenFilter === muscle ? 'All' : muscle;
+  if (currentTab !== 'library') showTab('library');
+  else renderLibraryScreen();
+}
+
+function bmPickMuscle(muscle){
+  const selected = String(muscle || '').trim();
+  if (!selected) return;
+  libScreenFilter = normalizeForAlias(libScreenFilter) === normalizeForAlias(selected) ? 'All' : selected;
   if (currentTab !== 'library') showTab('library');
   else renderLibraryScreen();
 }
@@ -253,7 +255,7 @@ function toggleRecent(name){
 /* Renderiser & exposer en globals. */
 cataloguePromise.then(() => renderLibraryScreen()).catch(() => {});
 Object.assign(window, {
-  renderLibraryScreen, onLibScreenSearch, bmPick, matchesLibraryMuscle,
+  renderLibraryScreen, onLibScreenSearch, bmPick, bmPickMuscle, matchesLibraryMuscle,
   libScreenPick, libScreenAddTo, toggleFavorite, toggleRecent,
   libScreenFilter, libScreenQuery, libScreenSort, libScreenFav, libScreenRec,
 });

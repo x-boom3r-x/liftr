@@ -196,7 +196,8 @@ function renderProgramme(){
   renderProgramsList();
   if (!days.length){
     el.innerHTML = '<div class="empty"><div class="empty-icon">🗓️</div>' +
-      '<div class="empty-text">No day created yet.<br>Start by adding a session (PUSH, PULL, LEGS…)</div></div>';
+      '<div class="empty-text">No day created yet.<br>Start by adding a session (PUSH, PULL, LEGS…)</div>' +
+      '<button type="button" class="btn btn-primary btn-sm" onclick="openNewDay(\'' + (activeProg ? activeProg.id : '') + '\')">+ Add your first day</button></div>';
     return;
   }
   el.innerHTML = days.map((d, i) => {
@@ -222,7 +223,7 @@ function renderProgramme(){
         '</div>' +
       '</div>' +
     '</div>';
-  }).join('');
+  }).join('') + '<button type="button" class="btn btn-primary btn-sm programme-add-day" onclick="openNewDay(\'' + (activeProg ? activeProg.id : '') + '\')">+ Add another day</button>';
   initProgrammeDayDrag();
 }
 
@@ -468,13 +469,15 @@ function saveProgrammeEditor(){
   const name = $('progNameInput').value.trim();
   const desc = $('progDescInput').value.trim();
   if (!name) { $('progNameInput').focus(); return; }
+  let created = null;
   if (id){
     renameProgramme(id, name);
     updateProgrammeDescription(id, desc);
   } else {
-    createProgramme(name, desc);
+    created = createProgramme(name, desc);
   }
   closeModal('programmeEditorModal');
+  if (created) openNewDay(created.id);
 }
 
 /* Ouvre l'édition du nom d'un programme en ligne */
@@ -504,7 +507,8 @@ function renderProgramView(programId){
   const daysEl = $('programDaysList');
   if (!daysEl) return;
   if (!days.length){
-    daysEl.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">Aucune journée. Ajoutez-en une pour commencer.</div></div>';
+    daysEl.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-text">Aucune journée. Ajoutez-en une pour commencer.</div>' +
+      '<button type="button" class="btn btn-primary btn-sm" onclick="openNewDay(\'' + p.id + '\')">+ Ajouter la première journée</button></div>';
     return;
   }
   daysEl.innerHTML = days.map(d => {
@@ -518,7 +522,7 @@ function renderProgramView(programId){
       '</div>' +
       '</div>' +
       '</div>';
-  }).join('');
+  }).join('') + '<button type="button" class="btn btn-sm programme-add-day" onclick="openNewDay(\'' + p.id + '\')">+ Ajouter une journée</button>';
 }
 
 /* Rend le sélecteur de programme pour openNewDay */
@@ -535,11 +539,14 @@ function renderProgramSelector(elId, selectedId){
 function saveNewDayInProgram(programId){
   const name = $('dayNameInput').value.trim();
   if (!name) { $('dayNameInput').focus(); return; }
-  DB.programme.push({ id: uid(), programId: programId || null, name: name, type: 'CUSTOM', order: getProgramDays(programId).length, exercises: [] });
+  const day = { id: uid(), programId: programId || null, name: name, type: 'CUSTOM', order: getProgramDays(programId).length, exercises: [] };
+  DB.programme.push(day);
   save();
   closeModal('newDayModal');
   renderProgramme();
   renderProgramsList();
+  openDayDetail(day.id);
+  return day;
 }
 function saveNewDay(){
   const name = $('dayNameInput').value.trim();
@@ -547,12 +554,15 @@ function saveNewDay(){
   const progSel = $('dayProgramSelector');
   const programId = progSel ? progSel.value : activeProgramId;
   if (programId){
-    saveNewDayInProgram(programId);
+    return saveNewDayInProgram(programId);
   } else {
-    DB.programme.push({ id: uid(), name: name, type: 'CUSTOM', exercises: [] });
+    const day = { id: uid(), name: name, type: 'CUSTOM', exercises: [] };
+    DB.programme.push(day);
     save();
     closeModal('newDayModal');
     renderAll();
+    openDayDetail(day.id);
+    return day;
   }
 }
 
@@ -628,6 +638,14 @@ function openDayDetail(id){
   const s = $('libSearch'); if (s) s.value = '';
   renderLibrary();
   openModal('dayDetailModal');
+  if (!d.exercises.length){
+    setTimeout(() => {
+      const search = $('libSearch');
+      if (!search || detailDayId !== id) return;
+      search.scrollIntoView({ block: 'center', behavior: 'auto' });
+      search.focus({ preventScroll: true });
+    }, 80);
+  }
 }
 
 function renameDay(){

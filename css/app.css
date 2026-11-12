@@ -286,6 +286,9 @@ button{background:none;border:none;cursor:pointer}
 .bm-hit{cursor:pointer}
 .bm-hit:focus-visible{outline:none;stroke:#fff;stroke-width:8}
 .bm-hit:hover{stroke:#9FC6FF;stroke-width:6}
+.bm-hit.selected{fill:#1374FC;stroke:#B9D8FF;stroke-width:5;filter:drop-shadow(0 0 4px rgba(19,116,252,.55))}
+.bm-hit.selected:hover{stroke:#fff}
+.programme-add-day{display:block;margin:12px auto 0}
 .bm-legend{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:4px;color:var(--text3);font-size:.62rem}
 .bm-legend i{display:inline-block;width:32px;height:7px;border-radius:6px;background:linear-gradient(90deg,#1B2D47,#1374FC)}
 .bm-empty{padding:8px 4px 2px;color:var(--text3);font-size:.72rem;text-align:center}

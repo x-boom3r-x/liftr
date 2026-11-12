@@ -78,11 +78,13 @@ function bodyMapHtml(opts){
     });
     MUSCLES.forEach(slug => {
       const group = ROOT_GROUP[slug];
+      const isSelected = !!(o.selected && (o.selected === slug || String(o.selected).toLowerCase() === String(group).toLowerCase()));
       const attrs = clickable && group
-        ? ' role="button" tabindex="0" aria-label="' + group + '" onclick="bmPick(\'' + group + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bmPick(\'' + group + '\')}"'
+        ? ' role="button" tabindex="0" aria-pressed="' + isSelected + '" aria-label="Select ' + slug.replace(/-/g, ' ') + ' muscle" onclick="bmPickMuscle(\'' + slug + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();bmPickMuscle(\'' + slug + '\')}"'
         : '';
       (view.p[slug] || []).forEach((d, i) => {
-        paths += '<path class="bm-m l' + levels[slug] + (clickable ? ' bm-hit' : '') + '" data-muscle="' + slug + '"' + attrs + ' d="' + d + '"><title>' + slug.replace(/-/g, ' ') + '</title></path>';
+        const selected = isSelected ? ' selected' : '';
+        paths += '<path class="bm-m l' + levels[slug] + (clickable ? ' bm-hit' : '') + selected + '" data-muscle="' + slug + '"' + attrs + ' d="' + d + '"><title>' + slug.replace(/-/g, ' ') + '</title></path>';
       });
     });
     return '<div class="bodymap-figure"><div class="bodymap-view-label">' + label + '</div>' +
@@ -105,7 +107,7 @@ function renderTodayBodyMap(){
   host.innerHTML = '<div class="bodymap-switch" role="group" aria-label="Body model">' +
     '<button type="button" class="' + (model === 'male' ? 'active' : '') + '" aria-pressed="' + (model === 'male') + '" onclick="setBodyMapModel(\'male\')">Man</button>' +
     '<button type="button" class="' + (model === 'female' ? 'active' : '') + '" aria-pressed="' + (model === 'female') + '" onclick="setBodyMapModel(\'female\')">Woman</button>' +
-    '</div>' + bodyMapHtml({ scores, body: model, days: 30 });
+    '</div>' + bodyMapHtml({ scores, body: model, days: 30, select: true });
 }
 
 function setBodyMapModel(model){
