@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="108">
+<html lang="en" data-build="109">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -9,9 +9,13 @@
 <meta name="theme-color" content="#080D18">
 <title>Liftr</title>
 <meta name="description" content="LIFTR — offline-first training and nutrition tracking, with an optional connected social feed.">
-<link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="liftr-icon-192-v109.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="liftr-icon-192-v109.png">
 <link rel="manifest" href="manifest.json">
+<style>
+  #bootSplash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#080D18;color:#F3F7FD}
+  #bootSplash.hidden{display:none!important}
+</style>
 <link rel="stylesheet" href="css/app.css">
 <script>
 /* Filet anti-desynchro HTML/JS : le HTML vient du reseau, un JS plus ancien
@@ -61,6 +65,22 @@
 </head>
 <body>
 
+<section class="boot-splash" id="bootSplash" role="status" aria-live="polite" aria-busy="true" aria-label="Opening Liftr">
+  <div class="boot-glow" aria-hidden="true"></div>
+  <div class="boot-content">
+    <div class="boot-mark"><img src="liftr-icon-512-v109.png" alt=""></div>
+    <h1 id="bootTitle">LIFTR</h1>
+    <p class="boot-tagline">Train on your terms.</p>
+    <div class="boot-rail" id="bootRail" aria-hidden="true"><span></span></div>
+    <p class="boot-status" id="bootStatus">Preparing your training space</p>
+    <div class="boot-error hidden" id="bootError">
+      <p id="bootErrorMessage">Liftr couldn't finish loading. Try again; your profile remains on this device.</p>
+      <button class="boot-retry" type="button" onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+  <div class="boot-footer" aria-hidden="true"><span>GYM</span><i></i><span>NUTRITION</span><i></i><span>SOCIAL</span></div>
+</section>
+
 <!-- ================= WELCOME ================= -->
 <div id="welcomeScreen" class="welcome">
   <div class="welcome-logo"><img src="nouveau%20logo.jpeg" alt="Liftr"></div>
@@ -85,7 +105,6 @@
 <div id="mainApp" class="hidden">
   <header class="header">
     <div class="header-brand">
-      <div class="logo"><img src="nouveau%20logo.jpeg" alt=""></div>
       <div>
         <div class="header-title">Liftr</div>
         <div class="header-sub" id="headerUser">—</div>

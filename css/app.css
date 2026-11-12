@@ -58,14 +58,7 @@ button{background:none;border:none;cursor:pointer}
   border-bottom:1px solid var(--border);
 }
 .header-brand{display:flex;align-items:center;gap:10px;min-width:0}
-.logo{
-  width:40px;height:40px;border-radius:11px;flex:none;overflow:hidden;
-  background:linear-gradient(145deg,var(--primary),#A4D1FF);
-  display:grid;place-items:center;
-}
 .welcome-logo img{filter:none}
-.logo img{width:40px;height:40px;border-radius:11px;filter:none;object-fit:cover;transform:scale(1.3)}
-.logo svg{width:19px;height:19px;fill:#080D18}
 .header-title{font-size:1.02rem;font-weight:700;letter-spacing:-.02em;line-height:1.1}
 .header-sub{font-size:.74rem;color:var(--text2);margin-top:2px}
 .profile-btn{
@@ -3075,7 +3068,6 @@ body::after{
   background:rgba(8,13,24,.96);border-color:rgba(163,197,239,.12);
   box-shadow:0 1px 0 rgba(255,255,255,.02);
 }
-.logo{border-radius:11px}
 .header-title{font-size:1rem;font-weight:760;letter-spacing:-.035em}
 .header-sub{font-size:.72rem}
 .header-profile{
@@ -3262,4 +3254,50 @@ body::after{
 @media(prefers-reduced-motion:reduce){
   .liftr-notif.show.is-achievement{animation:none}
   .liftr-notif.is-achievement::after{animation:none;display:none}
+}
+
+/* ---------- BOOT SCREEN ---------- */
+#bootSplash.boot-splash{
+  position:fixed;inset:0;z-index:9999;display:grid;place-items:center;isolation:isolate;overflow:hidden;
+  padding:calc(env(safe-area-inset-top) + 20px) 24px calc(env(safe-area-inset-bottom) + 32px);
+  color:#F3F7FD;
+  background:radial-gradient(ellipse 70% 44% at 50% 42%,rgba(19,116,252,.13),transparent 76%),#080D18;
+  opacity:1;visibility:visible;transition:opacity .22s cubic-bezier(.2,.75,.25,1),visibility .22s ease;
+}
+#bootSplash.is-leaving{opacity:0;visibility:hidden;pointer-events:none}
+.boot-glow{
+  position:absolute;z-index:-1;left:50%;top:43%;width:min(88vw,460px);aspect-ratio:1;transform:translate(-50%,-50%);
+  border-radius:50%;background:radial-gradient(circle,rgba(19,116,252,.14),rgba(19,116,252,.035) 42%,transparent 69%);
+  pointer-events:none;
+}
+.boot-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:min(100%,340px);text-align:center}
+.boot-mark{
+  width:100px;height:100px;overflow:hidden;border:1px solid rgba(110,169,255,.26);border-radius:27px;
+  background:#000;box-shadow:0 18px 46px rgba(0,0,0,.32),0 10px 24px rgba(19,116,252,.12);
+  animation:boot-mark-in .42s cubic-bezier(.18,.8,.24,1) both;
+}
+.boot-mark img{display:block;width:100%;height:100%;object-fit:cover}
+.boot-content h1{margin:24px 0 0;color:#F3F7FD;font-size:1.42rem;font-weight:820;line-height:1;letter-spacing:.16em}
+.boot-tagline{margin:10px 0 0;color:#A9B9D0;font-size:.9rem;line-height:1.45}
+.boot-rail{position:relative;width:146px;height:3px;margin-top:30px;overflow:hidden;border-radius:3px;background:rgba(163,197,239,.15)}
+.boot-rail span{position:absolute;inset:0 auto 0 0;width:42%;border-radius:inherit;background:linear-gradient(90deg,rgba(19,116,252,.3),#61A3FF);animation:boot-progress 1.25s cubic-bezier(.45,0,.55,1) infinite}
+.boot-status{margin:13px 0 0;color:#8197B6;font-size:.72rem;font-weight:560;letter-spacing:.015em}
+.boot-error{width:100%;margin-top:12px}
+.boot-error p{color:#A9B9D0;font-size:.78rem;line-height:1.5}
+.boot-retry{display:inline-flex;justify-content:center;align-items:center;min-height:44px;margin-top:15px;padding:0 19px;border:1px solid rgba(97,163,255,.32);border-radius:12px;background:rgba(19,116,252,.16);color:#D9E8FF;font-size:.82rem;font-weight:700}
+.boot-retry:focus-visible{outline:2px solid #61A3FF;outline-offset:3px}
+.boot-footer{position:absolute;z-index:1;right:20px;bottom:calc(env(safe-area-inset-bottom) + 23px);left:20px;display:flex;align-items:center;justify-content:center;gap:11px;color:#7187A6;font-size:.58rem;font-weight:730;letter-spacing:.16em}
+.boot-footer i{width:3px;height:3px;flex:none;border-radius:50%;background:#3388FF}
+@keyframes boot-mark-in{from{opacity:.55;transform:translateY(7px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes boot-progress{from{transform:translateX(-120%)}to{transform:translateX(250%)}}
+@media(max-height:620px){
+  #bootSplash.boot-splash{padding-top:calc(env(safe-area-inset-top) + 10px);padding-bottom:calc(env(safe-area-inset-bottom) + 24px)}
+  .boot-mark{width:78px;height:78px;border-radius:22px}
+  .boot-content h1{margin-top:17px}
+  .boot-rail{margin-top:20px}
+  .boot-footer{bottom:calc(env(safe-area-inset-bottom) + 12px)}
+}
+@media(prefers-reduced-motion:reduce){
+  #bootSplash.boot-splash{transition:none}
+  .boot-mark,.boot-rail span{animation:none}
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v108';
+const CACHE_NAME = 'liftr-v109';
 
 const ASSETS = [
   './',
@@ -84,6 +84,8 @@ const ASSETS = [
   './js/social/account.js',
   './js/social/index.js',
   './manifest.json',
+  './liftr-icon-192-v109.png',
+  './liftr-icon-512-v109.png',
   './gym/',
   './gym/index.html',
   './gym/precache.json',
