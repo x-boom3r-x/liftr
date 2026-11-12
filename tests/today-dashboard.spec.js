@@ -19,7 +19,7 @@ test.describe('Today — tableau de bord local', () => {
     await expect(page.locator('#todayNutritionSummary')).toContainText('650');
     await expect(page.locator('#todayNutritionSummary')).toContainText('32');
     await expect(page.locator('#todayWaterSummary')).toContainText('500');
-    await expect(page.locator('#todaySessionCount')).toContainText('1 session completed today');
+    await expect(page.locator('#todaySessionCount')).toContainText('1 workout completed today');
 
     await context.setOffline(true);
     await page.locator('.today-water-panel button').click();
@@ -32,12 +32,12 @@ test.describe('Today — tableau de bord local', () => {
     await context.setOffline(false);
   });
 
-  test('les actions rapides ouvrent les fonctions locales existantes', async ({ page }) => {
+  test('le raccourci Nutrition ouvre le journal puis sa feuille d’ajout', async ({ page }) => {
     await seed(page, {}, 'Mouataz');
-    await page.locator('.tabbar .plus').click();
-    await expect(page.locator('#actionSheet')).toBeVisible();
-    await page.locator('#asList button').filter({ hasText: 'Ajouter un repas' }).click();
+    await page.evaluate(() => showRoot('today'));
+    await page.locator('.today-action').filter({ hasText: 'Log food' }).click();
     await expect(page.locator('#tab-nutri-meals')).toBeVisible();
+    await page.locator('#tab-nutri-meals').getByRole('button', { name: /Meal/ }).click();
     await expect(page.locator('#mealName')).toBeVisible();
   });
 

@@ -107,7 +107,7 @@ function reelHtml(p){
 
 function emptyHtml(){
   return '<div class="feed-empty reel-empty">' +
-    '<div class="feed-empty-ico">▶</div>' +
+    '<div class="feed-empty-ico">' + icon('play') + '</div>' +
     '<div class="feed-empty-t">No reels yet</div>' +
     '<div class="feed-empty-s">Share a photo post and it will show up here as a reel.</div>' +
     '<button type="button" class="btn btn-sm" onclick="renderReels()">Refresh</button>' +

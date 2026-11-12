@@ -76,16 +76,20 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     });
   }
 
-  test('onglet feed : le bouton + et la tabbar se chevauchent jamais', async ({ page }) => {
+  test('Feed : le composeur intégré reste au-dessus de la navigation unique', async ({ page }) => {
     await openFeed(page);
     await page.waitForTimeout(200);
     const r = await page.evaluate(() => {
       const fab = document.getElementById('newPostFab');
+      const composer = document.getElementById('composer');
       const bar = document.querySelector('.tabbar');
-      const f = fab.getBoundingClientRect(), b = bar.getBoundingClientRect();
-      return { hidden: fab.classList.contains('hidden'), fabBottom: f.bottom, barTop: b.top };
+      const c = composer.getBoundingClientRect(), b = bar.getBoundingClientRect();
+      return { fabVisible: !!fab && !fab.classList.contains('hidden'), composerVisible: c.width > 0 && c.height > 0,
+        composerBottom: c.bottom, barTop: b.top };
     });
-    if (!r.hidden) expect(r.fabBottom).toBeLessThanOrEqual(r.barTop + 1);
+    expect(r.fabVisible, 'Social n’ajoute pas un second bouton flottant « + »').toBe(false);
+    expect(r.composerVisible).toBe(true);
+    expect(r.composerBottom).toBeLessThanOrEqual(r.barTop + 1);
   });
 
   test('modale et toast : toujours au-dessus de la tabbar', async ({ page }) => {
@@ -147,15 +151,14 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
         docCW: document.documentElement.clientWidth,
         innerW: window.innerWidth,
         gap: +(innerHeight - bar.bottom).toFixed(1),
-        scSW: sc.scrollWidth,
-        scCW: sc.clientWidth,
+        appOverflowX: getComputedStyle(sc).overflowX,
         docScrollY: window.scrollY
       };
     });
     expect(r.docSW, 'le document reste aussi large que l\'écran malgré l\'enfant à 916px')
       .toBeLessThanOrEqual(r.docCW);
-    expect(r.scSW, 'le conteneur .app absorbe le débordement (scrollWidth > clientWidth)')
-      .toBeGreaterThan(r.scCW);
+    expect(r.appOverflowX, 'le conteneur .app coupe le débordement horizontal')
+      .toMatch(/hidden|clip/);
     expect(r.gap, 'la barre reste collée en bas').toBeLessThanOrEqual(1);
     expect(r.docScrollY, 'la fenêtre ne défile pas').toBe(0);
   });
@@ -194,7 +197,7 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
       .toBeCloseTo(2, 1);
   });
 
-  test('--tabbar-h : hauteur réelle mesurée, fab et toast s\'y calent', async ({ page }) => {
+  test('--tabbar-h suit la barre réelle, le composeur reste intégré et le toast s\'y cale', async ({ page }) => {
     await openFeed(page);
     await page.waitForTimeout(250);
     const r = await page.evaluate(() => {
@@ -202,20 +205,20 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
       const varH = parseFloat(
         getComputedStyle(document.documentElement).getPropertyValue('--tabbar-h'));
       const fab = document.getElementById('newPostFab');
+      const composer = document.getElementById('composer');
       const toastEl = document.getElementById('toast');
       return {
         varH,
         realH: Math.round(bar.getBoundingClientRect().height * 100) / 100,
-        fabHidden: fab ? fab.classList.contains('hidden') : true,
-        fabBottom: fab ? parseFloat(getComputedStyle(fab).bottom) : null,
+        fabVisible: !!fab && !fab.classList.contains('hidden'),
+        composerVisible: !!composer && composer.getBoundingClientRect().height > 0,
         toastBottom: toastEl ? parseFloat(getComputedStyle(toastEl).bottom) : null
       };
     });
     expect(r.varH, '--tabbar-h reflète la hauteur mesurée de la barre')
       .toBeCloseTo(r.realH, 0);
-    expect(r.fabHidden, 'le fab du feed est visible').toBe(false);
-    expect(r.fabBottom, 'le fab flotte à --tabbar-h + 14px')
-      .toBeCloseTo(r.realH + 14, 0);
+    expect(r.fabVisible, 'aucun + flottant n’est ajouté au Feed').toBe(false);
+    expect(r.composerVisible, 'le composeur du Feed est visible').toBe(true);
     expect(r.toastBottom, 'le toast flotte à --tabbar-h + 20px')
       .toBeCloseTo(r.realH + 20, 0);
   });

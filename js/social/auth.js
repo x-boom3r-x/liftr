@@ -95,6 +95,9 @@ export function ensureMyProfile(){
 }
 
 export async function signOutSocial(){
+  if (typeof window.removePhonePushForSignOut === 'function'){
+    try { await window.removePhonePushForSignOut((window.socialUser || {}).id); } catch(e){}
+  }
   const auth = sbAuth();
   if (auth){ try { await auth.signOut(); } catch(e){} }
   window.socialUser = null;

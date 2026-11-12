@@ -24,23 +24,31 @@
   ],
   "shortcuts": [
     {
-      "name": "Program",
-      "url": "./index.html?tab=programme",
+      "name": "Start workout",
+      "short_name": "Workout",
+      "description": "Start and log a workout session",
+      "url": "./index.html?shortcut=workout",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "New session",
-      "url": "./index.html?tab=seance",
+      "name": "Log food",
+      "short_name": "Food diary",
+      "description": "Add food to today's diary",
+      "url": "./index.html?shortcut=meal",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Calendar",
-      "url": "./index.html?tab=calendrier",
+      "name": "Scan food",
+      "short_name": "Scan food",
+      "description": "Scan a product barcode",
+      "url": "./index.html?shortcut=scan",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Progress",
-      "url": "./index.html?tab=stats",
+      "name": "Share progress",
+      "short_name": "Social post",
+      "description": "Share a training or nutrition update",
+      "url": "./index.html?shortcut=post",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]

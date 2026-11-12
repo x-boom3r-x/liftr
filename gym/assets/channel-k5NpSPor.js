@@ -1,0 +1,1 @@
+import"./mobile-uUvWtIs0.js";import"./preload-helper-CPla4fz8.js";var e=null;function t(){return e||=(async()=>({channel:`web`,gymReminder:!1}))().catch(()=>({channel:`web`,gymReminder:!1}))}async function n(){return(await t()).channel}async function r(){return(await t()).gymReminder}async function i(){return!1}export{r as n,i as r,n as t};

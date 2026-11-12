@@ -64,6 +64,7 @@ import {
   openNotifications, closeNotifications, loadNotifications,
   refreshNotifBadge, markAllRead, initNotifications, resetNotifications
 } from './notifications.js';
+import { togglePhonePush, refreshPhonePushState, removePhonePushForSignOut } from './push.js';
 import { startRealtime, stopRealtime } from './realtime.js';
 import { renderReels, openReels, initReels, resetReels } from './reels.js';
 import { renderTimeline, openTimeline, initTimeline, resetTimeline } from './timeline.js';
@@ -126,6 +127,7 @@ Object.assign(window, {
   resetNotes, pickNoteMusic,
   openNotifications, closeNotifications, loadNotifications,
   refreshNotifBadge, markAllRead, initNotifications,
+  togglePhonePush, refreshPhonePushState, removePhonePushForSignOut,
   startRealtime, stopRealtime,
   renderReels, openReels, initReels, resetReels,
   renderTimeline, openTimeline, initTimeline, resetTimeline,

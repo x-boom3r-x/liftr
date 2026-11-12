@@ -1,13 +1,16 @@
-/* Chantier : layout du clone — barre sociale en bas avec les onglets
-   Home · Search · Create(+) · Reels · Messages · Profile, au-dessus de
-   la tabbar de l'app. Vérifie la structure, le positionnement et la
-   navigation entre Home / Reels / Create. */
+/* Social keeps internal destinations in the title menu and uses the app's
+   single root navigation. The feed composer stays inline. */
 const { test, expect } = require('@playwright/test');
 const { seed } = require('./helpers');
 const { ME, ME_P, withSocial, signedIn, openFeed, mockApi, post, consoleWatch } =
   require('./social-mock');
 
 test.describe('Navigation basse (layout clone)', () => {
+
+  async function chooseSection(page, label){
+    await page.locator('.feed-top-title').click();
+    await page.locator('#actionSheet .as-item').filter({ hasText: label }).click();
+  }
 
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -16,64 +19,41 @@ test.describe('Navigation basse (layout clone)', () => {
     await signedIn(page);
   });
 
-  test('la barre sociale contient Home, Search, Create, Reels, Messages, Profile', async ({ page }) => {
+  test('une seule barre racine; les destinations Social sont dans le menu du titre', async ({ page }) => {
     await mockApi(page, { posts: [], people: [ME_P] });
     await openFeed(page);
 
-    const nav = page.locator('#socialNav');
-    await expect(nav).toBeVisible();
-    await expect(nav.locator('[data-view="home"]')).toHaveCount(1);
-    await expect(nav.locator('[data-view="search"]')).toHaveCount(1);
-    await expect(nav.locator('#socialCreate')).toHaveCount(1);
-    await expect(nav.locator('[data-view="reels"]')).toHaveCount(1);
-    await expect(nav.locator('[data-view="inbox"]')).toHaveCount(1);
-    await expect(nav.locator('[data-view="profile"]')).toHaveCount(1);
+    await expect(page.locator('#socialNav')).toBeHidden();
+    await expect(page.locator('#tb .tab')).toHaveCount(3);
+    await chooseSection(page, 'Search people');
+    await expect(page.locator('#view-search')).toBeVisible();
   });
 
-  test('la barre sociale est fixée au-dessus de la tabbar de l’app', async ({ page }) => {
+  test('aucune seconde barre fixe ou flottante n’est affichée dans Social', async ({ page }) => {
     await mockApi(page, { posts: [], people: [ME_P] });
     await openFeed(page);
-    await page.waitForTimeout(150);
-
-    const r = await page.evaluate(() => {
-      const nav = document.getElementById('socialNav').getBoundingClientRect();
-      const bar = document.querySelector('.tabbar').getBoundingClientRect();
-      const cs = getComputedStyle(document.getElementById('socialNav'));
-      return { navPos: cs.position, navBottom: nav.bottom, barTop: bar.top, vh: window.innerHeight };
-    });
-    expect(r.navPos).toBe('fixed');
-    /* la barre sociale est collée juste au-dessus de la tabbar */
-    expect(Math.abs(r.navBottom - r.barTop)).toBeLessThanOrEqual(2);
+    await expect(page.locator('#socialNav')).toBeHidden();
+    await expect(page.locator('#tb')).toBeVisible();
+    await expect(page.locator('#newPostFab')).toHaveCount(0);
   });
 
-  test('l’onglet actif suit la vue (Home → Reels → Home)', async ({ page }) => {
+  test('le menu permet de passer de Home à Reels puis de revenir', async ({ page }) => {
     await mockApi(page, { posts: [post(0, ME.id, { kind: 'photo', image_path: 'u/r.webp' })], people: [ME_P] });
     await openFeed(page);
 
-    await expect(page.locator('#socialNav [data-view="home"]')).toHaveClass(/active/);
-    await expect(page.locator('#socialNav [data-view="reels"]')).not.toHaveClass(/active/);
-
-    await page.locator('#socialNav [data-view="reels"]').click();
+    await chooseSection(page, 'Reels');
     await expect(page.locator('#view-reels')).toBeVisible();
-    await expect(page.locator('#socialNav [data-view="reels"]')).toHaveClass(/active/);
-    await expect(page.locator('#socialNav [data-view="home"]')).not.toHaveClass(/active/);
-
-    await page.locator('#socialNav [data-view="home"]').click();
+    await chooseSection(page, 'Home feed');
     await expect(page.locator('#view-home')).toBeVisible();
-    await expect(page.locator('#socialNav [data-view="home"]')).toHaveClass(/active/);
   });
 
-  test('Create (+) ouvre le choix du type de publication', async ({ page }) => {
+  test('le composeur de publication reste dans le fil, sans bouton + flottant', async ({ page }) => {
     const errs = consoleWatch(page);
     await mockApi(page, { posts: [], people: [ME_P] });
     await openFeed(page);
 
-    await page.locator('#socialCreate').click();
-    await expect(page.locator('#actionSheet')).toBeVisible();
-    await expect(page.locator('#asList .as-item').first()).toBeVisible();
-    /* fermer */
-    await page.locator('#actionSheet .as-cancel .as-item').click();
-    await expect(page.locator('#actionSheet')).toBeHidden();
+    await expect(page.locator('#composer')).toBeVisible();
+    await expect(page.locator('#newPostFab')).toHaveCount(0);
     expect(errs).toEqual([]);
   });
 

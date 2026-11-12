@@ -1,0 +1,4 @@
+[functions.send-social-push]
+# Postgres calls the function with the Vault webhook secret, not a user JWT.
+# The handler verifies that shared secret before reading with the service role key.
+verify_jwt = false

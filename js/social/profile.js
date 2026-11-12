@@ -273,7 +273,7 @@ async function loadLiked(c){
   paintLiked();
 }
 
-/* 🔖 Saved : strictement privé (policy saves_own côté serveur). */
+/* Saved posts are private to their owner (saves_own policy). */
 async function loadSaved(c){
   const id = meId();
   c = c || sb();

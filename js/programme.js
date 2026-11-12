@@ -1,6 +1,7 @@
 /* ==================================================================
    LIFTR - programme, jours, bibliotheque d'exercices   ================================================================== */
 import { icon } from './icons.js';
+import { illustration } from './illustrations.js';
 import {
   searchExercises,
   filterByMuscle,
@@ -93,7 +94,7 @@ function suggestDay(){
 
 function todayCardEmpty(){
   return '<div class="today-empty">' +
-    '<span class="te-ico" aria-hidden="true">🏋️</span>' +
+    '<span class="te-ico">' + illustration('training') + '</span>' +
     '<div class="te-txt"><div class="te-t">No session in your program yet</div>' +
     '<div class="te-s">Create a day (PUSH, PULL, LEGS…) and it shows up here.</div></div>' +
     '<button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>' +
@@ -195,7 +196,7 @@ function renderProgramme(){
   renderTodayCard();
   renderProgramsList();
   if (!days.length){
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🗓️</div>' +
+    el.innerHTML = '<div class="empty"><div class="empty-icon">' + illustration('calendar') + '</div>' +
       '<div class="empty-text">No day created yet.<br>Start by adding a session (PUSH, PULL, LEGS…)</div>' +
       '<button type="button" class="btn btn-primary btn-sm" onclick="openNewDay(\'' + (activeProg ? activeProg.id : '') + '\')">+ Add your first day</button></div>';
     return;

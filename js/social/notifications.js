@@ -6,6 +6,7 @@
    ================================================================== */
 import { SOCIAL_ENABLED } from './config.js';
 import { sb } from './client.js';
+import { refreshPhonePushState } from './push.js';
 
 const LIMIT = 30;
 const PROFILE_SEL = 'id,username,display_name,avatar_url';
@@ -136,6 +137,7 @@ export async function openNotifications(){
   rows = [];
   render();
   if (typeof window.openModal === 'function') window.openModal('notifModal');
+  refreshPhonePushState();
   return await loadNotifications();
 }
 

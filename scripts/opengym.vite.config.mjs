@@ -19,6 +19,33 @@ function liftrOpenGym(){
         return text.replace(before, after)
       }
 
+      /* Keep the rendered Gym UI illustration-only even when the upstream submodule is
+         refreshed. Legacy routine emoji are still converted to SVG by glyphs.js so saved
+         user data remains readable; these transforms only remove pictographs from UI copy. */
+      if (source && source.startsWith('locales/')){
+        return code.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/[ \t]{2,}/g, ' ')
+      }
+
+      if (source === 'views/AdminCoach.jsx'){
+        return code.replace('Coach test passed ✅', 'Coach test passed')
+          .replace('Connected ✅', 'Connected')
+          .replace('Key saved ✅', 'Key saved')
+      }
+
+      if (source === 'views/FocusView.jsx'){
+        return code.replace("<span className=\"focus-warmup\" aria-label={t('Warm-up')}>🔥</span>",
+          "<span className=\"focus-warmup\" aria-label={t('Warm-up')}><Icon name=\"flame\" /></span>")
+      }
+
+      if (source === 'views/Settings.jsx'){
+        code = code.replace("title={'🎄 ' + t('Advent calendar')}", "title={t('Advent calendar')}")
+      }
+
+      if (source === 'lib/heart-rate.js'){
+        return code.replace('return hr ? ` ♥ ${hr.avg}/${hr.max}` : \'\'',
+          "return hr ? ` HR ${hr.avg}/${hr.max} bpm` : ''")
+      }
+
       if (source === 'lib/i18n-core.js'){
         const brandCopy = "const liftrVisibleCopy = value => String(value)\n" +
           "  .replaceAll('Documents/openGym', 'the default folder')\n" +
@@ -107,6 +134,9 @@ function liftrOpenGym(){
 
       return null
     },
+    renderChunk(code){
+      return code.replace('💿 Hey developer 👋', 'This screen could not be loaded.')
+    },
     transformIndexHtml: {
       order: 'pre',
       handler(html){
@@ -158,6 +188,7 @@ function liftrOpenGym(){
           else if (entry.isFile() && textFiles.has(entry.name.slice(entry.name.lastIndexOf('.')).toLowerCase())){
             const source = await fs.readFile(full, 'utf8')
             const normalized = source.replace(/\r\n?/g, '\n').replace(/^[\t ]+$/gm, '')
+              .replaceAll('💿 Hey developer 👋', 'LIFTR could not open this screen.')
             if (normalized !== source) await fs.writeFile(full, normalized)
           }
         }

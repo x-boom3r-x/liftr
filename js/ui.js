@@ -186,6 +186,37 @@ function showRoot(root, sub){
   showTab(tab);
 }
 
+function runQuickAction(action){
+  if (action === 'workout') return showRoot('gym', 'seance');
+  if (action === 'meal') return showRoot('nutrition', 'nutri-meals');
+  if (action === 'scan'){
+    showRoot('nutrition', 'nutri-foods');
+    setTimeout(() => { if (typeof window.openScanner === 'function') window.openScanner(); }, 160);
+    return true;
+  }
+  if (action === 'post'){
+    if (!feedGateOk()) return showRoot('feed');
+    showRoot('feed');
+    setTimeout(() => { if (typeof window.focusComposer === 'function') window.focusComposer(); }, 180);
+    return true;
+  }
+  if (action === 'notifications'){
+    if (!feedGateOk()) return showRoot('feed');
+    showRoot('feed');
+    setTimeout(() => { if (typeof window.openNotifications === 'function') window.openNotifications(); }, 220);
+    return true;
+  }
+  if (action === 'messages' || action === 'search'){
+    if (!feedGateOk()) return showRoot('feed');
+    showRoot('feed');
+    setTimeout(() => {
+      if (typeof window.setSView === 'function') window.setSView(action === 'messages' ? 'inbox' : 'search');
+    }, 180);
+    return true;
+  }
+  return false;
+}
+
 /* Une SEULE barre de sous-nav, déplacée selon la racine active (F2) :
    visible pour Gym et Nutrition, cachée pour Feed. Les boutons portent
    data-tab="<onglet concret>" : les selecteurs de tests restent valables. */
@@ -446,5 +477,5 @@ Object.assign(window, {
   boot, renderProfiles, createProfile, checkNet, showTab, showRoot, renderAll, pinTabbar,
   openModal, closeModal, askConfirm, closeConfirm, toast,
   openActionSheet, closeActionSheet,
-  pickInitialTab, openSocialNavigation, renderProfilScreen, ALL_TABS
+  pickInitialTab, openSocialNavigation, renderProfilScreen, runQuickAction, ALL_TABS
 });

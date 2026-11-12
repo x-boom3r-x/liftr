@@ -12,6 +12,7 @@ import {
   getComposerMusic, clearComposerMusic, openMusicPicker, setComposerMusic
 } from './music.js';
 import { setGlobalMuted, isGlobalMuted } from './autoplay.js';
+import { illustration } from '../illustrations.js';
 import { icon, iconS } from '../icons.js';
 
 const PAGE_SIZE = 20;
@@ -427,7 +428,7 @@ export async function vote(id, dir){
 }
 
 /* ------------------------------- save ------------------------------ */
-/* 🔖 : strictement privé, aucune notification. */
+/* Bookmark state is private and does not create a notification. */
 export async function toggleSave(id){
   const c = sb();
   const me = (window.socialUser || {}).id;
@@ -961,7 +962,7 @@ function skeletonHtml(){
 function emptyHtml(){
   if (scope === 'following' && noFollows){
     return '<div class="feed-empty">' +
-      '<div class="feed-empty-ico">☺</div>' +
+      '<div class="feed-empty-ico">' + illustration('community') + '</div>' +
       '<div class="feed-empty-t">No one in your crew yet</div>' +
       '<div class="feed-empty-s">Follow a few lifters and their sessions will show up here.</div>' +
       '<button type="button" class="btn btn-sm" onclick="openPeople()">Find people</button>' +

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v101';
+const CACHE_NAME = 'liftr-v104';
 
 const ASSETS = [
   './',
@@ -12,6 +12,7 @@ const ASSETS = [
   './js/store.js',
   './js/gestures.js',
   './js/ui.js',
+  './js/shortcuts.js',
   './js/today.js',
   './js/programme.js',
   './js/gym/exercises.js',
@@ -32,6 +33,7 @@ const ASSETS = [
   './js/nutrition.js',
   './js/foods.js',
   './js/icons.js',
+  './js/illustrations.js',
   './data/foods.json',
   './data/exercises-catalogue-provenance.json',
   './LICENSE',
@@ -74,6 +76,7 @@ const ASSETS = [
   './js/social/stories.js',
   './js/social/notes.js',
   './js/social/notifications.js',
+  './js/social/push.js',
   './js/social/realtime.js',
   './js/social/reels.js',
   './js/social/timeline.js',
@@ -154,5 +157,44 @@ self.addEventListener('fetch', event => {
       }
       throw e;
     }
+  })());
+});
+
+self.addEventListener('push', event => {
+  event.waitUntil((async () => {
+    let payload = {};
+    try { payload = event.data ? event.data.json() : {}; } catch(e){}
+    const title = String(payload.title || 'LIFTR Social').slice(0, 80);
+    const body = String(payload.body || 'You have a new Social notification.').slice(0, 180);
+    const tag = String(payload.tag || 'liftr-social').slice(0, 120);
+    const target = new URL(payload.url || './index.html?shortcut=notifications', self.registration.scope);
+    if (target.origin !== self.location.origin) target.href = self.registration.scope;
+    await self.registration.showNotification(title, {
+      body,
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      tag,
+      data: { url: target.href }
+    });
+  })());
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const fallback = new URL('./index.html?shortcut=notifications', self.registration.scope);
+  let target = fallback;
+  try {
+    const candidate = new URL(event.notification.data && event.notification.data.url || fallback.href);
+    if (candidate.origin === self.location.origin) target = candidate;
+  } catch(e){}
+  event.waitUntil((async () => {
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clients){
+      if ('focus' in client){
+        try { await client.navigate(target.href); } catch(e){}
+        return client.focus();
+      }
+    }
+    return self.clients.openWindow(target.href);
   })());
 });

@@ -4,7 +4,7 @@
 
 /* Build partage avec index.html (data-build) et sw.js (liftr-vXX) :
    on le bump a chaque deploiement (test handlers.spec.js l'impose). */
-window.__LIFTR_BUILD__ = '101';
+window.__LIFTR_BUILD__ = '104';
 
 import './gestures.js';
 import './state.js';
@@ -13,6 +13,7 @@ import './exercise-demo.js';   /* après data.js : exoKey/LIB sur window */
 import './idb.js';
 import './store.js';
 import './ui.js';
+import './shortcuts.js';
 import './today.js';
 import './programme.js';
 import './library.js';   /* écran Library (sous-onglet Muscu, build 84) */
@@ -48,7 +49,13 @@ window.addEventListener('unhandledrejection', e => {
 async function init(){
   await boot();
   const last = localStorage.getItem('at_lastUser');
-  if (last) await setUser(last);
+  if (last){
+    await setUser(last);
+    const shortcut = new URLSearchParams(location.search).get('shortcut');
+    if (shortcut && typeof window.runQuickAction === 'function'){
+      setTimeout(() => window.runQuickAction(shortcut), 180);
+    }
+  }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -11,6 +11,7 @@
       exception.
    ================================================================== */
 import { iconS } from '../icons.js';
+import { illustration } from '../illustrations.js';
 
 const MAX_JSON = 16 * 1024;   /* < 16 Ko (contrainte de la colonne) */
 const MAX_DAYS = 12;
@@ -113,7 +114,7 @@ export function shareEmbedHtml(att){
     const dE = (a.e1rm && a.prevE1rm && a.e1rm > a.prevE1rm)
       ? ' · +' + fmtKg(Math.round((a.e1rm - a.prevE1rm) * 10) / 10) + ' kg vs previous' : '';
     return '<div class="share-embed pr">' +
-      '<div class="se-head"><span aria-hidden="true">🏆</span> Personal record</div>' +
+      '<div class="se-head">' + illustration('award') + ' Personal record</div>' +
       '<div class="se-title">' + esc(a.exercise) + '</div>' +
       '<div class="se-big">' + esc(fmtKg(a.kg)) + '<small>kg × ' + esc(fmtKg(a.reps)) + '</small></div>' +
       '<div class="se-meta">' +
@@ -127,7 +128,7 @@ export function shareEmbedHtml(att){
     if (a.volume) rows.push(['Volume', fmtVolume(a.volume) + ' kg']);
     if (a.exercises.length) rows.push(['Exercises', String(a.exercises.length)]);
     return '<div class="share-embed session">' +
-      '<div class="se-head"><span aria-hidden="true">🏋️</span> Session summary</div>' +
+      '<div class="se-head">' + illustration('training') + ' Session summary</div>' +
       '<div class="se-title">' + esc(a.title) + (a.date ? ' · ' + esc(a.date) : '') + '</div>' +
       (rows.length
         ? '<div class="se-rows">' + rows.map(r =>

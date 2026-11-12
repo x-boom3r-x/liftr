@@ -719,7 +719,7 @@ button{background:none;border:none;cursor:pointer}
   background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
 }
 .rest-main{display:flex;align-items:center;gap:8px;font-weight:750;min-width:0}
-.rest-ico{font-size:1rem;opacity:.9}
+.rest-ico{width:20px;height:20px;flex:none;opacity:.9}
 .rest-time{font-variant-numeric:tabular-nums;font-size:1.05rem;letter-spacing:.02em}
 .rest-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;align-items:center}
 .rest-default{display:inline-flex;align-items:center;gap:5px;color:var(--text3);font-size:.65rem;font-weight:700}
@@ -1147,6 +1147,11 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
   display:grid;place-items:center;line-height:1
 }
 .notif-list{display:flex;flex-direction:column;gap:9px;max-height:56vh;overflow-y:auto;padding-right:2px;margin-top:12px}
+.phone-push-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;padding:12px 13px;border:1px solid var(--border);border-radius:14px;background:var(--surface2)}
+.phone-push-copy{min-width:0;display:grid;gap:4px}
+.phone-push-copy b{font-size:.8rem}
+.phone-push-copy small{max-width:42ch;color:var(--text2);font-size:.7rem;line-height:1.4}
+.phone-push-row .btn{flex:none;white-space:nowrap}
 .notif{
   display:flex;align-items:center;gap:11px;width:100%;text-align:left;
   background:var(--surface2);border:1px solid var(--border);
@@ -1203,40 +1208,28 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 /* ---------- navigation sociale ---------- */
 .snav{
   position:sticky;top:0;z-index:20;
-  display:flex;gap:4px;margin:0 0 16px;
-  padding:6px;border-radius:16px;
+  display:flex;gap:4px;margin:0 0 16px;padding:6px;border-radius:16px;
   background:var(--glass),rgba(15,15,18,.92);
   backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border:var(--glass-b);
 }
 .snav-item{
-  position:relative;flex:1;display:flex;flex-direction:column;
-  align-items:center;gap:3px;padding:7px 4px;border-radius:12px;
-  color:var(--text3);font-size:.64rem;font-weight:700;letter-spacing:.02em;
+  position:relative;flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:7px 4px;border-radius:12px;color:var(--text3);
+  font-size:.64rem;font-weight:700;letter-spacing:.02em;
   transition:color .16s,background .16s,transform .08s;
 }
 .snav-item:active{transform:scale(.96)}
-.snav-ico svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;
-  stroke-linecap:round;stroke-linejoin:round}
+.snav-ico svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .snav-item.active{color:var(--text);background:var(--primary-dim)}
 .snav-item.active .snav-ico{color:var(--primary-text);filter:drop-shadow(0 0 7px rgba(19,116,252,.65))}
-.snav-dot{
-  position:absolute;top:5px;right:calc(50% - 16px);
-  min-width:16px;height:16px;padding:0 4px;border-radius:999px;
-  background:var(--gx2);color:#fff;font-size:.6rem;font-weight:800;
-  display:grid;place-items:center;box-shadow:0 0 0 2px rgba(15,15,18,.95)
-}
+.snav-dot{position:absolute;top:5px;right:calc(50% - 16px);min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--gx2);color:#fff;font-size:.6rem;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 2px rgba(15,15,18,.95)}
 .sview{animation:fade .2s ease}
 
 /* ---------- Chantier F : barre du haut Feed + sous-navs racine ---------- */
 .feed-top{display:flex;align-items:center;gap:6px;margin:0 0 12px}
-.feed-top .snav{
-  position:static;flex:0 0 auto;margin:0;padding:0;
-  background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;
-  justify-content:flex-end;gap:0;
-}
-.feed-top .snav-item{flex:0 0 auto;min-width:40px;height:40px;justify-content:center;
-  padding:0;border-radius:999px;gap:0}
+.feed-top .snav{position:static;flex:0 0 auto;margin:0;padding:0;background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;justify-content:flex-end;gap:0}
+.feed-top .snav-item{flex:0 0 auto;min-width:40px;height:40px;justify-content:center;padding:0;border-radius:999px;gap:0}
 .feed-top .snav-lbl{display:none}
 .feed-top-title{flex:1;min-width:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .feed-top-title .section-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1272,27 +1265,14 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .feed-bell svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;
   stroke-linecap:round;stroke-linejoin:round}
 .feed-bell .chip-dot{position:absolute;top:2px;right:2px}
-
-.socialnav{
-  position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:40;
-  display:flex;align-items:center;gap:2px;padding:6px 72px 7px 6px;
-  background:var(--glass),rgba(15,15,18,.94);
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border-top:var(--glass-b);
-}
+.socialnav{position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:40;display:flex;align-items:center;gap:2px;padding:6px 72px 7px 6px;background:var(--glass),rgba(15,15,18,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:var(--glass-b)}
 .socialnav .snav-item{flex:1;flex-direction:column;gap:2px;padding:5px 2px;border-radius:12px;min-width:0}
 .socialnav .snav-lbl{font-size:.56rem}
 .socialnav .snav-dot{top:2px;right:calc(50% - 16px)}
-.snav-create{flex:0 0 auto !important;width:44px}
-.snav-create .snav-ico{display:grid;place-items:center;width:38px;height:30px;border-radius:10px;
-  background:linear-gradient(135deg,var(--primary),#61A3FF);color:#080D18;
-  box-shadow:0 4px 14px rgba(19,116,252,.4)}
+.snav-create{flex:0 0 auto!important;width:44px}
+.snav-create .snav-ico{display:grid;place-items:center;width:38px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#61A3FF);color:#080D18;box-shadow:0 4px 14px rgba(19,116,252,.4)}
 .snav-create .snav-ico svg{width:22px;height:22px;stroke:#080D18;stroke-width:2.2}
 .snav-create:active .snav-ico{transform:scale(.94)}
-
-/* le FAB garde son contrat (bottom = --tabbar-h + 14, lu par app-shell)
-   mais passe au-dessus de la barre sociale (z-index) pour ne pas être
-   enterré par le fond de la nav ; la nav réserve la gouttière de droite. */
 #newPostFab{z-index:50}
 
 /* ---------- Reels : 1 image par écran, scroll-snap vertical ---------- */
@@ -1519,7 +1499,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .post-act-like.on .post-act-n{color:#FF5C97}
 .post-act-like:active{background:rgba(255,61,139,.2)}
 
-/* ---------- G : rangée [▲ n ▼] ♥ n 💬 n ⟲ n ····· 🔖 ↗ ----------
+/* ---------- G : post action row ----------
    Compactte par construction : elle tient sans d�bordement de 320
    à 430 px de large (icônes seules, padding serré). */
 .post-foot{gap:5px}
@@ -1830,8 +1810,6 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
   -webkit-text-fill-color:transparent;color:transparent;
 }
 
-/* .snav : top:0 dans l'app shell (bloc plus bas) — l'ancienne regle
-   top:calc(safe-top + 60px) (header sticky d'avant l'app shell) est retiree. */
 .thread-head{position:static}
 .crew-cell.skeleton .crew-av{background:var(--surface3)}
 .crew-cell.skeleton .crew-ring{background:var(--border)}
@@ -2116,7 +2094,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
    ================================================================ */
 
 /* --- 1. Reponse : pas de tache fantome, geste immediat ----------- */
-.btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.post-more,.post-mute,.fab,.as-item,
+.btn,.icon-btn,.seg,.tab,.post-act,.post-more,.post-mute,.fab,.as-item,
 .type-opt,.stepper button,.profile-btn,.file-btn,.chip,.crew-cell,.dm,
 .person,.ptile,.note-cell,.hist-item.tap,.lib-item,.plan-cell,.card,
 .profile-card,.ctx-sug,.add-set-btn,.add-ex-btn,.liftr-refresh,
@@ -2126,7 +2104,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 }
 
 /* --- 2. Pression continue : une seule courbe partout ------------- */
-.btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.post-more,.fab,.as-item,
+.btn,.icon-btn,.seg,.tab,.post-act,.post-more,.fab,.as-item,
 .type-opt,.stepper button,.profile-btn,.file-btn,.chip,.crew-cell,.dm,
 .person,.ptile,.note-cell,.hist-item.tap,.lib-item,.plan-cell,
 .ctx-sug,.add-set-btn,.add-ex-btn,.liftr-refresh,.composer-photo{
@@ -2149,7 +2127,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
   .btn:hover{background:var(--surface3);border-color:rgba(255,255,255,.14)}
   .btn-primary:hover{background:var(--primary-dark);color:#fff}
   .icon-btn:hover,.stepper button:hover{background:var(--surface3);color:var(--text)}
-  .seg:hover,.tab:hover,.snav-item:hover{color:var(--text)}
+  .seg:hover,.tab:hover{color:var(--text)}
   .dm:hover,.person:hover{background:var(--surface2)}
   .post:hover,.card:hover,.profile-card:hover{border-color:rgba(255,255,255,.16)}
   .post-act:hover,.post-more:hover,.post-mute:hover{background:var(--surface3);color:var(--text)}
@@ -2171,10 +2149,6 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
   box-shadow:0 1px 0 rgba(255,255,255,.05);
 }
 /* .tabbar : blur/saturate + ombre haute deja fondus dans le bloc de base */
-.snav{
-  backdrop-filter:blur(24px) saturate(180%);
-  -webkit-backdrop-filter:blur(24px) saturate(180%);
-}
 .modal{
   transform-origin:bottom center;
   box-shadow:0 -18px 60px rgba(0,0,0,.55);
@@ -2184,7 +2158,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .sview{will-change:opacity}
 
 /* --- 6. Comportement d'app : pas de selection parasite, pas de rebond */
-.header,.tabbar,.snav,.crew,.action-sheet,.notes,.fab,.stepper{
+.header,.tabbar,.crew,.action-sheet,.notes,.fab,.stepper{
   user-select:none;-webkit-user-select:none;
 }
 .modal,.action-sheet,.crew,.sview,.feed{overscroll-behavior:contain}
@@ -2196,7 +2170,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 
 /* --- 8. Reduced motion : fondu, plus de glisse ni d'echelle -------- */
 @media (prefers-reduced-motion: reduce){
-  .btn:active,.icon-btn:active,.seg:active,.tab:active,.snav-item:active,
+  .btn:active,.icon-btn:active,.seg:active,.tab:active,
   .post-act:active,.post-more:active,.fab:active,.as-item:active,
   .type-opt:active,.stepper button:active,.profile-btn:active,.file-btn:active,
   .chip:active,.crew-cell:active,.dm:active,.person:active,.ptile:active,
@@ -2205,7 +2179,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
   .add-ex-btn:active,.liftr-refresh:active,.composer-photo:active{
     transform:none !important;
   }
-  .btn,.icon-btn,.seg,.tab,.snav-item,.post-act,.fab,.as-item,.dm,.person,
+  .btn,.icon-btn,.seg,.tab,.post-act,.fab,.as-item,.dm,.person,
   .ptile,.note-cell,.crew-cell,.card,.profile-card,.ctx-sug{
     transition:background-color .15s ease,border-color .15s ease,color .15s ease !important;
   }
@@ -2461,8 +2435,7 @@ html{background:var(--bg)}
   padding:0 16px 24px;
   padding:0 max(16px,calc((100% - 608px) / 2)) 24px;
 }
-/* padding-top sur le panneau (pas sur .app) : le .snav sticky se colle
-   ainsi pile sous le header, sans 18px de vide */
+/* Le panneau garde un espacement court sous l'en-tête de Social. */
 .app > .panel{min-width:0;max-width:100%;padding-top:18px}
 #tab-feed{padding-bottom:72px}
 .tabbar{
@@ -2470,7 +2443,6 @@ html{background:var(--bg)}
   top:auto;left:auto;right:auto;bottom:auto;
   transform:none;-webkit-transform:none;
 }
-.snav{top:0}
 
 /* iOS zoome la page au focus d'un champ < 16px (viewport décalé) */
 @media (hover:none) and (pointer:coarse){
@@ -2963,9 +2935,49 @@ html{background:var(--bg)}
 .today-water-value span{color:var(--text2);font-size:.82rem}
 .today-water-panel .btn{margin-top:5px}
 .today-shortcuts{display:grid;gap:4px}
-.today-shortcuts button{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 2px;border-top:1px solid var(--border);color:var(--text2);text-align:left;font-size:.83rem}
-.today-shortcuts button span:last-child{color:var(--primary-text);font-size:1rem}
-.today-shortcuts button:hover{color:var(--text)}
+.today-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.today-shortcuts .today-action{min-width:0;min-height:82px;display:grid;grid-template-columns:26px minmax(0,1fr);align-items:center;gap:9px;padding:11px 10px;border:1px solid var(--border);border-radius:13px;background:var(--surface2);color:var(--text);text-align:left;transition:border-color .16s ease,background .16s ease,transform .16s ease}
+.today-shortcuts .today-action:hover{border-color:var(--primary);background:var(--surface);transform:translateY(-1px)}
+.today-shortcuts .today-action:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.today-action>svg{width:23px;height:23px;fill:none;stroke:var(--primary-text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.today-action>span{min-width:0;display:grid;gap:4px}
+.today-action b{font-size:.72rem;line-height:1.15;font-weight:700}
+.today-action small{color:var(--text2);font-size:.64rem;line-height:1.2}
+.header-shortcut{display:flex;align-items:center;gap:7px;min-height:36px;padding:0 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text2);font-size:.76rem;font-weight:650;transition:border-color .16s ease,color .16s ease,background .16s ease}
+.header-shortcut:hover,.header-shortcut:focus-visible{border-color:var(--primary);background:var(--primary-dim);color:var(--text)}
+.header-shortcut:focus-visible,.shortcut-close:focus-visible,.shortcut-option:focus-visible{outline:2px solid var(--primary-text);outline-offset:2px}
+.header-shortcut>svg,.shortcut-search>svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.header-shortcut kbd,.shortcut-search kbd{padding:3px 5px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);color:var(--text3);font-family:inherit;font-size:.62rem;line-height:1.1;font-weight:600}
+.shortcut-dialog{width:min(580px,calc(100vw - 28px));max-height:min(600px,calc(100dvh - 32px));margin:auto;padding:0;overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text);box-shadow:0 24px 80px rgba(0,0,0,.48)}
+.shortcut-dialog::backdrop{background:rgba(1,5,12,.68);backdrop-filter:blur(3px)}
+.shortcut-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:19px 20px 14px}
+.shortcut-top h2{font-size:1rem;line-height:1.25;font-weight:720}
+.shortcut-top p{margin-top:4px;color:var(--text3);font-size:.76rem}
+.shortcut-close{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:1.15rem;line-height:1}
+.shortcut-close:hover{background:var(--surface2);color:var(--text)}
+.shortcut-close svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.shortcut-search{display:flex;align-items:center;gap:10px;margin:0 14px;padding:11px 12px;border:1px solid var(--border);border-radius:11px;background:var(--bg);color:var(--text3)}
+.shortcut-search:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
+.shortcut-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font-size:.88rem}
+.shortcut-results{max-height:min(390px,calc(100dvh - 220px));overflow-y:auto;padding:9px 8px;overscroll-behavior:contain}
+.shortcut-option{width:100%;display:flex;align-items:center;gap:11px;min-height:54px;padding:8px 10px;border-radius:9px;color:var(--text2);text-align:left}
+.shortcut-option:hover,.shortcut-option.is-active{background:var(--surface2);color:var(--text)}
+.shortcut-option.is-active .shortcut-option-icon{background:var(--primary-dim);color:var(--primary-text)}
+.shortcut-option-icon{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:9px;background:var(--surface2);color:var(--text2)}
+.shortcut-option-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.shortcut-option-copy{min-width:0;display:grid;gap:3px}
+.shortcut-option-copy b{font-size:.79rem;font-weight:680}
+.shortcut-option-copy small{color:var(--text3);font-size:.68rem;line-height:1.2}
+.shortcut-option-group{margin-left:auto;color:var(--text3);font-size:.58rem;font-weight:700;letter-spacing:.07em}
+.shortcut-empty{padding:26px 14px;color:var(--text3);font-size:.8rem;text-align:center}
+.shortcut-help{display:flex;justify-content:flex-end;gap:14px;padding:10px 18px;border-top:1px solid var(--border);color:var(--text3);font-size:.66rem}
+.liftr-illustration{display:block;width:48px;height:48px;color:var(--primary-text)}
+.today-empty .te-ico{display:grid;place-items:center;width:48px;height:48px;flex:none;opacity:.9}
+.empty-icon .liftr-illustration{width:58px;height:58px}
+.feed-empty-ico .liftr-illustration{width:48px;height:48px;margin:0 auto}
+.share-embed .se-head .liftr-illustration{display:inline-block;width:20px;height:20px;vertical-align:middle;margin-right:5px}
+.thread-empty{display:grid;justify-items:center;gap:12px;font-size:.82rem;color:var(--text3);text-align:center;padding:34px 8px}
+.thread-empty .liftr-illustration{width:52px;height:52px}
 .plus-label{display:none}
 
 @media(min-width:900px){
@@ -2990,6 +3002,12 @@ html{background:var(--bg)}
   .today-heading{align-items:flex-start;margin:6px 0 22px}
   .today-title{font-size:2rem}
   .nutrition-overview,.today-water-panel,.today-shortcuts{padding:16px}
+}
+@media(max-width:500px){
+  .header-shortcut{width:36px;min-width:36px;height:36px;justify-content:center;padding:0}
+  .header-shortcut>span,.header-shortcut>kbd{display:none}
+  .shortcut-top{padding:16px 16px 12px}
+  .shortcut-results{max-height:min(430px,calc(100dvh - 200px))}
 }
 @media(max-width:400px){
   .tabbar-inner{gap:1px}
@@ -3034,7 +3052,7 @@ html{background:var(--bg)}
   --glass-b:1px solid rgba(163,197,239,.12);
   --gx1:#A8C6FF;--gx2:#75A6FF;--gx3:#1374FC;--gx4:#8AAEFF;
   --gx:linear-gradient(125deg,var(--gx1),var(--gx3));
-  --tabbar-pad-b:max(10px,var(--safe-bottom));
+  --tabbar-pad-b:max(8px,calc(var(--safe-bottom) - 24px));
   --tabbar-h:calc(62px + var(--tabbar-pad-b));
   --radius-card:18px;
   --radius-control:12px;
@@ -3151,17 +3169,16 @@ body::after{
 /* Social views live in the title menu, keeping one persistent app navigation. */
 #tab-feed{padding-bottom:0}
 .socialnav{display:none!important}
+.snav-create,#newPostFab{display:none!important}
 .feed-top-title{position:relative;display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start;padding:0 18px 0 0;background:transparent;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .feed-top-title .section-title{padding-right:16px}
 .feed-top-title::after{content:"⌄";position:absolute;top:1px;right:0;color:var(--text3);font-size:.8rem}
-.snav-create,#newPostFab{display:none!important}
 .feed-top{margin-bottom:12px}
 .feed-top .section-title{background:none;-webkit-text-fill-color:currentColor;color:var(--text)}
 .feed-actions{margin-bottom:12px}
 .feed-actions .chip{min-height:34px}
 .composer,.post,.person,.dm,.notes,.thread-head{border-color:var(--border)}
 .composer,.post,.person,.dm{background:var(--surface)}
-.socialnav~.feed-actions{margin-top:0}
 .profile-btn:active,.header-profile:active{transform:scale(.97)}
 :focus-visible{outline-color:var(--primary-text)}
 .nutri-progress-details{margin-top:20px;border-top:1px solid var(--border)}
@@ -3201,7 +3218,6 @@ body::after{
 @media(max-width:390px){
   .tabbar{padding-left:8px;padding-right:8px}
   .tabbar .tab{font-size:.61rem}
-  .socialnav .snav-lbl{font-size:.57rem}
 }
 @media(prefers-reduced-motion:reduce){
   .panel{animation:none}

@@ -7,6 +7,7 @@ import { timeAgo } from './feed.js';
 import { pushLayer, popLayer } from '../gestures.js';
 import { postLinkText } from './deeplink.js';
 import { iconS } from '../icons.js';
+import { illustration } from '../illustrations.js';
 
 const CONV_SELECT = 'id,user_a,user_b,last_message_at,last_preview,last_sender_id';
 const PROFILE_SELECT = 'id,username,display_name,avatar_url';
@@ -157,7 +158,7 @@ function paintThread(){
   if (!box) return;
   const me = meId();
   if (!msgs.length){
-    box.innerHTML = '<div class="thread-empty">Say hi 👋</div>';
+    box.innerHTML = '<div class="thread-empty">' + illustration('message') + '<span>Say hello to start a conversation.</span></div>';
     return;
   }
   box.innerHTML = msgs.map((m, i) => {
