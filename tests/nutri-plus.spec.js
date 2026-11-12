@@ -333,6 +333,7 @@ test.describe('Chantier Nutrition', () => {
           done(null);
         },
         onDetected(callback){ this.detected = callback; },
+        start(){ this.started = true; },
         stop(){},
         emit(code){ if (this.detected) this.detected({ codeResult: { code } }); }
       };
@@ -346,6 +347,12 @@ test.describe('Chantier Nutrition', () => {
 
     await page.evaluate(() => window.openScanner());
     await expect(page.locator('#scanStatus')).toContainText('Point the camera');
+    const readerStarted = await page.evaluate(() => ({
+      started: window.Quagga.started,
+      readers: window.Quagga.config.decoder.readers
+    }));
+    expect(readerStarted.started).toBe(true);
+    expect(readerStarted.readers).toContain('upc_reader');
     const frame = await page.locator('#scanRegion').evaluate(el => ({
       height: el.clientHeight,
       videoHeight: el.querySelector('video').clientHeight,

@@ -13,7 +13,7 @@ import { lookupBarcode, importRemoteFood } from './nutri-remote.js';
 
 const VENDOR_QUAGGA = 'js/vendor/quagga2.js';
 /* EAN-13/EAN-8/UPC-A (via ean_reader)/UPC-E — formats produits Open Food Facts */
-const QUAGGA_READERS = ['ean_reader', 'ean_8_reader', 'upc_e_reader'];
+const QUAGGA_READERS = ['ean_reader', 'ean_8_reader', 'upc_reader', 'upc_e_reader'];
 let _scanState = null;        /* { food, code } résultat courant */
 let _scanActive = false;      /* décodage actif (caméra ouverte) */
 let _lookupBusy = false;      /* anti-rebond pendant un lookup */
@@ -126,9 +126,20 @@ function startCamera(epoch){
         }
         return;
       }
-      if (status) status.textContent = 'Point the camera at the barcode.';
       bindDetect();
       _scanActive = true;
+      try {
+        /* Quagga.init only prepares the camera; start() begins processing frames. */
+        window.Quagga.start();
+        if (status) status.textContent = 'Point the camera at the barcode.';
+      } catch (e){
+        _scanActive = false;
+        if (status) status.textContent = 'Camera opened, but barcode reading could not start. Try again or search by name.';
+        const acts = document.querySelector('#scanBody .composer-actions');
+        if (acts) acts.insertAdjacentHTML('afterbegin',
+          '<button class="btn btn-primary" onclick="scanToManual()">Search by name</button>' +
+          '<button class="chip" onclick="openScanner()">Try camera again</button>');
+      }
     });
   } catch (e){
     if (status) status.textContent = 'Could not start the camera. Check camera access or search by name.';
