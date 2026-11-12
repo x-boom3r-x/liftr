@@ -11,7 +11,7 @@ const routine = {
 
 async function openDay(page, id = 'd1'){
   await page.click('button[data-tab="programme"]');
-  await page.locator('#daysList [data-day-id="' + id + '"]').click();
+  await page.locator('#daysList [data-day-id="' + id + '"] .programme-day-main').click();
   await expect(page.locator('#dayDetailModal')).toHaveClass(/show/);
 }
 
@@ -119,7 +119,7 @@ test.describe('Programmes et organisation des routines', () => {
     await page.locator('#daysList [data-day-id="d1"] button[aria-label="Descendre Upper"]').click();
     expect(await page.evaluate(() => getActiveProgrammeDays().map(d => d.id))).toEqual(['d2', 'd1']);
 
-    await page.locator('#daysList [data-day-id="d1"]').click();
+    await page.locator('#daysList [data-day-id="d1"] .programme-day-main').click();
     await page.locator('#dayExercises button[aria-label="Descendre Bench press"]').click();
     expect(await page.evaluate(() => DB.programme.find(d => d.id === 'd1').exercises.map(e => e.id))).toEqual(['e2', 'e1']);
 
@@ -140,7 +140,7 @@ test.describe('Programmes et organisation des routines', () => {
     );
     expect(await page.evaluate(() => getActiveProgrammeDays().map(d => d.id))).toEqual(['d2', 'd1']);
 
-    await page.locator('#daysList [data-day-id="d1"]').click();
+    await page.locator('#daysList [data-day-id="d1"] .programme-day-main').click();
     await page.locator('#dayExercises .ex-drag-handle[data-ex-id="e2"]').dragTo(
       page.locator('#dayExercises .ex-block[data-ex-id="e1"]')
     );

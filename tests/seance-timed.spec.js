@@ -101,7 +101,8 @@ test('l’editeur du programme transforme les secondes en cible chronométrée',
   await seed(page, { programmes: [program], programme: [
     { ...day, exercises: [{ id: 'plank', name: 'Plank' }] }
   ] });
-  await page.locator('#daysList [data-day-id="timed-day"]').click();
+  await page.click('button[data-tab="programme"]');
+  await page.locator('#daysList [data-day-id="timed-day"] .programme-day-main').click();
   await page.locator('.ex-params summary').click();
   await page.locator('#param-sets-plank').fill('2');
   await page.locator('#param-seconds-plank').fill('30');

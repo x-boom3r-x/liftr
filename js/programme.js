@@ -203,15 +203,15 @@ function renderProgramme(){
   el.innerHTML = days.map((d, i) => {
     const past = DB.history.filter(h => h.dayId === d.id).length;
     const id = esc(d.id);
-    return '<div class="card tap programme-day" data-day-id="' + id + '" onclick="openDayDetail(\'' + id + '\')">' +
+    return '<div class="card programme-day" data-day-id="' + id + '">' +
       '<div class="card-header">' +
-        '<div style="min-width:0">' +
+        '<button type="button" class="programme-day-main" onclick="openDayDetail(\'' + id + '\')" aria-label="Open ' + esc(d.name) + ' day">' +
           '<div class="card-title">' + esc(d.name) + '</div>' +
           '<div class="card-sub">' + d.exercises.length + ' exercise' + (d.exercises.length !== 1 ? 's' : '') +
             (d.exercises.length ? ' · ' + esc(d.exercises.slice(0,3).map(e => e.name).join(', ')) + (d.exercises.length > 3 ? '…' : '') : '') +
             (past ? ' · ' + past + ' past session' + (past > 1 ? 's' : '') : '') +
           '</div>' +
-        '</div>' +
+        '</button>' +
         '<div class="card-actions">' +
           '<button type="button" class="icon-btn day-drag-handle" draggable="true" onclick="event.stopPropagation()" aria-label="Réordonner ' + esc(d.name) + '" title="Réordonner">↕</button>' +
           '<button type="button" class="icon-btn" onclick="event.stopPropagation();moveProgrammeDay(\'' + id + '\',-1)" aria-label="Monter ' + esc(d.name) + '" title="Monter"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +

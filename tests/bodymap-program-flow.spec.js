@@ -75,5 +75,10 @@ test.describe('Mannequin et création guidée du programme', () => {
     expect(result.days).toHaveLength(2);
     expect(result.days[0]).toMatchObject({ name: 'Haut du corps', exercises: [benchName] });
     expect(result.days[1]).toMatchObject({ name: 'Bas du corps', exercises: [squatName] });
+
+    await page.locator('#dayDetailModal').getByRole('button', { name: 'Close', exact: true }).click();
+    await page.locator('#daysList [data-day-id] .programme-day-main').first().click();
+    await expect(page.locator('#dayDetailModal')).toHaveClass(/show/);
+    await expect(page.locator('#dayTitleInput')).toHaveValue('Haut du corps');
   });
 });
