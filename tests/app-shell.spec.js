@@ -163,7 +163,7 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     expect(r.docScrollY, 'la fenêtre ne défile pas').toBe(0);
   });
 
-  test('zone safe-area : la barre couvre l’inset et garde les commandes au-dessus', async ({ page }) => {
+  test('zone safe-area : la barre reste dans le viewport et ses commandes restent visibles', async ({ page }) => {
     await page.evaluate(t => window.showTab(t), 'programme');
     await page.waitForTimeout(150);
     const measure = () => page.evaluate(() => {
@@ -189,12 +189,12 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
 
     expect(sansInset.barBottom, 'barre collée en bas (sans inset)')
       .toBeCloseTo(sansInset.visualH, 0);
-    expect(avecInset.barBottom, 'fond de barre étendu sous l’inset sûr')
-      .toBeCloseTo(avecInset.visualH + 34, 0);
+    expect(avecInset.barBottom, 'la barre ne dépasse pas le viewport visible')
+      .toBeCloseTo(avecInset.visualH, 0);
     expect(sansInset.tabGap, 'sans inset : libellés à 8px du bord')
       .toBeCloseTo(8, 1);
-    expect(avecInset.tabGap, 'avec inset : commandes arrêtées au bord sûr')
-      .toBeCloseTo(0, 1);
+    expect(avecInset.tabGap, 'avec inset : libellés entièrement visibles au-dessus du home indicator')
+      .toBeCloseTo(34, 1);
     expect(avecInset.barH - sansInset.barH,
       'la barre réserve les 26px d’inset qui dépassent le minimum de 8px')
       .toBeCloseTo(26, 1);

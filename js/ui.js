@@ -106,19 +106,18 @@ window.addEventListener('offline', checkNet);
    et le Feed continue de gérer/restaurer son propre scroll. */
 
 /* Safari can leave fixed-position elements at the layout viewport edge while its
-   browser chrome changes the visible viewport. Keep the app shell aligned to the
-   viewport WebKit reports, and extend its background through the home-indicator area. */
+   browser chrome changes the visible viewport. Match the shell to WebKit's visible
+   viewport; the tabbar reserves the home-indicator inset inside that height. */
 function syncAppViewport(){
   const shell = document.getElementById('mainApp');
   const viewport = window.visualViewport;
   if (!shell || !viewport || Math.abs(viewport.scale - 1) > 0.01) return;
-  const safeBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
   shell.style.top = viewport.offsetTop + 'px';
   shell.style.left = viewport.offsetLeft + 'px';
   shell.style.right = 'auto';
   shell.style.bottom = 'auto';
   shell.style.width = viewport.width + 'px';
-  shell.style.height = (viewport.height + safeBottom) + 'px';
+  shell.style.height = viewport.height + 'px';
 }
 function pinTabbar(){ syncAppViewport(); }
 if (window.visualViewport){
