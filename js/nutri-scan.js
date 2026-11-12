@@ -212,6 +212,7 @@ function renderScanFood(food){
       '<option value="">Choose a serving…</option>' + portions + '</select>' : '') +
     '<div class="scan-preview" id="scanPreview"></div>' +
     '</div>' +
+    '<div class="scan-library-row"><button class="chip" onclick="scanSaveToFoods()">Save to My Foods</button></div>' +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="openScanner()">Scan again</button>' +
     '<button class="btn btn-primary btn-sm" onclick="scanConfirmAdd()">Add to meal</button>' +
@@ -265,6 +266,20 @@ function scanConfirmAdd(){
   window.logRemoteFood(f.id, grams, unit);
 }
 
+function scanSaveToFoods(){
+  if (!_scanState || !_scanState.food) return;
+  const food = importRemoteFood(_scanState.food);
+  if (!food){ toast('Could not save this food'); return; }
+  if (typeof window.save === 'function') window.save();
+  const name = food.name;
+  closeScanner();
+  const search = document.getElementById('nutriFoodSearch');
+  if (search) search.value = '';
+  window.showTab && window.showTab('nutri-foods');
+  window.setNutriFoodFilter && window.setNutriFoodFilter('mine');
+  toast(name + ' saved to My Foods');
+}
+
 /* ---- produit introuvable ---- */
 function renderScanNotFound(code, offline){
   scanSet(
@@ -309,4 +324,5 @@ window.scanCreateFood = scanCreateFood;
 window.scanUnitChange = scanUnitChange;
 window.scanPortionChange = scanPortionChange;
 window.scanConfirmAdd = scanConfirmAdd;
+window.scanSaveToFoods = scanSaveToFoods;
 window.LiftrCloseScanModal = closeScanner;

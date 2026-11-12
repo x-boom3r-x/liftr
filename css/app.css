@@ -1439,6 +1439,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .scan-found .input{margin-bottom:0}
 .scan-preview{font-size:.82rem;color:var(--text2);min-height:1.1em}
 .scan-notfound{display:flex;flex-direction:column;gap:8px;margin:4px 0 8px}
+.scan-library-row{display:flex;justify-content:flex-start;margin:0 0 4px}
 @media(prefers-reduced-motion:reduce){.scan-guide::after{animation:none}}
 
 /* ---------- bouton flottant "nouveau post" ---------- */

@@ -779,7 +779,7 @@ function itemEditorHtml(){
     '<select class="input" id="itemUnit" aria-label="Unit" onchange="itemUnitChange(this.value)">' + units + '</select>' +
     '<span class="item-preview" id="itemPreview"></span>' +
     '<button class="btn btn-primary btn-sm" onclick="addDraftItem()">' +
-    (p.from >= 0 ? 'Update' : 'Add to meal') + '</button>' +
+    (p.from >= 0 ? 'Update' : nutriDraft && nutriDraft.recipeMode ? 'Add ingredient' : 'Add to meal') + '</button>' +
     '</div>';
 }
 
@@ -824,7 +824,7 @@ function mealBuilderHtml(){
   const n = nutriDB();
   const t = draftTotals();
   const yMeals = n.meals.filter(m => m.date === shiftISO(nutriDate(), -1));
-  const copyRow = (yMeals.length && !d.items.length)
+  const copyRow = (yMeals.length && !d.items.length && !d.recipeMode)
     ? '<div class="nutri-copy-row"><span class="section-hint" style="margin:0">Copy from yesterday:</span>' +
       yMeals.map(m => '<button type="button" class="chip" onclick="copyYestMeal(' +
         esc(JSON.stringify(m.id)) + ')">' + esc(m.name) + '</button>').join('') + '</div>'
@@ -863,9 +863,10 @@ function mealBuilderHtml(){
   return '<div class="nutri-form-backdrop" role="presentation" onclick="if(event.target===this)cancelNutriForm()">' +
     '<div class="card nutri-form builder-form" role="dialog" aria-modal="true" aria-labelledby="mealBuilderTitle">' +
     '<div class="nutri-sheet-head"><div><div class="nutri-sheet-title" id="mealBuilderTitle">' +
-    (d.id ? 'Edit meal' : 'Build a meal') + '</div><div class="section-hint">Choose foods and set portions</div></div>' +
+    (d.recipeMode ? 'Build a recipe' : d.id ? 'Edit meal' : 'Build a meal') + '</div><div class="section-hint">' +
+    (d.recipeMode ? 'Save it to My Foods and reuse it any day.' : 'Choose foods and set portions') + '</div></div>' +
     '<button type="button" class="nutri-sheet-close" data-nutri-close onclick="cancelNutriForm()" aria-label="Close meal editor">×</button></div>' +
-    '<input class="input" id="mealName" placeholder="Meal name" maxlength="60" value="' + esc(d.name) + '"' +
+    '<input class="input" id="mealName" placeholder="' + (d.recipeMode ? 'Recipe name' : 'Meal name') + '" maxlength="60" value="' + esc(d.name) + '"' +
     ' oninput="mealNameInput(this.value)">' +
     '<input class="input builder-search" id="mealFoodSearch" placeholder="Search foods…" aria-label="Search foods to add"' +
     ' value="' + esc(d.q || '') + '" oninput="mealSearchInput(this.value)">' +
@@ -873,7 +874,10 @@ function mealBuilderHtml(){
     copyRow + itemsCard + totals +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="cancelNutriForm()">Cancel</button>' +
-    '<button class="btn btn-primary btn-sm" onclick="saveMealDraft()">Save meal</button>' +
+    (d.recipeMode
+      ? '<button class="btn btn-primary btn-sm" onclick="saveDraftAsRecipe()">Save recipe</button>'
+      : '<button class="chip" onclick="saveDraftAsRecipe()">Save as recipe</button>' +
+        '<button class="btn btn-primary btn-sm" onclick="saveMealDraft()">Save meal</button>') +
     '</div></div></div>';
 }
 
@@ -1010,6 +1014,14 @@ function addMeal(){
   showTab('nutri-meals');
   revealNutriForm();
 }
+function addRecipe(){
+  nutriFormOpener = document.activeElement;
+  nutriForm = 'meal';
+  nutriDraft = newDraft();
+  nutriDraft.recipeMode = true;
+  showTab('nutri-meals');
+  revealNutriForm();
+}
 function addMealFor(type){
   nutriFormOpener = document.activeElement;
   nutriForm = 'meal';
@@ -1098,27 +1110,58 @@ function copyYestMeal(id){
   renderNutriMeals();
   toast('Copied "' + m.name + '"');
 }
+function storeRecipe(name, type, items){
+  const n = nutriDB();
+  const normalized = (items || []).map(it => {
+    const food = it.food || it.snapshot || (it.foodId && findNutriFood(it.foodId));
+    if (!food) return null;
+    return { food: food, foodId: it.foodId || food.id, name: food.name,
+      qty: +it.qty || 0, unit: it.unit || 'g' };
+  }).filter(it => it && it.qty > 0);
+  if (!normalized.length) return null;
+  let food;
+  try { food = recipeToFood({ id: uid(), name: name, items: normalized, cookedWeightG: 0 }); }
+  catch (e){ food = null; }
+  if (!food || !(food.kcal >= 0) || !isFinite(food.kcal)) return null;
+  food.source = 'recipe';
+  n.foods.push(food);
+  if (!Array.isArray(n.recipes)) n.recipes = [];
+  const recipe = {
+    id: uid(), foodId: food.id, name: name, type: type || 'lunch',
+    items: normalized.map(it => ({ foodId: it.foodId, qty: it.qty, unit: it.unit, name: it.name }))
+  };
+  n.recipes.push(recipe);
+  return { food: food, recipe: recipe };
+}
+
+function saveDraftAsRecipe(){
+  if (nutriDraft && nutriDraft.pick) addDraftItem();
+  const d = nutriDraft;
+  if (!d || !d.items.length){ toast('Add foods first — recipes need ingredients'); return; }
+  const name = String(d.name || '').trim();
+  if (!name){ toast('Name your recipe first'); $('mealName') && $('mealName').focus(); return; }
+  const stored = storeRecipe(name, d.type, d.items);
+  if (!stored){ toast('Could not save this recipe'); return; }
+  touchNutriRecent(d.items.filter(it => it.foodId).map(it => it.foodId));
+  nutriForm = null;
+  nutriDraft = null;
+  save();
+  showTab('nutri-foods');
+  setNutriFoodFilter('all');
+  toast('"' + name + '" saved to My Foods');
+  restoreNutriSectionFocus();
+}
+
 function saveMealAsRecipe(id){
   const n = nutriDB();
   const m = n.meals.find(x => x.id === id);
   if (!m) return;
-  const items = (m.items || []).map(it => {
-    const f = it.foodId ? (it.snapshot || findNutriFood(it.foodId)) : null;
-    return f ? { food: f, qty: +it.qty || 0, unit: it.unit || 'g' } : null;
-  }).filter(Boolean);
-  if (!items.length){ toast('Add foods first — recipes need food items'); return; }
-  let food = null;
-  try { food = recipeToFood({ id: uid(), name: m.name, items: items, cookedWeightG: 0 }); }
-  catch (e){ food = null; }
-  if (!food || !(food.kcal >= 0) || !isFinite(food.kcal)){ toast('Could not save this recipe'); return; }
-  n.foods.push(food);
-  /* template reutilisable : ingredients d'origine (foodId + qty) */
-  if (!Array.isArray(n.recipes)) n.recipes = [];
-  n.recipes.push({
-    id: uid(), name: m.name, type: m.type || 'lunch',
-    items: (m.items || []).filter(it => it.foodId).map(it =>
-      ({ foodId: it.foodId, qty: +it.qty || 0, unit: it.unit || 'g', name: it.name }))
-  });
+  const items = (m.items || []).filter(it => it.foodId).map(it => ({
+    food: it.snapshot || findNutriFood(it.foodId), foodId: it.foodId,
+    qty: +it.qty || 0, unit: it.unit || 'g'
+  }));
+  const stored = storeRecipe(m.name, m.type || 'lunch', items);
+  if (!stored){ toast('Could not save this recipe'); return; }
   save();
   renderNutriMeals();
   toast('"' + m.name + '" saved to Foods');
@@ -1425,7 +1468,7 @@ function renderNutriFoods(){
       (fl === 'fav' && favs.length) || (fl === 'recent' && recents.length) || (fl === 'mine' && mine.length);
     if (!anyShown){
       html += '<div class="empty">' + (fl === 'all'
-        ? 'Your food list is empty — tap <b>+ Food</b> to add staples (per 100 g), or type to search.'
+        ? 'Your food list is empty — add a personal food, scan a packaged product, or start a recipe.'
         : 'Nothing in this filter yet.') + '</div>';
     }
   }
@@ -2265,8 +2308,8 @@ Object.assign(window, {
   renderNutrition, nutriDB, nutriTotalsOf,
   nutriFoodPreparation, saveNutriFoodPreparation,
   /* meals : liste + builder foodId/qty */
-  addMeal, addMealFor, editMeal, editMealItem, removeMeal, removeMealItem,
-  saveMealDraft, cancelNutriForm, copyYestMeal, saveMealAsRecipe,
+  addMeal, addRecipe, addMealFor, editMeal, editMealItem, removeMeal, removeMealItem,
+  saveMealDraft, saveDraftAsRecipe, cancelNutriForm, copyYestMeal, saveMealAsRecipe,
   mealNameInput, mealTypeChange, mealSearchInput, pickMealFood,
   itemQtyInput, itemUnitChange, addDraftItem, editDraftItem, removeDraftItem,
   /* foods : per 100 g + recherche + log */
