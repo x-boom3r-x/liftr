@@ -10,7 +10,29 @@ async function boot(){
   if (sp) pendingShare = sp;
   await renderProfiles();
   checkNet();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if ('serviceWorker' in navigator){
+    const sw = navigator.serviceWorker;
+    const build = document.documentElement.getAttribute('data-build') || '';
+    const jsBuild = window.__LIFTR_BUILD__ || '';
+    const hadController = !!sw.controller;
+
+    // Une PWA ouverte avec l'ancien worker peut garder l'ancien écran après
+    // l'activation du worker mis à jour. Recharge une fois quand ils diffèrent.
+    if (hadController && build && build === jsBuild){
+      sw.addEventListener('controllerchange', () => {
+        const key = 'liftr-controller-reload-build';
+        try {
+          if (sessionStorage.getItem(key) === build) return;
+          sessionStorage.setItem(key, build);
+        } catch(e){}
+        location.reload();
+      });
+    }
+
+    sw.register('sw.js', { updateViaCache: 'none' })
+      .then(registration => registration.update().catch(()=>{}))
+      .catch(()=>{});
+  }
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'exNameInput') addExercise();
     if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'addExCustom') addExCustom();
