@@ -210,6 +210,32 @@ test.describe('App shell : tabbar collée en bas sur les 5 onglets', () => {
     expect(dimensions.height).toBeCloseTo(dimensions.viewportHeight, 0);
   });
 
+  test('le fond du dock prolonge le visual viewport jusqu’au bord visible', async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const visualBottom = visualViewport.offsetTop + visualViewport.height;
+      const originalInnerHeight = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+      Object.defineProperty(window, 'innerHeight', {
+        configurable: true,
+        value: visualBottom + 42
+      });
+      window.dispatchEvent(new Event('resize'));
+      const extension = getComputedStyle(document.body, '::after');
+      const result = {
+        visualBottom,
+        shellBottom: document.getElementById('mainApp').getBoundingClientRect().bottom,
+        extensionTop: window.innerHeight - parseFloat(extension.height),
+        extensionHeight: parseFloat(extension.height)
+      };
+      if (originalInnerHeight) Object.defineProperty(window, 'innerHeight', originalInnerHeight);
+      else delete window.innerHeight;
+      window.dispatchEvent(new Event('resize'));
+      return result;
+    });
+    expect(r.extensionHeight).toBeGreaterThanOrEqual(42);
+    expect(r.shellBottom).toBeCloseTo(r.visualBottom, 0);
+    expect(r.extensionTop).toBeCloseTo(r.visualBottom, 0);
+  });
+
   test('Safari/tablette : dock inférieur étroit, centré et collé au bas', async ({ page }) => {
     await page.setViewportSize({ width: 820, height: 1180 });
     await page.waitForTimeout(120);

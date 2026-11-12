@@ -112,6 +112,11 @@ function syncAppViewport(){
   const shell = document.getElementById('mainApp');
   const viewport = window.visualViewport;
   if (!shell || !viewport || Math.abs(viewport.scale - 1) > 0.01) return;
+  /* The visible viewport can end above the layout viewport on iOS. Keep the
+     dock's background continuous through that leftover strip; controls stay
+     inside the visual viewport and above the home-indicator safe area. */
+  const viewportBottomGap = Math.max(0, window.innerHeight - (viewport.offsetTop + viewport.height));
+  document.documentElement.style.setProperty('--viewport-bottom-gap', viewportBottomGap + 'px');
   shell.style.top = viewport.offsetTop + 'px';
   shell.style.left = viewport.offsetLeft + 'px';
   shell.style.right = 'auto';

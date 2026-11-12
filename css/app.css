@@ -23,6 +23,7 @@
   --text3:#7B8EAA;
   --safe-top:env(safe-area-inset-top);
   --safe-bottom:env(safe-area-inset-bottom);
+  --viewport-bottom-gap:0px;
   --line:#334B6B;
   --story-ring:linear-gradient(45deg,#C5D5FF,#1374FC 50%,#6B84E5);
   /* keep labels above the iPhone home indicator */
@@ -3065,7 +3066,8 @@ html{background:var(--bg)}
 #mainApp{position:fixed;inset:0;min-height:0;overflow:hidden;background:var(--bg)}
 html,body{width:100%;height:100%;min-height:100%;overflow:hidden;background:var(--bg)}
 body::after{
-  content:"";position:fixed;left:0;right:0;bottom:0;height:var(--safe-bottom);
+  content:"";position:fixed;left:0;right:0;bottom:0;
+  height:max(var(--safe-bottom),var(--viewport-bottom-gap));
   z-index:39;pointer-events:none;background:rgba(8,14,26,.98)
 }
 .header{
@@ -3252,6 +3254,7 @@ body::after{
 /* Safari/tablet: keep the bottom dock visually compact and anchored to the shell. */
 @media(max-width:899px){
   #mainApp>.tabbar{width:min(100%,520px);margin:0 auto;padding:5px 10px var(--tabbar-pad-b);border:1px solid rgba(163,197,239,.16);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.24)}
+  body::after{left:50%;right:auto;width:min(100vw,520px);transform:translateX(-50%);border-left:1px solid rgba(163,197,239,.16);border-right:1px solid rgba(163,197,239,.16)}
 }
 @media(min-width:900px){
   #mainApp>.tabbar{width:auto;max-width:none;margin:0;border:0;border-right:1px solid var(--border);border-radius:0}
