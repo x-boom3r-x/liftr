@@ -54,7 +54,7 @@ function renderSeance(){
           '<div class="card-title">' + esc(d.name) + '</div>' +
           '<div class="card-sub">' + (d.exercises.length ? esc(d.exercises.map(e => e.name).join(' · ')) : 'No exercises') +
             (past ? ' · done ' + past + ' time' + (past > 1 ? 's' : '') : '') + '</div>' +
-        '</div>' + typeChip(d.type) +
+        '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;margin-top:12px">' +
         '<button class="btn btn-primary btn-sm" style="flex:1" ' + (d.exercises.length && !DB.active ? '' : 'disabled') +
@@ -147,6 +147,7 @@ function startFreeSession(){
 
 function resumeSession(){
   if (!DB.active) return;
+  syncRestDefaultUI();
   const d = sessionDiff();
   $('activeTitle').textContent = DB.active.dayName;
   $('activeSub').textContent = new Date(DB.active.startedAt).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) +
@@ -357,9 +358,19 @@ function plannedNumber(value, integer){
 
 function restForExercise(ex){
   const target = ex && ex.planned ? ex.planned.rest : null;
-  if (target == null || String(target).trim() === '') return 90;
+  if (target == null || String(target).trim() === '') return Math.max(0, Math.min(900, Number(DB.restDefaultSecs ?? 90)));
   const seconds = plannedNumber(target, true);
-  return seconds == null ? 90 : Math.max(0, Math.min(900, seconds));
+  return seconds == null ? Math.max(0, Math.min(900, Number(DB.restDefaultSecs ?? 90))) : Math.max(0, Math.min(900, seconds));
+}
+
+function restAfterSet(ex){
+  const planned = ex && ex.planned;
+  if (!planned || !planned.groupId) return restForExercise(ex);
+  const members = (DB.active && DB.active.exercises || []).filter(item => item.planned && item.planned.groupId === planned.groupId);
+  if (members.length < 2 || Number(planned.groupIndex) < Number(planned.groupCount)) return 0;
+  const explicit = members.map(item => item.planned.rest).filter(value => value != null && String(value).trim() !== '')
+    .map(value => plannedNumber(value, true)).filter(value => value != null);
+  return explicit.length ? Math.max(...explicit) : Math.max(0, Math.min(900, Number(DB.restDefaultSecs ?? 90)));
 }
 
 function applySuggestion(){
@@ -463,7 +474,7 @@ function finishTimedHold(auto = false){
   closeModal('addSetModal');
   addSetExIdx = null;
   resumeSession();
-  startRest(restForExercise(ex));
+  startRest(restAfterSet(ex));
   if (auto){
     if (navigator.vibrate) navigator.vibrate([80, 60, 120]);
     toast('Timed hold complete · ' + set.sec + ' seconds.');
@@ -567,7 +578,7 @@ function saveSet(){
   closeModal('addSetModal');
   addSetExIdx = null;
   resumeSession();
-  startRest(restForExercise(ex));
+  startRest(restAfterSet(ex));
 }
 
 function addDropSet(exIdx, setIdx){
@@ -880,9 +891,28 @@ function removeActiveExercise(exId){
 /* ---------------- timer de repos ---------------- */
 let _restLoop = null;
 
+function defaultRestSeconds(){
+  return Math.max(0, Math.min(900, Math.round(Number((DB && DB.restDefaultSecs) ?? 90))));
+}
+
+function syncRestDefaultUI(){
+  const seconds = defaultRestSeconds();
+  const select = $('restDefaultSelect');
+  const button = $('restStartBtn');
+  if (select) select.value = String(seconds);
+  if (button) button.textContent = seconds ? 'Start ' + seconds + 's' : 'Rest off';
+}
+
+function saveRestDefault(value){
+  if (!DB) return;
+  DB.restDefaultSecs = Math.max(0, Math.min(900, Math.round(Number(value) || 0)));
+  save();
+  syncRestDefaultUI();
+}
+
 function startRest(secs){
   if (!DB.active) return;
-  const requested = Number(secs);
+  const requested = secs == null ? defaultRestSeconds() : Number(secs);
   if (Number.isFinite(requested) && requested <= 0){
     delete DB.active.restUntil;
     DB.active.restSecs = 0;
@@ -892,7 +922,7 @@ function startRest(secs){
     restLoop();
     return;
   }
-  DB.active.restSecs = Math.max(10, +secs || 90);
+  DB.active.restSecs = Math.max(10, Number.isFinite(requested) ? requested : defaultRestSeconds());
   DB.active.restUntil = Date.now() + DB.active.restSecs * 1000;
   DB.active.restDone = false;
   save();
@@ -902,7 +932,7 @@ function startRest(secs){
 
 function restAdd(d){
   if (!DB.active) return;
-  if (!DB.active.restUntil){ startRest(90); return; }
+  if (!DB.active.restUntil){ startRest(); return; }
   DB.active.restUntil = Math.max(Date.now(), DB.active.restUntil + d * 1000);
   DB.active.restSecs = Math.max(10, (DB.active.restSecs || 90) + d);
   if (DB.active.restUntil <= Date.now()) DB.active.restDone = true;
@@ -1080,5 +1110,5 @@ Object.assign(window, {
   openAddEx, onAddExSearch, renderAddEx, toggleSessionExercise, addSessionExercise,
   addExCustom, removeActiveExercise,
   addDropSet, stepDropSet, removeDropSet, addRestPause, stepRestPause, removeRestPause,
-  startRest, restAdd, restSkip, restTick, restLoop, restStopLoop
+  startRest, restAdd, restSkip, restTick, restLoop, restStopLoop, saveRestDefault
 });

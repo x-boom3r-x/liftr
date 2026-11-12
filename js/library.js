@@ -92,7 +92,7 @@ async function renderLibraryScreen(){
   }
   let list = buildList(exes);
   if (libScreenFilter === 'Custom') list = list.filter(ex => ex.category === 'custom');
-  else if (libScreenFilter !== 'All') list = list.filter(ex => ex.bodyPart === libScreenFilter);
+  else if (libScreenFilter !== 'All') list = list.filter(ex => matchesLibraryMuscle(ex, libScreenFilter));
 
   if (libScreenSort === 'recent') list = list.sort((a,b) => (b._lastUsed||0) - (a._lastUsed||0));
   else if (libScreenSort === 'used') list = list.sort((a,b) => (b.usageCount||0) - (a.usageCount||0));
@@ -182,6 +182,28 @@ function bmPick(muscle){
   else renderLibraryScreen();
 }
 
+function matchesLibraryMuscle(ex, filter){
+  const part = normalizeForAlias(ex.bodyPart);
+  const key = normalizeForAlias(filter);
+  if (part === key) return true;
+  const anatomy = normalizeForAlias([ex.target || '', ...(ex.secondaryMuscles || [])].join(' '));
+  const aliases = {
+    back: ['back', 'lats', 'traps', 'rhomboids'], 'upper-back': ['back', 'lats', 'traps', 'rhomboids'],
+    'lower-back': ['lower back', 'erectors', 'back'], trapezius: ['traps', 'trapezius'],
+    chest: ['chest', 'pectorals'], serratus: ['serratus'],
+    shoulders: ['shoulders', 'delts', 'rotator cuff'], deltoids: ['delts', 'shoulders', 'rotator cuff'],
+    arms: ['upper arms', 'lower arms', 'biceps', 'triceps', 'forearms'],
+    biceps: ['biceps'], triceps: ['triceps'], forearm: ['forearm', 'forearms', 'grip'],
+    legs: ['upper legs', 'lower legs', 'quads', 'quadriceps', 'hamstrings', 'adductors', 'glutes', 'calves', 'tibialis', 'hip flexors'],
+    quadriceps: ['quads', 'quadriceps'], hamstring: ['hamstrings', 'hamstring'],
+    adductors: ['adductors'], 'hip-flexors': ['hip flexors'], calves: ['calves', 'gastrocnemius'], tibialis: ['tibialis'],
+    glutes: ['glutes', 'glute'], gluteal: ['glutes', 'glute'],
+    core: ['waist', 'abs', 'obliques', 'core'], abs: ['abs', 'core'], obliques: ['obliques']
+  };
+  const terms = aliases[key] || [key];
+  return terms.some(term => part === term || anatomy.includes(term));
+}
+
 function libScreenPick(name){
   const days = DB.programme || [];
   const acts = [];
@@ -231,7 +253,7 @@ function toggleRecent(name){
 /* Renderiser & exposer en globals. */
 cataloguePromise.then(() => renderLibraryScreen()).catch(() => {});
 Object.assign(window, {
-  renderLibraryScreen, onLibScreenSearch, bmPick,
+  renderLibraryScreen, onLibScreenSearch, bmPick, matchesLibraryMuscle,
   libScreenPick, libScreenAddTo, toggleFavorite, toggleRecent,
   libScreenFilter, libScreenQuery, libScreenSort, libScreenFav, libScreenRec,
 });

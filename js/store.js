@@ -17,6 +17,7 @@ function defaultDB(){
     prLog: [],             // log des records
     custom: [],             // exercices personnalisés
     weightLog: [],          // journal des poids
+    restDefaultSecs: 90,    // repos par défaut entre les séries
     active: null            // session active
   };
 }
@@ -62,6 +63,7 @@ document.addEventListener('visibilitychange', () => {
 
 /* Repare les donnees incompletes (entrees sans id = suppression impossible) */
 function normalizeDB(){
+  DB.restDefaultSecs = Math.max(0, Math.min(900, Math.round(Number(DB.restDefaultSecs ?? 90) || 0)));
   if (!Array.isArray(DB.programme)) DB.programme = [];
   DB.programme = DB.programme.filter(d => d && typeof d === 'object');
   if (!Array.isArray(DB.history)) DB.history = [];

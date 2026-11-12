@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="96">
+<html lang="en" data-build="98">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -121,8 +121,8 @@
           <section class="today-panel today-workout-panel" aria-labelledby="todayWorkoutTitle">
             <div class="today-panel-head">
               <div>
-                <div class="today-overline">TRAINING</div>
-                <h2 id="todayWorkoutTitle">Your session</h2>
+                <div class="today-overline">GYM</div>
+                <h2 id="todayWorkoutTitle">Next workout</h2>
                 <p class="today-session-hint" id="todaySessionCount"></p>
               </div>
               <button class="text-link" type="button" onclick="showRoot('gym','programme')">View plan <span aria-hidden="true">↗</span></button>
@@ -143,6 +143,11 @@
         </div>
 
         <aside class="today-dashboard-side">
+          <section class="today-panel today-muscle-panel" aria-labelledby="todayMuscleTitle">
+            <div class="today-overline">TRAINING MAP</div>
+            <h2 id="todayMuscleTitle">Muscles trained</h2>
+            <div id="todayBodyMap"></div>
+          </section>
           <section class="today-panel today-water-panel" aria-labelledby="todayWaterTitle">
             <div class="today-overline">HYDRATION</div>
             <h2 id="todayWaterTitle">Water</h2>
@@ -169,6 +174,7 @@
         </div>
         <div class="section-head-acts">
           <button class="btn btn-sm" onclick="showTab('library')">Exercises</button>
+          <button class="btn btn-sm" onclick="printProgrammePdf()">Save PDF</button>
           <button class="btn btn-primary btn-sm" onclick="openNewDay()">+ New day</button>
         </div>
       </div>
@@ -360,6 +366,7 @@
           <div class="section-hint" id="nutriMealsHint">What you ate today</div>
         </div>
         <div class="section-head-acts">
+          <button class="btn btn-sm" onclick="openScanner()" aria-label="Scan product barcode">Scan</button>
           <button class="btn btn-sm" onclick="openNutriTransfer()">Transfer</button>
           <button class="btn btn-sm btn-primary" onclick="addMeal()">+ Meal</button>
         </div>
@@ -793,10 +800,6 @@
       <input class="input" id="dayNameInput" placeholder="e.g. PUSH, PULL, LEGS…" maxlength="40">
     </div>
     <div class="field">
-      <label class="label">Type</label>
-      <div class="type-picker" id="dayTypePicker"></div>
-    </div>
-    <div class="field">
       <label class="label">Programme</label>
       <select class="input" id="dayProgramSelector"></select>
     </div>
@@ -901,11 +904,6 @@
       <button class="btn btn-primary btn-sm" style="flex:none" onclick="renameDay()">Rename</button>
     </div>
     <div class="field">
-      <label class="label">Session type</label>
-      <div class="type-picker" id="detailTypePicker"></div>
-    </div>
-
-    <div class="field">
       <label class="label" for="copyDayTargetProgram">Copier cette journée vers</label>
       <div class="row">
         <select class="input" id="copyDayTargetProgram"></select>
@@ -968,7 +966,8 @@
         <span class="rest-time" id="restTime">Rest</span>
       </div>
       <div class="rest-actions">
-        <button class="btn btn-sm" id="restStartBtn" onclick="startRest(90)">Start 90s</button>
+          <label class="rest-default"><span>Default</span><select id="restDefaultSelect" aria-label="Default rest interval" onchange="saveRestDefault(this.value)"><option value="0">Off</option><option value="30">30s</option><option value="45">45s</option><option value="60">60s</option><option value="90">90s</option><option value="120">2m</option><option value="150">2:30</option><option value="180">3m</option><option value="240">4m</option><option value="300">5m</option><option value="600">10m</option></select></label>
+          <button class="btn btn-sm" id="restStartBtn" onclick="startRest()">Start rest</button>
         <span class="rest-running" id="restRunning">
           <button class="btn btn-sm" onclick="restAdd(-15)">−15</button>
           <button class="btn btn-sm" onclick="restAdd(15)">+15</button>

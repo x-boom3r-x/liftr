@@ -59,7 +59,8 @@ function renderToday(){
   }
 
   const count = document.getElementById('todaySessionCount');
-  if (count) count.textContent = (db.active ? 'Session in progress' : records.length ? records.length + ' session' + (records.length === 1 ? '' : 's') + ' completed today' : 'Your training stays on this device');
+  if (count) count.textContent = (db.active ? 'Workout in progress' : records.length ? records.length + ' workout' + (records.length === 1 ? '' : 's') + ' completed today' : 'Ready when you are');
+  if (typeof window.renderTodayBodyMap === 'function') window.renderTodayBodyMap();
 }
 
 Object.assign(window, { renderToday });

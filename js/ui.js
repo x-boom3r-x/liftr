@@ -137,16 +137,9 @@ function feedGateOk(){
   return typeof window.socialAvailable === 'function' ? window.socialAvailable() : true;
 }
 
-/* Premier lancement → tableau de bord local. On restaure la dernière vue
-   sociale uniquement si le réseau est disponible. */
+/* Chaque connexion démarre sur le tableau de bord local : les sous-vues
+   sont conservées pendant la navigation, pas comme écran de reconnexion. */
 function pickInitialTab(){
-  let memo = localStorage.getItem('at_tab');
-  if (memo === 'nutri-week') memo = 'nutri-goal';
-  if (memo && ALL_TABS.includes(memo)){
-    const root = rootOf(memo);
-    if (root === 'feed') return feedGateOk() ? memo : 'today';
-    if (root === 'gym' || root === 'nutrition') return memo;
-  }
   return 'today';
 }
 

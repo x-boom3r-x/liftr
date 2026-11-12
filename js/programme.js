@@ -22,8 +22,6 @@ import { repSequenceOf } from './gym/progression.js';
 loadCatalogue();
 
 let detailDayId = null;
-let newDayType = 'PUSH';
-let detailDayType = 'PUSH';
 let activeProgramId = null; // ID du programme actuellement sélectionné
 let dragExId = null;
 let selectedDayExerciseIds = new Set();
@@ -46,12 +44,6 @@ function dropExoRecords(name){
 /* ==================================================================
    PROGRAMME
    ================================================================== */
-function typeChip(type){
-  const t = (type || 'PUSH').toUpperCase();
-  const cls = TYPES.includes(t) ? t.toLowerCase() : 'type';
-  return '<span class="chip chip-' + cls + '">' + esc(t) + '</span>';
-}
-
 /* --- carte « Aujourd'hui » (modèle openGym) : plan du jour, suggestion,
        session en cours — reprend la couleur Liftr --- */
 const MUSCLE_CHIP = {
@@ -150,7 +142,7 @@ function renderTodayCard(){
           (planned.exercises.length !== 1 ? 's' : '') +
           (lastDoneOf(planned.id) ? ' · last done ' + fmtShort(lastDoneOf(planned.id)) : ' · never done') +
         '</div>' +
-      '</div>' + typeChip(planned.type) + '</div>' +
+      '</div></div>' +
       (mus.length ? '<div class="today-muscles">' + mus.map(muscleChip).join('') + '</div>' : '') +
       '<div class="today-acts">' +
         '<button class="btn btn-primary btn-sm" onclick="startSession(\'' + planned.id + '\')">Start session</button>' +
@@ -166,7 +158,7 @@ function renderTodayCard(){
         '<div class="today-eyebrow"><span class="today-dot"></span>Done today</div>' +
         '<div class="today-name">' + esc(planned.name) + '</div>' +
         '<div class="today-meta">Nice — recovery is programmed. See you tomorrow.</div>' +
-      '</div>' + typeChip(planned.type) + '</div>' +
+      '</div></div>' +
       '<div class="today-acts">' +
         '<button class="btn btn-sm" onclick="openDayDetail(\'' + planned.id + '\')">View session</button>' +
         '<button class="btn btn-sm" onclick="showTab(\'stats\')">Progress</button>' +
@@ -186,7 +178,7 @@ function renderTodayCard(){
       '<div class="today-meta">' + sugg.exercises.length + ' exercise' +
         (sugg.exercises.length !== 1 ? 's' : '') +
         (last ? ' · last done ' + fmtShort(last) : ' · never done') + '</div>' +
-    '</div>' + typeChip(sugg.type) + '</div>' +
+    '</div></div>' +
     (mus.length ? '<div class="today-muscles">' + mus.map(muscleChip).join('') + '</div>' : '') +
     '<div class="today-acts">' +
       '<button class="btn btn-primary btn-sm" onclick="startSession(\'' + sugg.id + '\')">Start session</button>' +
@@ -219,7 +211,7 @@ function renderProgramme(){
             (past ? ' · ' + past + ' past session' + (past > 1 ? 's' : '') : '') +
           '</div>' +
         '</div>' +
-        '<div class="card-actions">' + typeChip(d.type) +
+        '<div class="card-actions">' +
           '<button type="button" class="icon-btn day-drag-handle" draggable="true" onclick="event.stopPropagation()" aria-label="Réordonner ' + esc(d.name) + '" title="Réordonner">↕</button>' +
           '<button type="button" class="icon-btn" onclick="event.stopPropagation();moveProgrammeDay(\'' + id + '\',-1)" aria-label="Monter ' + esc(d.name) + '" title="Monter"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
           '<button type="button" class="icon-btn" onclick="event.stopPropagation();moveProgrammeDay(\'' + id + '\',1)" aria-label="Descendre ' + esc(d.name) + '" title="Descendre"' + (i === days.length - 1 ? ' disabled' : '') + '>↓</button>' +
@@ -234,10 +226,46 @@ function renderProgramme(){
   initProgrammeDayDrag();
 }
 
+function printProgrammePdf(){
+  const programme = getActiveProgramme();
+  const days = getActiveProgrammeDays();
+  if (!days.length){ toast('Add a workout day before exporting the plan.'); return; }
+  const view = window.open('', '_blank');
+  if (!view){ toast('Allow pop-ups to save the plan as a PDF.'); return; }
+  const date = new Date().toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
+  const dayHtml = days.map((day, dayIndex) => {
+    const exerciseRows = day.exercises.map((exercise, index) => {
+      const parts = [];
+      if (exercise.sets != null && exercise.sets !== '') parts.push(exercise.sets + ' sets');
+      if (exercise.reps) parts.push(exercise.reps + ' reps');
+      if (exercise.weight != null && exercise.weight !== '') parts.push(exercise.weight + ' kg');
+      if (exercise.seconds) parts.push(exercise.seconds + ' sec');
+      if (exercise.rest != null && exercise.rest !== '') parts.push(exercise.rest + ' sec rest');
+      const members = exercise.groupId ? day.exercises.filter(item => item.groupId === exercise.groupId) : [];
+      const groupLabel = members.length > 1
+        ? '<span class="group">' + (exercise.groupType === 'circuit' ? 'Circuit' : 'Superset') +
+          ' · ' + members.map(item => esc(item.name)).join(' + ') + '</span>' : '';
+      return '<li><div><b>' + esc(exercise.name) + '</b>' + groupLabel +
+        (parts.length ? '<small>' + esc(parts.join(' · ')) + '</small>' : '') +
+        (exercise.notes ? '<p>' + esc(exercise.notes) + '</p>' : '') +
+        '</div><span class="index">' + String(index + 1).padStart(2, '0') + '</span></li>';
+    }).join('');
+    return '<section class="day"><header><span>DAY ' + String(dayIndex + 1).padStart(2, '0') + '</span><h2>' + esc(day.name) + '</h2></header>' +
+      (exerciseRows ? '<ol>' + exerciseRows + '</ol>' : '<p class="empty">No exercises in this day yet.</p>') + '</section>';
+  }).join('');
+  const html = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>' + esc(programme ? programme.name : 'Training plan') + ' · LIFTR</title><style>' +
+    '@page{size:A4;margin:16mm}*{box-sizing:border-box}body{margin:0;color:#182338;font:14px/1.45 Arial,sans-serif}header.brand{display:flex;justify-content:space-between;align-items:flex-end;padding:0 0 18px;border-bottom:3px solid #1374fc}header.brand strong{color:#1374fc;font-size:22px;letter-spacing:.12em}header.brand span{color:#62728a;font-size:12px}h1{margin:22px 0 5px;font-size:30px;letter-spacing:-.04em}p.intro{margin:0 0 23px;color:#62728a}.day{margin:0 0 22px;break-inside:avoid}.day header{display:flex;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid #d5deeb}.day header span{color:#1374fc;font-size:10px;font-weight:700;letter-spacing:.12em}.day h2{margin:0;font-size:19px}.day ol{margin:0;padding:0;list-style:none}.day li{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e4eaf2}.day li b{display:block;font-size:14px}.day small{display:block;margin-top:3px;color:#62728a}.day p{margin:4px 0 0;color:#62728a;font-size:12px}.group{display:block;margin-top:3px;color:#1374fc;font-size:11px;font-weight:700}.index{color:#8d9ab0;font-size:11px}.empty{color:#62728a}footer{margin-top:26px;padding-top:10px;border-top:1px solid #d5deeb;color:#8390a3;font-size:10px}@media print{footer{position:fixed;bottom:0;left:0;right:0}}</style></head><body>' +
+    '<header class="brand"><strong>LIFTR</strong><span>' + esc(date) + '</span></header><h1>' + esc(programme ? programme.name : 'Training plan') + '</h1>' +
+    '<p class="intro">' + days.length + ' workout day' + (days.length === 1 ? '' : 's') + ' · Personal training plan</p>' + dayHtml +
+    '<footer>Created on this device with LIFTR</footer><script>window.addEventListener("load",()=>setTimeout(()=>window.print(),200));window.addEventListener("afterprint",()=>setTimeout(()=>window.close(),300))<\/script></body></html>';
+  view.document.open();
+  view.document.write(html);
+  view.document.close();
+}
+
 function openNewDay(programId){
-  newDayType = 'PUSH';
   $('dayNameInput').value = '';
-  renderTypePicker('dayTypePicker', newDayType, t => { newDayType = t; });
   const progSel = $('dayProgramSelector');
   if (progSel) renderProgramSelector('dayProgramSelector', programId || activeProgramId);
   openModal('newDayModal');
@@ -396,16 +424,6 @@ function deleteProgramme(id){
     renderAll();
   });
 }
-function renderTypePicker(elId, current, onPick){
-  $(elId).innerHTML = TYPES.map(t =>
-    '<button class="type-opt' + (t === current ? ' on' : '') + '" data-t="' + t + '">' + t + '</button>'
-  ).join('');
-  $(elId).querySelectorAll('.type-opt').forEach(b => b.onclick = () => {
-    onPick(b.dataset.t);
-    $(elId).querySelectorAll('.type-opt').forEach(x => x.classList.toggle('on', x.dataset.t === b.dataset.t));
-  });
-}
-
 /* Rend la liste des programmes (puces de sélection) */
 function renderProgramsList(){
   const el = $('programsList');
@@ -497,7 +515,7 @@ function renderProgramView(programId){
       '<div class="card-title">' + esc(d.name) + '</div>' +
       '<div class="card-sub">' + d.exercises.length + ' exercice' + (d.exercises.length !== 1 ? 's' : '') +
       (past ? ' · ' + past + ' séance(s) passée(s)' : '') + '</div>' +
-      '</div>' + typeChip(d.type) +
+      '</div>' +
       '</div>' +
       '</div>';
   }).join('');
@@ -517,8 +535,7 @@ function renderProgramSelector(elId, selectedId){
 function saveNewDayInProgram(programId){
   const name = $('dayNameInput').value.trim();
   if (!name) { $('dayNameInput').focus(); return; }
-  const type = newDayType;
-  DB.programme.push({ id: uid(), programId: programId || null, name: name, type: type, order: getProgramDays(programId).length, exercises: [] });
+  DB.programme.push({ id: uid(), programId: programId || null, name: name, type: 'CUSTOM', order: getProgramDays(programId).length, exercises: [] });
   save();
   closeModal('newDayModal');
   renderProgramme();
@@ -532,7 +549,7 @@ function saveNewDay(){
   if (programId){
     saveNewDayInProgram(programId);
   } else {
-    DB.programme.push({ id: uid(), name: name, type: newDayType, exercises: [] });
+    DB.programme.push({ id: uid(), name: name, type: 'CUSTOM', exercises: [] });
     save();
     closeModal('newDayModal');
     renderAll();
@@ -601,13 +618,11 @@ function openDayDetail(id){
   if (!d) return;
   detailDayId = id;
   selectedDayExerciseIds.clear();
-  detailDayType = d.type;
   $('dayTitleInput').value = d.name;
   const copyTarget = $('copyDayTargetProgram');
   if (copyTarget){
     copyTarget.innerHTML = DB.programmes.map(p => '<option value="' + esc(p.id) + '"' + (p.id === d.programId ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('');
   }
-  renderTypePicker('detailTypePicker', detailDayType, t => { detailDayType = t; d.type = t; save(); renderProgramme(); });
   renderDayExercises();
   libFilter = 'All'; libQuery = '';
   const s = $('libSearch'); if (s) s.value = '';
@@ -680,7 +695,7 @@ function renderDayExercises(){
         '<button type="button" class="btn btn-sm" onclick="saveExerciseParams(\'' + id + '\')">Enregistrer les objectifs</button>' +
       '</details>' +
       (moveOptions ? '<label class="ex-move-label">Déplacer vers<select class="input" aria-label="Déplacer ' + esc(e.name) + ' vers une journée" onchange="moveDayExercise(\'' + id + '\',this.value);this.value=\'\'"><option value="">Choisir une journée…</option>' + moveOptions + '</select></label>' : '') +
-      '<label class="ex-select-label"><input type="checkbox" class="ex-select" value="' + id + '"' + (selectedDayExerciseIds.has(e.id) ? ' checked' : '') + ' onchange="setDayExerciseSelected(\'' + id + '\',this.checked)"> Sélectionner pour grouper</label>' +
+          '<label class="ex-select-label"><input type="checkbox" class="ex-select" value="' + id + '"' + (selectedDayExerciseIds.has(e.id) ? ' checked' : '') + ' onchange="setDayExerciseSelected(\'' + id + '\',this.checked)"> Select to group</label>' +
     '</div>';
   }).join('');
   el.innerHTML = renderExerciseGroupToolbar() + (blocks || '<div class="empty" style="padding:24px"><div class="empty-text">No exercises. Add some below.</div></div>');
@@ -924,9 +939,9 @@ function deleteCurrentDay(){
 }
 
 Object.assign(window, {
-  exoNameSet, othersHaveExo, dropExoRecords, typeChip, renderProgramme,
+  exoNameSet, othersHaveExo, dropExoRecords, renderProgramme,
   renderTodayCard, dayMuscles, suggestDay, muscleChip,
-  openNewDay, renderTypePicker, saveNewDay, renamePrompt, applyDayName, deleteDay,
+  openNewDay, saveNewDay, printProgrammePdf, renamePrompt, applyDayName, deleteDay,
   openDayDetail, renameDay, renderDayExercises, exerciseHistoryLine, libEntries,
   renderLibrary, onLibSearch, toggleLibExercise, libAddToDay, addExercise, renameExercise,
   deleteExercise, deleteCurrentDay, toggleCardio, shareProgramme,
@@ -938,7 +953,7 @@ Object.assign(window, {
   getExerciseParams, setExerciseParams, exerciseParamsLine, saveExerciseParams,
   addDayExercise, deleteDayExercise, duplicateDayExercise, moveDayExercise,
   copyProgrammeDay, copyCurrentDayToProgram, moveProgrammeDayBefore,
-  moveDayExerciseOrder, moveProgrammeDay, reorderDayExercises, groupSelectedExercises,
+  moveDayExerciseOrder, moveProgrammeDay, reorderDayExercises, groupSelectedExercises, updateGroupSelectionUI,
   setDayExerciseSelected, setExerciseGroupType, dissolveExerciseGroup,
   saveDayTemplate, saveCurrentDayTemplate, loadDayTemplates, deleteDayTemplate, importDayFromTemplate,
   importDayTemplateById, openDayTemplates, renderDayTemplates
@@ -1312,18 +1327,23 @@ function normalizeExerciseGroups(day){
 function renderExerciseGroupToolbar(){
   const selected = selectedDayExerciseIds.size;
   return '<div class="exercise-group-toolbar">' +
-    '<span id="groupSelectionCount" aria-live="polite">' + selected + ' sélectionné(s)</span>' +
+    '<span id="groupSelectionCount" aria-live="polite">' + (selected < 2 ? 'Select 2 or more exercises to link them' : selected + ' exercises selected') + '</span>' +
     '<label class="sr-only" for="exerciseGroupType">Type de groupe</label>' +
-    '<select class="input" id="exerciseGroupType"><option value="superset">Superset</option><option value="circuit">Circuit</option></select>' +
-    '<button type="button" class="btn btn-sm" id="groupSelectedBtn" onclick="groupSelectedExercises()"' + (selected < 2 ? ' disabled' : '') + '>Grouper</button>' +
+    '<select class="input" id="exerciseGroupType" aria-label="Group style" onchange="updateGroupSelectionUI()"><option value="superset">Superset</option><option value="circuit">Circuit</option></select>' +
+    '<button type="button" class="btn btn-sm" id="groupSelectedBtn" onclick="groupSelectedExercises()"' + (selected < 2 ? ' disabled' : '') + '>' + (selected < 2 ? 'Create superset' : 'Create ' + (($('exerciseGroupType') && $('exerciseGroupType').value === 'circuit') ? 'circuit' : 'superset')) + '</button>' +
   '</div>';
 }
 
 function updateGroupSelectionUI(){
   const count = $('groupSelectionCount');
   const button = $('groupSelectedBtn');
-  if (count) count.textContent = selectedDayExerciseIds.size + ' sélectionné(s)';
-  if (button) button.disabled = selectedDayExerciseIds.size < 2;
+  const selected = selectedDayExerciseIds.size;
+  if (count) count.textContent = selected < 2 ? 'Select 2 or more exercises to link them' : selected + ' exercises selected';
+  if (button){
+    button.disabled = selected < 2;
+    const type = $('exerciseGroupType') && $('exerciseGroupType').value === 'circuit' ? 'circuit' : 'superset';
+    button.textContent = selected < 2 ? 'Create superset' : 'Create ' + type;
+  }
 }
 
 function setDayExerciseSelected(exId, checked){
@@ -1336,9 +1356,12 @@ function groupSelectedExercises(){
   const d = DB.programme.find(x => x.id === detailDayId);
   const members = d ? d.exercises.filter(ex => selectedDayExerciseIds.has(ex.id)) : [];
   if (!d || members.length < 2){ toast('Sélectionnez au moins deux exercices.'); return false; }
+  const priorGroups = new Set(members.map(ex => ex.groupId).filter(Boolean));
+  priorGroups.forEach(id => d.exercises.filter(ex => ex.groupId === id).forEach(ex => { delete ex.groupId; delete ex.groupType; }));
   const groupId = uid();
   const type = $('exerciseGroupType').value === 'circuit' ? 'circuit' : 'superset';
   members.forEach(ex => { ex.groupId = groupId; ex.groupType = type; });
+  normalizeExerciseGroups(d);
   selectedDayExerciseIds.clear();
   save(); renderDayExercises(); renderProgramme();
   return true;

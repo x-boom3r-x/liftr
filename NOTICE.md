@@ -15,7 +15,33 @@ The upstream textSource tag has these meanings:
 - opengym (4,308 records): community catalogue material covered by openGym's AGPL-3.0.
 - exercisedb (1,324 records): the exercise names, muscle groups and instructions retain MIT-licensed provenance from ExerciseDB v1 by AscendAPI, received through hasaneyldrm/exercises-dataset (https://github.com/hasaneyldrm/exercises-dataset). The descriptions in those records were written for openGym and are covered by AGPL-3.0. The MIT license below applies to the ExerciseDB-derived portions only; it does not relicense the descriptions or the combined catalogue.
 
-The openGym NOTICE (https://github.com/DuarteSantos8/openGym/blob/8fb98b16861a2728652302a7e6e30c50548493a0/NOTICE.md) identifies exercise stills and animations licensed from Gym visual as outside the openGym AGPL. LIFTR does not copy or distribute those assets or openGym's body-map artwork.
+The openGym NOTICE (https://github.com/DuarteSantos8/openGym/blob/8fb98b16861a2728652302a7e6e30c50548493a0/NOTICE.md) identifies exercise stills and animations licensed from Gym visual as outside the openGym AGPL. LIFTR does not copy or distribute those assets.
+
+## Body map geometry
+
+LIFTR includes the front and back body-map paths from openGym's `frontend/src/lib/body-paths.js`, adapted for the LIFTR workout dashboard and derived from MuscleMap by Melih Colpan. The geometry is licensed under the MIT License. The source files and upstream attribution are at https://github.com/DuarteSantos8/openGym/blob/main/frontend/src/lib/body-paths.js and https://github.com/DuarteSantos8/openGym/blob/main/NOTICE.md.
+
+MIT License
+
+Copyright (c) 2026 Melih Colpan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## openGym React frontend
 

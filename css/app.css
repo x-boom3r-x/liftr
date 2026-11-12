@@ -272,21 +272,26 @@ button{background:none;border:none;cursor:pointer}
 .today-empty .te-s{font-size:.73rem;color:var(--text3);margin-top:2px}
 .today-empty .btn{flex:none}
 
-/* ---- carte musculaire (SVG maison, pas de copie openGym) ---- */
-.bodymap{display:flex;justify-content:center;gap:14px;padding:8px 0 2px}
-.bodymap svg{width:100%;max-width:250px;height:auto;display:block}
-.bm-zone{
-  fill:var(--surface3);stroke:var(--border);stroke-width:1.4;
-  stroke-linejoin:round;transition:fill .18s ease;
-}
+/* Anatomical front/back muscle map, with LIFTR training volume in blue. */
+.bodymap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;gap:8px;padding:4px 0 0}
+.bodymap-figure{min-width:0;text-align:center}
+.bodymap-view-label{margin-bottom:2px;color:var(--text3);font-size:.6rem;font-weight:750;letter-spacing:.12em}
+.bodymap .bm-v{display:block;width:100%;height:auto;max-height:225px;overflow:visible}
+.bm-sil{fill:#172943;stroke:#253A57;stroke-width:2;stroke-linejoin:round}
+.bm-m{fill:#1B2D47;stroke:#2B4263;stroke-width:2;stroke-linejoin:round;transition:fill .18s ease,stroke .18s ease}
+.bm-m.l1{fill:rgba(19,116,252,.24)}
+.bm-m.l2{fill:rgba(19,116,252,.43)}
+.bm-m.l3{fill:rgba(19,116,252,.66)}
+.bm-m.l4{fill:#1374FC;stroke:#61A3FF}
 .bm-hit{cursor:pointer}
-.bm-hit:hover .bm-zone{stroke:rgba(19,116,252,.65)}
-.bm-hit.on .bm-zone{stroke:var(--primary);stroke-width:2}
-.bm-base{fill:var(--surface2);stroke:var(--border);stroke-width:1.4}
-.bm-title{fill:var(--text3);font-size:9px;font-weight:800;letter-spacing:.1em;text-anchor:middle}
-.bm-legend{display:flex;justify-content:center;align-items:center;gap:8px;font-size:.64rem;color:var(--text3);margin-top:2px}
-.bm-legend i{display:inline-block;width:26px;height:7px;border-radius:4px;border:1px solid var(--border)}
-.bm-empty{font-size:.76rem;color:var(--text3);text-align:center;padding:10px 4px 4px}
+.bm-hit:focus-visible{outline:none;stroke:#fff;stroke-width:8}
+.bm-hit:hover{stroke:#9FC6FF;stroke-width:6}
+.bm-legend{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:4px;color:var(--text3);font-size:.62rem}
+.bm-legend i{display:inline-block;width:32px;height:7px;border-radius:6px;background:linear-gradient(90deg,#1B2D47,#1374FC)}
+.bm-empty{padding:8px 4px 2px;color:var(--text3);font-size:.72rem;text-align:center}
+.bodymap-switch{display:flex;justify-content:flex-end;gap:4px;margin:-4px 0 4px}
+.bodymap-switch button{padding:5px 9px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text3);font-size:.64rem;font-weight:700}
+.bodymap-switch button.active{border-color:rgba(19,116,252,.42);background:var(--primary-dim);color:var(--primary-text)}
 
 /* ---- écran Library (sous-onglet Muscu) ---- */
 #libScreenGrid.lib-grid{max-height:none;overflow:visible}
@@ -711,7 +716,9 @@ button{background:none;border:none;cursor:pointer}
 .rest-main{display:flex;align-items:center;gap:8px;font-weight:750;min-width:0}
 .rest-ico{font-size:1rem;opacity:.9}
 .rest-time{font-variant-numeric:tabular-nums;font-size:1.05rem;letter-spacing:.02em}
-.rest-actions{display:flex;gap:6px;align-items:center}
+.rest-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;align-items:center}
+.rest-default{display:inline-flex;align-items:center;gap:5px;color:var(--text3);font-size:.65rem;font-weight:700}
+.rest-default select{min-height:32px;padding:5px 7px;border:1px solid var(--border);border-radius:9px;background:var(--surface2);color:var(--text);font:inherit;font-size:.7rem}
 .rest-running{display:flex;gap:6px}
 .rest-bar.done{border-color:rgba(48,209,88,.5);background:rgba(48,209,88,.12)}
 .rest-bar.done .rest-time{color:var(--green);animation:restPop .45s ease}
@@ -1383,7 +1390,7 @@ svg.ico{width:1.05em;height:1.05em;flex:none;display:inline-block;vertical-align
 .nutri-adapt .chip{flex:0 0 auto}
 
 /* ---------- chantier Nutrition : eau, multi-jour, scanner, recettes ---------- */
-.section-head-acts{display:flex;gap:8px;align-items:center}
+.section-head-acts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;align-items:center}
 .water-card{margin-top:12px}
 .water-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
 .water-label{font-weight:600;font-size:.92rem}
@@ -2557,6 +2564,8 @@ html{background:var(--bg)}
 .ing-row .ing-k{font-weight:750;font-variant-numeric:tabular-nums;flex:none;min-width:64px;text-align:right;color:var(--primary-text)}
 .ing-actions{display:flex;gap:2px;flex:none}
 .food-list{display:flex;flex-direction:column;gap:7px;max-height:42vh;max-height:42dvh;overflow-y:auto;overscroll-behavior:contain}
+.food-prep-note{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:9px 11px;border-radius:11px;background:var(--surface2);color:var(--text2);font-size:.72rem}
+.food-prep-note button{flex:none;color:var(--primary-text);font-size:.72rem;font-weight:750}
 .food-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;text-align:left;
   padding:10px 12px;border-radius:13px;background:var(--surface2);border:1px solid var(--border)}
 .food-item:active{background:var(--surface3)}
@@ -2917,10 +2926,20 @@ html{background:var(--bg)}
 .today-session-hint{margin-top:5px;color:var(--text2);font-size:.82rem}
 .text-link{display:inline-flex;align-items:center;gap:6px;color:var(--text2);font-size:.78rem;font-weight:650;white-space:nowrap}
 .text-link:hover{color:var(--primary-text)}
-.today-dashboard-grid .today-card{margin:0;padding:22px;border-color:rgba(19,116,252,.24);background:linear-gradient(135deg,rgba(19,116,252,.11),rgba(19,116,252,.025) 62%),var(--surface)}
+.today-dashboard-grid .today-card{margin:0;padding:0;border:0;background:transparent;box-shadow:none}
 .today-dashboard-grid .today-name{font-size:1.25rem;letter-spacing:-.025em}
 .today-dashboard-grid .today-acts{margin-top:18px}
-.nutrition-overview,.today-water-panel,.today-shortcuts{padding:20px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
+.nutrition-overview,.today-water-panel,.today-shortcuts,.today-muscle-panel{padding:18px;border:1px solid var(--border);border-radius:18px;background:var(--surface)}
+.today-workout-panel{padding:18px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(150deg,rgba(19,116,252,.07),transparent 68%),var(--surface)}
+.today-workout-panel .today-panel-head{align-items:center;margin-bottom:8px}
+.today-workout-panel .today-panel-head h2{margin-top:3px}
+.today-workout-panel .today-session-hint{margin-top:3px;font-size:.72rem}
+.today-workout-panel #todayCard{min-width:0}
+.today-workout-panel .today-card{padding:8px 0 0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.today-workout-panel .today-card .today-name{font-size:1.25rem}
+.today-workout-panel .today-card .today-acts{margin-top:14px}
+.today-workout-panel .today-empty{margin:8px 0 0;padding:10px 0 0;border:0;border-top:1px solid var(--border);background:transparent}
+.today-muscle-panel h2{margin-bottom:8px}
 .today-kcal-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 .today-kcal-row>div:first-child{display:flex;align-items:baseline;gap:8px}
 .today-kcal-row strong{font-size:2rem;letter-spacing:-.05em;font-weight:760}
@@ -2972,6 +2991,8 @@ html{background:var(--bg)}
   .tab{padding-left:2px;padding-right:2px;font-size:.58rem}
   .today-macros{grid-template-columns:repeat(2,minmax(0,1fr))}
   .today-kcal-row{align-items:flex-start;flex-direction:column;gap:2px}
+  .rest-bar{align-items:flex-start;flex-direction:column}
+  .rest-actions{width:100%;justify-content:space-between}
 }
 @media(prefers-reduced-motion:reduce){
   .today-progress>span{transition:none}
@@ -3052,10 +3073,7 @@ body::after{
 }
 .card{background:var(--surface)}
 .card:active{border-color:rgba(19,116,252,.55)}
-.today-card,.today-dashboard-grid .today-card{
-  background:linear-gradient(135deg,rgba(19,116,252,.1),transparent 66%),var(--surface);
-  border-color:rgba(19,116,252,.25);
-}
+.today-card,.today-dashboard-grid .today-card{background:transparent;border-color:transparent}
 .today-eyebrow,.today-kicker,.today-overline{color:var(--primary-text)}
 .today-dashboard-grid .today-card .btn-primary{box-shadow:none}
 .btn,.chip,.input,.textarea,select.input{border-radius:var(--radius-control)}

@@ -170,7 +170,7 @@ function openPlanPick(iso){
   $('planClearBtn').style.display = e ? '' : 'none';
   const fromProgramme = DB.programme.map(d =>
     '<button class="plan-choice' + (e && e.dayId === d.id ? ' sel' : '') + '" onclick="planSet(\'' + d.id + '\')">' +
-      '<span class="pc-name">' + esc(d.name) + '</span>' + typeChip(d.type) + '</button>'
+      '<span class="pc-name">' + esc(d.name) + '</span></button>'
   ).join('');
   const repos = '<button class="plan-choice' + (e && !e.dayId ? ' sel' : '') + '" onclick="planSet(null)">' +
     '<span class="pc-name">Rest</span><span class="chip chip-rest">REST</span></button>';

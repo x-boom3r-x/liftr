@@ -26,6 +26,7 @@ function nutriDB(){
   if (!Array.isArray(n.favs)) n.favs = [];
   if (!Array.isArray(n.recents)) n.recents = [];
   if (!Array.isArray(n.recipes)) n.recipes = [];
+  if (n.foodPreparation !== 'raw' && n.foodPreparation !== 'cooked') n.foodPreparation = 'cooked';
   if (!n.water || typeof n.water !== 'object') n.water = {};
   n.meals.forEach(m => { if (!Array.isArray(m.items)) m.items = []; });
   /* aliments persos legacy (p/c/f) -> noms nutrition.js (per 100 g) */
@@ -35,6 +36,21 @@ function nutriDB(){
     if (f && f.fat === undefined && f.f !== undefined) f.fat = +f.f || 0;
   });
   return n;
+}
+
+function nutriFoodPreparation(){
+  const n = nutriDB();
+  return n && n.foodPreparation === 'raw' ? 'raw' : 'cooked';
+}
+
+function saveNutriFoodPreparation(value){
+  const n = nutriDB();
+  if (!n) return;
+  n.foodPreparation = value === 'raw' ? 'raw' : 'cooked';
+  save();
+  if (currentTab === 'nutri-foods') renderNutriFoods();
+  else if (currentTab === 'nutri-meals') renderNutriMeals();
+  toast('Food values set to ' + n.foodPreparation);
 }
 
 /* Keep the nutrient values that were used when a food was logged. This is
@@ -768,7 +784,7 @@ function mealPickResultsHtml(d){
   const cq = norm(q);
   const custom = n.foods.filter(f => norm(f.name).indexOf(cq) >= 0).slice(0, 8);
   if (!foodsDbReady()) ensureFoodsDb('nutri-meals');
-  const db = foodsDbReady() ? searchFoods(q, 12) : [];
+  const db = foodsDbReady() ? searchFoods(q, 12, nutriFoodPreparation()) : [];
   const rows = [];
   custom.forEach(f => rows.push({ f: f, custom: true }));
   db.forEach(f => { if (!rows.some(r => r.f.id === f.id)) rows.push({ f: f, custom: false }); });
@@ -1357,12 +1373,17 @@ function renderNutriFoods(){
   const n = nutriDB();
   const q = (($('nutriFoodSearch') && $('nutriFoodSearch').value) || '').trim();
   let html = nutriForm === 'food' ? foodFormHtml() : '';
+  if (!q && !foodsDbReady() && ((n.favs || []).length || (n.recents || []).length)) ensureFoodsDb('nutri-foods');
+  if (nutriForm !== 'food'){
+    html += '<div class="food-prep-note">Showing ' + (nutriFoodPreparation() === 'raw' ? 'raw' : 'cooked') +
+      ' values <button type="button" onclick="showRoot(\'nutrition\',\'nutri-goal\')">Change</button></div>';
+  }
   if (q){
     if (!foodsDbReady()) ensureFoodsDb('nutri-foods');
     scheduleRemoteSearch(q);
     const cq = norm(q);
     const custom = n.foods.filter(f => norm(f.name).indexOf(cq) >= 0).slice(0, 10);
-    const db = foodsDbReady() ? searchFoods(q, 20) : [];
+    const db = foodsDbReady() ? searchFoods(q, 20, nutriFoodPreparation()) : [];
     const rows = [];
     custom.forEach(f => rows.push({ f: f, custom: true }));
     db.forEach(f => { if (!rows.some(r => r.f.id === f.id)) rows.push({ f: f, custom: false }); });
@@ -1379,9 +1400,12 @@ function renderNutriFoods(){
     nutriRemoteState = { q: '', foods: [], loading: false, empty: false };
     html += nutriFilterChipsHtml();
     const asRow = id => { const f = findNutriFood(id); return f ? { f: f, custom: n.foods.some(x => x && x.id === id) } : null; };
-    const favs = (n.favs || []).map(asRow).filter(Boolean);
-    const recents = (n.recents || []).slice(0, 10).map(asRow)
-      .filter(x => x && !favs.some(v => v.f.id === x.f.id));
+    const prep = nutriFoodPreparation();
+    const collapse = rows => window.LiftrFoods && LiftrFoods.collapseVariants
+      ? LiftrFoods.collapseVariants(rows, prep) : rows;
+    const favs = collapse((n.favs || []).map(asRow).filter(Boolean));
+    const recents = collapse((n.recents || []).map(asRow).filter(Boolean)).slice(0, 10)
+      .filter(x => !favs.some(v => v.f.id === x.f.id));
     const mine = n.foods.slice(-30).reverse().map(f => ({ f: f, custom: true }));
     const fxSec = (label, list) => '<div class="section-hint fx-head">' + label +
       '<span class="fx-n">' + list.length + '</span></div>' +
@@ -2037,7 +2061,16 @@ function renderNutriGoal(){
   const w = nutriWeight();
   const row = (label, val) => '<div class="nutri-plan-row"><span>' + label + '</span><b>' + val + '</b></div>';
 
-  let html = nutriBmiCardHtml() + nutriGoalListHtml(p, goal, w) + '<div class="card nutri-form">' +
+  const prep = nutriFoodPreparation();
+  let html = '<div class="card nutri-form nutri-food-prep-setting">' +
+    '<div class="nutri-meal-name">Food values</div>' +
+    '<div class="section-hint">Foods with raw and cooked data appear once. This choice sets the values used for new food searches and meal entries; saved meals stay unchanged.</div>' +
+    '<label class="label" for="nutriFoodPreparation">Default preparation</label>' +
+    '<select class="input" id="nutriFoodPreparation" onchange="saveNutriFoodPreparation(this.value)">' +
+      '<option value="cooked"' + (prep === 'cooked' ? ' selected' : '') + '>Cooked</option>' +
+      '<option value="raw"' + (prep === 'raw' ? ' selected' : '') + '>Raw</option>' +
+    '</select></div>' +
+    nutriBmiCardHtml() + nutriGoalListHtml(p, goal, w) + '<div class="card nutri-form">' +
     '<div class="nutri-meal-name" style="margin-bottom:10px">Your plan</div>' +
     (w > 0
       ? '<div class="section-hint">Current weight: <b>' + w + ' kg</b> — updated by your weigh-ins (Body weight, Stats).</div>'
@@ -2224,6 +2257,7 @@ document.addEventListener('keydown', function(e){
 
 Object.assign(window, {
   renderNutrition, nutriDB, nutriTotalsOf,
+  nutriFoodPreparation, saveNutriFoodPreparation,
   /* meals : liste + builder foodId/qty */
   addMeal, addMealFor, editMeal, editMealItem, removeMeal, removeMealItem,
   saveMealDraft, cancelNutriForm, copyYestMeal, saveMealAsRecipe,
