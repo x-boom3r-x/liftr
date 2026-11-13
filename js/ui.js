@@ -432,10 +432,10 @@ function renderProfilScreen(){
     btn: '<button class="btn btn-sm" onclick="exportBackup()">Export</button>' +
          '<button class="btn btn-sm" style="margin-left:6px" onclick="$(\'backupFile\').click()">Restore</button>'
   });
-  rows.push({
-    t: 'App preferences',
-    s: 'Language, text size, motion and shortcuts.',
-    btn: '<button class="btn btn-sm" onclick="openAppPreferences()">Settings</button>'
+  rows.unshift({
+    t: 'Settings & personalization',
+    s: 'Language, text size, notifications, motion and shortcuts.',
+    btn: '<button class="btn btn-sm btn-primary" onclick="openAppPreferences()">Settings</button>'
   });
   rows.push({
     t: 'Getting started',

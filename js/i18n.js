@@ -1,5 +1,5 @@
-/* Lightweight, offline French interface layer. Source text remains English so
-   language changes never rewrite a user's data or exercise names. */
+/* Lightweight offline language layer. UI source strings stay stable so locale
+   changes never rewrite a user's data or exercise names. */
 const FR = new Map(Object.entries({
   'Today':'Aujourd’hui','Plan':'Programme','Workout':'Séance','Progress':'Progrès','Diary':'Journal','Foods':'Aliments','Goals':'Objectifs',
   'Gym':'Musculation','Nutrition':'Nutrition','Social':'Social','Home':'Accueil','People':'Personnes','Search':'Rechercher','Messages':'Messages','Notifications':'Notifications',
@@ -245,19 +245,60 @@ const FR = new Map(Object.entries({
   ,'Offline':'Hors ligne'
   ,'Share progress':'Partager un progrès'
   ,'Exercises':'Exercices'
+  ,'Settings & personalization':'Réglages et personnalisation'
+  ,'Language, text size, notifications, motion and shortcuts.':'Langue, taille du texte, notifications, animations et raccourcis.'
+  ,'Settings are saved on this device. Gym and Nutrition remain available offline.':'Les réglages sont enregistrés sur cet appareil. Gym et Nutrition restent disponibles hors ligne.'
+  ,'Language & comfort':'Langue et confort'
+  ,'Language':'Langue'
+  ,'Text size':'Taille du texte'
+  ,'Normal':'Normale'
+  ,'Large':'Grande'
+  ,'Extra large':'Très grande'
+  ,'Reduce motion':'Réduire les animations'
+  ,'Limits movement and transitions.':'Limite les mouvements et transitions.'
+  ,'Motivational quotes':'Citations motivantes'
+  ,'Show motivational messages after a workout.':'Afficher des messages motivants après une séance.'
+  ,'Alert me when rest ends':'Me prévenir à la fin du repos'
+  ,'Send a phone notification when a rest period ends while LIFTR is in the background.':'Recevoir une notification quand le repos se termine avec LIFTR en arrière-plan.'
+  ,'Enable phone notifications':'Autoriser les notifications'
+  ,'Notification permission is enabled for this device.':'Les notifications sont autorisées sur cet appareil.'
+  ,'Tap “Enable phone notifications” to allow alerts.':'Appuie sur « Autoriser les notifications » pour les activer.'
+  ,'Notifications are blocked in this browser. Allow them in device settings.':'Les notifications sont bloquées dans ce navigateur. Autorise-les dans les réglages de l’appareil.'
+  ,'This browser does not support notifications.':'Ce navigateur ne prend pas en charge les notifications.'
+  ,'On iPhone, add LIFTR to the Home Screen before enabling notifications.':'Sur iPhone, ajoute LIFTR à l’écran d’accueil avant d’activer les notifications.'
+  ,'Add to Home Screen first':'Ajouter à l’écran d’accueil'
+  ,'Notifications allowed':'Notifications autorisées'
+  ,'Open device settings':'Ouvrir les réglages de l’appareil'
+  ,'Phone notifications were not enabled.':'Les notifications du téléphone n’ont pas été activées.'
+  ,'The timer keeps its end time on this device. Mobile browsers may pause background work, so an alert can arrive late. A live lock screen timer needs a native iOS or Android app.':'Le minuteur conserve son heure de fin sur cet appareil. Les navigateurs mobiles peuvent suspendre le travail en arrière-plan et retarder l’alerte. Un minuteur actualisé sur l’écran verrouillé nécessite une app iOS ou Android native.'
+  ,'Manage Social notifications':'Gérer les notifications Social'
+  ,'Shortcuts':'Raccourcis'
+  ,'Choose which actions appear in the ⌘K / Ctrl K search.':'Choisis les actions visibles dans la recherche ⌘K / Ctrl K.'
+  ,'Select all':'Tout sélectionner'
+  ,'Save settings':'Enregistrer les réglages'
+  ,'Profile':'Profil'
+  ,'Days':'Journées'
+  ,'Social feed':'Fil Social'
+  ,'Find lifters':'Découvrir des personnes'
 }));
 
 const originals = new WeakMap();
+const EN = new Map();
+for (const [english, french] of FR){
+  if (!EN.has(french)) EN.set(french, english);
+}
+EN.set('Préférences', 'Preferences');
+EN.set('Réglages', 'Settings');
+EN.set('Profil', 'Profile');
 let language = 'fr';
 function translateValue(value){
-  if (language !== 'fr') return value;
   const key = String(value || '').trim();
-  const date = key.match(/^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY), (JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER) (\d{1,2})$/);
+  const date = language === 'fr' && key.match(/^(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY), (JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER) (\d{1,2})$/);
   if (date){
     const months = {JANUARY:0,FEBRUARY:1,MARCH:2,APRIL:3,MAY:4,JUNE:5,JULY:6,AUGUST:7,SEPTEMBER:8,OCTOBER:9,NOVEMBER:10,DECEMBER:11};
     return new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long'}).format(new Date(new Date().getFullYear(),months[date[2]],+date[3]));
   }
-  const mapped = FR.get(key);
+  const mapped = (language === 'fr' ? FR : EN).get(key);
   if (!mapped) return value;
   const lead = String(value).match(/^\s*/)?.[0] || '';
   const tail = String(value).match(/\s*$/)?.[0] || '';

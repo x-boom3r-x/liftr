@@ -3287,6 +3287,10 @@ html.liftr-quotes-off #liftrText{display:none!important}
 .pref-toggle small{color:var(--text3);font-size:.66rem}
 .pref-toggle input,.pref-check input{width:18px;height:18px;accent-color:var(--primary);flex:none}
 .pref-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pref-notification-status{margin:10px 0 8px;padding:9px 10px;border-radius:10px;background:var(--surface);color:var(--text2);font-size:.7rem;line-height:1.45}
+.pref-notification-actions{display:flex;flex-wrap:wrap;gap:7px}
+.pref-notification-actions .btn{min-height:38px}
+.pref-note{margin-top:9px;color:var(--text3);font-size:.68rem;line-height:1.5}
 .pref-check{display:flex;align-items:center;gap:8px;min-height:39px;padding:6px 8px;border-radius:9px;background:var(--surface);font-size:.72rem;line-height:1.2}
 .first-help{margin:0 0 14px;padding:18px;border:1px solid rgba(97,163,255,.3);border-radius:15px;background:linear-gradient(145deg,rgba(19,116,252,.14),var(--surface2))}
 .first-help h2{margin:7px 0;font-size:1.1rem;line-height:1.2}

@@ -2,7 +2,7 @@ import { setLanguage, currentLanguage } from './i18n.js';
 
 const PREF_KEY = () => 'liftr_preferences_' + (window.currentUser || 'guest');
 const SHORTCUT_KEY = () => 'liftr_shortcuts_' + (window.currentUser || 'guest');
-const DEFAULTS = { textSize:'normal', reducedMotion:false, quotes:true, language:'fr' };
+const DEFAULTS = { textSize:'normal', reducedMotion:false, quotes:true, language:'fr', restTimerNotifications:false };
 const $ = id => document.getElementById(id);
 function readPrefs(){
   try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(PREF_KEY()) || '{}')); }
@@ -27,8 +27,58 @@ function shortcutIds(){
 }
 function shortcutSettingsHtml(){
   const selected = new Set(shortcutIds());
-  const french = document.documentElement.lang === 'fr';
-  return (window.LIFTR_SHORTCUTS || []).map(x => '<label class="pref-check"><input type="checkbox" name="liftrShortcut" value="' + x.id + '"' + (selected.has(x.id) ? ' checked' : '') + '><span>' + (french ? x.label : x.name) + '</span></label>').join('');
+  return (window.LIFTR_SHORTCUTS || []).map(x => '<label class="pref-check"><input type="checkbox" name="liftrShortcut" value="' + x.id + '"' + (selected.has(x.id) ? ' checked' : '') + '><span>' + x.name + '</span></label>').join('');
+}
+function isIOS(){
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function isStandalone(){
+  return !!navigator.standalone || !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+function updateNotificationSettings(){
+  const status = $('prefNotificationStatus');
+  const button = $('prefNotificationPermission');
+  const toggle = $('prefRestNotifications');
+  if (toggle) toggle.checked = !!readPrefs().restTimerNotifications;
+  if (!status || !button) return;
+  button.disabled = false;
+  if (!window.isSecureContext || typeof window.Notification === 'undefined'){
+    status.textContent = 'This browser does not support notifications.';
+    button.disabled = true;
+  } else if (isIOS() && !isStandalone()){
+    status.textContent = 'On iPhone, add LIFTR to the Home Screen before enabling notifications.';
+    button.textContent = 'Add to Home Screen first';
+    button.disabled = true;
+  } else if (Notification.permission === 'granted'){
+    status.textContent = 'Notification permission is enabled for this device.';
+    button.textContent = 'Notifications allowed';
+    button.disabled = true;
+  } else if (Notification.permission === 'denied'){
+    status.textContent = 'Notifications are blocked in this browser. Allow them in device settings.';
+    button.textContent = 'Open device settings';
+    button.disabled = true;
+  } else {
+    status.textContent = 'Tap “Enable phone notifications” to allow alerts.';
+    button.textContent = 'Enable phone notifications';
+  }
+}
+async function enableRestTimerNotifications(){
+  if (!window.isSecureContext || typeof window.Notification === 'undefined' || (isIOS() && !isStandalone())){
+    updateNotificationSettings();
+    return false;
+  }
+  let permission = Notification.permission;
+  if (permission === 'default') permission = await Notification.requestPermission();
+  if (permission === 'granted'){
+    const prefs = readPrefs();
+    prefs.restTimerNotifications = true;
+    savePrefs(prefs);
+    if ($('prefRestNotifications')) $('prefRestNotifications').checked = true;
+  }
+  updateNotificationSettings();
+  if (permission !== 'granted' && typeof window.toast === 'function') toast('Phone notifications were not enabled.');
+  return permission === 'granted';
 }
 function ensureModal(){
   if ($('liftrPreferences')) return;
@@ -37,13 +87,16 @@ function ensureModal(){
   root.className = 'overlay';
   root.setAttribute('aria-hidden','true');
   root.innerHTML = '<div class="modal liftr-prefs-modal" role="dialog" aria-modal="true" aria-labelledby="liftrPrefsTitle">' +
-    '<div class="grabber"></div><div class="modal-top"><div><div class="modal-title" id="liftrPrefsTitle">Préférences</div><div class="modal-sub">Réglages enregistrés sur cet appareil.</div></div><button class="modal-x" type="button" onclick="closeAppPreferences()" aria-label="Fermer">×</button></div>' +
-    '<section class="pref-section"><h3>Confort</h3><label class="pref-row"><span>Langue</span><select id="prefLanguage" class="input"><option value="fr">Français</option><option value="en">English</option></select></label>' +
-    '<label class="pref-row"><span>Taille du texte</span><select id="prefTextSize" class="input"><option value="normal">Normale</option><option value="large">Grande</option><option value="xlarge">Très grande</option></select></label>' +
-    '<label class="pref-toggle"><span><b>Réduire les animations</b><small>Limite les mouvements et transitions.</small></span><input id="prefReducedMotion" type="checkbox"></label>' +
-    '<label class="pref-toggle"><span><b>Citations motivantes</b><small>Afficher les textes de motivation après une séance.</small></span><input id="prefQuotes" type="checkbox"></label></section>' +
-    '<section class="pref-section"><div class="pref-section-head"><div><h3>Raccourcis</h3><p>Choisis les actions visibles dans la recherche ⌘K / Ctrl K.</p></div><button class="text-link" type="button" onclick="selectAllLiftrShortcuts()">Tout</button></div><div class="pref-shortcuts">' + shortcutSettingsHtml() + '</div></section>' +
-    '<div class="modal-actions"><button class="btn" type="button" onclick="closeAppPreferences()">Annuler</button><button class="btn btn-primary" type="button" onclick="saveAppPreferences()">Enregistrer</button></div></div>';
+    '<div class="grabber"></div><div class="modal-top"><div><div class="modal-title" id="liftrPrefsTitle">Settings &amp; personalization</div><div class="modal-sub">Settings are saved on this device. Gym and Nutrition remain available offline.</div></div><button class="modal-x" type="button" onclick="closeAppPreferences()" aria-label="Close">×</button></div>' +
+    '<section class="pref-section"><h3>Language &amp; comfort</h3><label class="pref-row"><span>Language</span><select id="prefLanguage" class="input"><option value="fr">Français</option><option value="en">English</option></select></label>' +
+    '<label class="pref-row"><span>Text size</span><select id="prefTextSize" class="input"><option value="normal">Normal</option><option value="large">Large</option><option value="xlarge">Extra large</option></select></label>' +
+    '<label class="pref-toggle"><span><b>Reduce motion</b><small>Limits movement and transitions.</small></span><input id="prefReducedMotion" type="checkbox"></label>' +
+    '<label class="pref-toggle"><span><b>Motivational quotes</b><small>Show motivational messages after a workout.</small></span><input id="prefQuotes" type="checkbox"></label></section>' +
+    '<section class="pref-section"><h3>Notifications</h3><label class="pref-toggle"><span><b>Alert me when rest ends</b><small>Send a phone notification when a rest period ends while LIFTR is in the background.</small></span><input id="prefRestNotifications" type="checkbox"></label>' +
+    '<div class="pref-notification-status" id="prefNotificationStatus" role="status" aria-live="polite"></div><div class="pref-notification-actions"><button class="btn btn-sm" type="button" id="prefNotificationPermission" onclick="enableRestTimerNotifications()">Enable phone notifications</button><button class="btn btn-sm btn-ghost" type="button" onclick="openNotifications()">Manage Social notifications</button></div>' +
+    '<p class="pref-note">The timer keeps its end time on this device. Mobile browsers may pause background work, so an alert can arrive late. A live lock screen timer needs a native iOS or Android app.</p></section>' +
+    '<section class="pref-section"><div class="pref-section-head"><div><h3>Shortcuts</h3><p>Choose which actions appear in the ⌘K / Ctrl K search.</p></div><button class="text-link" type="button" onclick="selectAllLiftrShortcuts()">Select all</button></div><div class="pref-shortcuts">' + shortcutSettingsHtml() + '</div></section>' +
+    '<div class="modal-actions"><button class="btn" type="button" onclick="closeAppPreferences()">Cancel</button><button class="btn btn-primary" type="button" onclick="saveAppPreferences()">Save settings</button></div></div>';
   root.addEventListener('click', e => { if (e.target === root) closeAppPreferences(); });
   document.body.appendChild(root);
 }
@@ -54,6 +107,8 @@ function openAppPreferences(){
   $('prefTextSize').value = p.textSize;
   $('prefReducedMotion').checked = !!p.reducedMotion;
   $('prefQuotes').checked = !!p.quotes;
+  $('prefRestNotifications').checked = !!p.restTimerNotifications;
+  updateNotificationSettings();
   $('liftrPreferences').classList.add('show');
   $('liftrPreferences').setAttribute('aria-hidden','false');
   $('prefLanguage').focus({preventScroll:true});
@@ -72,7 +127,8 @@ function saveAppPreferences(){
     language: $('prefLanguage').value === 'en' ? 'en' : 'fr',
     textSize: ['large','xlarge'].includes($('prefTextSize').value) ? $('prefTextSize').value : 'normal',
     reducedMotion: $('prefReducedMotion').checked,
-    quotes: $('prefQuotes').checked
+    quotes: $('prefQuotes').checked,
+    restTimerNotifications: $('prefRestNotifications').checked
   };
   savePrefs(p);
   try { localStorage.setItem('liftr_language', p.language); } catch(e){}
@@ -112,4 +168,6 @@ window.saveAppPreferences = saveAppPreferences;
 window.selectAllLiftrShortcuts = selectAllLiftrShortcuts;
 window.maybeShowFirstUseHelp = maybeShowFirstUseHelp;
 window.openGettingStartedHelp = openGettingStartedHelp;
+window.getLiftrPreferences = readPrefs;
+window.enableRestTimerNotifications = enableRestTimerNotifications;
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyPrefs, {once:true}); else applyPrefs();

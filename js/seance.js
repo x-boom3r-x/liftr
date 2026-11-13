@@ -935,7 +935,7 @@ function restAdd(d){
   if (!DB.active.restUntil){ startRest(); return; }
   DB.active.restUntil = Math.max(Date.now(), DB.active.restUntil + d * 1000);
   DB.active.restSecs = Math.max(10, (DB.active.restSecs || 90) + d);
-  if (DB.active.restUntil <= Date.now()) DB.active.restDone = true;
+  DB.active.restDone = DB.active.restUntil <= Date.now();
   save();
   restTick();
 }
@@ -968,6 +968,7 @@ function restTick(){
       save();
       toast('Rest over');
       if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
+      notifyRestTimerFinished();
     }
     bar.classList.add('done');
     return;
@@ -977,6 +978,30 @@ function restTick(){
   $('restStartBtn').style.display = 'none';
   $('restRunning').style.display = '';
   bar.classList.remove('done');
+}
+
+function notifyRestTimerFinished(){
+  const prefs = typeof window.getLiftrPreferences === 'function' ? window.getLiftrPreferences() : null;
+  if (!prefs || !prefs.restTimerNotifications || document.visibilityState === 'visible' ||
+      !window.isSecureContext || typeof window.Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const french = document.documentElement.lang === 'fr';
+  const title = french ? 'Pause terminée' : 'Rest complete';
+  const options = {
+    body: french ? 'Prépare ta prochaine série.' : 'Get ready for your next set.',
+    icon: './liftr-icon-192-v109.png',
+    badge: './liftr-icon-192-v109.png',
+    tag: 'liftr-rest-timer',
+    renotify: true,
+    data: { url: new URL('./index.html', location.href).href }
+  };
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.ready.then(registration => {
+      if (typeof registration.showNotification === 'function') return registration.showNotification(title, options);
+      try { new Notification(title, options); } catch(e){}
+    }).catch(() => {});
+  } else {
+    try { new Notification(title, options); } catch(e){}
+  }
 }
 
 function restLoop(){
