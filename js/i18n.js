@@ -281,11 +281,11 @@ const FR = new Map(Object.entries({
   ,'Social feed':'Fil Social'
   ,'Find lifters':'Découvrir des personnes'
   ,'Assisted reps with help':'Répétitions assistées'
-  ,'Log clean reps above and reps completed with help separately. Add drops below to continue with less weight before resting.':'Saisis séparément les répétitions strictes et celles réalisées avec aide. Ajoute les dégressives ci-dessous; le repos commencera après la dernière.'
-  ,'Log clean reps and reps completed with help separately. Add drops below to continue with less weight before resting.':'Saisis séparément les répétitions strictes et celles réalisées avec aide. Ajoute les dégressives ci-dessous; le repos commencera après la dernière.'
+  ,'Log clean reps above and reps completed with help separately. Choose the weight for every drop set below.':'Saisis séparément les répétitions strictes et celles réalisées avec aide. Choisis toi-même le poids de chaque dégressive ci-dessous.'
+  ,'Log clean reps and reps completed with help separately. Choose the weight for every drop set below.':'Saisis séparément les répétitions strictes et celles réalisées avec aide. Choisis toi-même le poids de chaque dégressive ci-dessous.'
   ,'Count clean reps above, then reps completed with a partner or machine here. Example: 8+2A.':'Compte les répétitions strictes au-dessus, puis celles réalisées avec un partenaire ou une machine ici. Exemple : 8+2A.'
   ,'Drop sets':'Séries dégressives'
-  ,'Continue right away with less weight. Rest starts after the last drop.':'Continue immédiatement en réduisant le poids. Le repos commence après la dernière dégressive.'
+  ,'Choose the weight for each drop. Rest starts after the last one.':'Choisis le poids de chaque dégressive. Le repos commence après la dernière.'
   ,'+ Add drop':'+ Ajouter une dégressive'
   ,'Drop':'Dégressive'
   ,'+ Drop set':'+ Ajouter une série dégressive'
@@ -294,6 +294,9 @@ const FR = new Map(Object.entries({
   ,'Decrease drop reps':'Diminuer les répétitions de la dégressive'
   ,'Increase drop reps':'Augmenter les répétitions de la dégressive'
   ,'Drop sets can only be added to a working set.':'Les séries dégressives s’ajoutent uniquement à une série de travail.'
+  ,'Choose a weight and reps for every drop set.':'Choisis un poids et un nombre de répétitions pour chaque dégressive.'
+  ,'Choose a weight and reps for every drop set, or remove an unfinished drop.':'Choisis un poids et un nombre de répétitions pour chaque dégressive, ou supprime celle qui est incomplète.'
+  ,'Remove drop set':'Supprimer la série dégressive'
 }));
 
 const originals = new WeakMap();

@@ -137,7 +137,7 @@ function setLine(s){
   if (s.rir != null) meta.push('<span class="set-meta">RIR ' + esc(fmtNum(s.rir)) + '</span>');
   else if (s.rpe != null) meta.push('<span class="set-meta">RPE ' + esc(fmtNum(s.rpe)) + '</span>');
   (Array.isArray(s.drops) ? s.drops : []).forEach((drop, i) => {
-    meta.push('<span class="set-meta set-drop">DROP ' + (i + 1) + ' · ' + esc(fmtNum(drop.weight)) + ' kg × ' + esc(fmtNum(drop.reps)) + '</span>');
+    meta.push('<span class="set-meta set-drop">DROP ' + (i + 1) + ' · ' + (drop.weight == null ? '—' : esc(fmtNum(drop.weight))) + ' kg × ' + (drop.reps == null ? '—' : esc(fmtNum(drop.reps))) + '</span>');
   });
   (s.restPause && Array.isArray(s.restPause.clusters) ? s.restPause.clusters : []).forEach((cluster, i) => {
     meta.push('<span class="set-meta set-burst">RP ' + (i + 1) + ' · +' + esc(fmtNum(cluster.reps)) + ' reps · ' + esc(fmtNum(cluster.restSec)) + ' s</span>');
@@ -156,7 +156,7 @@ function setShort(s){
   if (s.rir != null) base += ' [RIR ' + fmtNum(s.rir) + ']';
   else if (s.rpe != null) base += ' [RPE ' + fmtNum(s.rpe) + ']';
   (Array.isArray(s.drops) ? s.drops : []).forEach((drop, i) => {
-    base += ' [drop ' + (i + 1) + ': ' + fmtNum(drop.weight) + 'kg×' + fmtNum(drop.reps) + ']';
+    base += ' [drop ' + (i + 1) + ': ' + (drop.weight == null ? '—' : fmtNum(drop.weight)) + 'kg×' + (drop.reps == null ? '—' : fmtNum(drop.reps)) + ']';
   });
   (s.restPause && Array.isArray(s.restPause.clusters) ? s.restPause.clusters : []).forEach((cluster, i) => {
     base += ' [rest-pause ' + (i + 1) + ': +' + fmtNum(cluster.reps) + ' reps / ' + fmtNum(cluster.restSec) + 's]';

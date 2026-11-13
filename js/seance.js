@@ -190,16 +190,19 @@ function renderDropRows(set, exIdx, setIdx){
   const drops = Array.isArray(set.drops) ? set.drops : [];
   return '<div class="set-additions">' +
     drops.map((drop, dropIdx) =>
-      '<div class="set-addition-row">' +
-        '<span class="set-addition-name">Drop ' + (dropIdx + 1) + '</span>' +
-        '<span class="set-addition-load">' + fmtNum(drop.weight) + ' kg × ' + fmtNum(drop.reps) + '</span>' +
-        '<span class="set-addition-controls">' +
+      '<div class="set-addition-row set-drop-row">' +
+        '<span class="set-addition-name"><span>Drop</span> ' + (dropIdx + 1) + '</span>' +
+        '<button type="button" class="set-addition-remove" aria-label="Remove drop set" onclick="removeDropSet(' + exIdx + ',' + setIdx + ',' + dropIdx + ')">×</button>' +
+        '<label class="drop-set-editor"><span>Weight (kg)</span><span class="drop-set-input-row">' +
           '<button type="button" aria-label="Decrease drop weight" onclick="stepDropSet(' + exIdx + ',' + setIdx + ',' + dropIdx + ',\'weight\',-0.5)">−</button>' +
+          '<input id="dropWeight-' + exIdx + '-' + setIdx + '-' + dropIdx + '" type="number" inputmode="decimal" min="0" max="999" step="0.5" placeholder="kg" value="' + (drop.weight == null ? '' : esc(fmtNum(drop.weight))) + '" oninput="updateDropSetValue(' + exIdx + ',' + setIdx + ',' + dropIdx + ',\'weight\',this.value)">' +
           '<button type="button" aria-label="Increase drop weight" onclick="stepDropSet(' + exIdx + ',' + setIdx + ',' + dropIdx + ',\'weight\',0.5)">+</button>' +
+        '</span></label>' +
+        '<label class="drop-set-editor"><span>Reps</span><span class="drop-set-input-row">' +
           '<button type="button" aria-label="Decrease drop reps" onclick="stepDropSet(' + exIdx + ',' + setIdx + ',' + dropIdx + ',\'reps\',-1)">−</button>' +
+        '<input id="dropReps-' + exIdx + '-' + setIdx + '-' + dropIdx + '" type="number" inputmode="numeric" min="1" max="999" step="1" value="' + (drop.reps == null ? '' : esc(fmtNum(drop.reps))) + '" oninput="updateDropSetValue(' + exIdx + ',' + setIdx + ',' + dropIdx + ',\'reps\',this.value)">' +
           '<button type="button" aria-label="Increase drop reps" onclick="stepDropSet(' + exIdx + ',' + setIdx + ',' + dropIdx + ',\'reps\',1)">+</button>' +
-          '<button type="button" class="set-addition-remove" aria-label="Remove drop set" onclick="removeDropSet(' + exIdx + ',' + setIdx + ',' + dropIdx + ')">×</button>' +
-        '</span>' +
+        '</span></label>' +
       '</div>'
     ).join('') +
     (!set.cardio ? '<button type="button" class="set-addition-add" onclick="addDropSet(' + exIdx + ',' + setIdx + ')">+ Drop set</button>' : '') +
@@ -208,10 +211,12 @@ function renderDropRows(set, exIdx, setIdx){
 
 function syncPendingDropInputs(){
   pendingDropSets.forEach((drop, index) => {
-    const weight = parseFloat($('pendingDropWeight' + index)?.value);
-    const reps = parseInt($('pendingDropReps' + index)?.value, 10);
-    if (Number.isFinite(weight)) drop.weight = snap(weight, 0.5, 0, 999);
-    if (Number.isFinite(reps)) drop.reps = snap(reps, 1, 1, 999);
+    const weightInput = $('pendingDropWeight' + index);
+    const repsInput = $('pendingDropReps' + index);
+    const weight = weightInput ? weightInput.value.trim() : '';
+    const reps = repsInput ? repsInput.value.trim() : '';
+    drop.weight = weight !== '' && Number.isFinite(Number(weight)) ? snap(Number(weight), 0.5, 0, 999) : null;
+    drop.reps = reps !== '' && Number.isFinite(Number(reps)) ? snap(Number(reps), 1, 1, 999) : null;
   });
 }
 
@@ -224,7 +229,7 @@ function renderPendingDropSets(){
         '<button class="text-link" type="button" onclick="removePendingDropSet(' + index + ')">Remove</button></div>' +
       '<label class="drop-draft-field"><span>Weight (kg)</span><div class="stepper">' +
         '<button type="button" onclick="stepPendingDropSet(' + index + ',\'weight\',-0.5)" aria-label="Decrease drop weight">−</button>' +
-        '<input id="pendingDropWeight' + index + '" type="number" inputmode="decimal" min="0" max="999" step="0.5" value="' + esc(fmtNum(drop.weight)) + '" oninput="updatePendingDropValue(' + index + ',\'weight\',this.value)">' +
+        '<input id="pendingDropWeight' + index + '" type="number" inputmode="decimal" min="0" max="999" step="0.5" placeholder="kg" value="' + (drop.weight == null ? '' : esc(fmtNum(drop.weight))) + '" oninput="updatePendingDropValue(' + index + ',\'weight\',this.value)">' +
         '<span class="unit">kg</span><button type="button" onclick="stepPendingDropSet(' + index + ',\'weight\',0.5)" aria-label="Increase drop weight">+</button>' +
       '</div></label>' +
       '<label class="drop-draft-field"><span>Reps</span><div class="stepper">' +
@@ -239,21 +244,17 @@ function renderPendingDropSets(){
 function addPendingDropSet(){
   if ($('warmupInput') && $('warmupInput').checked) return;
   syncPendingDropInputs();
-  const last = pendingDropSets.length ? pendingDropSets[pendingDropSets.length - 1] : {
-    weight: Number($('weightInput') && $('weightInput').value) || 0,
-    reps: Number($('repsInput') && $('repsInput').value) || 1
-  };
-  pendingDropSets.push({
-    weight: snap((Number(last.weight) || 0) * 0.8, 0.5, 0, 999),
-    reps: snap(Number(last.reps) || 1, 1, 1, 999)
-  });
+  const previousReps = pendingDropSets.length
+    ? pendingDropSets[pendingDropSets.length - 1].reps
+    : Number($('repsInput') && $('repsInput').value) || 1;
+  pendingDropSets.push({ weight: null, reps: Math.max(1, snap(Number(previousReps) || 1, 1, 1, 999)) });
   renderPendingDropSets();
 }
 
 function updatePendingDropValue(index, field, raw){
   const drop = pendingDropSets[index];
   if (!drop || (field !== 'weight' && field !== 'reps')) return;
-  if (String(raw).trim() === '') return;
+  if (String(raw).trim() === '') { drop[field] = null; return; }
   const value = Number(raw);
   if (!Number.isFinite(value)) return;
   drop[field] = field === 'weight' ? snap(value, 0.5, 0, 999) : snap(value, 1, 1, 999);
@@ -358,7 +359,7 @@ function openAddSet(exIdx){
     sub.hidden = isCardio;
     sub.textContent = isTimed
       ? 'Start the hold timer when you begin. You can finish early and save the time actually held.'
-      : 'Log clean reps and reps completed with help separately. Add drops below to continue with less weight before resting.';
+      : 'Log clean reps and reps completed with help separately. Choose the weight for every drop set below.';
   }
   const plannedHint = $('plannedSetPrefill');
   if (plannedHint) plannedHint.hidden = true;
@@ -642,6 +643,16 @@ function saveSet(){
       toast('Drop sets can only be added to a working set.');
       return;
     }
+    const incompleteDropIndex = pendingDropSets.findIndex(drop =>
+      drop.weight == null || !Number.isFinite(Number(drop.weight)) ||
+      drop.reps == null || !Number.isFinite(Number(drop.reps)) || Number(drop.reps) < 1);
+    if (incompleteDropIndex >= 0){
+      toast('Choose a weight and reps for every drop set.');
+      const missingField = pendingDropSets[incompleteDropIndex].weight == null ? 'pendingDropWeight' : 'pendingDropReps';
+      const input = $(missingField + incompleteDropIndex);
+      if (input) input.focus();
+      return;
+    }
     if (pendingDropSets.length) set.drops = pendingDropSets.map(drop => ({ weight: drop.weight, reps: drop.reps }));
     const sequence = repSequenceOf(ex.planned && ex.planned.reps);
     const workIndex = ex.sets.filter(isWorkingSet).length;
@@ -670,12 +681,24 @@ function addDropSet(exIdx, setIdx){
   if (!set || ex.cardio || set.timed || isWarmupSet(set)) return;
   if (!Array.isArray(set.drops)) set.drops = [];
   const previous = set.drops.length ? set.drops[set.drops.length - 1] : set;
-  const weight = Math.max(0, Math.round((Number(previous.weight) || 0) * 0.8 * 2) / 2);
   const reps = Math.max(1, Math.round(Number(previous.reps) || 1));
-  set.drops.push({ weight, reps });
+  set.drops.push({ weight: null, reps });
   save();
   renderActive();
   resumeSession();
+}
+
+function updateDropSetValue(exIdx, setIdx, dropIdx, field, raw){
+  const set = DB.active && DB.active.exercises[exIdx] && DB.active.exercises[exIdx].sets[setIdx];
+  const drop = set && Array.isArray(set.drops) ? set.drops[dropIdx] : null;
+  if (!drop || (field !== 'weight' && field !== 'reps')) return;
+  if (String(raw).trim() === '') drop[field] = null;
+  else {
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return;
+    drop[field] = field === 'weight' ? snap(value, 0.5, 0, 999) : snap(value, 1, 1, 999);
+  }
+  save();
 }
 
 function stepDropSet(exIdx, setIdx, dropIdx, field, delta){
@@ -1117,6 +1140,11 @@ function cancelSession(){
 function finishSession(){
   if (!DB.active) return;
   if (DB.active.holdTimer){ toast('Finish or cancel the timed hold before ending the session.'); return; }
+  const unfinishedDrop = DB.active.exercises.some(ex => ex.sets.some(set =>
+    Array.isArray(set.drops) && set.drops.some(drop =>
+      drop.weight == null || !Number.isFinite(Number(drop.weight)) ||
+      drop.reps == null || !Number.isFinite(Number(drop.reps)) || Number(drop.reps) < 1)));
+  if (unfinishedDrop){ toast('Choose a weight and reps for every drop set, or remove an unfinished drop.'); return; }
   let totalSets = 0, workingSets = 0, volume = 0, performed = 0, holdSec = 0;
   DB.active.exercises.forEach(ex => {
     totalSets += ex.sets.length;
@@ -1218,6 +1246,6 @@ Object.assign(window, {
   openAddEx, onAddExSearch, renderAddEx, toggleSessionExercise, addSessionExercise,
   addExCustom, removeActiveExercise,
   addPendingDropSet, updatePendingDropValue, stepPendingDropSet, removePendingDropSet,
-  addDropSet, stepDropSet, removeDropSet, addRestPause, stepRestPause, removeRestPause,
+  addDropSet, updateDropSetValue, stepDropSet, removeDropSet, addRestPause, stepRestPause, removeRestPause,
   startRest, restAdd, restSkip, restTick, restLoop, restStopLoop, saveRestDefault
 });

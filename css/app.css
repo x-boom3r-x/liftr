@@ -455,6 +455,15 @@ button{background:none;border:none;cursor:pointer}
 .set-addition-controls .set-addition-remove{color:var(--red);margin-left:2px}
 .set-addition-add{justify-self:start;padding:5px 8px;border:1px dashed var(--border);border-radius:8px;color:var(--text3);font-size:.71rem;font-weight:700}
 .set-addition-add:active{border-color:var(--primary-text);color:var(--primary-text)}
+.set-drop-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.set-drop-row .set-addition-name{grid-column:1;align-self:center}
+.set-drop-row .set-addition-remove{grid-column:2;grid-row:1;width:28px;height:28px;border-radius:7px;background:var(--surface3);color:var(--red);font-size:1rem}
+.drop-set-editor{grid-column:1/-1;display:grid;gap:4px;min-width:0;color:var(--text3);font-size:.65rem;font-weight:650}
+.drop-set-input-row{display:flex;align-items:center;gap:4px;min-width:0}
+.drop-set-input-row button{flex:none;width:29px;height:30px;border-radius:7px;background:var(--surface3);color:var(--text2);font-size:.9rem;font-weight:700}
+.drop-set-input-row input{flex:1;min-width:0;width:1%;height:30px;padding:3px 6px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);text-align:center;font-size:.82rem;font-weight:700}
+.drop-set-input-row input::placeholder{color:var(--text3);opacity:.7}
+.drop-set-input-row .unit{flex:none;color:var(--text3);font-size:.65rem}
 .dropset-draft{margin:12px 0;padding:12px;border:1px solid var(--border);border-radius:13px;background:var(--surface2)}
 .dropset-draft[hidden]{display:none!important}
 .dropset-draft-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
