@@ -10,6 +10,7 @@ loadCatalogue();
 
 let addSetExIdx = null;
 let timedHoldInterval = null;
+let pendingDropSets = [];
 
 /* ==================================================================
    SEANCE
@@ -205,6 +206,76 @@ function renderDropRows(set, exIdx, setIdx){
   '</div>';
 }
 
+function syncPendingDropInputs(){
+  pendingDropSets.forEach((drop, index) => {
+    const weight = parseFloat($('pendingDropWeight' + index)?.value);
+    const reps = parseInt($('pendingDropReps' + index)?.value, 10);
+    if (Number.isFinite(weight)) drop.weight = snap(weight, 0.5, 0, 999);
+    if (Number.isFinite(reps)) drop.reps = snap(reps, 1, 1, 999);
+  });
+}
+
+function renderPendingDropSets(){
+  const list = $('pendingDropList');
+  if (!list) return;
+  list.innerHTML = pendingDropSets.map((drop, index) =>
+    '<div class="drop-draft-row">' +
+      '<div class="drop-draft-row-head"><strong><span>Drop</span> ' + (index + 1) + '</strong>' +
+        '<button class="text-link" type="button" onclick="removePendingDropSet(' + index + ')">Remove</button></div>' +
+      '<label class="drop-draft-field"><span>Weight (kg)</span><div class="stepper">' +
+        '<button type="button" onclick="stepPendingDropSet(' + index + ',\'weight\',-0.5)" aria-label="Decrease drop weight">−</button>' +
+        '<input id="pendingDropWeight' + index + '" type="number" inputmode="decimal" min="0" max="999" step="0.5" value="' + esc(fmtNum(drop.weight)) + '" oninput="updatePendingDropValue(' + index + ',\'weight\',this.value)">' +
+        '<span class="unit">kg</span><button type="button" onclick="stepPendingDropSet(' + index + ',\'weight\',0.5)" aria-label="Increase drop weight">+</button>' +
+      '</div></label>' +
+      '<label class="drop-draft-field"><span>Reps</span><div class="stepper">' +
+        '<button type="button" onclick="stepPendingDropSet(' + index + ',\'reps\',-1)" aria-label="Decrease drop reps">−</button>' +
+        '<input id="pendingDropReps' + index + '" type="number" inputmode="numeric" min="1" max="999" step="1" value="' + esc(fmtNum(drop.reps)) + '" oninput="updatePendingDropValue(' + index + ',\'reps\',this.value)">' +
+        '<span class="unit">reps</span><button type="button" onclick="stepPendingDropSet(' + index + ',\'reps\',1)" aria-label="Increase drop reps">+</button>' +
+      '</div></label>' +
+    '</div>'
+  ).join('');
+}
+
+function addPendingDropSet(){
+  if ($('warmupInput') && $('warmupInput').checked) return;
+  syncPendingDropInputs();
+  const last = pendingDropSets.length ? pendingDropSets[pendingDropSets.length - 1] : {
+    weight: Number($('weightInput') && $('weightInput').value) || 0,
+    reps: Number($('repsInput') && $('repsInput').value) || 1
+  };
+  pendingDropSets.push({
+    weight: snap((Number(last.weight) || 0) * 0.8, 0.5, 0, 999),
+    reps: snap(Number(last.reps) || 1, 1, 1, 999)
+  });
+  renderPendingDropSets();
+}
+
+function updatePendingDropValue(index, field, raw){
+  const drop = pendingDropSets[index];
+  if (!drop || (field !== 'weight' && field !== 'reps')) return;
+  if (String(raw).trim() === '') return;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) return;
+  drop[field] = field === 'weight' ? snap(value, 0.5, 0, 999) : snap(value, 1, 1, 999);
+}
+
+function stepPendingDropSet(index, field, delta){
+  syncPendingDropInputs();
+  const drop = pendingDropSets[index];
+  if (!drop || (field !== 'weight' && field !== 'reps')) return;
+  const step = field === 'weight' ? 0.5 : 1;
+  const min = field === 'weight' ? 0 : 1;
+  drop[field] = snap((Number(drop[field]) || 0) + delta, step, min, 999);
+  renderPendingDropSets();
+}
+
+function removePendingDropSet(index){
+  syncPendingDropInputs();
+  if (index < 0 || index >= pendingDropSets.length) return;
+  pendingDropSets.splice(index, 1);
+  renderPendingDropSets();
+}
+
 function renderRestPauseRows(set, exIdx, setIdx){
   if (set.timed || isWarmupSet(set)) return '';
   const clusters = set.restPause && Array.isArray(set.restPause.clusters) ? set.restPause.clusters : [];
@@ -287,7 +358,7 @@ function openAddSet(exIdx){
     sub.hidden = isCardio;
     sub.textContent = isTimed
       ? 'Start the hold timer when you begin. You can finish early and save the time actually held.'
-      : 'Assisted reps count when the movement is helped (partner, machine).';
+      : 'Log clean reps and reps completed with help separately. Add drops below to continue with less weight before resting.';
   }
   const plannedHint = $('plannedSetPrefill');
   if (plannedHint) plannedHint.hidden = true;
@@ -296,6 +367,10 @@ function openAddSet(exIdx){
     if (DB.active.holdTimer){ syncTimedHoldUI(); startTimedHoldLoop(); }
     return;
   }
+
+  pendingDropSets = [];
+  if ($('dropsetDraft')) $('dropsetDraft').hidden = isCardio || isTimed;
+  renderPendingDropSets();
 
   if ($('effortInput')) $('effortInput').value = '';
   if ($('effortScale')) $('effortScale').value = 'rir';
@@ -534,6 +609,8 @@ function syncSetFlags(){
   }
   if (failure.checked) warmup.checked = false;
   failure.disabled = warmup.checked;
+  const dropAdd = $('pendingDropAddBtn');
+  if (dropAdd) dropAdd.disabled = warmup.checked;
 }
 
 function saveSet(){
@@ -560,6 +637,12 @@ function saveSet(){
     const assisted = readNum($('assistedInput'), 1, 0, 999);
     if (reps + assisted < 1) return;
     const set = { weight: weight, reps: reps, assisted: assisted };
+    syncPendingDropInputs();
+    if (pendingDropSets.length && $('warmupInput') && $('warmupInput').checked){
+      toast('Drop sets can only be added to a working set.');
+      return;
+    }
+    if (pendingDropSets.length) set.drops = pendingDropSets.map(drop => ({ weight: drop.weight, reps: drop.reps }));
     const sequence = repSequenceOf(ex.planned && ex.planned.reps);
     const workIndex = ex.sets.filter(isWorkingSet).length;
     if (sequence.length && sequence[Math.min(workIndex, sequence.length - 1)] === 'max') set.max = true;
@@ -1134,6 +1217,7 @@ Object.assign(window, {
   sessionDiff, renderProgramDiff, setRecapPick, applyProgramPicks,
   openAddEx, onAddExSearch, renderAddEx, toggleSessionExercise, addSessionExercise,
   addExCustom, removeActiveExercise,
+  addPendingDropSet, updatePendingDropValue, stepPendingDropSet, removePendingDropSet,
   addDropSet, stepDropSet, removeDropSet, addRestPause, stepRestPause, removeRestPause,
   startRest, restAdd, restSkip, restTick, restLoop, restStopLoop, saveRestDefault
 });

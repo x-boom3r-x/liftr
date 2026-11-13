@@ -455,6 +455,23 @@ button{background:none;border:none;cursor:pointer}
 .set-addition-controls .set-addition-remove{color:var(--red);margin-left:2px}
 .set-addition-add{justify-self:start;padding:5px 8px;border:1px dashed var(--border);border-radius:8px;color:var(--text3);font-size:.71rem;font-weight:700}
 .set-addition-add:active{border-color:var(--primary-text);color:var(--primary-text)}
+.dropset-draft{margin:12px 0;padding:12px;border:1px solid var(--border);border-radius:13px;background:var(--surface2)}
+.dropset-draft[hidden]{display:none!important}
+.dropset-draft-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dropset-draft-head>div{min-width:0;flex:1}
+.dropset-draft-head h3{margin:0;font-size:.82rem;font-weight:750}
+.dropset-draft-head p{margin:4px 0 0;color:var(--text3);font-size:.68rem;line-height:1.4}
+.dropset-draft-head .btn{flex:none;min-height:36px;padding:6px 9px}
+.dropset-draft-list{display:grid;gap:8px;margin-top:9px}
+.drop-draft-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:9px;border:1px solid var(--border);border-radius:11px;background:var(--surface)}
+.drop-draft-row-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;min-height:27px}
+.drop-draft-row-head strong{font-size:.75rem;color:var(--primary-text)}
+.drop-draft-row-head .text-link{min-height:28px;font-size:.7rem}
+.drop-draft-field{display:grid;gap:5px;min-width:0;color:var(--text3);font-size:.65rem;font-weight:650}
+.drop-draft-field .stepper{min-width:0;gap:3px;padding:4px}
+.drop-draft-field .stepper button{width:30px;height:32px;border-radius:8px;font-size:1rem}
+.drop-draft-field .stepper input{min-width:0;font-size:.96rem;font-weight:700}
+.drop-draft-field .stepper .unit{font-size:.62rem}
 .set-del{color:var(--text3);font-size:1rem;padding:4px 6px}
 .set-del:active{color:var(--red)}
 .add-set-btn{

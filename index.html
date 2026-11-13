@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr" data-build="115">
+<html lang="fr" data-build="116">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -1056,7 +1056,7 @@
   <div class="modal">
     <div class="grabber"></div>
     <div class="modal-title" id="addSetTitle">Add a set</div>
-    <div class="modal-sub">Assisted reps count when the movement is helped (partner, machine).</div>
+    <div class="modal-sub">Log clean reps above and reps completed with help separately. Add drops below to continue with less weight before resting.</div>
 
     <div class="set-context" id="setContext" hidden></div>
     <div class="planned-set-prefill" id="plannedSetPrefill" hidden>Prefilled from the programmed target. Saved values are your actual results.</div>
@@ -1083,15 +1083,23 @@
     </div>
 
     <div class="field">
-      <label class="label">Assisted reps</label>
+      <label class="label">Assisted reps with help</label>
       <div class="stepper">
         <button type="button" onclick="stepAssisted(-1)" aria-label="Less assisted reps">−</button>
         <input id="assistedInput" type="number" inputmode="numeric" step="1" min="0" max="999" value="0">
         <span class="unit">assisted</span>
         <button type="button" onclick="stepAssisted(1)" aria-label="More assisted reps">+</button>
       </div>
-      <div class="hint">Example: 8 clean reps + 2 assisted → <b>8+2A</b></div>
+      <div class="hint">Count clean reps above, then reps completed with a partner or machine here. Example: 8+2A.</div>
     </div>
+
+    <section class="dropset-draft" id="dropsetDraft" aria-labelledby="dropsetDraftTitle">
+      <div class="dropset-draft-head">
+        <div><h3 id="dropsetDraftTitle">Drop sets</h3><p>Continue right away with less weight. Rest starts after the last drop.</p></div>
+        <button class="btn btn-sm" id="pendingDropAddBtn" type="button" onclick="addPendingDropSet()">+ Add drop</button>
+      </div>
+      <div class="dropset-draft-list" id="pendingDropList"></div>
+    </section>
 
     <div class="field set-effort-field" id="strengthEffortField">
       <label class="label" for="effortInput">Effort (optional)</label>
