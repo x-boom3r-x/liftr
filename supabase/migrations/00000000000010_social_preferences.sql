@@ -2,7 +2,7 @@
 create table if not exists public.social_notification_preferences (
   user_id uuid primary key references public.profiles (id) on delete cascade,
   follow boolean not null default true,
-  like boolean not null default true,
+  "like" boolean not null default true,
   comment boolean not null default true,
   mention boolean not null default true,
   updated_at timestamptz not null default now()

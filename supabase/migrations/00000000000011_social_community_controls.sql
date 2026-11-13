@@ -61,7 +61,7 @@ grant select, insert on public.social_reports to authenticated;
 create table if not exists public.social_notification_preferences (
   user_id uuid primary key references public.profiles (id) on delete cascade,
   follow boolean not null default true,
-  like boolean not null default true,
+  "like" boolean not null default true,
   comment boolean not null default true,
   mention boolean not null default true,
   updated_at timestamptz not null default now()
@@ -188,8 +188,8 @@ begin
   insert into public.social_group_members(group_id,user_id,role) values (v_id,auth.uid(),'member') on conflict do nothing;
   return v_id;
 end $$;
-revoke all on function public.create_social_group(text,text,text,text,numeric,text,date) from public;
-revoke all on function public.join_social_group(text) from public;
+revoke all on function public.create_social_group(text,text,text,text,numeric,text,date) from public, anon;
+revoke all on function public.join_social_group(text) from public, anon;
 grant execute on function public.create_social_group(text,text,text,text,numeric,text,date) to authenticated;
 grant execute on function public.join_social_group(text) to authenticated;
 

@@ -9,3 +9,4 @@ playwright-report/
 
 .vercel
 .opengym-ref/
+supabase/.temp/
