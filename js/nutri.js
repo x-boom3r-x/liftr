@@ -26,6 +26,8 @@ function nutriDB(){
   if (!Array.isArray(n.favs)) n.favs = [];
   if (!Array.isArray(n.recents)) n.recents = [];
   if (!Array.isArray(n.recipes)) n.recipes = [];
+  if (!Array.isArray(n.groceries)) n.groceries = [];
+  if (!Array.isArray(n.mealShortcuts)) n.mealShortcuts = [];
   if (n.foodPreparation !== 'raw' && n.foodPreparation !== 'cooked') n.foodPreparation = 'cooked';
   if (!n.water || typeof n.water !== 'object') n.water = {};
   n.meals.forEach(m => { if (!Array.isArray(m.items)) m.items = []; });
@@ -328,9 +330,54 @@ function renderNutrition(tab){
 
 function openNutriTransfer(){
   openActionSheet('Diary backup & restore', [
+    { label: 'Save Nutrition backup', fn: exportNutritionBackup },
+    { label: 'Restore Nutrition backup', fn: openNutritionBackupImport },
     { label: 'Export diary file', fn: exportNutriOpenTracker },
     { label: 'Import diary file', fn: openNutriOpenTrackerImport }
   ]);
+}
+function exportNutritionBackup(){
+  const n = nutriDB();
+  if (!n) return;
+  const payload = { app:'liftr-nutrition-backup', v:1, at:new Date().toISOString(), nutrition:n };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'liftr-nutrition-' + todayISO() + '.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  toast('Nutrition backup saved');
+}
+function openNutritionBackupImport(){
+  const input = $('nutritionBackupFile');
+  if (input) input.click();
+}
+function importNutritionBackup(input){
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 25 * 1024 * 1024){ input.value = ''; toast('This file is too large to import (25 MB maximum).'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    let payload;
+    try { payload = JSON.parse(String(reader.result || '')); } catch(e){ payload = null; }
+    const value = payload && payload.app === 'liftr-nutrition-backup' && payload.nutrition;
+    if (!value || !Array.isArray(value.meals) || !Array.isArray(value.foods)){
+      input.value = ''; toast('This is not a valid LIFTR Nutrition backup.'); return;
+    }
+    input.value = '';
+    askConfirm('Restore Nutrition backup?',
+      value.meals.length + ' logged meals and ' + value.foods.length + ' saved foods will replace the current Nutrition data. Gym and Social stay unchanged.',
+      'Restore').then(result => {
+      if (!result.ok) return;
+      DB.nutri = value;
+      save();
+      renderNutrition(currentTab);
+      if (typeof window.renderToday === 'function') window.renderToday();
+      toast('Nutrition backup restored');
+    });
+  };
+  reader.onerror = () => { input.value = ''; toast('Could not read this backup file.'); };
+  reader.readAsText(file);
 }
 
 /* ---- J3 : resolution foodId -> aliment, totaux recalcules ----
@@ -488,6 +535,7 @@ function nutriMealCard(m, editable){
     ? '<span class="meal-head-actions">' +
       '<button class="icon-btn" onclick="editMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Edit meal">' + icon('pencil') + '</button>' +
       '<button class="icon-btn" onclick="saveMealAsRecipe(' + esc(JSON.stringify(m.id)) + ')" aria-label="Save as recipe">' + icon('star') + '</button>' +
+      '<button class="icon-btn" onclick="saveMealShortcut(' + esc(JSON.stringify(m.id)) + ')" aria-label="Save meal shortcut">' + icon('bookmark') + '</button>' +
       '<button class="icon-btn" onclick="removeMeal(' + esc(JSON.stringify(m.id)) + ')" aria-label="Delete meal">' + icon('trash') + '</button></span>'
     : '';
   return '<div class="card meal-card meal-' + esc(type) + '">' +
@@ -654,7 +702,7 @@ function mealTypeLabel(t){
 function newDraft(){
   const h = new Date().getHours();
   const type = h < 11 ? 'breakfast' : h < 16 ? 'lunch' : 'dinner';
-  return { id: null, type: type, name: '', items: [], pick: null, q: '' };
+  return { id: null, type: type, name: '', items: [], pick: null, q: '', servings:1 };
 }
 function draftFromMeal(m){
   return { id: m.id, type: m.type || 'lunch', name: m.name || 'Meal',
@@ -694,6 +742,13 @@ function pickMealFood(id){
 }
 function itemQtyInput(v){
   if (nutriDraft && nutriDraft.pick){ nutriDraft.pick.qty = v; updateItemPreview(); }
+}
+function setUsualPortion(value){
+  if (!nutriDraft || !nutriDraft.pick) return;
+  nutriDraft.pick.qty = String(value);
+  const input = $('itemQty');
+  if (input) input.value = String(value);
+  updateItemPreview();
 }
 function itemUnitChange(v){
   const d = nutriDraft;
@@ -777,6 +832,9 @@ function itemEditorHtml(){
     '<input class="input" id="itemQty" type="number" inputmode="decimal" min="0" step="any"' +
     ' value="' + esc(p.qty) + '" aria-label="Quantity" oninput="itemQtyInput(this.value)">' +
     '<select class="input" id="itemUnit" aria-label="Unit" onchange="itemUnitChange(this.value)">' + units + '</select>' +
+    '<div class="usual-portions"><span>Portions usuelles</span>' +
+      (p.unit === 'g' || p.unit === 'ml' ? [50,100,150,200].map(v => '<button type="button" class="chip" onclick="setUsualPortion(' + v + ')">' + v + ' ' + p.unit + '</button>').join('') : [1,2,3].map(v => '<button type="button" class="chip" onclick="setUsualPortion(' + v + ')">' + v + '</button>').join('')) +
+    '</div>' +
     '<span class="item-preview" id="itemPreview"></span>' +
     '<button class="btn btn-primary btn-sm" onclick="addDraftItem()">' +
     (p.from >= 0 ? 'Update' : nutriDraft && nutriDraft.recipeMode ? 'Add ingredient' : 'Add to meal') + '</button>' +
@@ -839,7 +897,7 @@ function mealBuilderHtml(){
         '<button class="icon-btn" onclick="editDraftItem(' + i + ')" aria-label="Edit ingredient">' + icon('pencil') + '</button>' +
         '<button class="icon-btn" onclick="removeDraftItem(' + i + ')" aria-label="Remove ingredient">' + icon('x') + '</button>' +
         '</span></div>').join('') +
-      '</div>'
+    '</div>'
     : '';
   /* barre de totaux : kcal en chiffre + macros colorees + mini-barre de part */
   let totals;
@@ -868,6 +926,7 @@ function mealBuilderHtml(){
     '<button type="button" class="nutri-sheet-close" data-nutri-close onclick="cancelNutriForm()" aria-label="Close meal editor">×</button></div>' +
     '<input class="input" id="mealName" placeholder="' + (d.recipeMode ? 'Recipe name' : 'Meal name') + '" maxlength="60" value="' + esc(d.name) + '"' +
     ' oninput="mealNameInput(this.value)">' +
+    (d.recipeMode ? '<div class="recipe-yield"><label class="label" for="recipeServings">Portions par lot</label><input class="input" id="recipeServings" type="number" min="1" max="100" value="' + esc(d.servings || 1) + '" oninput="recipeServingsInput(this.value)"><span id="recipeServingPreview" class="section-hint"></span></div>' : '') +
     '<input class="input builder-search" id="mealFoodSearch" placeholder="Search foods…" aria-label="Search foods to add"' +
     ' value="' + esc(d.q || '') + '" oninput="mealSearchInput(this.value)">' +
     '<div id="mealPickContent">' + (d.pick ? itemEditorHtml() : mealPickResultsHtml(d)) + '</div>' +
@@ -981,6 +1040,40 @@ function nutriMealSectionHtml(type, meals){
     addBtn + '</div>' + cards + '</section>';
 }
 
+function nutriMealShortcutsHtml(){
+  const list = nutriDB().mealShortcuts || [];
+  if (!list.length) return '';
+  return '<section class="meal-habits"><div class="section-hint">Repas habituels</div><div class="habit-chips">' + list.map(item =>
+    '<span class="habit-chip"><button type="button" onclick="useMealShortcut(' + esc(JSON.stringify(item.id)) + ')">' + esc(item.name) + '</button><button type="button" aria-label="Retirer des raccourcis" onclick="removeMealShortcut(' + esc(JSON.stringify(item.id)) + ')">×</button></span>'
+  ).join('') + '</div></section>';
+}
+function saveMealShortcut(id){
+  const meal = nutriDB().meals.find(x => x.id === id);
+  if (!meal || !(meal.items || []).length) return;
+  const list = nutriDB().mealShortcuts;
+  const template = { id:uid(), name:meal.name, type:meal.type || 'lunch', items:meal.items.map(x => Object.assign({}, x)) };
+  const prior = list.findIndex(x => x.name.toLowerCase() === template.name.toLowerCase());
+  if (prior >= 0) list[prior] = Object.assign({id:list[prior].id}, template);
+  else list.unshift(template);
+  nutriDB().mealShortcuts = list.slice(0, 8);
+  save(); renderNutriMeals(); toast('Raccourci de repas enregistré');
+}
+function useMealShortcut(id){
+  const item = (nutriDB().mealShortcuts || []).find(x => x.id === id);
+  if (!item) return;
+  nutriFormOpener = document.activeElement;
+  nutriForm = 'meal';
+  nutriDraft = newDraft();
+  nutriDraft.type = item.type || 'lunch';
+  nutriDraft.name = item.name;
+  nutriDraft.items = (item.items || []).map(x => Object.assign({}, x));
+  showTab('nutri-meals'); renderNutriMeals(); revealNutriForm();
+}
+function removeMealShortcut(id){
+  nutriDB().mealShortcuts = (nutriDB().mealShortcuts || []).filter(x => x.id !== id);
+  save(); renderNutriMeals();
+}
+
 function renderNutriMeals(){
   const box = $('nutriMeals');
   if (!box) return;
@@ -994,7 +1087,7 @@ function renderNutriMeals(){
     : (nutriIsToday() ? 'What you ate today' : 'Meals on this day');
 
   const open = nutriForm === 'meal' && !!nutriDraft;
-  let html = nutriCalendarStripHtml() + nutriDaySummaryHtml(date);
+  let html = nutriMealShortcutsHtml() + nutriCalendarStripHtml() + nutriDaySummaryHtml(date);
   if (open) html += mealBuilderHtml();
   if (meals.length) html += '<div class="meal-stack">' + meals.map(m => nutriMealCard(m, true)).join('') + '</div>';
   if (!meals.length && !open){
@@ -1004,6 +1097,7 @@ function renderNutriMeals(){
   mountNutriDialog(box);
   if (open){
     if (nutriDraft.pick) updateItemPreview();
+    if (nutriDraft.recipeMode) recipeServingsInput(nutriDraft.servings || 1);
   }
 }
 
@@ -1110,7 +1204,7 @@ function copyYestMeal(id){
   renderNutriMeals();
   toast('Copied "' + m.name + '"');
 }
-function storeRecipe(name, type, items){
+function storeRecipe(name, type, items, existingId, servings){
   const n = nutriDB();
   const normalized = (items || []).map(it => {
     const food = it.food || it.snapshot || (it.foodId && findNutriFood(it.foodId));
@@ -1119,18 +1213,24 @@ function storeRecipe(name, type, items){
       qty: +it.qty || 0, unit: it.unit || 'g' };
   }).filter(it => it && it.qty > 0);
   if (!normalized.length) return null;
+  const existing = existingId && (n.recipes || []).find(r => r.id === existingId);
+  const foodId = existing ? existing.foodId : uid();
   let food;
-  try { food = recipeToFood({ id: uid(), name: name, items: normalized, cookedWeightG: 0 }); }
+  try { food = recipeToFood({ id: foodId, name: name, items: normalized, cookedWeightG: 0 }); }
   catch (e){ food = null; }
   if (!food || !(food.kcal >= 0) || !isFinite(food.kcal)) return null;
   food.source = 'recipe';
-  n.foods.push(food);
+  food.id = foodId;
+  const foodIndex = n.foods.findIndex(f => f.id === foodId);
+  if (foodIndex >= 0) n.foods[foodIndex] = food; else n.foods.push(food);
   if (!Array.isArray(n.recipes)) n.recipes = [];
   const recipe = {
-    id: uid(), foodId: food.id, name: name, type: type || 'lunch',
+    id: existing ? existing.id : uid(), foodId: food.id, name: name, type: type || 'lunch',
+    servings: Math.max(1, Math.min(100, Math.round(+servings || 1))),
     items: normalized.map(it => ({ foodId: it.foodId, qty: it.qty, unit: it.unit, name: it.name }))
   };
-  n.recipes.push(recipe);
+  if (existing){ n.recipes[n.recipes.indexOf(existing)] = recipe; }
+  else n.recipes.push(recipe);
   return { food: food, recipe: recipe };
 }
 
@@ -1140,7 +1240,7 @@ function saveDraftAsRecipe(){
   if (!d || !d.items.length){ toast('Add foods first — recipes need ingredients'); return; }
   const name = String(d.name || '').trim();
   if (!name){ toast('Name your recipe first'); $('mealName') && $('mealName').focus(); return; }
-  const stored = storeRecipe(name, d.type, d.items);
+  const stored = storeRecipe(name, d.type, d.items, d.recipeId, d.servings);
   if (!stored){ toast('Could not save this recipe'); return; }
   touchNutriRecent(d.items.filter(it => it.foodId).map(it => it.foodId));
   nutriForm = null;
@@ -1148,7 +1248,7 @@ function saveDraftAsRecipe(){
   save();
   showTab('nutri-foods');
   setNutriFoodFilter('all');
-  toast('"' + name + '" saved to My Foods');
+  toast('"' + name + '" ' + (d.recipeId ? 'updated' : 'saved to My Foods'));
   restoreNutriSectionFocus();
 }
 
@@ -1174,13 +1274,18 @@ function recipesSectionHtml(){
   if (!list.length) return '';
   return '<div class="section-hint fx-head">Recipes<span class="fx-n">' + list.length + '</span></div>' +
     '<div class="recipe-list">' + list.map(r => {
-      let kcal = 0;
-      (r.items || []).forEach(it => { const f = findNutriFood(it.foodId); if (f){ try { kcal += nutrientsFor(f, +it.qty || 0, it.unit || 'g').kcal; } catch (e){} } });
+      const total = { kcal:0, protein:0, carbs:0, fat:0 };
+      (r.items || []).forEach(it => { const f = findNutriFood(it.foodId); if (f){ try { const x = nutrientsFor(f, +it.qty || 0, it.unit || 'g'); Object.keys(total).forEach(k => { total[k] += +x[k] || 0; }); } catch (e){} } });
+      const servings = Math.max(1, +r.servings || 1);
+      const macros = x => Math.round(x.protein) + 'P / ' + Math.round(x.carbs) + 'C / ' + Math.round(x.fat) + 'F';
+      const perServing = { kcal:total.kcal/servings, protein:total.protein/servings, carbs:total.carbs/servings, fat:total.fat/servings };
       return '<div class="recipe-row">' +
         '<span class="fi-main"><span class="fn">' + esc(r.name) + '</span>' +
-        '<span class="fm">' + (r.items || []).length + ' items · ' + Math.round(kcal) + ' kcal / batch</span></span>' +
+        '<span class="fm">' + (r.items || []).length + ' aliments · lot: ' + Math.round(total.kcal) + ' kcal, ' + macros(total) + ' · portion: ' + Math.round(perServing.kcal) + ' kcal, ' + macros(perServing) + '</span></span>' +
         '<span class="fi-acts">' +
         '<button class="chip" onclick="useRecipe(' + esc(JSON.stringify(r.id)) + ')">Use</button>' +
+        '<button class="icon-btn" onclick="editRecipe(' + esc(JSON.stringify(r.id)) + ')" aria-label="Edit recipe">' + icon('pencil') + '</button>' +
+        '<button class="icon-btn" onclick="addRecipeToGrocery(' + esc(JSON.stringify(r.id)) + ')" aria-label="Add ingredients to shopping list">' + icon('clipboard') + '</button>' +
         '<button class="icon-btn" onclick="deleteRecipe(' + esc(JSON.stringify(r.id)) + ')" aria-label="Delete recipe">' + icon('trash') + '</button>' +
         '</span></div>';
     }).join('') + '</div>';
@@ -1194,10 +1299,33 @@ function useRecipe(id){
   nutriDraft = newDraft();
   nutriDraft.name = r.name;
   if (r.type) nutriDraft.type = r.type;
-  nutriDraft.items = (r.items || []).map(it => Object.assign({}, it));
+  const servings = Math.max(1, +r.servings || 1);
+  nutriDraft.items = (r.items || []).map(it => Object.assign({}, it, { qty:(+it.qty || 0) / servings }));
   showTab('nutri-meals');
   revealNutriForm();
   toast('Recipe loaded into a new meal');
+}
+function editRecipe(id){
+  const r = (nutriDB().recipes || []).find(x => x.id === id);
+  if (!r) return;
+  nutriFormOpener = document.activeElement;
+  nutriForm = 'meal';
+  nutriDraft = newDraft();
+  nutriDraft.recipeMode = true;
+  nutriDraft.recipeId = r.id;
+  nutriDraft.name = r.name;
+  nutriDraft.type = r.type || 'lunch';
+  nutriDraft.servings = Math.max(1, +r.servings || 1);
+  nutriDraft.items = (r.items || []).map(it => Object.assign({}, it));
+  showTab('nutri-meals');
+  revealNutriForm();
+}
+function recipeServingsInput(value){
+  if (!nutriDraft || !nutriDraft.recipeMode) return;
+  nutriDraft.servings = Math.max(1, Math.min(100, Math.round(+value || 1)));
+  const totals = draftTotals();
+  const preview = $('recipeServingPreview');
+  if (preview) preview.textContent = Math.round(totals.kcal) + ' kcal / lot · ' + Math.round(totals.kcal / nutriDraft.servings) + ' kcal / portion';
 }
 function deleteRecipe(id){
   const n = nutriDB();
@@ -1205,6 +1333,34 @@ function deleteRecipe(id){
   save();
   renderNutriFoods();
   toast('Recipe deleted');
+}
+
+let nutriGroceryOpen = false;
+function groceryListHtml(){
+  if (!nutriGroceryOpen) return '';
+  const list = nutriDB().groceries || [];
+  return '<section class="card grocery-card"><div class="section-head"><div><div class="section-title">Liste de courses</div><div class="section-hint">Enregistrée hors ligne sur cet appareil.</div></div><button class="icon-btn" type="button" onclick="closeGroceryList()" aria-label="Fermer">×</button></div>' +
+    '<div class="grocery-add"><input class="input" id="groceryName" maxlength="80" placeholder="Aliment à acheter" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addGroceryItem()}"><input class="input" id="groceryQty" maxlength="30" placeholder="Quantité (facultatif)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addGroceryItem()}"><button class="btn btn-primary btn-sm" onclick="addGroceryItem()">Ajouter</button></div>' +
+    (list.length ? '<div class="grocery-list">' + list.map(item => '<div class="grocery-item' + (item.done ? ' done' : '') + '"><input type="checkbox" ' + (item.done ? 'checked' : '') + ' onchange="toggleGroceryItem(' + esc(JSON.stringify(item.id)) + ',this.checked)" aria-label="Article acheté"><span><b>' + esc(item.name) + '</b>' + (item.qty ? '<small>' + esc(item.qty) + '</small>' : '') + '</span><button type="button" class="icon-btn" onclick="removeGroceryItem(' + esc(JSON.stringify(item.id)) + ')" aria-label="Supprimer">' + icon('trash') + '</button></div>').join('') + '</div>' : '<div class="empty">Ajoute tes courses ou envoie les ingrédients d’une recette ici.</div>') +
+    '<div class="modal-actions"><button class="btn btn-sm" onclick="clearCompletedGroceries()">Effacer les articles cochés</button><button class="btn btn-sm btn-primary" onclick="closeGroceryList()">Terminé</button></div></section>';
+}
+function openGroceryList(){ nutriGroceryOpen = true; showTab('nutri-foods'); renderNutriFoods(); requestAnimationFrame(() => $('groceryName')?.focus({preventScroll:true})); }
+function closeGroceryList(){ nutriGroceryOpen = false; renderNutriFoods(); }
+function addGroceryItem(name, qty){
+  const label = String(name || ($('groceryName') && $('groceryName').value) || '').trim();
+  if (!label) return;
+  const amount = String(qty || ($('groceryQty') && $('groceryQty').value) || '').trim();
+  nutriDB().groceries.push({ id:uid(), name:label, qty:amount, done:false });
+  save(); renderNutriFoods();
+}
+function toggleGroceryItem(id, done){ const item = nutriDB().groceries.find(x => x.id === id); if (item){ item.done = !!done; save(); renderNutriFoods(); } }
+function removeGroceryItem(id){ nutriDB().groceries = nutriDB().groceries.filter(x => x.id !== id); save(); renderNutriFoods(); }
+function clearCompletedGroceries(){ nutriDB().groceries = nutriDB().groceries.filter(x => !x.done); save(); renderNutriFoods(); }
+function addRecipeToGrocery(id){
+  const recipe = (nutriDB().recipes || []).find(x => x.id === id);
+  if (!recipe) return;
+  (recipe.items || []).forEach(item => addGroceryItem(item.name || nutriItemName(item), (+item.qty || 0) + ' ' + (item.unit || 'g')));
+  openGroceryList();
 }
 
 /* ---- Foods : recherche (perso + base 690), favoris, recents, per 100 g ---- */
@@ -1218,7 +1374,7 @@ function foodFormHtml(){
     .join('');
   return '<div class="nutri-form-backdrop" role="presentation" onclick="if(event.target===this)cancelNutriForm()">' +
     '<div class="card nutri-form food-form" role="dialog" aria-modal="true" aria-labelledby="foodFormTitle">' +
-    '<div class="nutri-sheet-head"><div><div class="nutri-sheet-title" id="foodFormTitle">Add a food</div>' +
+    '<div class="nutri-sheet-head"><div><div class="nutri-sheet-title" id="foodFormTitle">' + (d.id ? 'Edit food' : 'Add a food') + '</div>' +
     '<div class="section-hint">Nutrition values per 100 g</div></div>' +
     '<button type="button" class="nutri-sheet-close" data-nutri-close onclick="cancelNutriForm()" aria-label="Close food editor">×</button></div>' +
     '<div class="section-hint" style="margin-bottom:8px">Per 100 g — stored as typed.</div>' +
@@ -1247,7 +1403,7 @@ function foodFormHtml(){
     '<input class="input" id="foodBarcode" inputmode="numeric" placeholder="Scan or type" value="' + esc(bc) + '" oninput="nutriFoodInput(\'barcode\',this.value)">' +
     '<div class="composer-actions">' +
     '<button class="chip" onclick="cancelNutriForm()">Cancel</button>' +
-    '<button class="btn btn-primary btn-sm" onclick="submitFood()">Add</button>' +
+    '<button class="btn btn-primary btn-sm" onclick="submitFood()">' + (d.id ? 'Save changes' : 'Add') + '</button>' +
     '</div></div></div>';
 }
 
@@ -1388,7 +1544,9 @@ function foodDetailHtml(f){
     '<div class="composer-actions">' +
     '<button class="chip" onclick="toggleNutriFav(' + esc(JSON.stringify(f.id)) + ')"' +
     ' aria-pressed="' + fav + '" aria-label="Favorite">' + icon('star') + (fav ? ' Saved' : ' Save') + '</button>' +
-    (custom ? '<button class="chip" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ');closeFoodDetail()"' +
+    (custom && f.source !== 'recipe' ? '<button class="chip" onclick="editNutriFood(' + esc(JSON.stringify(f.id)) + ');closeFoodDetail()">' + icon('pencil') + ' Edit</button>' +
+      '<button class="chip" onclick="duplicateNutriFood(' + esc(JSON.stringify(f.id)) + ');closeFoodDetail()">' + icon('copy') + ' Duplicate</button>' : '') +
+    (custom && f.source !== 'recipe' ? '<button class="chip" onclick="removeFood(' + esc(JSON.stringify(f.id)) + ');closeFoodDetail()"' +
       ' aria-label="Delete food">' + icon('trash') + ' Delete</button>' : '') +
     '<button class="btn btn-primary btn-sm" onclick="logFood(' + esc(JSON.stringify(f.id)) + ');closeFoodDetail()">Log food</button>' +
     '</div></div>';
@@ -1421,7 +1579,7 @@ function renderNutriFoods(){
   if (!box) return;
   const n = nutriDB();
   const q = (($('nutriFoodSearch') && $('nutriFoodSearch').value) || '').trim();
-  let html = nutriForm === 'food' ? foodFormHtml() : '';
+  let html = groceryListHtml() + (nutriForm === 'food' ? foodFormHtml() : '');
   if (!q && !foodsDbReady() && ((n.favs || []).length || (n.recents || []).length)) ensureFoodsDb('nutri-foods');
   if (nutriForm !== 'food'){
     html += '<div class="food-prep-note">Showing ' + (nutriFoodPreparation() === 'raw' ? 'raw' : 'cooked') +
@@ -1517,6 +1675,20 @@ function addFood(){
   showTab('nutri-foods');
   revealNutriForm();
 }
+function editNutriFood(id, duplicate){
+  const n = nutriDB();
+  const original = n.foods.find(f => f.id === id);
+  if (!original || original.source === 'recipe') return;
+  const next = Object.assign({}, original);
+  if (duplicate){ next.id = null; next.name = original.name + ' (copy)'; }
+  nutriFormOpener = document.activeElement;
+  _pendingBarcode = null;
+  nutriFoodDraft = next;
+  nutriForm = 'food';
+  showTab('nutri-foods');
+  revealNutriForm();
+}
+function duplicateNutriFood(id){ editNutriFood(id, true); }
 
 function submitFood(){
   const draft = nutriFoodDraft || {};
@@ -1529,7 +1701,7 @@ function submitFood(){
     return value !== '' && value != null ? +value || 0 : 0;
   };
   const f = {
-    id: uid(), name: name,
+    id: draft.id || uid(), name: name, source:'custom',
     kcal: rd('kcal', 'foodKcal'),
     protein: rd('protein', 'foodP'),
     carbs: rd('carbs', 'foodC'),
@@ -1544,7 +1716,8 @@ function submitFood(){
   const bc = String(draft.barcode || ($('foodBarcode') && $('foodBarcode').value) || _pendingBarcode || '').trim();
   if (isBarcodeFormat(bc)){ f.barcode = bc; f.source = 'custom'; }
   const chk = atwaterCheck(f);
-  n.foods.push(f);
+  const index = n.foods.findIndex(item => item.id === f.id);
+  if (index >= 0) n.foods[index] = f; else n.foods.push(f);
   nutriForm = null;
   nutriFoodDraft = null;
   _pendingBarcode = null;
@@ -1553,7 +1726,7 @@ function submitFood(){
   restoreNutriSectionFocus();
   /* Atwater : on AVERTIT, on ne bloque jamais */
   if (!chk.ok) toast('Food added — check Atwater: ' + chk.calc + ' vs ' + f.kcal + ' kcal');
-  else toast('Food added');
+  else toast(draft.id ? 'Food updated' : 'Food added');
 }
 
 function removeFood(id){
@@ -2315,6 +2488,7 @@ Object.assign(window, {
   /* foods : per 100 g + recherche + log */
   addFood, submitFood, nutriFoodInput, removeFood, logFood, toggleNutriFav,
   openFoodDetail, closeFoodDetail, setNutriFoodFilter,
+  editNutriFood, duplicateNutriFood,
   /* J2 : profil / plan */
   nutriProfile, nutriWeight, nutriPlan, nutriActiveGoal, nutriAdaptive,
   saveNutriProfile, applyAdaptive, saveNutriGoal,
@@ -2325,7 +2499,10 @@ Object.assign(window, {
   nutriPrevDay, nutriNextDay, nutriGotoToday,
   nutriGotoDate, nutriPrevMonth, nutriNextMonth,
   addWater, logWater, saveWaterGoal,
-  useRecipe, deleteRecipe,
+  useRecipe, editRecipe, deleteRecipe, recipeServingsInput,
+  openGroceryList, closeGroceryList, addGroceryItem, toggleGroceryItem, removeGroceryItem,
+  clearCompletedGroceries, addRecipeToGrocery, saveMealShortcut, useMealShortcut, removeMealShortcut, setUsualPortion,
+  exportNutritionBackup, openNutritionBackupImport, importNutritionBackup,
   logRemoteFood, addFoodWithBarcode,
   setNutriWeekRange, openNutriTransfer,
   openNutriOpenTrackerImport, importNutriOpenTracker, exportNutriOpenTracker

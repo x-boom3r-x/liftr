@@ -1,4 +1,4 @@
-const CACHE_NAME = 'liftr-v113';
+const CACHE_NAME = 'liftr-v114';
 
 const ASSETS = [
   './',
@@ -13,6 +13,8 @@ const ASSETS = [
   './js/gestures.js',
   './js/ui.js',
   './js/shortcuts.js',
+  './js/i18n.js',
+  './js/preferences.js',
   './js/today.js',
   './js/programme.js',
   './js/gym/exercises.js',
@@ -79,6 +81,7 @@ const ASSETS = [
   './js/social/stories.js',
   './js/social/notes.js',
   './js/social/notifications.js',
+  './js/social/groups.js',
   './js/social/push.js',
   './js/social/realtime.js',
   './js/social/reels.js',

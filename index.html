@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-build="113">
+<html lang="fr" data-build="114">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -406,12 +406,13 @@
         </div>
         <div class="section-head-acts">
           <button class="btn btn-sm" onclick="openScanner()" aria-label="Scan product barcode">Scan</button>
-          <button class="btn btn-sm" onclick="openNutriTransfer()">Transfer</button>
+          <button class="btn btn-sm" onclick="openNutriTransfer()">Backup</button>
           <button class="btn btn-sm btn-primary" onclick="addMeal()">+ Meal</button>
         </div>
       </div>
       <div id="nutriMeals"></div>
       <input id="nutriOpenTrackerFile" class="hidden" type="file" accept=".json,application/json" onchange="importNutriOpenTracker(this)">
+      <input id="nutritionBackupFile" class="hidden" type="file" accept=".json,application/json" onchange="importNutritionBackup(this)">
     </section>
 
     <section id="tab-nutri-foods" class="panel hidden">
@@ -422,6 +423,7 @@
         </div>
         <div class="section-head-acts">
           <button class="btn btn-sm" onclick="openScanner()">Scan</button>
+          <button class="btn btn-sm" onclick="openGroceryList()">Shopping list</button>
           <button class="btn btn-sm" onclick="addRecipe()">+ Recipe</button>
           <button class="btn btn-sm btn-primary" onclick="addFood()">+ Food</button>
         </div>
@@ -829,6 +831,13 @@
       </div>
       <button type="button" class="btn btn-sm" id="phonePushBtn" onclick="togglePhonePush()">Checking…</button>
     </div>
+    <details class="social-notif-settings">
+      <summary>Choose which Social alerts you receive</summary>
+      <label><span>New followers</span><input type="checkbox" data-social-notif="follow" onchange="setSocialNotificationPreference('follow',this.checked)" checked></label>
+      <label><span>Likes</span><input type="checkbox" data-social-notif="like" onchange="setSocialNotificationPreference('like',this.checked)" checked></label>
+      <label><span>Comments and replies</span><input type="checkbox" data-social-notif="comment" onchange="setSocialNotificationPreference('comment',this.checked)" checked></label>
+      <label><span>Mentions</span><input type="checkbox" data-social-notif="mention" onchange="setSocialNotificationPreference('mention',this.checked)" checked></label>
+    </details>
     <div class="modal-actions">
       <button type="button" class="btn btn-sm btn-ghost" onclick="markAllRead()">Mark all read</button>
     </div>

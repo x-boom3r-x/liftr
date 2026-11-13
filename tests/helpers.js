@@ -29,6 +29,9 @@ async function seed(page, db = {}, profile = 'Mouataz'){
     localStorage.setItem('at_lastUser', profile);
     localStorage.setItem('at_tab', 'programme');
     localStorage.setItem('at_v2_' + profile, JSON.stringify(full));
+    /* Functional selectors and fixtures use the app's original English labels. */
+    localStorage.setItem('liftr_language', 'en');
+    localStorage.setItem('liftr_first_help_' + profile, '1');
   }, { db, profile });
   await page.reload();
   await page.waitForSelector('#mainApp:not(.hidden)');

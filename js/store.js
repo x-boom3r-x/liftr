@@ -328,6 +328,7 @@ async function setUser(name){
   if (DB.active) currentTab = 'seance';
   renderAll();
   showTab(currentTab);
+  if (typeof window.maybeShowFirstUseHelp === 'function') window.maybeShowFirstUseHelp();
   if (wantTab) history.replaceState(null, '', location.pathname);
   if (pendingShare){
     const code = pendingShare; pendingShare = null;

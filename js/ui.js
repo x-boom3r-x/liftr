@@ -433,6 +433,21 @@ function renderProfilScreen(){
          '<button class="btn btn-sm" style="margin-left:6px" onclick="$(\'backupFile\').click()">Restore</button>'
   });
   rows.push({
+    t: 'App preferences',
+    s: 'Language, text size, motion and shortcuts.',
+    btn: '<button class="btn btn-sm" onclick="openAppPreferences()">Settings</button>'
+  });
+  rows.push({
+    t: 'Getting started',
+    s: 'A quick guide to Gym, Nutrition and Social.',
+    btn: '<button class="btn btn-sm" onclick="openGettingStartedHelp()">Open guide</button>'
+  });
+  rows.push({
+    t: 'Privacy and blocked profiles',
+    s: 'Manage the profiles you have blocked on Social.',
+    btn: '<button class="btn btn-sm" onclick="openBlockedProfiles()">Manage</button>'
+  });
+  rows.push({
     t: 'Training progress',
     s: 'Review your sessions, records and trends.',
     btn: '<button class="btn btn-sm" onclick="showTab(\'stats\')">View progress</button>'
@@ -491,6 +506,7 @@ function openSocialNavigation(){
     { label: 'Search people', fn: () => window.setSView && window.setSView('search') },
     { label: 'Reels', fn: () => window.setSView && window.setSView('reels') },
     { label: 'Messages', fn: () => window.setSView && window.setSView('inbox') },
+    { label: 'Private groups & challenges', fn: () => window.openSocialGroups && window.openSocialGroups() },
     { label: 'My profile', fn: () => window.showMyProfile && window.showMyProfile() }
   ]);
 }

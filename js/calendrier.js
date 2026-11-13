@@ -8,6 +8,11 @@ import { icon } from './icons.js';
    CALENDRIER
    ================================================================== */
 const DOW = ['M','T','W','T','F','S','S'];
+function calLocale(){ return document.documentElement.lang === 'fr' ? 'fr-FR' : 'en-US'; }
+function calDayInitials(){
+  const monday = new Date(2024,0,1);
+  return Array.from({length:7},(_,i) => new Intl.DateTimeFormat(calLocale(),{weekday:'narrow'}).format(new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+i)));
+}
 
 function shiftMonth(d){ calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + d, 1); renderCalendar(); }
 function calToday(){ calCursor = new Date(); selectedDate = todayISO(); renderCalendar(); }
@@ -18,8 +23,8 @@ function progressionsOn(iso){ return DB.progressions.filter(p => p.date === iso)
 
 function renderCalendar(){
   const y = calCursor.getFullYear(), m = calCursor.getMonth();
-  $('calMonth').textContent = calCursor.toLocaleDateString('en-US', { month:'long', year:'numeric' });
-  $('calDow').innerHTML = DOW.map(d => '<div class="cal-dow">' + d + '</div>').join('');
+  $('calMonth').textContent = calCursor.toLocaleDateString(calLocale(), { month:'long', year:'numeric' });
+  $('calDow').innerHTML = calDayInitials().map(d => '<div class="cal-dow">' + d + '</div>').join('');
 
   const first = new Date(y, m, 1);
   const start = new Date(y, m, 1 - ((first.getDay() + 6) % 7));
@@ -47,12 +52,16 @@ function renderWeekCard(){
   const we = new Date(ws.getFullYear(), ws.getMonth(), ws.getDate() + 6);
   const wk = weekKeyOf(sel);
 
-  $('weekLabel').textContent = 'Week of ' + ws.toLocaleDateString('en-US', { day:'numeric', month:'long' });
-  $('weekRange').textContent = ws.toLocaleDateString('en-US', { day:'numeric', month:'short' }) + ' → ' +
-    we.toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' });
+  const locale = calLocale();
+  const french = locale === 'fr-FR';
+  $('weekLabel').textContent = (french ? 'Semaine du ' : 'Week of ') + ws.toLocaleDateString(locale, { day:'numeric', month:'long' });
+  $('weekRange').textContent = ws.toLocaleDateString(locale, { day:'numeric', month:'short' }) + ' → ' +
+    we.toLocaleDateString(locale, { day:'numeric', month:'short', year:'numeric' });
 
   const wProgs = DB.progressions.filter(p => weekKeyOf(parseISO(p.date)) === wk);
-  $('weekProgCount').textContent = wProgs.length + ' progression' + (wProgs.length !== 1 ? 's' : '');
+  $('weekProgCount').textContent = wProgs.length + ' ' + (french
+    ? (wProgs.length > 1 ? 'progressions' : 'progression')
+    : 'progression' + (wProgs.length !== 1 ? 's' : ''));
 
   const w = DB.weeks[wk] || {};
   $('weekNote').value = w.note || '';
@@ -64,7 +73,7 @@ function renderWeekCard(){
     const has = sessionsOn(iso).length || progressionsOn(iso).length;
     strip += '<button class="day-pill' + (iso === selectedDate ? ' sel' : '') + (iso === todayISO() ? ' today' : '') + '"' +
       ' onclick="selectDate(\'' + iso + '\')">' +
-      '<div class="dow">' + DOW[i] + '</div><div class="num">' + d.getDate() + '</div>' +
+      '<div class="dow">' + calDayInitials()[i] + '</div><div class="num">' + d.getDate() + '</div>' +
       '<div class="dotmini' + (has ? '' : ' none') + '"></div></button>';
   }
   $('dayStrip').innerHTML = strip;

@@ -40,7 +40,8 @@ import {
   renderProfile, openProfile, showMyProfile, toggleFollowFromProfile,
   openThreadOfTarget, openEditProfile, openAvatarView, pickAvatar, removeAvatar,
   submitProfile, initProfile, resetProfile, setProfileTab, shareProfile,
-  togglePrivateEdit, popProfileLayer
+  togglePrivateEdit, popProfileLayer, openProfileModerationMenu, blockProfileUser, reportProfileUser,
+  openBlockedProfiles, closeBlockedProfiles, unblockProfileUser
 } from './profile.js';
 import {
   openSearch, runSearch, clearSearch, renderSearch, resetSearch
@@ -87,6 +88,8 @@ import {
   privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts
 } from './privacy.js';
 import { postLinkIn } from './deeplink.js';
+import { openSocialGroups, closeSocialGroups, createSocialGroup, joinSocialGroup, selectSocialGroup,
+  addSocialGroupEntry, copySocialGroupCode, leaveSocialGroup, deleteSocialGroup } from './groups.js';
 
 Object.assign(window, {
   SOCIAL_CONFIG, SOCIAL_ENABLED, GOOGLE_ENABLED,
@@ -140,6 +143,10 @@ Object.assign(window, {
   openTrackPage, closeTrackPage, toggleTrackSave, isTrackSaved, savedTracks,
   initAutoplay, setGlobalMuted, isGlobalMuted, autoplayScan, musicStoryAutoplay,
   privacyMode, isPrivateProfile, writePrivacy, canSeePosts, filterPrivatePosts,
+  openSocialGroups, closeSocialGroups, createSocialGroup, joinSocialGroup, selectSocialGroup,
+  addSocialGroupEntry, copySocialGroupCode, leaveSocialGroup, deleteSocialGroup,
+  openProfileModerationMenu, blockProfileUser, reportProfileUser,
+  openBlockedProfiles, closeBlockedProfiles, unblockProfileUser,
   onFollowChanged
 });
 

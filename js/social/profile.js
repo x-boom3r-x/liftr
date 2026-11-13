@@ -103,7 +103,8 @@ function paintProfile(){
           'data-state="' + (following ? 'accepted' : (requested ? 'pending' : 'none')) + '">' +
           (following ? 'Following' : (requested ? 'Requested' : 'Follow')) + '</button>' +
         '<button type="button" class="btn btn-ghost" id="profMessageBtn" onclick="openThreadOfTarget()">' +
-          'Message</button>';
+          'Message</button>' +
+        '<button type="button" class="btn btn-ghost" onclick="openProfileModerationMenu()" aria-label="Profile options">More</button>';
   }
 
   const tabs = el('profTabs');
@@ -482,6 +483,82 @@ export function openThreadOfTarget(){
   const id = targetId || (current && current.id);
   if (!id) return false;
   if (typeof window.openThread === 'function') window.openThread(id);
+  return true;
+}
+
+export function openProfileModerationMenu(){
+  const id = targetId || (current && current.id);
+  if (!id || id === meId()) return false;
+  if (typeof window.openActionSheet === 'function') return window.openActionSheet('Options du profil', [
+    { label:'Signaler ce profil', style:'destructive', fn:() => reportProfileUser(id) },
+    { label:'Bloquer ce profil', style:'destructive', fn:() => blockProfileUser(id) }
+  ]);
+  return false;
+}
+export async function blockProfileUser(id){
+  const c = sb(), me = meId();
+  if (!c || !me || id === me) return false;
+  const confirm = await window.askConfirm('Bloquer ce profil ?',
+    'Ses publications et son profil seront masqués pour toi. Le blocage coupe aussi le suivi entre vous.', 'Bloquer');
+  if (!confirm || !confirm.ok) return false;
+  const { error } = await c.from('social_user_blocks').insert({blocker_id:me,blocked_id:id});
+  if (error){ toast('Le blocage sera disponible après la mise à jour Social du serveur.'); return false; }
+  try { await c.from('follows').delete().or('and(follower_id.eq.' + me + ',followee_id.eq.' + id + '),and(follower_id.eq.' + id + ',followee_id.eq.' + me + ')'); } catch(e){}
+  targetId = null;
+  if (typeof window.setSView === 'function') window.setSView('home');
+  if (typeof window.renderFeed === 'function') await window.renderFeed();
+  toast('Profil bloqué.');
+  return true;
+}
+export async function reportProfileUser(id){
+  const c = sb(), me = meId();
+  if (!c || !me || id === me) return false;
+  const categoryText = String(window.prompt('Motif : spam, harcèlement, contenu dangereux, usurpation, autre', 'autre') || '').toLowerCase();
+  if (!categoryText) return false;
+  const category = categoryText.includes('spam') ? 'spam' : categoryText.includes('harc') ? 'harassment'
+    : categoryText.includes('dang') ? 'unsafe' : categoryText.includes('usurp') ? 'impersonation' : 'other';
+  const details = String(window.prompt('Détail facultatif (1 000 caractères maximum)', '') || '').slice(0,1000);
+  const { error } = await c.from('social_reports').insert({reporter_id:me,target_user_id:id,category,details});
+  if (error){ toast('Le signalement sera disponible après la mise à jour Social du serveur.'); return false; }
+  toast('Signalement envoyé. Merci de nous l’avoir signalé.');
+  return true;
+}
+
+function ensureBlockedProfilesModal(){
+  if (el('blockedProfilesModal')) return;
+  const root = document.createElement('div');
+  root.id = 'blockedProfilesModal'; root.className = 'overlay'; root.setAttribute('aria-hidden','true');
+  root.innerHTML = '<div class="modal blocked-profiles-modal" role="dialog" aria-modal="true" aria-labelledby="blockedProfilesTitle"><div class="grabber"></div><div class="modal-top"><div><div class="modal-title" id="blockedProfilesTitle">Profils bloqués</div><div class="modal-sub">Seuls les profils que tu as bloqués sont visibles ici.</div></div><button class="modal-x" type="button" onclick="closeBlockedProfiles()" aria-label="Fermer">×</button></div><div id="blockedProfilesList" class="blocked-profiles-list"></div></div>';
+  root.addEventListener('click', e => { if (e.target === root) closeBlockedProfiles(); });
+  document.body.appendChild(root);
+}
+export async function openBlockedProfiles(){
+  const c = sb(), me = meId();
+  if (!c || !me){ toast('Connecte-toi à Social pour gérer les profils bloqués.'); return false; }
+  ensureBlockedProfilesModal();
+  const root = el('blockedProfilesModal'), list = el('blockedProfilesList');
+  root.classList.add('show'); root.setAttribute('aria-hidden','false');
+  list.innerHTML = '<div class="comment-empty">Chargement…</div>';
+  const { data, error } = await c.from('social_user_blocks').select('blocked_id').eq('blocker_id',me).order('created_at',{ascending:false});
+  if (error){ list.innerHTML = '<div class="comment-empty">La gestion des blocages sera disponible après la mise à jour Social du serveur.</div>'; return false; }
+  const ids = (data || []).map(x => x.blocked_id);
+  if (!ids.length){ list.innerHTML = '<div class="comment-empty">Aucun profil bloqué.</div>'; return true; }
+  const { data: profiles, error: profileError } = await c.from('profiles').select('id,username,display_name').in('id',ids);
+  const names = Object.fromEntries((profiles || []).map(x => [x.id,x.display_name || (x.username ? '@' + x.username : 'Profil') ]));
+  if (profileError){ list.innerHTML = '<div class="comment-empty">Impossible de charger les profils.</div>'; return false; }
+  list.innerHTML = ids.map(id => '<div class="blocked-profile-row"><span>' + esc(names[id] || 'Profil indisponible') + '</span><button class="btn btn-sm" type="button" onclick="unblockProfileUser(' + JSON.stringify(id).replace(/"/g,'&quot;') + ')">Débloquer</button></div>').join('');
+  return true;
+}
+export function closeBlockedProfiles(){ const root = el('blockedProfilesModal'); if (root){ root.classList.remove('show'); root.setAttribute('aria-hidden','true'); } }
+export async function unblockProfileUser(id){
+  const me = meId(), c = sb();
+  if (!me || !c || !id) return false;
+  const result = await window.askConfirm('Débloquer ce profil ?', 'Cette personne pourra à nouveau trouver ton profil et t’envoyer un message.', 'Débloquer');
+  if (!result || !result.ok) return false;
+  const { error } = await c.from('social_user_blocks').delete().eq('blocker_id',me).eq('blocked_id',id);
+  if (error){ toast('Impossible de débloquer ce profil.'); return false; }
+  await openBlockedProfiles();
+  toast('Profil débloqué.');
   return true;
 }
 

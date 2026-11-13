@@ -14,6 +14,7 @@ const PROFILE_SEL = 'id,username,display_name,avatar_url';
 let rows = [];
 let unread = 0;
 let loaded = false;
+const NOTIF_TYPES = ['follow','like','comment','mention'];
 
 function el(id){ return document.getElementById(id); }
 function toast(msg){ if (typeof window.toast === 'function') window.toast(msg); }
@@ -25,6 +26,22 @@ function esc(v){
 function gateOk(){ return typeof window.socialAvailable === 'function' ? window.socialAvailable() : SOCIAL_ENABLED; }
 function meId(){ return (window.socialUser || {}).id || null; }
 function ago(t){ return (typeof window.timeAgo === 'function') ? window.timeAgo(t) : ''; }
+function notifPrefKey(){ return 'liftr_social_notifications_' + (meId() || 'guest'); }
+function socialNotificationPreferences(){
+  try {
+    const value = JSON.parse(localStorage.getItem(notifPrefKey()) || '{}');
+    return Object.fromEntries(NOTIF_TYPES.map(type => [type, value[type] !== false]));
+  } catch(e){ return Object.fromEntries(NOTIF_TYPES.map(type => [type, true])); }
+}
+function notificationType(type){ return type === 'follow_request' ? 'follow' : type; }
+function visibleRows(){
+  const prefs = socialNotificationPreferences();
+  return rows.filter(row => prefs[notificationType(row.type)] !== false);
+}
+function syncPreferenceControls(){
+  const prefs = socialNotificationPreferences();
+  document.querySelectorAll('[data-social-notif]').forEach(input => { input.checked = prefs[input.dataset.socialNotif] !== false; });
+}
 
 /* ------------------------------ rendu ------------------------------ */
 function who(n){
@@ -68,8 +85,9 @@ function notifRowHtml(n){
 function render(){
   const list = el('notifList');
   if (!list) return;
-  list.innerHTML = rows.length
-    ? rows.map(notifRowHtml).join('')
+  const shown = visibleRows();
+  list.innerHTML = shown.length
+    ? shown.map(notifRowHtml).join('')
     : '<div class="comment-empty">No notifications yet.</div>';
   paintBadge();
 }
@@ -88,7 +106,7 @@ function paintBadge(){
 /* Le badge se déduit des lignes chargées (les plus récentes) : pas de
    requête « count » séparée — plus robuste et suffisant pour un badge. */
 function recomputeUnread(){
-  unread = rows.filter(n => !n.read_at).length;
+  unread = visibleRows().filter(n => !n.read_at).length;
   paintBadge();
   return unread;
 }
@@ -137,6 +155,7 @@ export async function openNotifications(){
   rows = [];
   render();
   if (typeof window.openModal === 'function') window.openModal('notifModal');
+  syncPreferenceControls();
   refreshPhonePushState();
   return await loadNotifications();
 }
@@ -150,7 +169,7 @@ export function closeNotifications(){
 async function markRead(n){
   if (!n || n.read_at) return;
   n.read_at = new Date().toISOString();
-  if (unread > 0) unread -= 1;
+  if (unread > 0 && socialNotificationPreferences()[notificationType(n.type)] !== false) unread -= 1;
   paintBadge();
   const list = el('notifList');
   const row = list && list.querySelector('[data-notif="' + n.id + '"]');
@@ -224,3 +243,25 @@ export function resetNotifications(){
 
 export function notifUnread(){ return unread; }
 export function notifLoaded(){ return loaded; }
+
+export async function setSocialNotificationPreference(type, enabled){
+  if (!NOTIF_TYPES.includes(type)) return false;
+  const prefs = socialNotificationPreferences();
+  prefs[type] = !!enabled;
+  try { localStorage.setItem(notifPrefKey(), JSON.stringify(prefs)); } catch(e){}
+  syncPreferenceControls();
+  recomputeUnread();
+  render();
+  const c = sb(), me = meId();
+  if (c && me){
+    try {
+      const { error } = await c.from('social_notification_preferences')
+        .upsert({ user_id:me, [type]:!!enabled }, { onConflict:'user_id' });
+      if (error) toast('Preference saved on this device. Server sync needs the Social update.');
+      else toast('Social alert preference saved');
+    } catch(e){ toast('Preference saved on this device.'); }
+  }
+  return true;
+}
+
+window.setSocialNotificationPreference = setSocialNotificationPreference;

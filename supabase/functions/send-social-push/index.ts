@@ -54,6 +54,13 @@ Deno.serve(async req => {
       return response({ error: 'notification_not_found' }, 404);
     }
 
+    const typeColumn = notice.type === 'follow_request' ? 'follow' : notice.type;
+    if (['follow','like','comment','mention'].includes(typeColumn)){
+      const { data: prefs } = await admin.from('social_notification_preferences')
+        .select(typeColumn).eq('user_id', notice.user_id).maybeSingle();
+      if (prefs && prefs[typeColumn] === false) return response({ sent: 0, reason: 'disabled_by_user' });
+    }
+
     const [{ data: actor }, { data: devices }] = await Promise.all([
       admin.from('profiles').select('display_name,username').eq('id', notice.actor_id).maybeSingle(),
       admin.from('push_subscriptions').select('endpoint,subscription').eq('user_id', notice.user_id)

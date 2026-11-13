@@ -174,7 +174,7 @@ test.describe('Chantier Nutrition', () => {
     await page.fill('#mealFoodSearch', 'Oats');
     await page.locator('#nutriDialogMount .food-pick').first().click();
     await page.fill('#itemQty', '150');
-    await page.locator('#nutriDialogMount .item-editor button').click();
+    await page.locator('#nutriDialogMount .item-editor button.btn-primary').click();
     await page.locator('#nutriDialogMount button:has-text("Save meal")').click();
     await expect(page.locator('#toast')).toContainText('Meal saved');
 
